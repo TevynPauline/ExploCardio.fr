@@ -299,7 +299,9 @@ conservée.
 - **FR-010** : Un compte DOIT porter l'un des statuts : email à confirmer, en attente de
   validation, validé, refusé, suspendu.
 - **FR-011** : Un compte qui n'est pas « validé » DOIT pouvoir consulter le site et ses
-  prix, mais NE DOIT PAS pouvoir finaliser une commande ni une mise à disposition.
+  prix, mais NE DOIT PAS pouvoir finaliser une commande. Seule exception : la mise à
+  disposition express (F05, FR-009), qu'un compte en attente peut commander et payer, sans
+  expédition avant sa validation.
 - **FR-012** : L'administrateur DOIT pouvoir consulter les comptes en attente, les valider,
   les refuser avec un motif, et suspendre un compte validé.
 - **FR-013** : L'administrateur DOIT pouvoir choisir entre validation manuelle et
@@ -415,8 +417,8 @@ conservée.
 
 ### Measurable Outcomes
 
-- **SC-001** : Aucun compte non validé ne peut finaliser une commande (0 cas sur l'ensemble
-  des tests).
+- **SC-001** : Aucun compte non validé ne peut finaliser une commande, hors mise à
+  disposition express de F05 (0 cas sur l'ensemble des tests).
 - **SC-002** : Un même numéro RPPS ou SIRET n'obtient jamais plus d'un tensiomètre (0 cas
   sur l'ensemble des tests, y compris en cas de demandes simultanées).
 - **SC-003** : 100 % des abonnements à la newsletter sont enregistrés avec leur date, leur

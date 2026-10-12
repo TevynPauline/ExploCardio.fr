@@ -351,7 +351,9 @@ un code promo.
 - **FR-006** : Le panier DOIT appliquer les prix et disponibilités en vigueur et signaler
   au client tout changement depuis l'ajout.
 - **FR-007** : Tout visiteur DOIT pouvoir composer un panier. Seul un client validé DOIT
-  pouvoir entrer dans le tunnel de commande.
+  pouvoir entrer dans le tunnel de commande. Seule exception : un compte en attente de
+  validation peut y entrer pour un panier ne contenant qu'une mise à disposition et son kit
+  d'accessoires (F05, FR-009).
 
 **Tunnel de commande**
 
@@ -514,7 +516,8 @@ un code promo.
 - **SC-007** : Après un paiement refusé, 100 % des paniers et des saisies sont conservés.
 - **SC-008** : Aucune donnée de carte bancaire n'est présente dans les données ni dans les
   journaux du site.
-- **SC-009** : Aucun compte non validé ne parvient à finaliser une commande.
+- **SC-009** : Aucun compte non validé ne parvient à finaliser une commande, hors mise à
+  disposition express de F05 ; dans ce cas, rien n'est expédié avant la validation.
 - **SC-010** : Une demande de financement est envoyée en moins de 3 minutes, et son statut
   est visible dans « Mon compte » dès l'envoi.
 - **SC-011** : Aucun nom d'organisme de financement n'apparaît dans les écrans et emails
@@ -527,10 +530,10 @@ un code promo.
 Les points marqués « confirmé » n'étaient pas tranchés dans la demande initiale ; ils ont été
 validés par la responsable du projet le 2026-10-12.
 
-- **Frontière avec F05 (confirmé, à réajuster avec F05)** : F04 gère la ligne de mise à disposition dans le
-  panier, le paiement du premier mois et la création de l'abonnement. Le choix des options,
-  le contrat, la résiliation, les retours et les échéances impayées relèvent de F05. Cette
-  frontière sera réajustée lors de la spécification de F05.
+- **Frontière avec F05 (confirmé, alignée sur F05)** : F04 gère la ligne de mise à
+  disposition dans le panier, le paiement du premier mois, la mise en place du prélèvement
+  mensuel et les factures. L'offre, la date de livraison, le kit, la résiliation, les
+  retours, les retards et les impayés relèvent de F05.
 - **Bons d'achat (confirmé)** : ils s'appliquent comme une remise commerciale sur les
   achats, pas sur les mises à disposition ni sur les frais de port. Leur traitement
   comptable et fiscal est à valider par l'expert-comptable d'ExploCardio.fr. Ils ne sont
