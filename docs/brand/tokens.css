@@ -1,0 +1,81 @@
+/* ExploCardio.fr — design tokens (identité « Les trois temps », variante 2C) */
+@import url("https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap");
+
+:root {
+  /* Couleurs de marque (symbole) */
+  --ec-euca:   #9CC5BE;  /* point 1 — eucalyptus (décoratif) */
+  --ec-sage:   #7FB0A8;  /* point 2 — sauge (décoratif) */
+  --ec-blue:   #C7D8E6;  /* point 3 — bleu brume (décoratif) */
+  --ec-deep:   #4F8A80;  /* vert profond — icônes, accents ≥ 18px ou gras */
+  --ec-deep-strong: #3F7068; /* boutons, liens (AA sur fond clair et texte blanc) */
+
+  /* Texte */
+  --ec-ink:    #2F4A55;  /* titres, texte principal */
+  --ec-muted:  #5E7680;  /* texte secondaire (uniquement sur --ec-bg ou blanc) */
+
+  /* Surfaces */
+  --ec-bg:        #FAF8F4;  /* fond de page (ivoire) */
+  --ec-surface:   #FFFFFF;  /* cartes */
+  --ec-pale:      #E9F2EF;  /* héro / couverture (eucalyptus pâle) */
+  --ec-mint:      #B9DCD6;  /* décor */
+  --ec-blue-soft: #E3ECF3;  /* encart d'information */
+  --ec-lin:       #EFE6D8;  /* encart promo (beige lin) */
+  --ec-dark:      #2F4A55;  /* bloc contact / footer */
+  --ec-line:      #E6E1D8;  /* bordures, séparateurs */
+
+  /* Placeholders (photos à venir) */
+  --ec-ph-fill: #F1EDE5; --ec-ph-line: #C9C2B5; --ec-ph-text: #9A9385;
+
+  /* Dégradé du mot-symbole (lettre par lettre : vert → bleu) */
+  --ec-wordmark-gradient: linear-gradient(90deg, #6BA59B 0%, #518C82 48%, #6E92B4 100%);
+
+  /* Typographie */
+  --ec-font: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ec-fw-light: 300; --ec-fw-regular: 400; --ec-fw-medium: 500; --ec-fw-semibold: 600;
+  --ec-fs-display: clamp(2.25rem, 4vw + 1rem, 3.5rem); /* H1, poids 300 */
+  --ec-fs-h2: clamp(1.75rem, 2vw + 1rem, 2.25rem);     /* poids 300 */
+  --ec-fs-h3: 1.25rem;                                  /* poids 600 */
+  --ec-fs-body: 1rem; --ec-fs-small: .875rem;
+  --ec-fs-kicker: .75rem;  /* MAJUSCULES, poids 500, interlettrage .12em, couleur --ec-deep-strong */
+  --ec-lh-tight: 1.15; --ec-lh-body: 1.6;
+
+  /* Espacements, rayons, ombres */
+  --ec-space-1: 4px; --ec-space-2: 8px; --ec-space-3: 12px; --ec-space-4: 16px;
+  --ec-space-6: 24px; --ec-space-8: 32px; --ec-space-12: 48px; --ec-space-16: 64px; --ec-space-24: 96px;
+  --ec-radius-sm: 6px; --ec-radius: 12px; --ec-radius-lg: 20px; --ec-radius-pill: 999px;
+  --ec-shadow: 0 1px 2px rgba(47,74,85,.06), 0 8px 24px rgba(47,74,85,.06);
+  --ec-container: 1180px;
+}
+
+/* Base */
+body { margin:0; background:var(--ec-bg); color:var(--ec-ink); font-family:var(--ec-font); font-size:var(--ec-fs-body); line-height:var(--ec-lh-body); }
+h1,h2 { font-weight:var(--ec-fw-light); line-height:var(--ec-lh-tight); letter-spacing:-.01em; }
+h3 { font-weight:var(--ec-fw-semibold); }
+a { color:var(--ec-deep-strong); }
+
+/* Composants de référence */
+.ec-kicker { display:inline-flex; align-items:center; gap:10px; font-size:var(--ec-fs-kicker); font-weight:500; letter-spacing:.12em; text-transform:uppercase; color:var(--ec-deep-strong); }
+.ec-dots { display:inline-flex; align-items:flex-end; gap:3px; }
+.ec-dots i { display:block; border-radius:50%; }
+.ec-dots i:nth-child(1){ width:6px; height:6px; background:var(--ec-euca); }
+.ec-dots i:nth-child(2){ width:8px; height:8px; background:var(--ec-sage); }
+.ec-dots i:nth-child(3){ width:10px; height:10px; background:var(--ec-blue); }
+
+.ec-btn { display:inline-flex; align-items:center; gap:8px; padding:12px 22px; border-radius:var(--ec-radius-pill); font:500 1rem/1 var(--ec-font); text-decoration:none; border:1px solid transparent; cursor:pointer; transition:background .15s, border-color .15s; }
+.ec-btn--primary { background:var(--ec-deep-strong); color:#fff; }
+.ec-btn--primary:hover { background:var(--ec-ink); }
+.ec-btn--secondary { background:transparent; color:var(--ec-ink); border-color:var(--ec-ink); }
+.ec-btn--secondary:hover { background:var(--ec-pale); }
+.ec-btn:focus-visible { outline:2px solid var(--ec-deep-strong); outline-offset:3px; }
+
+.ec-card { background:var(--ec-surface); border:1px solid var(--ec-line); border-radius:var(--ec-radius); padding:var(--ec-space-6); }
+.ec-hero { background:var(--ec-pale); }
+.ec-box--info  { background:var(--ec-blue-soft); border-radius:var(--ec-radius); }
+.ec-box--promo { background:var(--ec-lin); border-radius:var(--ec-radius); }
+.ec-dark { background:var(--ec-dark); color:#fff; }
+.ec-dark .ec-accent { color:var(--ec-euca); }
+.ec-badge { display:inline-block; padding:2px 10px; border:1px solid var(--ec-sage); border-radius:var(--ec-radius-pill); font-size:.75rem; color:var(--ec-deep-strong); background:#fff; }
+.ec-placeholder { background:var(--ec-ph-fill); border:1px dashed var(--ec-ph-line); color:var(--ec-ph-text); border-radius:var(--ec-radius); display:grid; place-items:center; text-align:center; font-size:var(--ec-fs-small); }
+
+/* Mot-symbole en texte (uniquement si le SVG ne peut pas être utilisé) */
+.ec-wordmark { font-family:var(--ec-font); font-weight:400; background:var(--ec-wordmark-gradient); -webkit-background-clip:text; background-clip:text; color:transparent; }
