@@ -76,6 +76,3 @@ a { color:var(--ec-deep-strong); }
 .ec-dark .ec-accent { color:var(--ec-euca); }
 .ec-badge { display:inline-block; padding:2px 10px; border:1px solid var(--ec-sage); border-radius:var(--ec-radius-pill); font-size:.75rem; color:var(--ec-deep-strong); background:#fff; }
 .ec-placeholder { background:var(--ec-ph-fill); border:1px dashed var(--ec-ph-line); color:var(--ec-ph-text); border-radius:var(--ec-radius); display:grid; place-items:center; text-align:center; font-size:var(--ec-fs-small); }
-
-/* Mot-symbole en texte (uniquement si le SVG ne peut pas être utilisé) */
-.ec-wordmark { font-family:var(--ec-font); font-weight:400; background:var(--ec-wordmark-gradient); -webkit-background-clip:text; background-clip:text; color:transparent; }

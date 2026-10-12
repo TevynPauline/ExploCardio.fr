@@ -20,12 +20,14 @@ Le symbole se compose de **trois points alignés qui grandissent en montant** (�
 | `assets/explocardio-fr-logo.svg` | Logo principal, sur fond clair (ivoire, blanc, eucalyptus pâle) |
 | `assets/explocardio-fr-logo-blanc.svg` | Sur fond sombre (`--ec-dark`) |
 | `assets/explocardio-fr-symbole.svg` | Favicon, avatar, petits formats, puce décorative |
+| `assets/explocardio-fr-logo-horizontal.svg` | Version horizontale compacte pour l'en-tête du site, sur fond clair |
+| `assets/explocardio-fr-logo-horizontal-blanc.svg` | Version horizontale compacte, sur fond sombre (`--ec-dark`) |
 
 - **Mot-symbole :** Inter Regular (400), coloré **lettre par lettre** en dégradé du vert sauge `#6BA59B` au bleu `#6E92B4`, en passant par `#518C82`.
 - **Points du symbole :** eucalyptus `#9CC5BE`, sauge `#7FB0A8` et bleu brume `#C7D8E6`, de gauche à droite et du plus petit au plus grand.
 - **Zone de protection :** au moins la hauteur du grand point tout autour du logo. **Taille minimale :** 120 px de large pour le logo complet. En dessous, on utilise le symbole seul.
 - Utiliser **toujours le SVG**. Ne pas recomposer le logo en texte, ne pas le déformer, ne pas changer les couleurs, ne pas l'afficher sur une photo chargée.
-- **En-tête du site :** une version horizontale compacte est permise (symbole à gauche, ~28 px de haut, avec « ExploCardio.fr » en dégradé). Le logo empilé est réservé au héros, au footer et aux documents.
+- **En-tête du site :** utiliser la version horizontale compacte `assets/explocardio-fr-logo-horizontal.svg` (symbole à gauche, mot-symbole à droite, ~28 px de haut). Elle reprend les tracés du logo principal ; ne pas la recomposer en texte. Le logo empilé est réservé au héros, au footer et aux documents.
 
 ## 3. Couleurs
 

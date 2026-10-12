@@ -5,7 +5,7 @@
 - `design-system.md` : la charte complète (logo, couleurs, typo, composants, accessibilité, structure du site).
 - `tokens.css` : variables CSS et classes de base prêtes à l'emploi (`--ec-*`, `.ec-btn`, `.ec-card`…).
 - `tokens.json` : les mêmes valeurs, indépendantes du framework (Tailwind, thème Odoo, etc.).
-- `assets/` : logo couleur, logo blanc et symbole seul (SVG + PNG).
+- `assets/` : logo couleur, logo blanc et symbole seul (SVG + PNG), et logo horizontal pour l'en-tête, couleur et blanc (SVG).
 
 ## Installation dans le projet
 
