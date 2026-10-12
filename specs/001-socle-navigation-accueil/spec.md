@@ -302,9 +302,10 @@ vérifier leur affichage sur le site public.
   ligne (tutos, agenda partagé, garantie express, espace client).
 - **FR-021** : Les éléments « Hébergement des données de santé » et « logiciel Cloud »
   DOIVENT porter le badge « En préparation » tant que l'administrateur ne l'a pas retiré.
-- **FR-022** : L'offre de bienvenue DOIT apparaître dans un encart lin avec le texte « Un
-  tensiomètre électronique offert à votre inscription avec abonnement à la newsletter » et
-  un bouton d'inscription.
+- **FR-022** : L'offre de bienvenue DOIT apparaître dans un encart lin avec un bouton
+  d'inscription et un texte modifiable par l'administrateur. Texte initial : « Un
+  tensiomètre électronique offert avec votre première commande, pour toute inscription avec
+  abonnement à la newsletter » (modalité de remise fixée par F02).
 - **FR-023** : La section service et fidélité DOIT présenter le parcours en 3 étapes
   (consommables → points → hotline et SAV offerts) sous forme de trois cercles numérotés de
   taille croissante reliés par des flèches fines, ainsi que les engagements de réactivité.
@@ -435,7 +436,8 @@ validés par la responsable du projet le 2026-10-12.
 
 - **Offre de bienvenue (confirmé)** : le bouton d'inscription mène à la création de
   compte professionnel. Les conditions d'attribution du tensiomètre (compte validé,
-  abonnement à la newsletter, délai, stock) relèvent du module comptes. Une inscription à la
+  abonnement à la newsletter, remise avec la première commande) relèvent du module comptes
+  (F02). Une inscription à la
   newsletter seule, depuis le pied de page, ne donne pas droit au cadeau.
 - **Bandeau promotionnel (confirmé)** : il n'apparaît qu'en période de promotion et n'est
   pas masquable. La mise en pause du défilement est conservée : c'est une exigence
