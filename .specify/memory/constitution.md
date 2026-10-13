@@ -154,8 +154,12 @@ logistique et le contenu.
 Cette section rassemble les contraintes d'architecture qui découlent des principes.
 
 - **Systèmes externes autorisés** : Stripe (paiement), PCA (ouverture et fermeture des
-  droits d'accès des médecins), puis Odoo (ERP) en fin de projet. Toute nouvelle
-  intégration externe exige un amendement ou une justification dans le plan.
+  droits d'accès des médecins), un outil d'agenda (prise de rendez-vous), un outil
+  d'emailing (emails et newsletter), puis Odoo (ERP) en fin de projet. L'outil d'agenda et
+  l'outil d'emailing sont choisis lors de la planification ; ils NE DOIVENT recevoir que
+  les données strictement nécessaires, jamais de donnée de patient, et DOIVENT respecter le
+  RGPD. Toute autre intégration externe exige un amendement ou une justification dans le
+  plan.
 - **Frontière des données** : les données de gestion ne sont lues et écrites que par la
   couche d'accès du principe III. Les échanges avec PCA ne portent que sur des comptes et
   des droits de médecins, jamais sur des données de patients (principe IV).
@@ -197,4 +201,4 @@ Cette section rassemble les contraintes d'architecture qui découlent des princi
 - Les onze principes étant non négociables, aucune dérogation ponctuelle n'est admise : un
   écart durable passe par un amendement.
 
-**Version**: 1.0.0 | **Ratified**: 2026-10-12 | **Last Amended**: 2026-10-12
+**Version**: 1.1.0 | **Ratified**: 2026-10-12 | **Last Amended**: 2026-10-13
