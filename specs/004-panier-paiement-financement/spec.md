@@ -554,8 +554,9 @@ validés par la responsable du projet le 2026-10-12.
   d'un compte n'expire pas.
 - **Express (confirmé)** : proposé seulement si tous les articles du panier sont en
   stock et si la commande est passée avant une heure limite réglée par l'administrateur.
-- **Relance de panier abandonné (confirmé)** : aucune relance par email dans cette
-  version.
+- **Relance de panier abandonné** : F04 n'envoie aucune relance lui-même. Un rappel unique
+  est envoyé par F10 (emailing automatisé), selon ses règles ; décision du 2026-10-13, qui
+  remplace l'hypothèse initiale « aucune relance ».
 - **Facturation d'un équipement financé** : hypothèse retenue — le site n'émet pas de
   facture au client pour une commande « financée ». Le circuit exact (facture à l'organisme
   de financement) est à valider par l'expert-comptable d'ExploCardio.fr.
