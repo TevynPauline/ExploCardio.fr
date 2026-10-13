@@ -439,7 +439,9 @@ son retour, le passer en maintenance puis le remettre disponible, et vérifier �
 **Parc de location**
 
 - **FR-035** : Chaque appareil du parc DOIT être identifié par son numéro de série et porter
-  l'un des statuts : disponible, loué, en retour, en maintenance.
+  l'un des statuts : disponible, loué, en retour, en maintenance. Un appareil
+  prêté gratuitement dans le cadre du SAV (F07) est « loué » avec le motif « prêt SAV » :
+  il est indisponible à la location et ne donne lieu à aucune échéance.
 - **FR-036** : La disponibilité affichée sur le site DOIT refléter le parc en temps réel :
   seuls les appareils « disponibles » sont proposés.
 - **FR-037** : Un même appareil NE DOIT JAMAIS être affecté à deux locations en même temps.
