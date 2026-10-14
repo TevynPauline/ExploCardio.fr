@@ -22,11 +22,17 @@ calcul des garanties, la déclaration et le suivi des demandes de SAV.
 **Hors périmètre de F07** : l'expédition des commandes (F04), dont F07 complète l'écran par
 la saisie du numéro de série ; la mise à disposition et son parcours (F05) ; les droits
 d'assistance et l'assistance à l'acte (F06) ; les notices et tutoriels (F09) ; l'envoi des
-emails de rappel (F10) ; le back-office complet (F13) ; le passage sous Odoo (F11).
+emails de rappel (F10) ; le back-office complet (F13) ; la gestion des numéros de série,
+des garanties et de leurs durées, qui se fait dans Odoo (base fictive en phase 1).
 
 **Lien avec les autres modules** : « Mon compte » (F02) accueille la rubrique. Les fiches
 produit (F03) fournissent modèles, photos et consommables compatibles. F05 fournit la mise à
 disposition de remplacement. F06 indique si le client dispose de droits d'assistance.
+
+**Phases (constitution v2.1.0)** : en phase 1, F07 fonctionne avec le connecteur Odoo de démonstration : appareils,
+numéros de série, garanties et parc de prêt viennent de sa base fictive. Les demandes de SAV
+et les enregistrements manuels sont des demandes réelles, gérées par le site dès la phase 1.
+Les emails sont simulés par le connecteur emailing.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -44,9 +50,9 @@ dans « Mon compte » sans aucune action du client.
 
 **Acceptance Scenarios**:
 
-1. **Given** une commande contenant un équipement, **When** l'administrateur prépare
-   l'expédition, **Then** il saisit ou scanne le numéro de série de chaque appareil, et
-   l'expédition ne peut pas être validée sans lui.
+1. **Given** une commande contenant un équipement, **When** l'équipe prépare l'expédition
+   dans Odoo, **Then** elle y saisit ou scanne le numéro de série de chaque appareil, et le
+   site le lit à la livraison.
 2. **Given** une commande livrée, **When** la livraison est enregistrée, **Then** chaque
    appareil apparaît dans « Mes appareils & garanties » du client, avec son modèle, sa
    photo, son numéro de série, sa date d'achat et sa date de fin de garantie.
@@ -248,31 +254,35 @@ l'envoi d'un seul rappel par échéance.
 
 ---
 
-### User Story 8 - Tenir les garanties et traiter le SAV (Priority: P2)
+### User Story 8 - Traiter le SAV et les enregistrements (Priority: P2)
 
-L'administrateur règle la durée de garantie de chaque produit, saisit les numéros de série à
-l'expédition, valide les enregistrements manuels et traite les demandes de SAV.
+Dans le back-office du site, l'administrateur valide les enregistrements manuels et traite
+les demandes de SAV. L'équipe règle les durées de garantie, saisit les numéros de série et
+corrige ou transfère les appareils dans Odoo.
 
-**Why this priority**: sans ces écrans, ni l'ajout automatique ni le SAV ne fonctionnent.
+**Why this priority**: sans ces opérations, ni l'ajout automatique ni le SAV ne
+fonctionnent.
 
-**Independent Test**: fixer une durée de garantie, expédier une commande avec un numéro de
-série, valider un enregistrement manuel et traiter une demande de SAV jusqu'à sa
-résolution.
+**Independent Test**: valider un enregistrement manuel et traiter une demande de SAV
+jusqu'à sa résolution dans le back-office ; dans la base fictive du connecteur Odoo,
+modifier une durée de garantie et transférer un appareil, et vérifier l'affichage côté
+client.
 
 **Acceptance Scenarios**:
 
-1. **Given** un produit, **When** l'administrateur fixe sa durée de garantie, **Then**
-   elle s'applique aux appareils livrés ensuite, sans modifier les garanties déjà en
-   cours.
-2. **Given** les demandes de SAV, **When** l'administrateur ouvre la liste, **Then** il
-   peut la filtrer par statut, par client, par modèle et par ancienneté.
+1. **Given** une durée de garantie modifiée dans Odoo pour un produit, **When** un
+   appareil est livré ensuite, **Then** la nouvelle durée s'applique, sans modifier les
+   garanties déjà en cours.
+2. **Given** les demandes de SAV, **When** l'administrateur ouvre la liste dans le
+   back-office, **Then** il peut la filtrer par statut, par client, par modèle et par
+   ancienneté.
 3. **Given** une demande, **When** il l'ouvre, **Then** il voit l'appareil, sa garantie,
    les droits d'assistance du client, la description, les photos et le fil des échanges.
-4. **Given** un numéro de série saisi par erreur, **When** l'administrateur le corrige,
-   **Then** la correction est enregistrée avec son motif.
-5. **Given** un appareil revendu ou cédé, **When** l'administrateur le transfère d'un
-   compte à un autre, **Then** il disparaît du premier et apparaît sur le second.
-6. **Given** toute validation, tout refus, tout changement de statut ou de garantie,
+4. **Given** un numéro de série corrigé ou un appareil transféré dans Odoo, **When** le
+   site le lit, **Then** la rubrique des clients concernés est mise à jour.
+5. **Given** le back-office du site, **When** un administrateur cherche à modifier une
+   durée de garantie ou un numéro de série, **Then** aucun écran ne le permet.
+6. **Given** toute validation, tout refus et tout changement de statut d'une demande,
    **When** l'action est effectuée, **Then** elle est journalisée avec son auteur et sa
    date.
 
@@ -323,29 +333,32 @@ résolution.
 
 **Ajout automatique**
 
-- **FR-005** : Le numéro de série de chaque équipement DOIT être saisi ou scanné dans le
-  back-office au moment de l'expédition. L'expédition d'un équipement NE DOIT PAS pouvoir
-  être validée sans lui.
+- **FR-005** : Le numéro de série de chaque équipement DOIT être saisi ou scanné dans Odoo
+  au moment de l'expédition, et lu par le site via le connecteur Odoo. L'exigence d'un
+  numéro de série avant l'expédition relève du paramétrage d'Odoo.
 - **FR-006** : Un appareil acheté sur le site DOIT apparaître dans la rubrique du client dès
   la livraison, sans aucune saisie de sa part.
 - **FR-007** : Chaque exemplaire DOIT avoir sa propre fiche et son propre numéro de série.
-- **FR-008** : Seuls les produits que l'administrateur a marqués comme suivis par numéro de
-  série DOIVENT entrer dans la rubrique.
+- **FR-008** : Seuls les produits suivis par numéro de série dans Odoo DOIVENT entrer dans
+  la rubrique.
 
 **Enregistrement manuel**
 
 - **FR-009** : Le client DOIT pouvoir enregistrer un appareil acheté ailleurs en indiquant
   le modèle, le numéro de série, la date d'achat, et en joignant une preuve d'achat (PDF ou
   photo).
-- **FR-010** : Un enregistrement manuel DOIT être validé ou refusé par l'administrateur, le
-  client étant prévenu de la décision et, en cas de refus, de son motif.
+- **FR-010** : Un enregistrement manuel est une demande : il DOIT être validé ou refusé par
+  l'administrateur dans le back-office du site, le client étant prévenu de la décision et,
+  en cas de refus, de son motif. Une fois validé, l'appareil et sa garantie DOIVENT être
+  enregistrés dans Odoo par son connecteur.
 - **FR-011** : Un numéro de série NE DOIT être rattaché qu'à un seul compte client. Un
   numéro déjà enregistré par un autre client DOIT être refusé, avec un message invitant à
   contacter l'équipe et sans aucune information sur l'autre client.
 
 **Garantie**
 
-- **FR-012** : La durée de garantie DOIT être fixée par l'administrateur pour chaque produit.
+- **FR-012** : La durée de garantie DOIT être fixée dans Odoo pour chaque produit (base fictive
+  en phase 1, principe VI).
   La garantie d'un appareil acheté sur le site DOIT courir à partir de sa date de
   livraison.
 - **FR-013** : Aucune extension de garantie n'est vendue dans la première version. La fiche
@@ -353,8 +366,8 @@ résolution.
   qu'elle puisse être proposée plus tard sans reprise des garanties existantes.
 - **FR-014** : Un changement de durée de garantie d'un produit NE DOIT PAS modifier les
   garanties déjà en cours.
-- **FR-015** : L'administrateur DOIT pouvoir corriger la date de fin de garantie d'un
-  appareil, avec un motif obligatoire.
+- **FR-015** : L'équipe DOIT pouvoir corriger dans Odoo la date de fin de garantie d'un
+  appareil, avec un motif obligatoire ; le site affiche la date corrigée.
 
 **Actions depuis l'appareil**
 
@@ -395,14 +408,14 @@ résolution.
   garantie, la solution proposée DOIT être une mise à disposition Express payante, au tarif
   normal (F05).
 - **FR-038** : Le prêt gratuit DOIT être accepté par le client avant tout envoi. L'appareil
-  prêté est pris dans le parc de location, où il devient indisponible avec le motif « prêt
-  SAV ». Aucun kit d'accessoires n'est facturé pour un prêt.
+  prêté est affecté dans Odoo depuis le parc de location, où il devient indisponible avec
+  le motif « prêt SAV ». Aucun kit d'accessoires n'est facturé pour un prêt.
 - **FR-039** : À la résolution de la demande, le client DOIT recevoir les instructions, la
   date limite et l'étiquette préaffranchie pour rendre l'appareil prêté. Un prêt non rendu
   suit les règles de rappel et de valeur de remplacement de F05, annoncées au client
   lorsqu'il accepte le prêt.
-- **FR-028** : L'équipe DOIT pouvoir enregistrer l'envoi d'un appareil de prêt sur une
-  demande, avec son numéro de série et son suivi.
+- **FR-028** : L'envoi d'un appareil de prêt DOIT être rattaché à la demande de SAV, avec son
+  numéro de série et son suivi, lus dans Odoo où l'équipe enregistre l'expédition.
 
 **Rappels**
 
@@ -414,13 +427,14 @@ résolution.
 
 **Données, administration et traçabilité**
 
-- **FR-031** : Appareils, garanties et demandes de SAV DOIVENT être enregistrés dans le
-  référentiel de gestion, par la couche d'accès unique (principe III), avec la notion de
-  numéro de série reprise d'Odoo.
-- **FR-032** : F07 DOIT livrer les écrans d'administration nécessaires : durées de garantie,
-  saisie des numéros de série à l'expédition, validation des enregistrements manuels,
-  liste et traitement des demandes de SAV, transfert et correction d'un appareil. Le
-  back-office complet (F13) les étendra.
+- **FR-031** : Les appareils, leurs numéros de série et leurs garanties DOIVENT être tenus
+  par Odoo et lus par son connecteur (base fictive en phase 1, principe III). Les demandes
+  de SAV et les enregistrements manuels en attente sont des demandes, gérées par le site
+  dans son back-office.
+- **FR-032** : Le back-office du site DOIT permettre de valider les enregistrements manuels
+  et de traiter les demandes de SAV. Les durées de garantie, la saisie des numéros de
+  série, la correction des garanties et le transfert d'un appareil se font dans Odoo
+  (principes III et VI).
 - **FR-033** : Les preuves d'achat et les photos DOIVENT n'être accessibles qu'au client
   concerné et à l'équipe, et être supprimées avec le compte.
 - **FR-034** : Toute validation, tout refus, toute correction, tout transfert et tout
@@ -455,33 +469,37 @@ résolution.
 
 ### Measurable Outcomes
 
-- **SC-001** : 100 % des équipements achetés sur le site apparaissent dans la rubrique du
+Chaque critère est marqué [Phase 1] s'il se vérifie avec les connecteurs de démonstration,
+ou [Phase 3] s'il nécessite les vrais services. Sauf mention contraire, les scénarios
+d'acceptation des parcours se vérifient en phase 1.
+
+- **SC-001** [Phase 1] : 100 % des équipements achetés sur le site apparaissent dans la rubrique du
   client à la livraison, sans aucune saisie de sa part.
-- **SC-002** : Un numéro de série déjà enregistré par un autre client est refusé dans 100 %
+- **SC-002** [Phase 1] : Un numéro de série déjà enregistré par un autre client est refusé dans 100 %
   des cas, avec le message invitant à contacter l'équipe, y compris en cas d'enregistrements
   simultanés.
-- **SC-003** : Aucun numéro de série n'est rattaché à deux comptes clients en même temps.
-- **SC-004** : Un client déclare une panne en moins de 3 minutes en partant de la fiche de
+- **SC-003** [Phase 1] : Aucun numéro de série n'est rattaché à deux comptes clients en même temps.
+- **SC-004** [Phase 1] : Un client déclare une panne en moins de 3 minutes en partant de la fiche de
   l'appareil, sans ressaisir le modèle ni le numéro de série.
-- **SC-005** : Un client enregistre un appareil acheté ailleurs en moins de 4 minutes.
-- **SC-006** : 95 % des enregistrements manuels sont validés ou refusés en moins de deux
+- **SC-005** [Phase 1] : Un client enregistre un appareil acheté ailleurs en moins de 4 minutes.
+- **SC-006** [Phase 1] : 95 % des enregistrements manuels sont validés ou refusés en moins de deux
   jours ouvrés.
-- **SC-007** : Le client est prévenu de chaque changement de statut d'une demande de SAV en
+- **SC-007** [Phase 1] : Le client est prévenu de chaque changement de statut d'une demande de SAV en
   moins de 5 minutes.
-- **SC-008** : Le statut de garantie affiché est exact pour 100 % des appareils testés, y
+- **SC-008** [Phase 1] : Le statut de garantie affiché est exact pour 100 % des appareils testés, y
   compris le jour même de l'échéance.
-- **SC-009** : Chaque garantie arrivant à échéance donne lieu à un rappel et un seul, sauf
+- **SC-009** [Phase 1] : Chaque garantie arrivant à échéance donne lieu à un rappel et un seul, sauf
   refus du client.
-- **SC-010** : Aucune expédition d'équipement n'est validée sans numéro de série.
-- **SC-011** : Un audit des écrans de F07 ne relève aucune non-conformité WCAG 2.2 AA.
+- **SC-010** [Phase 3] : Aucune expédition d'équipement n'est validée dans Odoo sans numéro de série.
+- **SC-011** [Phase 1] : Un audit des écrans de F07 ne relève aucune non-conformité WCAG 2.2 AA.
 
 ## Assumptions
 
 Les points marqués « confirmé » n'étaient pas tranchés dans la demande initiale ; ils ont été
 validés par la responsable du projet le 2026-10-13.
 
-- **Durée de garantie par défaut (confirmé)** : 24 mois si l'administrateur n'a rien
-  fixé pour un produit. Les durées réelles sont des données à saisir avant la mise en
+- **Durée de garantie par défaut (confirmé)** : 24 mois si rien n'est fixé dans Odoo pour
+  un produit. Les durées réelles sont des données à saisir avant la mise en
   ligne.
 - **Délai « bientôt expirée » (confirmé)** : 60 jours avant la date de fin, réglable. Le
   rappel par email part au même moment.
@@ -499,10 +517,10 @@ validés par la responsable du projet le 2026-10-13.
   (F05), pas dans les garanties. Une panne se déclare depuis la location et suit le même
   circuit de SAV.
 - **Échange standard (confirmé)** : si l'équipe remplace l'appareil par un autre,
-  l'administrateur rattache le nouveau numéro de série à la fiche ; la garantie d'origine
+  le nouveau numéro de série est rattaché à la fiche dans Odoo ; la garantie d'origine
   continue de courir.
 - **Revente et cession (confirmé)** : le transfert d'un appareil d'un compte à un autre
-  est fait par l'administrateur, à la demande des clients.
+  est fait dans Odoo par l'équipe, à la demande des clients.
 - **Pièces jointes (confirmé)** : PDF, JPEG ou PNG, 10 Mo au plus par fichier, 5 photos
   au plus par demande.
 - **Extension de garantie** : non proposée en V1 ; elle pourra l'être plus tard, à l'achat
@@ -513,13 +531,14 @@ validés par la responsable du projet le 2026-10-13.
 - **Appareils garantis concernés par le prêt** : ceux qu'ExploCardio.fr a vendus. Un
   appareil acheté ailleurs n'ouvre pas droit au prêt gratuit ; la mise à disposition
   Express payante lui est proposée.
-- **Numéros de série à l'expédition** : l'écran d'expédition de F04 est complété par cette
-  saisie. Le « scan » désigne la lecture du code-barres de l'appareil.
-- **Emails** : les rappels sont envoyés par F10 ; tant que F10 n'est pas livré, les emails
-  de F07 partent par l'outil d'emailing d'ExploCardio.fr.
+- **Numéros de série à l'expédition** : saisis dans Odoo, où se font les expéditions. Le
+  « scan » désigne la lecture du code-barres de l'appareil.
+- **Emails** : les emails de F07, dont les rappels, passent par le connecteur emailing
+  (F10) ; ils sont simulés en phase 1.
 - **Notices et tutoriels** : fournis par F09 ; tant que F09 n'est pas livré, seuls les
   documents rattachés aux fiches produit (F03) sont proposés.
-- **Référentiel de gestion** : appareils, garanties et demandes sont lus et écrits par la
-  couche d'accès unique, reprise par Odoo lors de F11.
+- **Données de gestion** : appareils, numéros de série et garanties sont tenus par Odoo
+  (base fictive en phase 1, principe III) ; les demandes de SAV et les enregistrements
+  manuels en attente sont gérés par le site.
 - **Périmètre** : site en français, professionnels de santé de France métropolitaine, aucune
   donnée de patient.

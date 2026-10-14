@@ -23,14 +23,18 @@ l'exercice des droits RGPD.
 **Hors périmètre de F02** : le contenu détaillé des rubriques de « Mon compte » qui relèvent
 d'autres modules (commandes, factures, locations, bons d'achat, droits d'assistance,
 garanties, rendez-vous, accès logiciels Cloud), le panier et le paiement, l'envoi des
-newsletters elles-mêmes, le back-office complet (F13), la reprise des fiches clients dans
-Odoo (F11), et le rattachement de plusieurs utilisateurs à un même compte client (reporté
+newsletters elles-mêmes, le back-office complet (F13), le branchement réel d'Odoo (phase 2), et le rattachement de plusieurs utilisateurs à un même compte client (reporté
 après la première version, voir FR-038). F02 fournit la structure du tableau de bord et les
 points d'entrée de ces rubriques.
 
 **Lien avec F01** : le bouton de l'offre de bienvenue et l'accès « Mon compte / Connexion »
 de l'en-tête mènent aux écrans de F02. L'inscription à la newsletter depuis le pied de page
 (F01) reste possible sans compte, mais ne donne pas droit au cadeau à elle seule.
+
+**Phases (constitution v2.1.0)** : en phase 1, F02 fonctionne avec les connecteurs de démonstration : la fiche client et
+le cadeau de bienvenue sont écrits dans la base fictive du connecteur Odoo, et les emails
+sont simulés par le connecteur emailing. Les comptes, leur validation et les consentements
+sont gérés par le site.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -78,7 +82,7 @@ finaliser une commande.
 
 L'administrateur consulte les comptes en attente, vérifie le numéro RPPS ou SIRET, puis
 valide ou refuse chaque compte. Le professionnel est prévenu par email. À la validation, sa
-fiche client est créée dans le référentiel de gestion.
+fiche client est créée dans Odoo, via son connecteur.
 
 **Why this priority**: c'est la règle centrale du module. Tant qu'un compte n'est pas
 validé, il ne peut pas commander.
@@ -93,7 +97,7 @@ l'email de refus.
    la liste, **Then** il voit pour chacun l'identité, le numéro RPPS ou SIRET, le cabinet et
    la date d'inscription.
 2. **Given** un compte en attente, **When** l'administrateur le valide, **Then** le statut
-   passe à « validé », la fiche client est créée dans le référentiel de gestion et le
+   passe à « validé », la fiche client est créée dans Odoo, via son connecteur, et le
    professionnel reçoit un email l'informant qu'il peut commander.
 3. **Given** un compte en attente, **When** l'administrateur le refuse en indiquant un
    motif, **Then** le statut passe à « refusé » et le professionnel reçoit un email qui
@@ -309,8 +313,8 @@ conservée.
   développeur.
 - **FR-014** : Le professionnel DOIT être prévenu par email de la validation, du refus ou
   de la suspension de son compte.
-- **FR-015** : À la validation, la fiche client DOIT être créée dans le référentiel de
-  gestion, avec les notions et champs repris d'Odoo (client / partenaire, adresses).
+- **FR-015** : À la validation, la fiche client DOIT être créée dans Odoo, via son connecteur,
+  avec les notions et champs d'Odoo (client / partenaire, adresses).
 - **FR-016** : Toute validation, tout refus et toute suspension DOIVENT être journalisés
   avec leur auteur et leur date.
 
@@ -327,12 +331,13 @@ conservée.
 - **FR-021** : Le tensiomètre DOIT être ajouté automatiquement et gratuitement à la première
   commande du bénéficiaire, et apparaître dans le récapitulatif et sur les documents de la
   commande. Il n'est jamais expédié sans commande.
-- **FR-022** : Chaque cadeau remis DOIT être enregistré dans le référentiel de gestion comme
-  une ligne à 0 € de la première commande, et décompté du stock.
+- **FR-022** : Chaque cadeau remis DOIT être enregistré dans Odoo, via son connecteur, comme
+  une ligne à 0 € de la première commande, et décompté du stock d'Odoo.
 - **FR-023** : Un cadeau déjà remis DOIT rester acquis si le bénéficiaire se désabonne de
   la newsletter.
 - **FR-024** : L'administrateur DOIT pouvoir, sans développeur, activer ou désactiver
-  l'offre et modifier son article, son texte et ses conditions.
+  l'offre et modifier son texte dans le back-office du site (principe VI). L'article offert,
+  son prix nul et son stock sont définis dans Odoo (base fictive en phase 1).
 - **FR-025** : En cas de rupture de stock, la commande NE DOIT PAS être retardée : le cadeau
   DOIT être expédié dès le retour en stock, le bénéficiaire informé et l'administrateur
   alerté.
@@ -417,26 +422,30 @@ conservée.
 
 ### Measurable Outcomes
 
-- **SC-001** : Aucun compte non validé ne peut finaliser une commande, hors mise à
+Chaque critère est marqué [Phase 1] s'il se vérifie avec les connecteurs de démonstration,
+ou [Phase 3] s'il nécessite les vrais services. Sauf mention contraire, les scénarios
+d'acceptation des parcours se vérifient en phase 1.
+
+- **SC-001** [Phase 1] : Aucun compte non validé ne peut finaliser une commande, hors mise à
   disposition express de F05 (0 cas sur l'ensemble des tests).
-- **SC-002** : Un même numéro RPPS ou SIRET n'obtient jamais plus d'un tensiomètre (0 cas
+- **SC-002** [Phase 1] : Un même numéro RPPS ou SIRET n'obtient jamais plus d'un tensiomètre (0 cas
   sur l'ensemble des tests, y compris en cas de demandes simultanées).
-- **SC-003** : 100 % des abonnements à la newsletter sont enregistrés avec leur date, leur
+- **SC-003** [Phase 1] : 100 % des abonnements à la newsletter sont enregistrés avec leur date, leur
   origine et le texte de consentement présenté.
-- **SC-004** : Un professionnel complète le formulaire d'inscription en moins de 4 minutes.
-- **SC-005** : Au moins 85 % des professionnels qui commencent le formulaire le terminent.
-- **SC-006** : En validation manuelle, 95 % des comptes sont traités en moins d'un jour
+- **SC-004** [Phase 1] : Un professionnel complète le formulaire d'inscription en moins de 4 minutes.
+- **SC-005** [Phase 3] : Au moins 85 % des professionnels qui commencent le formulaire le terminent.
+- **SC-006** [Phase 3] : En validation manuelle, 95 % des comptes sont traités en moins d'un jour
   ouvré.
-- **SC-007** : L'email de validation parvient au professionnel moins de 5 minutes après la
+- **SC-007** [Phase 3] : L'email de validation parvient au professionnel moins de 5 minutes après la
   décision.
-- **SC-008** : Un professionnel réinitialise son mot de passe en moins de 2 minutes.
-- **SC-009** : 100 % des cadeaux remis correspondent à une ligne de commande à 0 € et à une
-  sortie de stock dans le référentiel de gestion.
-- **SC-010** : Toute demande d'export ou de suppression est traitée en moins de 30 jours ;
+- **SC-008** [Phase 1] : Un professionnel réinitialise son mot de passe en moins de 2 minutes.
+- **SC-009** [Phase 1] : 100 % des cadeaux remis correspondent à une ligne de commande à 0 € et à une
+  sortie de stock dans Odoo.
+- **SC-010** [Phase 1] : Toute demande d'export ou de suppression est traitée en moins de 30 jours ;
   un export en libre-service est disponible en moins de 10 minutes.
-- **SC-011** : Un audit des écrans de F02 ne relève aucune non-conformité WCAG 2.2 AA, et
+- **SC-011** [Phase 1] : Un audit des écrans de F02 ne relève aucune non-conformité WCAG 2.2 AA, et
   tout le parcours d'inscription et de connexion est réalisable au clavier seul.
-- **SC-012** : Aucun message du site ne permet de savoir si une adresse email donnée
+- **SC-012** [Phase 1] : Aucun message du site ne permet de savoir si une adresse email donnée
   possède un compte.
 
 ## Assumptions
@@ -483,7 +492,10 @@ ils ont été validés par la responsable du projet le 2026-10-12 pour la premi�
   l'abonnement.
 - **Textes légaux** : CGU, CGV et politique de confidentialité sont fournis par
   ExploCardio.fr (pages livrées par F01).
-- **Référentiel de gestion** : la fiche client et la commande à 0 € sont lues et écrites
-  par la couche d'accès unique (principe III), reprise par Odoo lors de F11.
+- **Données de gestion** : la fiche client et la commande à 0 € sont lues et écrites dans
+  Odoo par son connecteur (base fictive en phase 1, principe III). La validation des comptes
+  reste dans le back-office du site et porte sur des données réelles dès la phase 1.
+- **Emails** : tous les emails de F02 passent par le connecteur emailing ; en phase 1, ils
+  sont simulés et aucun n'est réellement envoyé.
 - **Périmètre** : site en français, professionnels de santé de France métropolitaine,
   aucune donnée de patient.

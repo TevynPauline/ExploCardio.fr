@@ -29,6 +29,12 @@ après une commande ou une mise à disposition. F02 fournit les coordonnées du 
 accueille les rendez-vous dans « Mon compte ». F07 rattache un point SAV à une demande et à
 un appareil. F03 propose la réservation depuis les fiches produit et les pages services.
 
+**Phases (constitution v2.1.0)** : en phase 1, F08 fonctionne avec le connecteur agenda de démonstration, qui simule
+les disponibilités, les réservations et les liens de visio, avec le connecteur Odoo de
+démonstration pour les prestations incluses, et avec le connecteur emailing pour les
+confirmations et rappels. Les types de rendez-vous et leurs règles se règlent dans le
+back-office dès la phase 1.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Réserver un créneau sans rien ressaisir (Priority: P1)
@@ -295,8 +301,10 @@ puis vérifier les créneaux proposés et l'affichage d'une réservation côté 
 
 **Réservation**
 
-- **FR-004** : Les créneaux proposés DOIVENT provenir d'un outil d'agenda existant et être
-  affichés dans le site, sans redirection vers un site tiers.
+- **FR-004** : Les créneaux proposés DOIVENT provenir de l'outil d'agenda, lu par son
+  connecteur, et être affichés par les pages du site elles-mêmes, sans redirection vers un
+  site tiers ni intégration de l'outil dans les pages (principe III). En phase 1, le
+  connecteur agenda de démonstration simule les disponibilités et les réservations.
 - **FR-005** : Un créneau réservé DOIT disparaître immédiatement des disponibilités. Deux
   clients NE DOIVENT JAMAIS obtenir le même créneau.
 - **FR-006** : La prise de rendez-vous DOIT être réservée aux titulaires d'un compte, validé
@@ -306,8 +314,9 @@ puis vérifier les créneaux proposés et l'affichage d'une réservation côté 
 - **FR-008** : Un client NE DOIT pouvoir réserver que les prestations comprises dans son
   offre : installation si sa commande en comprend une, formation si sa mise à disposition
   ou son achat l'inclut, paramétrage s'il dispose d'un accès au logiciel Cloud, point SAV
-  s'il a une demande de SAV ouverte. L'administrateur DOIT pouvoir définir, par produit et
-  par offre, les prestations incluses et leur nombre.
+  s'il a une demande de SAV ouverte. Les prestations incluses et leur nombre DOIVENT être
+  définis avec les produits et les offres dans Odoo (base fictive en phase 1) et lus par
+  le connecteur Odoo.
 - **FR-034** : Une prestation incluse DOIT être décomptée quand le rendez-vous est honoré,
   et redevenir disponible si le rendez-vous est annulé dans les délais.
 - **FR-035** : Un client qui souhaite une prestation non comprise dans son offre, ou une
@@ -345,8 +354,8 @@ puis vérifier les créneaux proposés et l'affichage d'une réservation côté 
 
 - **FR-017** : Toute réservation DOIT être confirmée au client à l'écran et par email, avec
   le type, la date, l'heure, la durée, le mode et la façon de modifier ou d'annuler.
-- **FR-018** : Un rendez-vous à distance DOIT comporter un lien de visioconférence, présent
-  dans l'email et dans « Mon compte ».
+- **FR-018** : Un rendez-vous à distance DOIT comporter un lien de visioconférence, fourni
+  par le connecteur agenda, présent dans l'email et dans « Mon compte ».
 - **FR-019** : Le client DOIT recevoir un rappel la veille du rendez-vous.
 - **FR-020** : Le client DOIT pouvoir ajouter le rendez-vous à son propre agenda.
 
@@ -374,8 +383,9 @@ puis vérifier les créneaux proposés et l'affichage d'une réservation côté 
   afin de rester visibles dans « Mon compte » et pour l'équipe même si l'outil d'agenda est
   indisponible.
 - **FR-028** : Seules les données nécessaires au rendez-vous (identité, cabinet, email,
-  téléphone, adresse d'intervention) DOIVENT être transmises à l'outil d'agenda, et aucune
-  donnée de patient.
+  téléphone, adresse d'intervention) DOIVENT être transmises à l'outil d'agenda par son
+  connecteur, et aucune donnée de patient. En phase 1, aucune donnée n'est transmise à un
+  outil réel.
 - **FR-029** : La prise de rendez-vous DOIT respecter le choix de cookies du visiteur (F01)
   et rester utilisable s'il a refusé les cookies non essentiels.
 - **FR-030** : Les réservations, modifications et annulations faites par l'équipe DOIVENT
@@ -386,7 +396,7 @@ puis vérifier les créneaux proposés et l'affichage d'une réservation côté 
 **Charte, accessibilité et langue**
 
 - **FR-032** : La prise de rendez-vous DOIT respecter la charte du site (couleurs, police,
-  composants) bien qu'elle s'appuie sur un outil externe, ainsi que le niveau WCAG 2.2 AA,
+  composants), ses écrans étant ceux du site et non ceux de l'outil d'agenda, ainsi que le niveau WCAG 2.2 AA,
   le vouvoiement et le ton sobre du site.
 - **FR-033** : Tous les écrans et emails DOIVENT être en français, avec des dates et heures
   au format français et à l'heure de Paris.
@@ -412,21 +422,25 @@ puis vérifier les créneaux proposés et l'affichage d'une réservation côté 
 
 ### Measurable Outcomes
 
-- **SC-001** : Après une commande de mise à disposition, 100 % des clients se voient
+Chaque critère est marqué [Phase 1] s'il se vérifie avec les connecteurs de démonstration,
+ou [Phase 3] s'il nécessite les vrais services. Sauf mention contraire, les scénarios
+d'acceptation des parcours se vérifient en phase 1.
+
+- **SC-001** [Phase 1] : Après une commande de mise à disposition, 100 % des clients se voient
   proposer un créneau de formation.
-- **SC-002** : Un créneau réservé cesse d'être proposé aux autres clients en moins de
+- **SC-002** [Phase 1] : Un créneau réservé cesse d'être proposé aux autres clients en moins de
   5 secondes, et aucun créneau n'est attribué deux fois.
-- **SC-003** : Un client connecté réserve un rendez-vous en moins de 2 minutes, sans
+- **SC-003** [Phase 1] : Un client connecté réserve un rendez-vous en moins de 2 minutes, sans
   ressaisir ses coordonnées.
-- **SC-004** : 100 % des réservations donnent lieu à un email de confirmation en moins de
+- **SC-004** [Phase 1] : 100 % des réservations donnent lieu à un email de confirmation en moins de
   2 minutes, et à un rappel la veille.
-- **SC-005** : 100 % des rendez-vous à distance comportent un lien de visioconférence.
-- **SC-006** : Au moins 80 % des rendez-vous sont pris sans aucun échange d'email ni appel
+- **SC-005** [Phase 1] : 100 % des rendez-vous à distance comportent un lien de visioconférence.
+- **SC-006** [Phase 3] : Au moins 80 % des rendez-vous sont pris sans aucun échange d'email ni appel
   avec l'équipe.
-- **SC-007** : Un client modifie ou annule un rendez-vous en moins d'une minute.
-- **SC-008** : Au moins 90 % des rendez-vous confirmés sont honorés.
-- **SC-009** : Le médecin ne quitte jamais le site pendant la réservation.
-- **SC-010** : Un audit de la prise de rendez-vous ne relève aucune non-conformité WCAG 2.2
+- **SC-007** [Phase 1] : Un client modifie ou annule un rendez-vous en moins d'une minute.
+- **SC-008** [Phase 3] : Au moins 90 % des rendez-vous confirmés sont honorés.
+- **SC-009** [Phase 1] : Le médecin ne quitte jamais le site pendant la réservation.
+- **SC-010** [Phase 1] : Un audit de la prise de rendez-vous ne relève aucune non-conformité WCAG 2.2
   AA, et la réservation est réalisable au clavier seul.
 
 ## Assumptions
@@ -434,9 +448,8 @@ puis vérifier les créneaux proposés et l'affichage d'une réservation côté 
 Les points marqués « confirmé » n'étaient pas tranchés dans la demande initiale ; ils ont été
 validés par la responsable du projet le 2026-10-13.
 
-- **Outil d'agenda et constitution** : la constitution a été amendée le 2026-10-13
-  (version 1.1.0) pour autoriser l'outil d'agenda et l'outil d'emailing comme systèmes
-  externes.
+- **Outil d'agenda et constitution** : l'outil d'agenda est un service connecté autorisé par
+  la constitution (v2.1.0) ; il est utilisé uniquement par son connecteur.
 - **Gratuité (confirmé)** : la réservation est gratuite. Le prix d'une installation ou
   d'une formation est réglé à la commande (F03, F04, F05), jamais au moment du rendez-vous.
 - **Délai de modification et d'annulation (confirmé)** : jusqu'à 24 heures avant le
@@ -452,7 +465,7 @@ validés par la responsable du projet le 2026-10-13.
   existe mais reste désactivé.
 - **Délai de confirmation sur site** : 2 jours ouvrés par défaut, réglable.
 - **Prestations incluses** : le détail de ce que chaque produit et chaque offre comprend
-  (types et nombre de séances) est une donnée à saisir avant la mise en ligne. Par défaut,
+  (types et nombre de séances) est une donnée à saisir dans Odoo avant la mise en ligne. Par défaut,
   une mise à disposition comprend une formation à distance.
 - **Source des disponibilités** : l'outil d'agenda fait foi pour les créneaux libres ; le
   site conserve les rendez-vous pris et leur rattachement.
@@ -460,7 +473,7 @@ validés par la responsable du projet le 2026-10-13.
   l'équipe ; le choix relève de la planification.
 - **Hébergement des données** : l'outil d'agenda retenu doit traiter les données dans le
   respect du RGPD ; c'est un critère de choix lors de la planification.
-- **Emails** : envoyés à la charte du site, par le site ou par l'outil d'agenda, selon le
-  choix fait lors de la planification.
+- **Emails** : envoyés à la charte du site, par le connecteur emailing (F10) ; simulés en
+  phase 1.
 - **Périmètre** : site en français, professionnels de santé de France métropolitaine, aucune
   donnée de patient.

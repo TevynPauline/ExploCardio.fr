@@ -34,6 +34,11 @@ recueil du consentement à la newsletter (F01, F02) ; le back-office complet (F1
 trace. « Mon compte » (F02) accueille le centre de préférences. Les emails affichent le
 numéro de la hotline et ses horaires (F09).
 
+**Phases (constitution v2.1.0)** : en phase 1, F10 fonctionne avec le connecteur emailing de démonstration : aucun email
+n'est réellement envoyé, chacun est conservé dans une boîte de démonstration. Les données qui
+déclenchent les scénarios viennent de la base fictive du connecteur Odoo. Les modèles, les
+scénarios et les préférences des clients sont réels dès la phase 1.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Être informé à chaque étape (Priority: P1)
@@ -300,7 +305,13 @@ d'un modèle, envoyer un email de test, puis retrouver un envoi dans le suivi.
   transactionnel, de service automatisé, ou commercial. La famille détermine qui le reçoit
   et s'il peut être désactivé.
 - **FR-002** : Tous les emails du site DOIVENT être envoyés et tracés par F10, quel que soit
-  le module qui les déclenche.
+  le module qui les déclenche, uniquement à travers le connecteur emailing (principe III).
+  Aucune page ni aucun composant NE DOIT appeler l'outil d'envoi directement.
+- **FR-042** : En phase 1, le connecteur emailing de démonstration NE DOIT envoyer aucun email
+  réel : chaque email est conservé dans une boîte de démonstration, consultable pour relire
+  son contenu et sa mise en forme.
+- **FR-043** : Les notifications destinées à l'équipe (nouvelle demande de rappel, alertes,
+  F09) DOIVENT passer par le même connecteur, qui permet l'email et le SMS (principe III).
 
 **Emails transactionnels**
 
@@ -365,9 +376,10 @@ d'un modèle, envoyer un email de test, puis retrouver un envoi dans le suivi.
 
 **Relances d'impayés**
 
-- **FR-020** : Un paiement en attente ou refusé DOIT donner lieu à une séquence de relances
-  dont le nombre et les délais sont fixés par l'administrateur, et qui s'arrête dès la
-  régularisation.
+- **FR-020** : Un paiement en attente ou refusé, d'après le statut lu dans Odoo, DOIT donner
+  lieu à une séquence de relances dont le nombre et les délais sont fixés dans Odoo
+  (relances de factures, principe VI), et qui s'arrête dès la régularisation. F10 en
+  assure la mise en forme et l'envoi.
 - **FR-021** : La dernière relance avant une conséquence DOIT annoncer cette conséquence et
   sa date.
 
@@ -415,15 +427,16 @@ d'un modèle, envoyer un email de test, puis retrouver un envoi dans le suivi.
   date, état de remise.
 - **FR-036** : L'administrateur DOIT pouvoir consulter les emails envoyés à un client et les
   résultats de chaque scénario (envoyés, remis, ouverts, suivis d'une commande).
-- **FR-037** : Les délais, seuils, nombres de relances, fréquence maximale et plages
-  horaires DOIVENT être des paramètres modifiables par l'administrateur, jamais codés en
-  dur.
+- **FR-037** : Les délais des scénarios, la fréquence maximale et les plages horaires DOIVENT
+  être des paramètres du back-office, jamais codés en dur. Les données qui déclenchent les
+  scénarios (commandes, bons d'achat, droits, garanties, paiements) sont lues dans Odoo par
+  son connecteur.
 - **FR-038** : F10 DOIT livrer les écrans d'administration nécessaires : scénarios, modèles,
   suivi des envois. Le back-office complet (F13) les étendra.
 - **FR-039** : Seules les données nécessaires à l'envoi DOIVENT être transmises à l'outil
   d'emailing, conformément à la constitution.
-- **FR-040** : L'outil d'envoi DOIT rester indépendant d'Odoo : le branchement d'Odoo (F11)
-  NE DOIT PAS modifier les emails reçus par les clients.
+- **FR-040** : L'outil d'envoi DOIT rester indépendant d'Odoo : le passage du connecteur Odoo
+  en mode réel NE DOIT PAS modifier les emails reçus par les clients.
 
 ### Key Entities
 
@@ -444,29 +457,33 @@ d'un modèle, envoyer un email de test, puis retrouver un envoi dans le suivi.
 
 ### Measurable Outcomes
 
-- **SC-001** : Un client qui commande un consommable tous les deux mois reçoit une relance
+Chaque critère est marqué [Phase 1] s'il se vérifie avec les connecteurs de démonstration,
+ou [Phase 3] s'il nécessite les vrais services. Sauf mention contraire, les scénarios
+d'acceptation des parcours se vérifient en phase 1.
+
+- **SC-001** [Phase 1] : Un client qui commande un consommable tous les deux mois reçoit une relance
   entre 5 et 9 jours avant l'échéance prévue.
-- **SC-002** : Un client non abonné à la newsletter ne reçoit aucun email promotionnel
+- **SC-002** [Phase 1] : Un client non abonné à la newsletter ne reçoit aucun email promotionnel
   (0 cas sur l'ensemble des tests).
-- **SC-003** : 100 % des événements transactionnels donnent lieu à un email, envoyé en moins
+- **SC-003** [Phase 1] : 100 % des événements transactionnels donnent lieu à un email, envoyé en moins
   de 5 minutes, et à un seul.
-- **SC-004** : Une désinscription prend effet en moins d'une minute, y compris pour les
+- **SC-004** [Phase 1] : Une désinscription prend effet en moins d'une minute, y compris pour les
   emails déjà programmés.
-- **SC-005** : Aucune relance de réapprovisionnement n'est envoyée à un client qui a déjà
+- **SC-005** [Phase 1] : Aucune relance de réapprovisionnement n'est envoyée à un client qui a déjà
   recommandé (0 cas).
-- **SC-006** : 100 % des emails respectent la charte et restent lisibles sur mobile et sans
+- **SC-006** [Phase 1] : 100 % des emails respectent la charte et restent lisibles sur mobile et sans
   images.
-- **SC-007** : Au moins 15 % des relances de réapprovisionnement sont suivies d'une commande
+- **SC-007** [Phase 3] : Au moins 15 % des relances de réapprovisionnement sont suivies d'une commande
   du consommable dans les 14 jours.
-- **SC-008** : Moins de 0,5 % des emails commerciaux envoyés donnent lieu à une
+- **SC-008** [Phase 3] : Moins de 0,5 % des emails commerciaux envoyés donnent lieu à une
   désinscription.
-- **SC-009** : Un administrateur modifie le texte d'un modèle ou le délai d'un scénario en
+- **SC-009** [Phase 1] : Un administrateur modifie le texte d'un modèle ou le délai d'un scénario en
   moins de 5 minutes, sans développeur.
-- **SC-010** : Un client modifie ses préférences en moins d'une minute, avec ou sans
+- **SC-010** [Phase 1] : Un client modifie ses préférences en moins d'une minute, avec ou sans
   connexion.
-- **SC-011** : Aucun email ne contient de donnée de patient, de donnée de carte ni de mot de
+- **SC-011** [Phase 1] : Aucun email ne contient de donnée de patient, de donnée de carte ni de mot de
   passe.
-- **SC-012** : Après une indisponibilité de l'outil d'envoi, 100 % des emails en attente
+- **SC-012** [Phase 1] : Après une indisponibilité de l'outil d'envoi, 100 % des emails en attente
   sont envoyés, sans doublon.
 
 ## Assumptions
@@ -501,8 +518,11 @@ validés par la responsable du projet le 2026-10-13.
   mise en ligne.
 - **Modification des modèles** : dans le back-office ou dans l'outil d'emailing, selon le
   choix fait lors de la planification ; dans les deux cas sans développeur.
-- **Outil d'envoi** : choisi lors de la planification ; la constitution (v1.1.0) autorise un
-  outil d'emailing sous conditions.
+- **Outil d'envoi** : choisi lors de la planification ; la constitution (v2.1.0) en fait un
+  service connecté, utilisé uniquement par son connecteur, pour les emails et les SMS.
+- **Paramètres du back-office** : les délais des scénarios, la fréquence maximale et les
+  plages d'envoi n'ont ni valeur en euros ni effet comptable ; ils relèvent du back-office
+  au titre du fonctionnement du site (principe VI).
 - **Liste des emails transactionnels** : celle de la demande n'est pas limitative ; tout
   email de confirmation, de sécurité ou de suivi défini par un autre module en fait partie.
 - **Délais de prévenance** des alertes de bons, de droits et de garantie : fixés par F06 et

@@ -40,3 +40,6 @@
 - F04 a été mis à jour : la relance de panier abandonné est désormais prévue, par F10.
 - Reste à valider hors spec, par le conseil juridique : la qualification des emails de
   service et la mesure des ouvertures.
+- Révisée le 2026-10-14 pour la constitution v2.1.0 : données de gestion lues et écrites dans
+  Odoo par son connecteur (base fictive en phase 1), paramètres en euros dans Odoo,
+  critères de succès marqués [Phase 1] ou [Phase 3].

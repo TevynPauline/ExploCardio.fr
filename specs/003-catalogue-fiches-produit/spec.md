@@ -21,7 +21,8 @@ voit aussitôt le prix et le contenu correspondants.
 **Hors périmètre de F03** : le panier, la commande, le paiement et le parcours de demande de
 financement (F04), le parcours de mise à disposition (F05), le calcul des points
 et droits d'assistance (F06), les tutoriels et la bibliothèque de documents (F09), le
-back-office complet (F13), le passage des produits, prix et stocks sous Odoo (F11). F03
+back-office complet (F13), la gestion des produits, configurations, prix et stocks, qui se
+fait dans Odoo (base fictive en phase 1). F03
 affiche les informations de ces modules et y renvoie, sans les réaliser.
 
 **Lien avec F01 et F02** : les pages catégorie et services de F03 remplacent les pages de
@@ -29,6 +30,11 @@ présentation simples livrées par F01 (FR-038 de F01), aux mêmes adresses. La 
 méga-menus et la recherche de F01 mènent aux pages de F03. Les règles de compte de F02
 s'appliquent : tout visiteur consulte le catalogue et ses prix, seul un compte validé peut
 finaliser une commande.
+
+**Phases (constitution v2.1.0)** : en phase 1, F03 fonctionne avec le connecteur Odoo de démonstration : produits,
+configurations, prix, stocks et barèmes viennent de sa base fictive, qui reprend les
+références réelles de la brochure. Les contenus du catalogue (textes, photos, documents,
+publication) sont réels dès la phase 1 et gérés dans le back-office.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -178,20 +184,20 @@ clavier, télécharger un document et ajouter un consommable compatible au panie
 ### User Story 5 - Voir une disponibilité fiable (Priority: P2)
 
 Le médecin voit, sur les cartes et les fiches, si un produit est disponible, sous quel
-délai, ou indisponible. Cette information reflète le référentiel de gestion.
+délai, ou indisponible. Cette information reflète Odoo, lu par son connecteur.
 
 **Why this priority**: un médecin pressé ne doit pas découvrir une rupture après avoir
 commandé. La fiabilité de cette information conditionne la confiance.
 
-**Independent Test**: passer un produit en rupture dans le back-office et vérifier, sans
-délai, l'affichage sur sa carte, sa fiche et dans les listes où il apparaît.
+**Independent Test**: passer un produit en rupture dans la base fictive du connecteur Odoo
+(phase 1) ou dans Odoo (phase 3) et vérifier, dans le délai prévu, l'affichage sur sa carte, sa fiche et dans les listes où il apparaît.
 
 **Acceptance Scenarios**:
 
 1. **Given** un produit en stock, **When** sa fiche s'affiche, **Then** elle indique
    qu'il est disponible.
-2. **Given** un produit passé en rupture dans le back-office, **When** une page qui le
-   présente est affichée ou rechargée, **Then** il apparaît aussitôt « indisponible » ou
+2. **Given** un produit passé en rupture dans Odoo (base fictive en phase 1), **When** une
+   page qui le présente est affichée ou rechargée, **Then** il apparaît, dans le délai prévu, « indisponible » ou
    « délai X jours ».
 3. **Given** un produit dont le parc de location est épuisé mais le stock de vente
    disponible, **When** la fiche s'affiche, **Then** la disponibilité est indiquée
@@ -199,37 +205,40 @@ délai, l'affichage sur sa carte, sa fiche et dans les listes où il apparaît.
 4. **Given** un produit en « délai X jours », **When** le visiteur l'ajoute au panier,
    **Then** l'ajout est accepté et le délai est rappelé. **Given** un produit
    « indisponible », **Then** l'ajout au panier n'est pas proposé.
-5. **Given** le référentiel de gestion momentanément injoignable, **When** une fiche
+5. **Given** Odoo momentanément injoignable, **When** une fiche
    s'affiche, **Then** elle reste consultable, n'affirme pas une disponibilité non vérifiée
    et invite à réessayer ou à contacter l'équipe.
 
 ---
 
-### User Story 6 - Tenir le catalogue à jour (Priority: P2)
+### User Story 6 - Tenir les contenus du catalogue à jour (Priority: P2)
 
-L'administrateur crée et modifie les produits : références, configurations, prix, stocks,
-textes, photos et documents. Il peut importer des produits par fichier.
+L'équipe crée les produits, leurs configurations, leurs prix et leurs stocks dans Odoo (base
+fictive en phase 1). Dans le back-office du site, l'administrateur rédige ce qui les
+présente : textes, photos, documents, compatibilités, produits associés, puis publie.
 
-**Why this priority**: sans données, le catalogue est vide. F03 livre les écrans essentiels
-et l'import par fichier ; F13 les complétera.
+**Why this priority**: sans contenus, un produit d'Odoo n'est pas présentable. Le partage
+des rôles évite qu'une même donnée se saisisse à deux endroits (principe III).
 
-**Independent Test**: créer un équipement avec deux configurations et deux formules, puis
-un consommable avec un dégressif, et vérifier leur affichage sur le site public.
+**Independent Test**: pour un produit présent dans la base fictive, rédiger ses contenus
+dans le back-office, le publier et vérifier son affichage ; vérifier qu'aucun écran du
+back-office ne permet de modifier un prix ou un stock.
 
 **Acceptance Scenarios**:
 
-1. **Given** un administrateur, **When** il crée un produit avec ses configurations, ses
-   prix et ses formules proposées, **Then** le produit apparaît dans sa catégorie avec ces
-   informations.
-2. **Given** un produit, **When** l'administrateur modifie un prix ou un stock, **Then**
-   le site affiche la nouvelle valeur aussitôt.
+1. **Given** un produit présent dans Odoo, **When** l'administrateur rédige ses contenus
+   dans le back-office et le publie, **Then** il apparaît dans sa catégorie avec ses prix,
+   configurations et formules lus dans Odoo.
+2. **Given** un prix ou un stock modifié dans Odoo, **When** la page est affichée, **Then**
+   le site présente la nouvelle valeur dans le délai prévu.
 3. **Given** un produit en préparation, **When** il n'est pas publié, **Then** il est
    invisible du public et absent de la recherche.
-4. **Given** un fichier d'import, **When** l'administrateur l'importe, **Then** un rapport
-   indique les lignes créées, mises à jour et rejetées, avec le motif de chaque rejet, et
-   aucune ligne invalide n'est enregistrée.
-5. **Given** un produit incomplet (sans prix ou sans photo), **When** l'administrateur
-   tente de le publier, **Then** la publication est refusée avec la liste de ce qui manque.
+4. **Given** le back-office du site, **When** l'administrateur cherche à modifier un prix,
+   un stock, une référence ou une configuration, **Then** aucun écran ne le permet ; la
+   donnée est affichée avec l'indication qu'elle se gère dans Odoo.
+5. **Given** un produit incomplet (contenus manquants, ou absent d'Odoo), **When**
+   l'administrateur tente de le publier, **Then** la publication est refusée avec la liste
+   de ce qui manque.
 
 ---
 
@@ -311,6 +320,9 @@ leur parcours détaillé relève d'autres modules.
 - **FR-001** : Le catalogue DOIT être organisé en cinq catégories : Holter ECG, Holter
   tensionnel / MAPA, Épreuve / écho d'effort (avec l'environnement de l'épreuve d'effort),
   ECG de repos, Accessoires & consommables.
+- **FR-050** : Les marques présentées DOIVENT être celles de la brochure : Holter ECG : DMS ;
+  Holter tensionnel / MAPA : DMS, SunTech, Microlife WatchBP 03, IEM Mobil-O-Graph ; épreuve
+  et écho d'effort : DMS, Norav, Ergoline, RAM, Koch Évolution, SunTech Tango M2.
 - **FR-002** : Le site DOIT proposer quatre pages services : Hébergement des données de
   santé, Assistance et SAV, Financement, Installation et formation.
 - **FR-003** : Tout produit publié DOIT être atteignable en 3 clics maximum depuis
@@ -350,13 +362,13 @@ leur parcours détaillé relève d'autres modules.
   partir de » pour chaque durée proposée, la mention de son caractère indicatif et non
   contractuel, et un bouton « Demander mon financement ».
 - **FR-016** : La mensualité indicative DOIT être calculée automatiquement à partir du prix
-  du produit et d'un barème par durée réglé par l'administrateur.
-- **FR-046** : L'administrateur DOIT pouvoir forcer la mensualité affichée pour un produit,
-  soit pour tous les visiteurs, soit pour un client en particulier. Le montant forcé pour un
+  du produit et d'un barème par durée réglé dans Odoo (base fictive en phase 1, principe VI).
+- **FR-046** : Une mensualité forcée pour un produit, soit pour tous les visiteurs, soit pour
+  un client en particulier, DOIT pouvoir être définie dans Odoo. Le montant forcé pour un
   client n'est visible que de ce client, une fois connecté ; il prime sur le montant forcé
   général, qui prime sur le calcul automatique.
-- **FR-047** : Tout montant forcé DOIT être journalisé avec son auteur et sa date, et
-  l'administrateur DOIT pouvoir le retirer pour revenir au calcul automatique.
+- **FR-047** : Sans montant forcé, le site DOIT afficher le calcul automatique. La traçabilité
+  des montants forcés relève d'Odoo.
 - **FR-017** : Aucune formule standard NE DOIT afficher « prix sur demande ».
 - **FR-018** : La fiche DOIT proposer, sous le sélecteur, les onglets d'information :
   Caractéristiques techniques, Contenu du coffret, Consommables compatibles, Logiciel
@@ -386,21 +398,22 @@ leur parcours détaillé relève d'autres modules.
   complément, de façon moins appuyée.
 - **FR-028** : Les prix DOIVENT être visibles de tout visiteur, sans compte.
 - **FR-029** : Les prix, dégressifs, tarifs de mise à disposition et barèmes de financement
-  DOIVENT être des paramètres modifiables par l'administrateur, jamais codés en dur.
+  DOIVENT être réglés dans Odoo (base fictive en phase 1), jamais codés en dur (principe VI).
 
 **Disponibilité**
 
-- **FR-030** : La disponibilité affichée DOIT provenir du référentiel de gestion, et prendre
+- **FR-030** : La disponibilité affichée DOIT provenir d'Odoo, lu par son connecteur, et prendre
   l'un des états : disponible, délai X jours, indisponible.
-- **FR-031** : Un changement de stock ou de disponibilité dans le back-office DOIT être
-  visible sur le site sans délai, sur les cartes, les fiches et les listes.
+- **FR-031** : Un changement de stock ou de disponibilité dans Odoo DOIT être visible sur le
+  site, sur les cartes, les fiches et les listes : en moins d'une minute avec la base
+  fictive, en moins de 5 minutes avec Odoo réel.
 - **FR-032** : La disponibilité DOIT être indiquée séparément pour l'achat et pour la mise
   à disposition quand elles diffèrent.
 - **FR-033** : Un produit en « délai X jours » DOIT rester commandable, avec le délai
   affiché sur la fiche et rappelé au panier. Un produit « indisponible » NE DOIT PAS pouvoir
   être ajouté au panier ; la fiche reste consultable et propose de contacter l'équipe.
-- **FR-048** : L'administrateur DOIT pouvoir choisir, pour chaque produit hors stock, l'état
-  « délai X jours » (avec le nombre de jours) ou « indisponible ».
+- **FR-048** : L'état d'un produit hors stock, « délai X jours » (avec le nombre de jours) ou
+  « indisponible », DOIT être défini dans Odoo et lu par le site.
 
 **Pages services**
 
@@ -411,23 +424,24 @@ leur parcours détaillé relève d'autres modules.
 
 **Données et administration**
 
-- **FR-036** : F03 DOIT livrer les écrans d'administration essentiels du catalogue, utilisables
-  sans développeur : produits, configurations, prix, stocks, références, formules proposées,
-  textes, photos, documents, compatibilités, produits associés, publication. Le back-office
-  complet (F13) reprendra et étendra ces écrans.
-- **FR-049** : F03 DOIT livrer l'import des produits par fichier CSV, avec un rapport des
-  lignes créées, mises à jour et rejetées, et le motif de chaque rejet. Aucune ligne
-  invalide NE DOIT être enregistrée.
+- **FR-036** : Le back-office du site DOIT permettre de gérer, sans développeur, les seuls
+  contenus du catalogue : textes, photos, documents, compatibilités, produits associés,
+  ordre d'affichage, sous-catégories de filtre et publication. Les produits, configurations,
+  prix, stocks, références et formules proposées se gèrent dans Odoo (principe III).
+- **FR-049** : La base fictive du connecteur Odoo DOIT reprendre les références produits
+  réelles de la brochure, avec des prix, stocks et configurations de démonstration
+  (principe III).
 - **FR-037** : Un produit DOIT pouvoir être en préparation ou publié. Seul un produit
-  publié et complet (nom, catégorie, prix, photo ou emplacement provisoire) est visible.
-- **FR-038** : Toutes les données de produits, prix et stocks DOIVENT être lues par la
-  couche d'accès unique au référentiel de gestion (principe III), avec les notions d'Odoo :
-  article, variante, référence.
-- **FR-039** : Les contenus marketing (textes, photos, documents, produits associés)
-  DOIVENT être distincts des données de gestion (prix, stocks, références), afin de rester
-  dans le back-office quand les données de gestion passeront sous Odoo.
-- **FR-040** : Toute modification de prix ou de publication DOIT être journalisée avec son
-  auteur et sa date.
+  présent dans Odoo et complet (nom, catégorie, prix, photo ou emplacement provisoire) est
+  visible.
+- **FR-038** : Toutes les données de produits, prix et stocks DOIVENT être lues par le
+  connecteur Odoo (principe III), avec les notions d'Odoo : article, variante, référence.
+  Aucune page NE DOIT appeler Odoo directement.
+- **FR-039** : Les contenus marketing (textes, photos, documents, produits associés) DOIVENT
+  être conservés par le site, distincts des données de gestion, et rattachés à l'article
+  d'Odoo par sa référence.
+- **FR-040** : Toute modification de contenu ou de publication DOIT être journalisée avec son
+  auteur et sa date. La traçabilité des prix relève d'Odoo.
 
 **Charte, accessibilité et langue**
 
@@ -471,28 +485,33 @@ leur parcours détaillé relève d'autres modules.
 
 ### Measurable Outcomes
 
-- **SC-001** : 100 % des prix affichés dans le catalogue sont HT, avec le TTC en complément.
-- **SC-002** : Sur une fiche, le changement de formule met à jour le prix et le contenu
+Chaque critère est marqué [Phase 1] s'il se vérifie avec les connecteurs de démonstration,
+ou [Phase 3] s'il nécessite les vrais services. Sauf mention contraire, les scénarios
+d'acceptation des parcours se vérifient en phase 1.
+
+- **SC-001** [Phase 1] : 100 % des prix affichés dans le catalogue sont HT, avec le TTC en complément.
+- **SC-002** [Phase 1] : Sur une fiche, le changement de formule met à jour le prix et le contenu
   sans rechargement de la page, en moins d'une seconde.
-- **SC-003** : Un produit passé en rupture dans le back-office apparaît « indisponible » ou
-  « délai X jours » sur le site en moins d'une minute, sur toutes les pages qui le
-  présentent.
-- **SC-004** : 100 % des produits publiés sont atteignables en 3 clics maximum depuis
+- **SC-003** [Phase 3] : Un produit passé en rupture dans Odoo apparaît « indisponible » ou « délai X
+  jours » sur le site en moins de 5 minutes, sur toutes les pages qui le présentent.
+- **SC-013** [Phase 1] : Un produit passé en rupture dans la base fictive apparaît « indisponible » ou
+  « délai X jours » sur le site en moins d'une minute.
+- **SC-004** [Phase 1] : 100 % des produits publiés sont atteignables en 3 clics maximum depuis
   l'accueil.
-- **SC-005** : Aucun produit standard publié n'affiche « prix sur demande ».
-- **SC-006** : Un médecin trouve un consommable compatible avec son équipement et l'ajoute
+- **SC-005** [Phase 1] : Aucun produit standard publié n'affiche « prix sur demande ».
+- **SC-006** [Phase 1] : Un médecin trouve un consommable compatible avec son équipement et l'ajoute
   au panier en moins de 60 secondes.
-- **SC-007** : Lors d'un test avec des médecins, au moins 9 sur 10 identifient sans aide
+- **SC-007** [Phase 1] : Lors d'un test avec des médecins, au moins 9 sur 10 identifient sans aide
   les trois façons de s'équiper (acheter, louer, financer) sur une fiche.
-- **SC-008** : Un administrateur crée et publie un produit complet en moins de 10 minutes,
-  sans développeur.
-- **SC-009** : Un import de 200 lignes produit un rapport complet (créées, mises à jour,
-  rejetées avec motif) en moins de 2 minutes, sans enregistrer de ligne invalide.
-- **SC-010** : Un audit des pages de F03 ne relève aucune non-conformité WCAG 2.2 AA ni
+- **SC-008** [Phase 1] : Un administrateur rédige et publie les contenus d'un produit présent dans
+  Odoo en moins de 10 minutes, sans développeur.
+- **SC-009** [Phase 1] : La base fictive reprend 100 % des références produits de la brochure, et
+  aucune page du catalogue n'appelle Odoo autrement que par son connecteur.
+- **SC-010** [Phase 1] : Un audit des pages de F03 ne relève aucune non-conformité WCAG 2.2 AA ni
   aucune valeur de style hors des tokens de la charte.
-- **SC-011** : Les pages catégorie et les fiches s'affichent correctement de 320 px à
+- **SC-011** [Phase 1] : Les pages catégorie et les fiches s'affichent correctement de 320 px à
   1920 px de large, sans défilement horizontal.
-- **SC-012** : Aucun lien du catalogue ne mène à une erreur, y compris vers les modules non
+- **SC-012** [Phase 1] : Aucun lien du catalogue ne mène à une erreur, y compris vers les modules non
   encore livrés.
 
 ## Assumptions
@@ -502,8 +521,8 @@ validés par la responsable du projet le 2026-10-12.
 
 - **Montant TTC (confirmé)** : calculé à partir du taux de TVA de chaque article, 20 %
   par défaut. Le taux est une donnée de l'article, modifiable par l'administrateur.
-- **Formules par produit (confirmé)** : l'administrateur active, produit par produit,
-  l'achat, la mise à disposition et le financement. Les consommables ne proposent que
+- **Formules par produit (confirmé)** : l'achat, la mise à disposition et le financement
+  sont activés produit par produit dans Odoo (base fictive en phase 1). Les consommables ne proposent que
   l'achat.
 - **Configurations standard (confirmé)** : chaque configuration est une variante avec sa
   référence et son prix propres. Un pack est indisponible si l'un de ses composants l'est.
@@ -523,7 +542,7 @@ validés par la responsable du projet le 2026-10-12.
   « indicatif, sous réserve d'acceptation par notre partenaire financier ». Sa formulation
   exacte est à valider par le conseil juridique d'ExploCardio.fr.
 - **Seuil de financement (confirmé)** : le financement n'est proposé que pour les
-  produits que l'administrateur désigne, sans seuil de prix automatique.
+  produits désignés dans Odoo, sans seuil de prix automatique.
 - **Tutoriels vidéo (confirmé)** : l'onglet « Documents » liste les tutoriels rattachés
   au produit quand F09 est livré ; d'ici là, il ne présente que les notices et fiches
   techniques.
@@ -534,11 +553,16 @@ validés par la responsable du projet le 2026-10-12.
   présélectionné.
 - **Taille du catalogue** : quelques dizaines d'équipements et quelques centaines de
   consommables et accessoires au plus.
-- **Marques** : celles de la brochure. L'accord d'usage des logos, photos et documents des
+- **Marques** : celles de la brochure, réparties par catégorie (FR-050). L'accord d'usage des logos, photos et documents des
   fabricants est à la charge d'ExploCardio.fr.
 - **Photos** : fournies par ExploCardio.fr ; l'emplacement provisoire de la charte les
   remplace en attendant.
+- **Écran de démonstration (F11)** : en mode démonstration uniquement, un écran simple du
+  back-office, réservé à l'administrateur, permet de modifier les prix, stocks et
+  paramètres commerciaux de la base fictive et de la réinitialiser. Il disparaît en mode
+  réel. C'est une exigence de F11 (connecteurs et base de démonstration).
 - **Référencement** : chaque catégorie, fiche et page service a une adresse stable et
-  lisible, et peut être trouvée par les moteurs de recherche.
+  lisible, et peut être trouvée par les moteurs de recherche après la mise en ligne. En
+  phase 1, le site n'est pas indexé (F01, FR-048).
 - **Périmètre** : site en français, professionnels de santé de France métropolitaine, aucune
   donnée de patient.

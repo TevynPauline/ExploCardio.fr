@@ -39,3 +39,6 @@
 - Les hypothèses ont été confirmées le 2026-10-13.
 - La spec ne nomme aucun outil d'agenda : le choix est renvoyé à la planification. La
   constitution (v1.1.0) autorise désormais l'outil d'agenda et l'outil d'emailing.
+- Révisée le 2026-10-14 pour la constitution v2.1.0 : données de gestion lues et écrites dans
+  Odoo par son connecteur (base fictive en phase 1), paramètres en euros dans Odoo,
+  critères de succès marqués [Phase 1] ou [Phase 3].

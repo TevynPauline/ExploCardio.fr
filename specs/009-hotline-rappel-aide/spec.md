@@ -34,6 +34,11 @@ Express (F05) ou un rendez-vous (F08). Les fiches produit (F03) et les fiches d'
 (F07) affichent le numéro et les contenus d'aide. Le pied de page (F01) affiche le numéro,
 les horaires et l'accès au formulaire.
 
+**Phases (constitution v2.1.0)** : en phase 1, F09 fonctionne avec le connecteur emailing de démonstration (notifications
+de l'équipe et emails aux médecins simulés) et le connecteur Odoo de démonstration (contexte
+du client). Les demandes de rappel, les contenus d'aide et les réglages de la hotline sont
+réels dès la phase 1. La téléphonie n'est pas connectée au site.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Appeler la hotline (Priority: P1)
@@ -377,7 +382,8 @@ les valeurs affichées sur une période donnée.
 **Traitement par l'équipe**
 
 - **FR-019** : Toute demande envoyée pendant les horaires DOIT prévenir tous les membres de
-  l'équipe par email en moins d'une minute. Aucun SMS n'est envoyé.
+  l'équipe par email, via le connecteur emailing, en moins d'une minute (principe III). Ce
+  connecteur permet aussi l'envoi de SMS, non activé en première version.
 - **FR-020** : Les demandes DOIVENT apparaître dans une file triée selon trois critères
   successifs : l'urgence décroissante ; à urgence égale, les clients ayant des droits
   d'assistance actifs (F06) avant les autres ; puis l'heure d'arrivée. Une demande
@@ -395,9 +401,9 @@ les valeurs affichées sur une période donnée.
 - **FR-024** : Une demande DOIT porter l'un des statuts : nouvelle, prise en charge,
   rappelé, résolue, à relancer. Une note interne libre DOIT pouvoir être ajoutée à chaque
   étape.
-- **FR-025** : Une demande non prise en charge 20 minutes après son arrivée pendant les
-  horaires DOIT déclencher une alerte par email à toute l'équipe et être mise en évidence
-  dans la file.
+- **FR-025** : Une demande non prise en charge après un délai d'alerte (20 minutes par
+  défaut, réglable dans le back-office, principe VI) pendant les horaires DOIT déclencher
+  une alerte par email à toute l'équipe et être mise en évidence dans la file.
 - **FR-026** : La fiche d'une demande DOIT afficher le contexte du client : appareils,
   commandes récentes, locations en cours et statut de ses droits d'assistance (F06).
 - **FR-027** : Depuis une demande, un membre DOIT pouvoir créer une demande de SAV (F07),
@@ -419,7 +425,8 @@ les valeurs affichées sur une période donnée.
   avec ou sans droits d'assistance.
 - **FR-032** : La demande d'un client sans droits d'assistance actifs DOIT être enregistrée
   et traitée comme les autres. La fiche DOIT signaler l'absence de droits, et le membre
-  DOIT pouvoir proposer l'assistance à l'acte définie par F06.
+  DOIT pouvoir proposer l'assistance à l'acte définie par F06, dont le prix est fixé dans
+  Odoo.
 
 **Centre d'aide**
 
@@ -447,9 +454,11 @@ les valeurs affichées sur une période donnée.
 
 - **FR-041** : Les demandes de rappel DOIVENT être enregistrées par le site, avec leur
   historique d'attribution et de statut.
-- **FR-042** : F09 DOIT livrer les écrans nécessaires à l'équipe : file de traitement, fiche
-  de demande, réglage du numéro et des horaires, gestion des contenus d'aide, indicateurs.
-  Le back-office complet (F13) les étendra.
+- **FR-042** : F09 DOIT livrer dans le back-office les écrans nécessaires à l'équipe : file
+  de traitement, fiche de demande, réglage du numéro, des horaires et du délai d'alerte,
+  gestion des contenus d'aide, indicateurs. Le contexte du client (appareils, commandes,
+  locations, droits) y est lu dans Odoo par son connecteur, en lecture seule. Le
+  back-office complet (F13) étendra ces écrans.
 - **FR-043** : Toute prise en charge, réattribution, évolution de statut et suppression de
   pièce jointe DOIT être journalisée avec son auteur et sa date.
 - **FR-044** : Les pièces jointes NE DOIVENT être accessibles qu'à l'équipe et au client
@@ -485,30 +494,34 @@ les valeurs affichées sur une période donnée.
 
 ### Measurable Outcomes
 
-- **SC-001** : Un formulaire envoyé sans motif ou sans degré d'urgence est refusé avec un
+Chaque critère est marqué [Phase 1] s'il se vérifie avec les connecteurs de démonstration,
+ou [Phase 3] s'il nécessite les vrais services. Sauf mention contraire, les scénarios
+d'acceptation des parcours se vérifient en phase 1.
+
+- **SC-001** [Phase 1] : Un formulaire envoyé sans motif ou sans degré d'urgence est refusé avec un
   message clair dans 100 % des cas.
-- **SC-002** : Une demande envoyée pendant les horaires prévient toute l'équipe en moins
+- **SC-002** [Phase 3] : Une demande envoyée pendant les horaires prévient toute l'équipe en moins
   d'une minute.
-- **SC-003** : Une demande « critique » apparaît en tête de file, devant toute demande plus
+- **SC-003** [Phase 1] : Une demande « critique » apparaît en tête de file, devant toute demande plus
   ancienne de niveau inférieur, dans 100 % des cas testés ; à urgence égale, un client aux
   droits d'assistance actifs précède toujours un client sans droits.
-- **SC-004** : Une demande prise en charge par un membre ne peut jamais être prise par un
+- **SC-004** [Phase 1] : Une demande prise en charge par un membre ne peut jamais être prise par un
   autre sans réattribution (0 cas, y compris en cas de clics simultanés).
-- **SC-005** : Une demande envoyée en dehors des horaires indique au client le jour et
+- **SC-005** [Phase 1] : Une demande envoyée en dehors des horaires indique au client le jour et
   l'heure exacts de réouverture dans 100 % des cas, y compris la veille d'un jour férié ou
   d'une fermeture exceptionnelle.
-- **SC-006** : Toute demande non prise en charge après 20 minutes pendant les horaires
+- **SC-006** [Phase 1] : Toute demande non prise en charge après 20 minutes pendant les horaires
   déclenche une alerte.
-- **SC-007** : Au moins 90 % des demandes reçues pendant les horaires sont rappelées en
+- **SC-007** [Phase 3] : Au moins 90 % des demandes reçues pendant les horaires sont rappelées en
   moins de 30 minutes.
-- **SC-008** : Un médecin envoie une demande de rappel en moins de 2 minutes.
-- **SC-009** : Depuis n'importe quelle page du site, le numéro de la hotline est trouvé en
+- **SC-008** [Phase 1] : Un médecin envoie une demande de rappel en moins de 2 minutes.
+- **SC-009** [Phase 1] : Depuis n'importe quelle page du site, le numéro de la hotline est trouvé en
   moins de 10 secondes.
-- **SC-010** : Un changement d'horaires ou de numéro fait par l'administrateur est visible
+- **SC-010** [Phase 1] : Un changement d'horaires ou de numéro fait par l'administrateur est visible
   partout sur le site en moins de 5 minutes.
-- **SC-011** : Les indicateurs affichés correspondent aux demandes réelles de la période, à
+- **SC-011** [Phase 1] : Les indicateurs affichés correspondent aux demandes réelles de la période, à
   l'unité et à la minute près.
-- **SC-012** : Un audit des écrans de F09 ne relève aucune non-conformité WCAG 2.2 AA, et
+- **SC-012** [Phase 1] : Un audit des écrans de F09 ne relève aucune non-conformité WCAG 2.2 AA, et
   100 % des vidéos ont des sous-titres.
 
 ## Assumptions
@@ -519,7 +532,7 @@ initiale ; ils ont été validés par la responsable du projet le 2026-10-13.
 - **Assistance payante (confirmé)** : la question posée dans la demande a été tranchée
   dans F06 : en première version, une seule formule, à l'acte, à prix réglable, payée en
   ligne par carte. Le membre de l'équipe l'indique au téléphone ; le client l'achète depuis
-  « Mon compte ». Son prix reste une donnée à saisir avant la mise en ligne.
+  « Mon compte ». Son prix reste une donnée à saisir dans Odoo avant la mise en ligne.
 - **Motifs concernés par l'assistance payante (confirmé)** : seule l'aide à
   l'utilisation relève des droits d'assistance. Les pannes, le SAV, les commandes, la
   facturation et les renseignements sont traités pour tous (aligné sur F07). L'appréciation
@@ -544,10 +557,11 @@ initiale ; ils ont été validés par la responsable du projet le 2026-10-13.
   portent sur les demandes de rappel.
 - **Horaires par défaut (confirmé)** : du lundi au vendredi, de 9 h à 18 h, hors jours
   fériés, à confirmer et à saisir avant la mise en ligne.
-- **Constitution** : aucun amendement n'est nécessaire. Le site n'est relié à aucune
-  solution de téléphonie et n'envoie aucun SMS ; les notifications passent par l'outil
-  d'emailing, déjà autorisé (constitution v1.1.0).
-- **Notifications à l'équipe** : par email uniquement. Le délai d'une minute suppose que
+- **Constitution** : conforme à la v2.1.0. La téléphonie n'est pas un service connecté : le
+  numéro de la hotline est un paramètre du back-office, et l'outil de téléphonie se règle
+  à part. Les notifications d'équipe passent par le connecteur emailing.
+- **Notifications à l'équipe** : par email en V1 ; les SMS, prévus par le connecteur
+  emailing, pourront être activés plus tard. Le délai d'une minute suppose que
   chaque membre consulte sa messagerie ou garde la file ouverte ; la file fait foi.
 - **Pièces jointes** : JPEG, PNG ou PDF, 10 Mo au plus, une par demande.
 - **Membres de l'équipe** : ils disposent chacun d'un accès au back-office ; leur gestion
@@ -555,8 +569,8 @@ initiale ; ils ont été validés par la responsable du projet le 2026-10-13.
 - **Demande de rappel et demande de SAV** : ce sont deux objets distincts. Une demande de
   rappel peut donner lieu à une demande de SAV (F07), qui suit alors son propre circuit.
 - **Vote sur la FAQ** : non prévu dans cette version.
-- **Emails** : les emails de F09 sont envoyés à la charte du site, par l'outil d'emailing
-  d'ExploCardio.fr (F10).
+- **Emails** : les emails de F09 sont envoyés à la charte du site, par le connecteur
+  emailing (F10) ; ils sont simulés en phase 1.
 - **Assistant IA et discussion écrite** : non retenus pour le moment ; ils pourront faire
   l'objet d'un module ultérieur.
 - **Périmètre** : site en français, professionnels de santé de France métropolitaine, aucune

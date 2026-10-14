@@ -39,3 +39,6 @@
   imposées par la constitution (principe VII), pas des choix d'implémentation.
 - Toutes les hypothèses initialement marquées [À CLARIFIER] ont été confirmées ou corrigées
   le 2026-10-12 (bandeau promotionnel : uniquement en période de promotion, non masquable).
+- Révisée le 2026-10-14 pour la constitution v2.1.0 : données de gestion lues et écrites dans
+  Odoo par son connecteur (base fictive en phase 1), paramètres en euros dans Odoo,
+  critères de succès marqués [Phase 1] ou [Phase 3].

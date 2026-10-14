@@ -21,18 +21,25 @@ créditent une cagnotte. Deux mécanismes se cumulent :
 
 F06 livre aussi les **promotions** : remises automatiques, ventes flash et codes promo.
 
-Toutes les règles (taux, seuils, durées, validité, promotions) sont des paramètres du
-back-office, conformément au principe VI de la constitution.
+Toutes les règles (taux, seuils, durées, validité, promotions, prix de l'assistance) ont une
+valeur en euros ou un effet comptable : elles se règlent dans Odoo (base fictive en phase 1),
+conformément au principe VI de la constitution. Odoo calcule les bons d'achat et les droits
+d'assistance ; en phase 1, le connecteur Odoo de démonstration applique les mêmes règles
+(principe III). Le site affiche, propose et transmet les commandes ; il ne calcule pas.
 
 **Hors périmètre de F06** : le panier et l'application des remises au paiement (F04), les
 demandes d'assistance et de SAV elles-mêmes et leur traitement, les garanties, l'affichage du
-bandeau (F01) et des fiches produit (F03), le back-office complet (F13), la reprise par le
-programme de fidélité d'Odoo (F11).
+bandeau (F01) et des fiches produit (F03), le back-office complet (F13), le paramétrage et le calcul
+du programme, qui se font dans Odoo.
 
 **Lien avec les autres modules** : F04 applique dans le panier le solde de bons d'achat, les
 remises et les codes promo définis par F06, et signale à F06 les commandes payées, annulées
 et remboursées. F03 affiche sur les fiches consommables ce que l'achat rapporte. F01 affiche
 les promotions dans le bandeau. F02 présente les soldes et statuts dans « Mon compte ».
+
+**Phases (constitution v2.1.0)** : en phase 1, F06 fonctionne avec le connecteur Odoo de démonstration, qui tient les
+cagnottes, les droits et les promotions dans sa base fictive et applique les mêmes règles
+qu'Odoo. En mode réel, Odoo calcule ; le site n'a aucun écran de réglage du programme.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -205,69 +212,69 @@ lire son statut de droits.
 2. **Given** un client sans droits actifs, **When** sa fiche s'affiche, **Then** l'équipe
    voit la date de fin de ses derniers droits et s'il dispose d'une intervention à l'acte
    déjà payée.
-3. **Given** un geste commercial, **When** un administrateur ouvre ou prolonge des droits
-   à la main, **Then** l'action est enregistrée avec son motif et son auteur.
+3. **Given** un geste commercial, **When** l'équipe ouvre ou prolonge des droits à la main
+   dans Odoo, **Then** l'action est enregistrée avec son motif et son auteur, et le site
+   affiche les nouveaux droits.
 
 ---
 
 ### User Story 7 - Régler les règles du programme (Priority: P2)
 
-L'administrateur modifie les paliers et taux de la cagnotte, le seuil et la durée des droits
+L'équipe modifie dans Odoo les paliers et taux de la cagnotte, le seuil et la durée des droits
 d'assistance, la règle de prolongation et la durée de validité des bons. Les changements ne
-touchent que les commandes à venir.
+touchent que les commandes à venir. Le site reflète les nouvelles règles sans développeur.
 
 **Why this priority**: le programme évoluera. Un changement de règle ne doit ni exiger un
 développeur ni modifier ce qui est déjà acquis ; c'est un critère d'acceptation.
 
-**Independent Test**: créditer une commande, modifier un taux, créditer une seconde commande
-identique, et vérifier que le premier crédit est inchangé et que le second suit le nouveau
-taux.
+**Independent Test**: créditer une commande, modifier un taux dans la base fictive (phase 1)
+ou dans Odoo (phase 3), créditer une seconde commande identique, et vérifier que le premier
+crédit est inchangé et que le second suit le nouveau taux.
 
 **Acceptance Scenarios**:
 
-1. **Given** un administrateur, **When** il modifie un palier ou un taux, **Then** le
-   changement s'applique aux commandes suivantes et les bons déjà crédités restent
-   inchangés.
-2. **Given** un administrateur, **When** il modifie le seuil, la durée ou la règle de
-   prolongation des droits, **Then** les droits déjà ouverts conservent leur date de fin.
-3. **Given** des paliers incohérents (chevauchement, trou, taux négatif), **When**
-   l'administrateur les enregistre, **Then** l'enregistrement est refusé avec
-   l'explication.
-4. **Given** un geste commercial, **When** l'administrateur crédite ou débite une
-   cagnotte à la main, **Then** un motif est exigé et le mouvement apparaît dans
-   l'historique du client.
-5. **Given** toute modification de règle, **When** elle est enregistrée, **Then** elle
-   est journalisée avec son auteur, sa date et les valeurs avant et après.
+1. **Given** un palier ou un taux modifié dans Odoo, **When** une nouvelle commande est
+   payée, **Then** le nouveau taux s'applique et les bons déjà crédités restent inchangés.
+2. **Given** le seuil, la durée ou la règle de prolongation des droits modifiés dans Odoo,
+   **When** une nouvelle commande est payée, **Then** les droits déjà ouverts conservent
+   leur date de fin.
+3. **Given** un geste commercial, **When** l'équipe crédite ou débite une cagnotte à la
+   main dans Odoo, **Then** le mouvement apparaît dans l'historique du client sur le site,
+   avec son motif.
+4. **Given** le back-office du site, **When** un administrateur cherche à modifier une
+   règle du programme, **Then** aucun écran ne le permet.
 
 ---
 
 ### User Story 8 - Lancer une promotion (Priority: P2)
 
-L'administrateur crée une remise automatique, une vente flash ou un code promo. La promotion
-s'affiche dans le bandeau et sur les fiches concernées, puis s'arrête d'elle-même à sa date
-de fin.
+L'équipe crée dans Odoo une remise automatique, une vente flash ou un code promo. Le site
+l'annonce dans le bandeau et sur les fiches concernées, puis cesse de l'afficher à sa date de
+fin.
 
 **Why this priority**: les promotions animent le site, mais le programme de fidélité
 fonctionne sans elles.
 
-**Independent Test**: créer une vente flash de 10 % sur une catégorie avec une date de fin
-proche, vérifier son affichage et son application au panier, puis vérifier son arrêt à
-l'échéance.
+**Independent Test**: créer dans la base fictive une vente flash de 10 % sur une catégorie
+avec une date de fin proche, vérifier son affichage et son application au panier, puis son
+arrêt à l'échéance.
 
 **Acceptance Scenarios**:
 
-1. **Given** un administrateur, **When** il crée une remise automatique sur un produit,
-   une catégorie ou un montant de panier, **Then** elle s'applique sans action du client.
+1. **Given** une remise automatique créée dans Odoo sur un produit, une catégorie ou un
+   montant de panier, **When** un client remplit son panier, **Then** elle s'applique sans
+   action de sa part.
 2. **Given** une vente flash avec une date de début et de fin, **When** la période est en
    cours, **Then** elle est annoncée dans le bandeau et sur les fiches concernées, avec le
    prix d'origine, le prix remisé et la date de fin.
 3. **Given** une promotion arrivée à sa date de fin, **When** cette date est passée,
    **Then** elle cesse de s'appliquer et de s'afficher, sans intervention.
-4. **Given** un code promo, **When** l'administrateur le crée, **Then** il fixe sa remise,
-   sa période, ses conditions et ses limites d'usage.
+4. **Given** un code promo défini dans Odoo avec sa remise, sa période, ses conditions et
+   ses limites d'usage, **When** un client le saisit, **Then** il est accepté ou refusé
+   selon ces règles.
 5. **Given** plusieurs promotions applicables au même article, **When** le prix est
-   calculé, **Then** la règle de cumul fixée par l'administrateur s'applique, et le client
-   voit le détail.
+   calculé, **Then** la règle de cumul fixée dans Odoo s'applique, et le client voit le
+   détail.
 
 ---
 
@@ -331,10 +338,9 @@ et vérifier qu'il est consommé.
 
 - **FR-001** : Une commande éligible dont le montant atteint le seuil fixé DOIT ouvrir
   l'accès gratuit à l'assistance, à la hotline et au SAV réactif pour la durée fixée.
-- **FR-002** : Le seuil et la durée DOIVENT être des paramètres modifiables par
-  l'administrateur.
+- **FR-002** : Le seuil et la durée DOIVENT être réglés dans Odoo (base fictive en phase 1).
 - **FR-003** : Une nouvelle commande éligible DOIT prolonger la période selon la règle
-  choisie par l'administrateur : cumul (la durée s'ajoute) ou remise à zéro (la durée
+  choisie dans Odoo : cumul (la durée s'ajoute) ou remise à zéro (la durée
   repart de la nouvelle commande). Aucune règle NE DOIT raccourcir une période acquise.
 - **FR-004** : Les droits DOIVENT être rattachés au compte client et porter un statut actif
   ou inactif et une date de fin.
@@ -344,19 +350,18 @@ et vérifier qu'il est consommé.
 **Cagnotte de bons d'achat**
 
 - **FR-006** : Chaque commande éligible DOIT créditer en bons d'achat un pourcentage de son
-  montant HT éligible, selon des paliers fixés par l'administrateur. Valeurs par défaut :
+  montant HT éligible, selon des paliers fixés dans Odoo. Valeurs par défaut :
   0 % en dessous de 500 € HT, 5 % de 500 € à 1 000 € HT, 10 % au-dessus de 1 000 € HT.
 - **FR-007** : Le taux du palier atteint DOIT s'appliquer à la totalité du montant éligible
   (une commande de 1 200 € HT crédite 120 €).
 - **FR-008** : Le montant éligible DOIT exclure les frais de port, les remises, la part
   payée en bons d'achat et les lignes à 0 €.
 - **FR-009** : Seuls les consommables et les accessoires DOIVENT donner droit au crédit. Les
-  équipements, les services et les mises à disposition n'en donnent pas. L'administrateur
-  DOIT pouvoir marquer chaque produit comme éligible ou non.
+  équipements, les services et les mises à disposition n'en donnent pas. L'éligibilité de
+  chaque produit DOIT être définie dans Odoo.
 - **FR-010** : Le crédit DOIT être déclenché quand la commande est payée (paiement par carte
   confirmé, ou virement reçu).
-- **FR-011** : Les bons d'achat DOIVENT avoir une durée de validité fixée par
-  l'administrateur. Les bons expirés NE DOIVENT plus être utilisables, et le client DOIT
+- **FR-011** : Les bons d'achat DOIVENT avoir une durée de validité fixée dans Odoo. Les bons expirés NE DOIVENT plus être utilisables, et le client DOIT
   être prévenu avant leur expiration.
 - **FR-012** : Le client DOIT pouvoir utiliser sa cagnotte dans le panier, en tout ou en
   partie, les bons expirant le plus tôt étant consommés en premier.
@@ -364,7 +369,7 @@ et vérifier qu'il est consommé.
 **Assistance payante**
 
 - **FR-013** : Un client sans droits actifs DOIT se voir proposer une assistance payante à
-  l'acte : une intervention, à un prix HT fixé par l'administrateur, payée en ligne par
+  l'acte : une intervention, à un prix HT fixé dans Odoo, payée en ligne par
   carte (F04).
 - **FR-038** : L'achat d'une assistance à l'acte DOIT ouvrir un droit à une intervention,
   visible du client et de l'équipe d'assistance, consommé quand l'équipe clôt
@@ -386,11 +391,15 @@ et vérifier qu'il est consommé.
 
 **Génération et source de vérité**
 
-- **FR-019** : Les bons d'achat et les droits d'assistance DOIVENT être générés
-  automatiquement, sans intervention, à chaque commande éligible.
-- **FR-020** : Bons d'achat, droits et mouvements DOIVENT être enregistrés dans le
-  référentiel de gestion, par la couche d'accès unique (principe III), de façon à être
-  repris par le programme de fidélité d'Odoo lors de F11.
+- **FR-019** : Les bons d'achat et les droits d'assistance DOIVENT être calculés et générés
+  automatiquement par Odoo, sans intervention, à chaque commande éligible. En phase 1, le
+  connecteur Odoo de démonstration les calcule avec les mêmes règles, à partir des
+  paramètres de sa base fictive (principe III).
+- **FR-020** : Bons d'achat, droits et mouvements DOIVENT être enregistrés dans Odoo, source
+  de vérité. Le site les lit par le connecteur et NE DOIT PAS les calculer lui-même.
+- **FR-039** : Sur un jeu de commandes de référence, le connecteur de démonstration et Odoo
+  DOIVENT produire les mêmes bons et les mêmes droits ; c'est un test de contrat du
+  connecteur Odoo (principe X).
 - **FR-021** : Chaque mouvement de cagnotte DOIT conserver la commande d'origine, le
   montant, la date, et les règles appliquées au moment du calcul.
 - **FR-022** : Le solde affiché DOIT toujours égaler la somme des mouvements de
@@ -404,33 +413,35 @@ et vérifier qu'il est consommé.
 - **FR-024** : Le panier et les fiches consommables DOIVENT indiquer ce qu'un achat
   rapportera en bons d'achat et en droits d'assistance.
 - **FR-025** : L'équipe d'assistance DOIT pouvoir rechercher un client et consulter le
-  statut de ses droits, leur date de fin et leur origine.
+  statut de ses droits, leur date de fin et leur origine, dans Odoo ou en lecture seule
+  depuis le back-office du site.
 
 **Paramétrage et administration**
 
 - **FR-026** : Toute modification d'un taux, d'un palier, d'un seuil, d'une durée ou d'une
   règle DOIT s'appliquer aux commandes suivantes, sans modifier les bons déjà crédités ni
   les droits déjà ouverts.
-- **FR-027** : L'administrateur DOIT pouvoir créditer ou débiter une cagnotte, et ouvrir ou
-  prolonger des droits, à la main, avec un motif obligatoire.
+- **FR-027** : L'équipe DOIT pouvoir, dans Odoo, créditer ou débiter une cagnotte, et ouvrir
+  ou prolonger des droits, à la main, avec un motif obligatoire.
 - **FR-028** : Toute modification de règle et toute intervention manuelle DOIVENT être
-  journalisées avec leur auteur, leur date et les valeurs avant et après.
-- **FR-029** : F06 DOIT livrer les écrans d'administration nécessaires : règles du
-  programme, cagnottes et droits des clients, interventions manuelles, promotions. Le
-  back-office complet (F13) les étendra.
+  journalisées avec leur auteur, leur date et les valeurs avant et après ; cette
+  traçabilité relève d'Odoo.
+- **FR-029** : Le back-office du site NE DOIT comporter aucun écran de réglage du programme,
+  de crédit manuel ni de promotion : ces opérations se font dans Odoo (principes III et
+  VI). Il peut afficher les cagnottes et les droits en lecture seule.
 
 **Promotions**
 
-- **FR-030** : L'administrateur DOIT pouvoir créer des remises automatiques par produit, par
+- **FR-030** : L'équipe DOIT pouvoir créer dans Odoo des remises automatiques par produit, par
   catégorie ou par montant de panier.
-- **FR-031** : L'administrateur DOIT pouvoir créer des ventes flash avec une date de début
+- **FR-031** : L'équipe DOIT pouvoir créer dans Odoo des ventes flash avec une date de début
   et une date de fin, qui démarrent et s'arrêtent sans intervention.
-- **FR-032** : L'administrateur DOIT pouvoir créer des codes promo avec leur remise, leur
+- **FR-032** : L'équipe DOIT pouvoir créer dans Odoo des codes promo avec leur remise, leur
   période, leurs conditions et leurs limites d'usage.
 - **FR-033** : Une promotion en cours DOIT être annoncée dans le bandeau (F01) et sur les
   fiches concernées (F03), avec le prix d'origine, le prix remisé en HT et la date de fin.
 - **FR-034** : Les règles de cumul entre promotions, dégressifs, codes promo et bons d'achat
-  DOIVENT être fixées par l'administrateur et expliquées au client dans le panier.
+  DOIVENT être fixées dans Odoo et expliquées au client dans le panier.
 
 **Charte, accessibilité et langue**
 
@@ -442,7 +453,7 @@ et vérifier qu'il est consommé.
 
 ### Key Entities
 
-- **Règles du programme** : paliers et taux de la cagnotte, durée de validité des bons,
+- **Règles du programme** (dans Odoo) : paliers et taux de la cagnotte, durée de validité des bons,
   seuil et durée des droits, règle de prolongation, délais de prévenance. Chaque version
   des règles est conservée avec sa période d'application.
 - **Cagnotte** : rattachée à un compte client. Solde, prochaine expiration.
@@ -454,38 +465,44 @@ et vérifier qu'il est consommé.
   avec son origine, pour pouvoir la retirer.
 - **Assistance à l'acte** : prix, contenu d'une intervention.
 - **Intervention payée** : client, date d'achat, facture, état (disponible, consommée).
-- **Promotion** : type (remise automatique, vente flash, code promo), cible (produit,
+- **Promotion** (dans Odoo) : type (remise automatique, vente flash, code promo), cible (produit,
   catégorie, montant de panier), remise, dates de début et de fin, conditions, limites
   d'usage, règle de cumul.
-- **Journal du programme** : modifications de règles et interventions manuelles.
+- **Journal du programme** (dans Odoo) : modifications de règles et interventions manuelles.
 
 ## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
 
-- **SC-001** : Avec les paramètres par défaut, une commande éligible de 1 200 € HT crédite
+Chaque critère est marqué [Phase 1] s'il se vérifie avec les connecteurs de démonstration,
+ou [Phase 3] s'il nécessite les vrais services. Sauf mention contraire, les scénarios
+d'acceptation des parcours se vérifient en phase 1.
+
+- **SC-001** [Phase 1] : Avec les paramètres par défaut, une commande éligible de 1 200 € HT crédite
   exactement 120 € de bons d'achat.
-- **SC-002** : Après modification d'un taux dans le back-office, 100 % des commandes
+- **SC-002** [Phase 1] : Après modification d'un taux dans Odoo ou dans la base fictive, 100 % des commandes
   suivantes suivent le nouveau taux, et aucun bon déjà crédité n'est modifié.
-- **SC-003** : Une commande remboursée voit retirés 100 % des bons et des droits qu'elle
+- **SC-003** [Phase 1] : Une commande remboursée voit retirés 100 % des bons et des droits qu'elle
   avait générés.
-- **SC-004** : Pour chaque client, le solde affiché égale la somme des mouvements de son
+- **SC-004** [Phase 1] : Pour chaque client, le solde affiché égale la somme des mouvements de son
   historique, au centime près.
-- **SC-005** : Aucun crédit ni retrait n'est compté deux fois (0 cas sur l'ensemble des
+- **SC-005** [Phase 1] : Aucun crédit ni retrait n'est compté deux fois (0 cas sur l'ensemble des
   tests, y compris événements répétés ou simultanés).
-- **SC-006** : Bons et droits sont générés sans intervention pour 100 % des commandes
+- **SC-006** [Phase 1] : Bons et droits sont générés sans intervention pour 100 % des commandes
   éligibles, en moins de 5 minutes après l'événement déclencheur.
-- **SC-007** : Un membre de l'équipe d'assistance trouve le statut des droits d'un client
+- **SC-007** [Phase 1] : Un membre de l'équipe d'assistance trouve le statut des droits d'un client
   en moins de 15 secondes.
-- **SC-008** : Un client trouve son solde de bons d'achat et la date de fin de ses droits
+- **SC-008** [Phase 1] : Un client trouve son solde de bons d'achat et la date de fin de ses droits
   en moins de 30 secondes depuis « Mon compte ».
-- **SC-009** : Un administrateur modifie une règle ou crée une promotion en moins de
-  5 minutes, sans développeur.
-- **SC-010** : Une vente flash commence et s'arrête à la minute près de ses dates, sans
+- **SC-009** [Phase 3] : L'équipe modifie une règle ou crée une promotion dans Odoo en moins de
+  5 minutes, sans développeur, et le site en tient compte.
+- **SC-013** [Phase 3] : Sur un jeu de commandes de référence, le connecteur de démonstration et Odoo
+  produisent les mêmes bons et les mêmes droits, au centime et au jour près.
+- **SC-010** [Phase 1] : Une vente flash commence et s'arrête à la minute près de ses dates, sans
   intervention.
-- **SC-011** : Lors d'un test avec des médecins, au moins 8 sur 10 expliquent correctement,
+- **SC-011** [Phase 1] : Lors d'un test avec des médecins, au moins 8 sur 10 expliquent correctement,
   après lecture de « Mon compte », comment obtenir l'assistance gratuite.
-- **SC-012** : Un audit des écrans de F06 ne relève aucune non-conformité WCAG 2.2 AA.
+- **SC-012** [Phase 1] : Un audit des écrans de F06 ne relève aucune non-conformité WCAG 2.2 AA.
 
 ## Assumptions
 
@@ -518,17 +535,24 @@ validés par la responsable du projet le 2026-10-12.
   dégressifs se cumulent avec les bons d'achat.
 - **Assistance au mois** : non retenue pour la V1 ; seule la formule à l'acte est proposée.
   Une formule mensuelle pourra être étudiée plus tard.
-- **Prix de l'assistance à l'acte** : non fixé par la spec ; donnée à saisir au back-office
-  avant la mise en ligne.
+- **Prix de l'assistance à l'acte** : non fixé par la spec ; donnée à saisir dans Odoo avant
+  la mise en ligne.
 - **Vocabulaire** : la cagnotte est exprimée en euros de bons d'achat, pas en points. Les
   « points » évoqués dans le parcours de la charte désignent cette cagnotte.
 - **Demandes d'assistance** : la façon dont le client sollicite l'assistance (téléphone,
   formulaire, rendez-vous) et le traitement des demandes relèvent d'un autre module.
-- **Codes promo** : F06 les définit ; F04 les applique au panier. Les écrans de codes promo
-  prévus par F04 sont ceux de F06.
+- **Codes promo** : définis dans Odoo ; F04 les applique au panier.
 - **Traitement comptable et fiscal** : celui des bons d'achat et des remises est à valider
   par l'expert-comptable d'ExploCardio.fr.
-- **Référentiel de gestion** : cagnottes, droits et promotions sont lus et écrits par la
-  couche d'accès unique, reprise par Odoo lors de F11.
+- **Données de gestion** : cagnottes, droits, interventions payées et promotions sont tenus
+  par Odoo et lus par son connecteur (base fictive en phase 1, principe III).
+- **Faisabilité dans Odoo** : les règles de F06 (paliers appliqués à tout le montant, droits
+  d'assistance par période avec cumul plafonné, retrait au remboursement) doivent être
+  reproduites dans Odoo, par son module Fidélité ou par un développement spécifique. Ce
+  point est à vérifier avec l'intégrateur Odoo avant la phase 2.
+- **Écran de démonstration (F11)** : en mode démonstration uniquement, un écran simple du
+  back-office, réservé à l'administrateur, permet de modifier les prix, stocks et
+  paramètres commerciaux de la base fictive et de la réinitialiser. Il disparaît en mode
+  réel. C'est une exigence de F11 (connecteurs et base de démonstration).
 - **Périmètre** : site en français, professionnels de santé de France métropolitaine, aucune
   donnée de patient.

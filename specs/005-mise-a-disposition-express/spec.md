@@ -27,11 +27,18 @@ gestion du parc de location.
 l'abonnement (F04) ; la fiche produit et son onglet « Mise à disposition » (F03) ; la
 création du compte (F02) ; l'ouverture et la fermeture techniques des accès au logiciel
 Cloud (F12) ; la prise de rendez-vous de formation (F08) ; le financement longue durée
-(F04) ; le back-office complet (F13).
+(F04) ; le back-office complet (F13) ; la gestion du parc, des tarifs, des échéances et de
+leur facturation, qui se fait dans Odoo (base fictive en phase 1).
 
 **Frontière avec F04** : F05 définit l'offre, la date de livraison, le kit d'accessoires et
 tout le cycle de vie de la location (renouvellement, résiliation, retour, retard, impayé).
 F04 encaisse le premier mois, met en place le prélèvement mensuel et émet les factures.
+
+**Phases (constitution v2.1.0)** : en phase 1, F05 fonctionne avec les connecteurs de démonstration : le parc, les
+locations, les tarifs et les échéances viennent de la base fictive du connecteur Odoo ; les
+paiements sont simulés par le connecteur Stripe, les accès au logiciel Cloud par le
+connecteur PCA, et les emails par le connecteur emailing. L'heure limite et les jours non
+livrés sont réglés dans le back-office dès la phase 1.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -262,34 +269,35 @@ simple, mais il intervient après la mise en service.
 
 ---
 
-### User Story 8 - Gérer le parc de location (Priority: P2)
+### User Story 8 - Suivre le parc de location (Priority: P2)
 
-L'administrateur tient le parc à jour : chaque appareil a un numéro de série et un statut. Il
-prépare les expéditions, enregistre les retours et règle les tarifs et les délais.
+L'équipe tient le parc dans Odoo : chaque appareil a un numéro de série et un statut. Elle y
+affecte les appareils, enregistre les retours et règle les tarifs. Le site lit la
+disponibilité et l'affiche ; le back-office règle l'heure limite et les jours non livrés.
 
 **Why this priority**: la promesse de livraison au lendemain ne tient que si la
 disponibilité du parc est exacte.
 
-**Independent Test**: ajouter un appareil au parc, l'affecter à une location, enregistrer
-son retour, le passer en maintenance puis le remettre disponible, et vérifier à chaque
-étape la disponibilité affichée sur le site.
+**Independent Test**: dans la base fictive du connecteur Odoo, ajouter un appareil,
+l'affecter à une location, enregistrer son retour, le passer en maintenance puis le remettre
+disponible, et vérifier à chaque étape la disponibilité affichée sur le site.
 
 **Acceptance Scenarios**:
 
-1. **Given** un administrateur, **When** il ajoute un appareil au parc avec son numéro de
-   série, **Then** l'appareil est « disponible » et compte dans la disponibilité affichée.
-2. **Given** une commande de mise à disposition, **When** l'administrateur prépare
-   l'expédition, **Then** il affecte un appareil disponible, qui passe à « loué ».
-3. **Given** un appareil rendu, **When** il enregistre sa réception et son état, **Then**
-   l'appareil passe à « en retour », puis à « disponible » ou « en maintenance ».
+1. **Given** un appareil ajouté au parc dans Odoo, **When** le site lit le parc, **Then**
+   l'appareil compte dans la disponibilité affichée.
+2. **Given** une commande de mise à disposition, **When** l'équipe affecte un appareil dans
+   Odoo, **Then** il passe à « loué » et son numéro de série apparaît dans « Mon compte ».
+3. **Given** un appareil rendu, **When** l'équipe enregistre sa réception et son état dans
+   Odoo, **Then** la location est close et l'appareil passe à « en retour », puis à
+   « disponible » ou « en maintenance ».
 4. **Given** un appareil « en maintenance » ou « loué », **When** la disponibilité est
    calculée, **Then** il n'est pas proposé à la location.
-5. **Given** les règles commerciales, **When** l'administrateur modifie un tarif, l'heure
-   limite, les jours non livrés, les délais de rappel ou de tolérance, **Then** le
-   changement s'applique aux nouvelles commandes sans développeur.
-6. **Given** tout changement de statut d'un appareil, **When** il est effectué, **Then**
-   il est journalisé avec son auteur et sa date, et l'historique de l'appareil est
-   consultable.
+5. **Given** un administrateur, **When** il modifie l'heure limite ou les jours non livrés
+   dans le back-office, **Then** le changement s'applique aux nouvelles commandes sans
+   développeur.
+6. **Given** le back-office du site, **When** un administrateur ouvre le parc, **Then** il
+   ne peut que le consulter.
 
 ---
 
@@ -331,8 +339,9 @@ son retour, le passer en maintenance puis le remettre disponible, et vérifier �
 - **FR-002** : La location DOIT durer un mois, se renouveler automatiquement mois par mois,
   et être résiliable à tout moment avant l'échéance suivante.
 - **FR-003** : Le prix du premier mois DOIT inclure les frais d'envoi et de retour. Le prix
-  des mois consécutifs suivants DOIT être inférieur. Les deux montants DOIVENT être fixés
-  par l'administrateur pour chaque produit et affichés HT, avec le TTC en complément.
+  des mois consécutifs suivants DOIT être inférieur. Les deux montants, comme le prix du
+  kit d'accessoires, DOIVENT être fixés dans Odoo pour chaque produit (base fictive en
+  phase 1, principe VI) et affichés HT, avec le TTC en complément.
 - **FR-004** : Après un retour de l'appareil, toute nouvelle location DOIT repartir au tarif
   du premier mois.
 - **FR-005** : Le site DOIT proposer une page « Dépannage express » présentant les
@@ -345,7 +354,8 @@ son retour, le passer en maintenance puis le remettre disponible, et vérifier �
   produit ou depuis la page « Dépannage express ».
 - **FR-007** : Le médecin DOIT choisir sa date de livraison parmi les jours ouvrés
   possibles. La livraison au lendemain DOIT être proposée si la commande est passée un jour
-  ouvré avant l'heure limite et si un appareil est disponible.
+  ouvré avant l'heure limite et si un appareil est disponible. L'heure limite et les jours
+  non livrés DOIVENT être réglés dans le back-office du site (principe VI).
 - **FR-008** : Un médecin sans compte DOIT pouvoir créer son compte dans le parcours, sans
   perdre ses choix.
 - **FR-009** : Un compte non encore validé DOIT pouvoir commander et payer une mise à
@@ -373,8 +383,8 @@ son retour, le passer en maintenance puis le remettre disponible, et vérifier �
   cas, ne pas le proposer ni le facturer.
 - **FR-015** : Le kit NE DOIT JAMAIS être facturé deux fois d'office au même client pour un
   même type d'appareil. Le client DOIT pouvoir en racheter un volontairement.
-- **FR-016** : L'administrateur DOIT pouvoir enregistrer qu'un client possède un kit acquis
-  autrement.
+- **FR-016** : La possession d'un kit acquis autrement DOIT pouvoir être enregistrée dans
+  Odoo pour un client ; le site en tient compte.
 
 **Suivi et gestion par le client**
 
@@ -395,22 +405,22 @@ son retour, le passer en maintenance puis le remettre disponible, et vérifier �
   date de fin de la location (F12).
 - **FR-023** : À la résiliation, le client DOIT recevoir les instructions de retour, la date
   limite de retour et une étiquette préaffranchie.
-- **FR-024** : La location DOIT être close quand l'administrateur enregistre la réception de
-  l'appareil.
+- **FR-024** : La location DOIT être close quand l'équipe enregistre dans Odoo la réception de
+  l'appareil ; le site lit ce changement.
 
 **Échéances, impayés et retards**
 
 - **FR-025** : Chaque échéance DOIT être prélevée au tarif des mois consécutifs et donner
   lieu à une facture (F04). Le client DOIT être prévenu avant chaque échéance.
 - **FR-026** : En cas de prélèvement échoué, le client DOIT être prévenu et de nouvelles
-  tentatives effectuées selon une règle fixée par l'administrateur.
-- **FR-027** : Un impayé non régularisé au terme d'un délai fixé par l'administrateur DOIT
+  tentatives effectuées selon une règle fixée dans Odoo.
+- **FR-027** : Un impayé non régularisé au terme d'un délai fixé dans Odoo DOIT
   entraîner la suspension de l'accès au logiciel Cloud, la demande de retour de l'appareil
   et une alerte à l'administrateur.
 - **FR-028** : Un appareil non rendu à la date limite DOIT déclencher des rappels
   automatiques.
 - **FR-029** : Au-delà d'un délai de tolérance, le mois suivant DOIT être facturé selon une
-  règle fixée par l'administrateur, le client en étant prévenu à l'avance.
+  règle fixée dans Odoo, le client en étant prévenu à l'avance.
 - **FR-030** : L'autorisation de prélèvement DOIT rester valable jusqu'à l'enregistrement du
   retour de l'appareil, afin de permettre la facturation d'un retard.
 
@@ -427,14 +437,14 @@ son retour, le passer en maintenance puis le remettre disponible, et vérifier �
 **Non-restitution et dégradation**
 
 - **FR-034** : Aucun dépôt de garantie NE DOIT être demandé. Chaque produit proposé en mise
-  à disposition DOIT porter une valeur de remplacement fixée par l'administrateur, annoncée
+  à disposition DOIT porter une valeur de remplacement fixée dans Odoo, annoncée
   au client avant le paiement.
 - **FR-046** : La valeur de remplacement DOIT être facturée en cas de perte déclarée, ou
-  quand l'appareil n'est pas rendu au terme d'un délai de non-retour fixé par
-  l'administrateur, après rappels et préavis au client.
-- **FR-047** : Une dégradation constatée au retour DOIT être enregistrée par
-  l'administrateur avec son montant, chiffré par l'équipe, puis facturée au client, qui en
-  est informé avec le détail.
+  quand l'appareil n'est pas rendu au terme d'un délai de non-retour fixé dans Odoo, après
+  rappels et préavis au client.
+- **FR-047** : Une dégradation constatée au retour DOIT être enregistrée dans Odoo par
+  l'équipe avec son montant, puis facturée au client par Odoo ; le client en est informé
+  avec le détail.
 
 **Parc de location**
 
@@ -445,17 +455,21 @@ son retour, le passer en maintenance puis le remettre disponible, et vérifier �
 - **FR-036** : La disponibilité affichée sur le site DOIT refléter le parc en temps réel :
   seuls les appareils « disponibles » sont proposés.
 - **FR-037** : Un même appareil NE DOIT JAMAIS être affecté à deux locations en même temps.
-- **FR-038** : Le parc DOIT être géré dans le référentiel de gestion, par la couche d'accès
-  unique (principe III), avec la notion de numéro de série reprise d'Odoo.
-- **FR-039** : F05 DOIT livrer les écrans d'administration nécessaires : parc et historique
-  de chaque appareil, affectation et expédition, réception des retours, locations en cours,
-  impayés et retards, tarifs et règles. Le back-office complet (F13) les étendra.
+- **FR-038** : Le parc, ses numéros de série et ses statuts DOIVENT être gérés dans Odoo et
+  lus par son connecteur (base fictive en phase 1, principe III).
+- **FR-039** : L'affectation des appareils, les expéditions, la réception des retours, les
+  impayés, les tarifs et les règles de facturation DOIVENT se gérer dans Odoo. Le
+  back-office du site peut afficher les locations en cours, les impayés et les retards en
+  lecture seule, et règle l'heure limite et les jours non livrés.
 
 **Règles commerciales et traçabilité**
 
-- **FR-040** : Les tarifs, l'heure limite, les jours non livrés, les délais de prévenance,
-  de rappel, de tolérance et de régularisation DOIVENT être des paramètres modifiables par
-  l'administrateur, jamais codés en dur.
+- **FR-040** : Aucune règle de mise à disposition NE DOIT être codée en dur. Les tarifs, la
+  valeur de remplacement, les délais de tolérance, de régularisation et de non-retour, et la
+  date limite de retour se règlent dans Odoo. L'heure limite, les jours non livrés et les
+  délais d'envoi des rappels par email se règlent dans le back-office (principe VI).
+- **FR-048** : L'ouverture et la fermeture des accès au logiciel Cloud DOIVENT passer par le
+  connecteur PCA ; en phase 1, il les simule.
 - **FR-041** : Toute commande, résiliation, prolongation, affectation, réception de retour
   et suspension DOIT être journalisée avec son auteur et sa date.
 
@@ -490,27 +504,31 @@ son retour, le passer en maintenance puis le remettre disponible, et vérifier �
 
 ### Measurable Outcomes
 
-- **SC-001** : Un médecin qui commande avant l'heure limite un jour ouvré, pour un appareil
+Chaque critère est marqué [Phase 1] s'il se vérifie avec les connecteurs de démonstration,
+ou [Phase 3] s'il nécessite les vrais services. Sauf mention contraire, les scénarios
+d'acceptation des parcours se vérifient en phase 1.
+
+- **SC-001** [Phase 1] : Un médecin qui commande avant l'heure limite un jour ouvré, pour un appareil
   disponible, se voit proposer une livraison au lendemain dans 100 % des cas.
-- **SC-002** : Une résiliation arrête le prélèvement suivant et programme la fermeture de
+- **SC-002** [Phase 1] : Une résiliation arrête le prélèvement suivant et programme la fermeture de
   l'accès Cloud dans 100 % des cas testés.
-- **SC-003** : Le kit d'accessoires n'est jamais facturé deux fois d'office au même client
+- **SC-003** [Phase 1] : Le kit d'accessoires n'est jamais facturé deux fois d'office au même client
   pour un même type d'appareil (0 cas sur l'ensemble des tests).
-- **SC-004** : Un client connecté et validé commande une mise à disposition en moins de
+- **SC-004** [Phase 1] : Un client connecté et validé commande une mise à disposition en moins de
   3 minutes ; un médecin sans compte, en moins de 8 minutes.
-- **SC-005** : Aucun appareil n'est affecté à deux locations en même temps (0 cas, y compris
+- **SC-005** [Phase 1] : Aucun appareil n'est affecté à deux locations en même temps (0 cas, y compris
   en cas de commandes simultanées).
-- **SC-006** : La disponibilité affichée correspond à l'état réel du parc : un appareil
+- **SC-006** [Phase 1] : La disponibilité affichée correspond à l'état réel du parc : un appareil
   passé en maintenance ou loué cesse d'être proposé en moins d'une minute.
-- **SC-007** : Un client résilie sa location en moins de 2 minutes, sans contacter
+- **SC-007** [Phase 1] : Un client résilie sa location en moins de 2 minutes, sans contacter
   l'équipe.
-- **SC-008** : 95 % des commandes passées avant l'heure limite sont livrées à la date
+- **SC-008** [Phase 3] : 95 % des commandes passées avant l'heure limite sont livrées à la date
   annoncée.
-- **SC-009** : 100 % des échéances prélevées donnent lieu à une facture disponible dans
+- **SC-009** [Phase 1] : 100 % des échéances prélevées donnent lieu à une facture disponible dans
   « Mon compte ».
-- **SC-010** : 100 % des retards de retour déclenchent un rappel avant toute facturation
+- **SC-010** [Phase 1] : 100 % des retards de retour déclenchent un rappel avant toute facturation
   supplémentaire.
-- **SC-011** : Un audit des écrans de F05 ne relève aucune non-conformité WCAG 2.2 AA.
+- **SC-011** [Phase 1] : Un audit des écrans de F05 ne relève aucune non-conformité WCAG 2.2 AA.
 
 ## Assumptions
 
@@ -531,8 +549,8 @@ validés par la responsable du projet le 2026-10-12.
 - **Livraison au lendemain (confirmé)** : assurée en France continentale, du lundi au
   vendredi hors jours fériés. Pour la Corse et les zones où le transporteur ne la garantit
   pas, le délai réel est affiché.
-- **Détection du kit (confirmé)** : fondée sur les achats du compte sur le site, complétée
-  par l'enregistrement manuel de l'administrateur.
+- **Détection du kit (confirmé)** : fondée sur les achats du client enregistrés dans Odoo,
+  complétée par un enregistrement manuel dans Odoo.
 - **Dépendances F12 et F08 (confirmé)** : tant que ces modules ne sont pas livrés,
   l'ouverture de l'accès Cloud et la proposition d'un créneau de formation sont faites par
   l'équipe, alertée à chaque expédition et à chaque résiliation.
@@ -544,14 +562,19 @@ validés par la responsable du projet le 2026-10-12.
   pourra être étudié dans une version ultérieure. La V1 ne prévoit ni l'un ni l'autre.
 - **Valeur de remplacement et dégradations** : les montants et les clauses correspondantes
   sont à valider par le conseil juridique d'ExploCardio.fr.
-- **Produits concernés** : seuls les produits pour lesquels l'administrateur a activé la
-  formule « Mise à disposition » (F03).
+- **Produits concernés** : seuls les produits pour lesquels la formule « Mise à
+  disposition » est activée dans Odoo (F03).
 - **Kit dans le panier** : le kit est une ligne d'achat, payée en une fois avec le premier
   mois (panier mixte de F04).
 - **Conditions contractuelles** : les conditions de location (résiliation, retour,
   responsabilité) sont rédigées par ExploCardio.fr et son conseil juridique ; F05 les
   présente et recueille leur acceptation.
-- **Référentiel de gestion** : parc, locations et échéances sont lus et écrits par la
-  couche d'accès unique, reprise par Odoo lors de F11.
+- **Données de gestion** : parc, locations, échéances et factures sont lus et écrits dans
+  Odoo par son connecteur (base fictive en phase 1, principe III). Les paiements passent
+  par le connecteur Stripe et les accès Cloud par le connecteur PCA, simulés en phase 1.
+- **Écran de démonstration (F11)** : en mode démonstration uniquement, un écran simple du
+  back-office, réservé à l'administrateur, permet de modifier les prix, stocks et
+  paramètres commerciaux de la base fictive et de la réinitialiser. Il disparaît en mode
+  réel. C'est une exigence de F11 (connecteurs et base de démonstration).
 - **Périmètre** : site en français, professionnels de santé de France métropolitaine, aucune
   donnée de patient sur le site.

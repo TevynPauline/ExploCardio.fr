@@ -41,3 +41,6 @@
   équipements financés.
 - Stripe est nommé parce que la constitution (principe V) et la demande l'imposent comme
   prestataire de paiement ; c'est une contrainte du projet, pas un choix d'implémentation.
+- Révisée le 2026-10-14 pour la constitution v2.1.0 : données de gestion lues et écrites dans
+  Odoo par son connecteur (base fictive en phase 1), paramètres en euros dans Odoo,
+  critères de succès marqués [Phase 1] ou [Phase 3].

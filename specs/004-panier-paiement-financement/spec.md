@@ -24,13 +24,19 @@ la demande de financement.
 création et la validation des comptes (F02), le choix et les conditions d'une mise à
 disposition, son contrat, sa résiliation, les retours de matériel et les échéances
 impayées (F05), le calcul des points et des bons d'achat (F06), le service après-vente et
-les retours de marchandise, le back-office complet (F13), le passage des commandes et de la
-facturation sous Odoo (F11).
+les retours de marchandise, le back-office complet (F13), la gestion des commandes, des
+expéditions, des remboursements et de la facturation, qui se fait dans Odoo (base fictive en
+phase 1).
 
 **Lien avec les autres modules** : seul un compte validé finalise une commande (F02). Le
 tensiomètre de bienvenue est ajouté à la première commande (F02). Un produit en « délai X
 jours » reste commandable, un produit « indisponible » ne l'est pas (F03). Le solde de bons
 d'achat est fourni par F06.
+
+**Phases (constitution v2.1.0)** : en phase 1, F04 fonctionne avec les connecteurs de démonstration : le connecteur
+Stripe simule les paiements, le connecteur Odoo enregistre commandes, factures « FICTIVE »
+et stocks dans sa base fictive, et le connecteur emailing simule les emails. Aucun paiement
+réel n'est possible en phase 1.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -101,8 +107,8 @@ dans le back-office, la facture et la baisse du stock.
    adresses, la livraison, le mode de paiement et tous les montants, et la validation exige
    l'acceptation des CGV.
 5. **Given** un paiement confirmé, **When** la confirmation est reçue, **Then** la commande
-   est enregistrée dans le référentiel de gestion, le stock est décompté, la facture est
-   générée, la page de confirmation s'affiche et l'email récapitulatif est envoyé.
+   est enregistrée dans Odoo par son connecteur, le stock est décompté, la facture est
+   émise par Odoo, la page de confirmation s'affiche et l'email récapitulatif est envoyé.
 6. **Given** une commande payée, **When** le client ouvre « Mon compte », **Then** il y
    voit la commande, son statut et sa facture téléchargeable.
 7. **Given** un compte non validé, **When** son titulaire tente de lancer la commande,
@@ -273,34 +279,35 @@ dans « Mon compte ».
 
 ---
 
-### User Story 8 - Traiter les commandes et les demandes (Priority: P3)
+### User Story 8 - Traiter les demandes de financement et suivre les commandes (Priority: P3)
 
-L'administrateur consulte les commandes, enregistre les virements reçus, indique les
-expéditions, rembourse, traite les demandes de financement et gère les codes promo et les
-frais de port.
+L'équipe traite les demandes de financement dans le back-office du site. Les commandes, les
+virements, les expéditions, les remboursements, les codes promo et les frais de port se
+gèrent dans Odoo ; le site en affiche le résultat.
 
-**Why this priority**: indispensable à l'exploitation, mais ces écrans servent l'équipe et
-non le client.
+**Why this priority**: indispensable à l'exploitation, mais ces opérations servent l'équipe
+et non le client.
 
-**Independent Test**: depuis le back-office, confirmer un virement, expédier une commande,
-rembourser partiellement une autre, changer le statut d'une demande de financement et créer
-un code promo.
+**Independent Test**: dans le back-office, changer le statut d'une demande de financement ;
+dans la base fictive du connecteur Odoo, marquer une commande expédiée puis remboursée, et
+vérifier l'affichage côté client.
 
 **Acceptance Scenarios**:
 
-1. **Given** un administrateur, **When** il ouvre la liste des commandes, **Then** il peut
-   la filtrer par statut, mode de paiement, client et période.
-2. **Given** une commande payée, **When** il indique son expédition avec le transporteur
-   et le numéro de suivi, **Then** le client est prévenu.
-3. **Given** une commande payée par carte, **When** il la rembourse en tout ou en partie,
-   **Then** le remboursement est exécuté, l'avoir est généré et le statut est mis à jour.
-4. **Given** une demande de financement, **When** il change son statut ou ajoute une note
-   interne, **Then** le changement est enregistré et seul le statut est visible du client.
-5. **Given** les règles commerciales, **When** il modifie les frais de port, les seuils,
-   les délais ou un code promo, **Then** le changement s'applique aux nouvelles commandes
-   sans développeur.
-6. **Given** toute action sur une commande, un remboursement ou une demande, **When** elle
-   est effectuée, **Then** elle est journalisée avec son auteur et sa date.
+1. **Given** une demande de financement, **When** l'équipe change son statut ou ajoute une
+   note interne dans le back-office, **Then** le changement est enregistré et seul le
+   statut est visible du client.
+2. **Given** une commande marquée expédiée dans Odoo avec son transporteur et son numéro
+   de suivi, **When** le site la lit, **Then** le client voit le suivi et est prévenu.
+3. **Given** un remboursement décidé dans Odoo, **When** il est enregistré, **Then** le
+   remboursement par carte est exécuté via le connecteur Stripe, l'avoir émis par Odoo et
+   le statut mis à jour dans « Mon compte ».
+4. **Given** un code promo ou des frais de port modifiés dans Odoo, **When** une nouvelle
+   commande est passée, **Then** la nouvelle valeur s'applique, sans développeur.
+5. **Given** le back-office du site, **When** un administrateur ouvre les commandes,
+   **Then** il ne peut que les consulter.
+6. **Given** toute action sur une demande de financement, **When** elle est effectuée,
+   **Then** elle est journalisée avec son auteur et sa date.
 
 ---
 
@@ -366,9 +373,9 @@ un code promo.
   lendemain), chacun avec son prix HT et son délai estimé.
 - **FR-011** : Les frais de port DOIVENT être calculés par forfait : un forfait standard et
   un forfait express, avec franco de port au-delà d'un seuil de commande. Forfaits et seuil
-  sont réglés par l'administrateur.
+  sont réglés dans Odoo (base fictive en phase 1, principe VI).
 - **FR-046** : Chaque équipement volumineux DOIT porter son propre tarif de livraison, et
-  d'installation le cas échéant, fixé par l'administrateur produit par produit et affiché
+  d'installation le cas échéant, fixé dans Odoo produit par produit et affiché
   HT dès le panier. Ce tarif s'ajoute aux forfaits et n'entre pas dans le franco de port.
   Aucun frais de livraison NE DOIT être « sur demande ».
 - **FR-012** : Le récapitulatif DOIT reprendre articles, adresses, livraison, mode de
@@ -389,7 +396,7 @@ un code promo.
   est alors créée « en attente de paiement » et le RIB, le montant et la référence à
   rappeler lui sont communiqués.
 - **FR-018** : Le stock d'une commande en attente de virement DOIT être réservé pendant un
-  délai réglé par l'administrateur (7 jours par défaut). Le client DOIT recevoir un rappel
+  délai réglé dans Odoo (7 jours par défaut). Le client DOIT recevoir un rappel
   avant l'échéance. Sans paiement à l'échéance, la commande DOIT être annulée
   automatiquement, le stock libéré et le client prévenu.
 - **FR-019** : Une mise à disposition mensuelle DOIT être payée par abonnement avec
@@ -412,20 +419,24 @@ un code promo.
 
 **Commande, stock et facture**
 
-- **FR-026** : La commande DOIT être enregistrée dans le référentiel de gestion dès le
-  paiement confirmé, et le stock décompté, par la couche d'accès unique (principe III),
-  avec les notions d'Odoo (commande de vente, ligne, facture).
+- **FR-026** : La commande DOIT être enregistrée dans Odoo par son connecteur dès le
+  paiement confirmé, et le stock décompté (principe III), avec les notions d'Odoo
+  (commande de vente, ligne, facture). Le paiement DOIT passer par le connecteur Stripe.
 - **FR-027** : Une commande DOIT porter l'un des statuts : en attente de paiement, payée,
   en préparation, expédiée, livrée, annulée, remboursée partiellement, remboursée.
-- **FR-028** : Une facture PDF DOIT être générée automatiquement à chaque paiement
-  confirmé, avec les mentions légales françaises et une numérotation continue, sans trou
-  ni doublon, et être disponible dans « Mon compte ».
-- **FR-029** : Chaque échéance mensuelle prélevée DOIT donner lieu à une facture.
-- **FR-030** : Tout remboursement DOIT donner lieu à un avoir, numéroté de façon continue,
-  disponible dans « Mon compte ». Une facture émise NE DOIT JAMAIS être modifiée ni
+- **FR-028** : Une facture PDF DOIT être émise par Odoo à chaque paiement confirmé, avec les
+  mentions légales françaises et une numérotation continue, sans trou ni doublon, et être
+  disponible dans « Mon compte ». Le site n'émet aucune facture (principe V). En phase 1,
+  les factures de la base fictive portent la mention « FICTIVE ».
+- **FR-029** : Chaque échéance mensuelle prélevée DOIT donner lieu à une facture émise par
+  Odoo.
+- **FR-030** : Tout remboursement DOIT donner lieu à un avoir émis par Odoo, numéroté de
+  façon continue, disponible dans « Mon compte ». Une facture émise NE DOIT JAMAIS être modifiée ni
   supprimée.
-- **FR-031** : Un remboursement effectué depuis le back-office ou directement dans Stripe
-  DOIT mettre à jour le statut de la commande dans « Mon compte ».
+- **FR-031** : Un remboursement décidé dans Odoo DOIT déclencher le remboursement par
+  carte via le connecteur Stripe. Un remboursement fait directement dans Stripe DOIT être
+  reporté dans Odoo. Dans les deux cas, le statut de la commande est mis à jour dans « Mon
+  compte ».
 - **FR-032** : Le client DOIT être prévenu par email à la confirmation, à l'expédition (avec
   le suivi) et en cas de remboursement ou d'annulation.
 
@@ -443,8 +454,8 @@ un code promo.
   changement.
 - **FR-037** : Le nom des organismes de financement NE DOIT apparaître dans aucun écran ni
   email destiné au client.
-- **FR-038** : Une fois le financement accordé, l'administrateur DOIT pouvoir créer depuis la
-  demande une commande marquée « financée », sans paiement du client. Cette commande DOIT
+- **FR-038** : Une fois le financement accordé, l'équipe DOIT pouvoir créer dans Odoo, à
+  partir de la demande, une commande marquée « financée », sans paiement du client. Cette commande DOIT
   décompter le stock et être suivie comme une commande normale (préparation, expédition,
   livraison, garanties), et apparaître dans « Mon compte ».
 - **FR-047** : Une commande « financée » NE DOIT donner lieu à aucune facture adressée au
@@ -452,16 +463,22 @@ un code promo.
 
 **Administration et règles commerciales**
 
-- **FR-039** : F04 DOIT livrer les écrans d'administration nécessaires : liste et détail des
-  commandes, réception d'un virement, expédition, remboursement, demandes de financement,
-  codes promo, frais et modes de livraison. Le back-office complet (F13) les étendra.
-- **FR-040** : Les frais de port, seuils, délais, durées de financement, codes promo et
-  règles de cumul DOIVENT être des paramètres modifiables par l'administrateur, jamais
-  codés en dur.
+- **FR-039** : Le back-office du site DOIT permettre de traiter les demandes de financement
+  (statut, notes internes). Les commandes, la réception des virements, les expéditions, les
+  remboursements, les codes promo, les frais et modes de livraison se gèrent dans Odoo
+  (principes III et VI) ; le back-office peut les afficher en lecture seule.
+- **FR-040** : Les frais de port, seuils, durées de financement, codes promo, règles de cumul
+  et délai de réservation d'un virement DOIVENT être réglés dans Odoo (base fictive en
+  phase 1). L'heure limite de commande pour une livraison le lendemain DOIT être réglée dans
+  le back-office du site (principe VI). Aucune de ces valeurs NE DOIT être codée en dur.
 - **FR-041** : Toute action sur une commande, un paiement, un remboursement ou une demande
   de financement DOIT être journalisée avec son auteur et sa date.
 - **FR-042** : Les clés et secrets du service de paiement NE DOIVENT JAMAIS figurer dans le
   code.
+- **FR-048** : En phase 1, le connecteur Stripe de démonstration DOIT simuler les paiements
+  par carte (dont American Express), les refus, l'authentification forte, les prélèvements
+  SEPA et les confirmations tardives ou répétées, avec les mêmes réponses et erreurs que le
+  mode réel. Aucun paiement réel n'est possible en phase 1.
 
 **Charte, accessibilité et langue**
 
@@ -501,28 +518,35 @@ un code promo.
 
 ### Measurable Outcomes
 
-- **SC-001** : Un paiement American Express aboutit, et la commande apparaît dans le
-  back-office et dans « Mon compte » en moins d'une minute.
-- **SC-002** : Aucune commande payée n'est perdue ni créée en double (0 cas sur l'ensemble
+Chaque critère est marqué [Phase 1] s'il se vérifie avec les connecteurs de démonstration,
+ou [Phase 3] s'il nécessite les vrais services. Sauf mention contraire, les scénarios
+d'acceptation des parcours se vérifient en phase 1.
+
+- **SC-001** [Phase 3] : Un paiement American Express aboutit en mode test de Stripe, et la commande
+  apparaît dans Odoo et dans « Mon compte » en moins d'une minute.
+- **SC-013** [Phase 1] : Un paiement American Express simulé par le connecteur Stripe de démonstration
+  aboutit, et la commande apparaît dans la base fictive et dans « Mon compte ».
+- **SC-014** [Phase 1] : Toute facture de la phase 1 porte la mention « FICTIVE ».
+- **SC-002** [Phase 3] : Aucune commande payée n'est perdue ni créée en double (0 cas sur l'ensemble
   des tests, y compris confirmations tardives, répétées et simultanées).
-- **SC-003** : Un remboursement fait depuis le back-office ou depuis Stripe met à jour le
-  statut de la commande dans « Mon compte » en moins de 5 minutes.
-- **SC-004** : Un client validé dont les adresses sont enregistrées passe du panier à la
+- **SC-003** [Phase 3] : Un remboursement décidé dans Odoo ou fait dans Stripe met à jour le statut de
+  la commande dans « Mon compte » en moins de 5 minutes.
+- **SC-004** [Phase 1] : Un client validé dont les adresses sont enregistrées passe du panier à la
   confirmation en moins de 2 minutes.
-- **SC-005** : Au moins 70 % des clients validés qui entrent dans le tunnel vont jusqu'à la
+- **SC-005** [Phase 3] : Au moins 70 % des clients validés qui entrent dans le tunnel vont jusqu'à la
   confirmation.
-- **SC-006** : 100 % des commandes payées ont une facture, et la numérotation des factures
-  et des avoirs ne présente ni trou ni doublon.
-- **SC-007** : Après un paiement refusé, 100 % des paniers et des saisies sont conservés.
-- **SC-008** : Aucune donnée de carte bancaire n'est présente dans les données ni dans les
+- **SC-006** [Phase 3] : 100 % des commandes payées ont une facture émise par Odoo, et la numérotation
+  des factures et des avoirs ne présente ni trou ni doublon.
+- **SC-007** [Phase 1] : Après un paiement refusé, 100 % des paniers et des saisies sont conservés.
+- **SC-008** [Phase 3] : Aucune donnée de carte bancaire n'est présente dans les données ni dans les
   journaux du site.
-- **SC-009** : Aucun compte non validé ne parvient à finaliser une commande, hors mise à
+- **SC-009** [Phase 1] : Aucun compte non validé ne parvient à finaliser une commande, hors mise à
   disposition express de F05 ; dans ce cas, rien n'est expédié avant la validation.
-- **SC-010** : Une demande de financement est envoyée en moins de 3 minutes, et son statut
+- **SC-010** [Phase 1] : Une demande de financement est envoyée en moins de 3 minutes, et son statut
   est visible dans « Mon compte » dès l'envoi.
-- **SC-011** : Aucun nom d'organisme de financement n'apparaît dans les écrans et emails
+- **SC-011** [Phase 1] : Aucun nom d'organisme de financement n'apparaît dans les écrans et emails
   du parcours client.
-- **SC-012** : Un audit des écrans de F04 ne relève aucune non-conformité WCAG 2.2 AA, et
+- **SC-012** [Phase 1] : Un audit des écrans de F04 ne relève aucune non-conformité WCAG 2.2 AA, et
   tout le tunnel est réalisable au clavier seul.
 
 ## Assumptions
@@ -539,12 +563,11 @@ validés par la responsable du projet le 2026-10-12.
   comptable et fiscal est à valider par l'expert-comptable d'ExploCardio.fr. Ils ne sont
   utilisables qu'une fois F06 livré.
 - **Cumul des remises (confirmé)** : un seul code promo par commande ; il se cumule avec
-  les dégressifs de quantité et les bons d'achat, sauf réglage contraire de
-  l'administrateur.
+  les dégressifs de quantité et les bons d'achat, sauf réglage contraire dans Odoo.
 - **Qui peut demander un financement (confirmé)** : tout compte connecté, validé ou en
   attente de validation. Un visiteur est invité à créer un compte.
 - **Virement (confirmé)** : proposé pour tout achat, sans montant minimum. La commande
-  est payée quand l'administrateur enregistre la réception ; aucune facture n'est émise
+  est payée quand l'équipe enregistre la réception dans Odoo ; aucune facture n'est émise
   avant, seulement un récapitulatif de commande.
 - **Annulation et retours (confirmé)** : le client ne peut pas annuler ni retourner une
   commande en ligne ; il contacte l'équipe, qui annule ou rembourse depuis le back-office.
@@ -562,12 +585,17 @@ validés par la responsable du projet le 2026-10-12.
   de financement) est à valider par l'expert-comptable d'ExploCardio.fr.
 - **Taux de TVA** : celui de chaque article (F03), 20 % par défaut. Ventes en France
   métropolitaine uniquement.
-- **Mentions des factures** : la liste des mentions légales et le format de numérotation
-  sont à valider par l'expert-comptable d'ExploCardio.fr avant la mise en ligne.
-- **Emails** : envoyés par l'outil d'emailing d'ExploCardio.fr, à la charte.
+- **Mentions des factures** : les factures sont émises par Odoo ; leurs mentions légales et
+  leur numérotation sont à valider par l'expert-comptable d'ExploCardio.fr avant la mise en
+  ligne.
+- **Emails** : envoyés par le connecteur emailing (F10), à la charte ; simulés en phase 1.
 - **Stripe** : ExploCardio.fr dispose d'un compte Stripe actif acceptant American Express et
   le prélèvement SEPA.
-- **Référentiel de gestion** : commandes, factures, avoirs et stocks sont lus et écrits par
-  la couche d'accès unique, reprise par Odoo lors de F11.
+- **Données de gestion** : commandes, factures, avoirs et stocks sont lus et écrits dans
+  Odoo par son connecteur (base fictive en phase 1, principe III).
+- **Écran de démonstration (F11)** : en mode démonstration uniquement, un écran simple du
+  back-office, réservé à l'administrateur, permet de modifier les prix, stocks et
+  paramètres commerciaux de la base fictive et de la réinitialiser. Il disparaît en mode
+  réel. C'est une exigence de F11 (connecteurs et base de démonstration).
 - **Périmètre** : site en français, professionnels de santé de France métropolitaine, aucune
   donnée de patient.

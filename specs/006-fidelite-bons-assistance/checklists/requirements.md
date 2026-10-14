@@ -38,3 +38,6 @@
 - Les hypothèses ont été confirmées le 2026-10-12. Restent des données à fournir avant la
   mise en ligne : seuil et durée des droits, prix de l'assistance à l'acte. Restent à
   valider hors spec : règle des bons déjà dépensés et traitement comptable des bons.
+- Révisée le 2026-10-14 pour la constitution v2.1.0 : données de gestion lues et écrites dans
+  Odoo par son connecteur (base fictive en phase 1), paramètres en euros dans Odoo,
+  critères de succès marqués [Phase 1] ou [Phase 3].

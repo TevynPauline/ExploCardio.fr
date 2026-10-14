@@ -38,3 +38,6 @@
   Express payante hors garantie (FR-027).
 - Les hypothèses ont été confirmées le 2026-10-13.
 - Le motif « prêt SAV » a été ajouté au parc de location de F05 (FR-035).
+- Révisée le 2026-10-14 pour la constitution v2.1.0 : données de gestion lues et écrites dans
+  Odoo par son connecteur (base fictive en phase 1), paramètres en euros dans Odoo,
+  critères de succès marqués [Phase 1] ou [Phase 3].

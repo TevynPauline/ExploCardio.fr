@@ -38,3 +38,6 @@
   garantie, valeur de remplacement annoncée et facturée en cas de non-retour (FR-034).
 - Les hypothèses ont été confirmées le 2026-10-12.
 - L'exception de FR-009 a été reportée dans F02 (FR-011) et F04 (FR-007).
+- Révisée le 2026-10-14 pour la constitution v2.1.0 : données de gestion lues et écrites dans
+  Odoo par son connecteur (base fictive en phase 1), paramètres en euros dans Odoo,
+  critères de succès marqués [Phase 1] ou [Phase 3].

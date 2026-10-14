@@ -23,9 +23,15 @@ Toute l'interface respecte `docs/brand/design-system.md` et les tokens de `docs/
 
 **Hors périmètre de F01** : fiches produit détaillées, panier et commande, création et
 validation de compte client, parcours de mise à disposition et de financement, programme de
-fidélité, tutoriels et FAQ, back-office complet (F13), branchement Odoo (F11). F01 fournit les
+fidélité, tutoriels et FAQ, back-office complet (F13), branchement des services réels (phase 2). F01 fournit les
 points d'entrée vers ces modules, une page de présentation simple par famille et par service,
 et un mini back-office limité aux contenus de l'accueil et de l'en-tête.
+
+**Phases (constitution v2.1.0)** : en phase 1, F01 fonctionne avec les connecteurs de démonstration : les produits et
+les prix viennent de la base fictive du connecteur Odoo, et les emails sont simulés par le
+connecteur emailing. Les contenus gérés dans le mini back-office (bandeau, tuiles,
+actualités, coordonnées) sont réels dès la phase 1. Le site de démonstration est protégé
+(FR-047 à FR-049).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -311,8 +317,9 @@ vérifier leur affichage sur le site public.
   taille croissante reliés par des flèches fines, ainsi que les engagements de réactivité.
 - **FR-024** : La section actualités DOIT afficher les actualités, nouveaux produits et
   nouvelles offres publiés, les plus récents en premier.
-- **FR-025** : Le bloc contact DOIT présenter « Régis Andrieu, fondateur » sur fond sombre,
-  et n'afficher l'email, le téléphone et l'adresse que s'ils sont renseignés.
+- **FR-025** : Le bloc contact DOIT présenter uniquement « Régis Andrieu, fondateur » sur fond
+  sombre. L'email, le téléphone et l'adresse sont saisis plus tard dans le back-office et
+  chaque ligne reste masquée tant qu'elle est vide.
 - **FR-026** : Tout emplacement de photo non fourni DOIT être remplacé par l'emplacement
   provisoire prévu par la charte.
 
@@ -357,8 +364,8 @@ vérifier leur affichage sur le site public.
   produits et chaque service de la navigation et des tuiles (Holter ECG, Holter tensionnel,
   Épreuve d'effort, Accessoires & consommables, Services, Hébergement des données de santé,
   Assistance et service, Financement, mise à disposition). Chaque page présente l'offre en
-  quelques lignes et liste les produits correspondants du référentiel de gestion quand ils
-  existent, avec leur prix HT. Les modules suivants enrichiront ces pages.
+  quelques lignes et liste les produits correspondants fournis par le connecteur Odoo
+  quand ils existent, avec leur prix HT. Les modules suivants enrichiront ces pages.
 - **FR-046** : Les destinations des tuiles, cartes, boutons et méga-menus DOIVENT toujours
   mener à une page existante, jamais à une erreur ni à une page d'attente vide.
 
@@ -378,6 +385,15 @@ vérifier leur affichage sur le site public.
   la charte. Le nom s'écrit toujours « ExploCardio.fr ».
 - **FR-045** : Aucun visuel interdit par la charte (cœur, tracé ECG, pictogramme médical
   cliché, dégradé vif, ombre lourde, photo de stock générique) NE DOIT apparaître.
+
+**Site de démonstration (phase 1)**
+
+- **FR-047** : En phase 1, l'accès au site DOIT être protégé par un mot de passe.
+- **FR-048** : En phase 1, le site NE DOIT PAS être indexé par les moteurs de recherche.
+- **FR-049** : En phase 1, un bandeau « Version de démonstration » DOIT être affiché sur
+  toutes les pages, distinct du bandeau promotionnel et impossible à masquer.
+- **FR-050** : Le formulaire de contact et l'inscription à la newsletter DOIVENT passer par
+  le connecteur emailing ; en phase 1, son mode démonstration n'envoie aucun email réel.
 
 ### Key Entities
 
@@ -403,30 +419,34 @@ vérifier leur affichage sur le site public.
 
 ### Measurable Outcomes
 
-- **SC-001** : Depuis l'accueil, chacune des 6 tuiles mène à sa page en 1 clic (6 sur 6).
-- **SC-002** : 100 % des produits du catalogue sont atteignables en 3 clics maximum depuis
+Chaque critère est marqué [Phase 1] s'il se vérifie avec les connecteurs de démonstration,
+ou [Phase 3] s'il nécessite les vrais services. Sauf mention contraire, les scénarios
+d'acceptation des parcours se vérifient en phase 1.
+
+- **SC-001** [Phase 1] : Depuis l'accueil, chacune des 6 tuiles mène à sa page en 1 clic (6 sur 6).
+- **SC-002** [Phase 1] : 100 % des produits du catalogue sont atteignables en 3 clics maximum depuis
   l'accueil.
-- **SC-003** : Un administrateur modifie un message du bandeau, une tuile ou une actualité
+- **SC-003** [Phase 1] : Un administrateur modifie un message du bandeau, une tuile ou une actualité
   en moins de 5 minutes, sans développeur, et le changement est visible sur le site en moins
   d'une minute.
-- **SC-004** : Un contrôle des interfaces de F01 ne relève aucune couleur ni police hors des
+- **SC-004** [Phase 1] : Un contrôle des interfaces de F01 ne relève aucune couleur ni police hors des
   tokens de la charte.
-- **SC-005** : Un audit d'accessibilité des pages de F01 ne relève aucune non-conformité
+- **SC-005** [Phase 1] : Un audit d'accessibilité des pages de F01 ne relève aucune non-conformité
   WCAG 2.2 AA, et aucun texte en couleur pastel.
-- **SC-006** : Toutes les pages de F01 s'affichent sans défilement horizontal ni contenu
+- **SC-006** [Phase 1] : Toutes les pages de F01 s'affichent sans défilement horizontal ni contenu
   tronqué de 320 px à 1920 px de large.
-- **SC-007** : À la première visite, le bandeau cookies apparaît, le refus demande le même
+- **SC-007** [Phase 1] : À la première visite, le bandeau cookies apparaît, le refus demande le même
   nombre de gestes que l'acceptation (un), et aucun traceur non essentiel n'est déposé avant
   le choix.
-- **SC-008** : Les suggestions de recherche apparaissent en moins d'une seconde après la
+- **SC-008** [Phase 1] : Les suggestions de recherche apparaissent en moins d'une seconde après la
   saisie du deuxième caractère.
-- **SC-009** : Une référence fabricant exacte place l'article correspondant en première
+- **SC-009** [Phase 1] : Une référence fabricant exacte place l'article correspondant en première
   position dans 100 % des cas testés.
-- **SC-010** : Lors d'un test avec des médecins, au moins 9 sur 10 citent, après 30 secondes
+- **SC-010** [Phase 1] : Lors d'un test avec des médecins, au moins 9 sur 10 citent, après 30 secondes
   sur l'accueil, les trois familles d'équipements et au moins deux services.
-- **SC-011** : Tout le parcours (menus, recherche, formulaire, bandeau cookies) est
+- **SC-011** [Phase 1] : Tout le parcours (menus, recherche, formulaire, bandeau cookies) est
   réalisable au clavier seul.
-- **SC-012** : Aucun lien de l'en-tête, de l'accueil ou du pied de page ne mène à une
+- **SC-012** [Phase 1] : Aucun lien de l'en-tête, de l'accueil ou du pied de page ne mène à une
   erreur.
 
 ## Assumptions
@@ -470,11 +490,13 @@ validés par la responsable du projet le 2026-10-12.
 - **Cookies** : le choix est conservé 6 mois, conformément aux recommandations de la CNIL.
 - **Newsletter** : l'envoi passe par l'outil d'emailing d'ExploCardio.fr ; l'inscription est
   confirmée par email (double consentement).
-- **Marques affichées** : celles de la brochure — DMS, SunTech, Microlife, IEM, Norav,
-  Ergoline, RAM, Koch Évolution. L'accord d'usage des logos est à la charge d'ExploCardio.fr.
+- **Marques affichées** : celles de la brochure — Holter ECG : DMS ; Holter tensionnel /
+  MAPA : DMS, SunTech, Microlife WatchBP 03, IEM Mobil-O-Graph ; épreuve et écho d'effort :
+  DMS, Norav, Ergoline, RAM, Koch Évolution, SunTech Tango M2. L'accord d'usage des logos est à la charge d'ExploCardio.fr.
 - **Photos** : les photos réelles d'équipements seront fournies plus tard ; les emplacements
   provisoires sont acceptés à la mise en ligne.
-- **Données** : les produits, catégories et références affichés ou recherchés proviennent du
-  référentiel de gestion, via sa couche d'accès unique (principe III).
+- **Données** : les produits, catégories, références et prix affichés ou recherchés
+  proviennent d'Odoo, via son connecteur (base fictive en phase 1, principe III). Les
+  contenus de l'accueil et de l'en-tête sont réels dès la phase 1.
 - **Périmètre** : site en français, pour des professionnels de santé de France
   métropolitaine. Aucune donnée de patient n'est collectée.
