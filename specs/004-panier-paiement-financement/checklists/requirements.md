@@ -46,3 +46,4 @@
   critères de succès marqués [Phase 1] ou [Phase 3].
 - Réduction de périmètre appliquée le 2026-10-14 : mention des garanties retirée du suivi
   des commandes financées.
+- Ajout le 2026-10-14 de l'abonnement mensuel au logiciel Cloud (FR-049), à la suite de F12.

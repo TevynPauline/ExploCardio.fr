@@ -15,6 +15,8 @@ ExploCardio.fr, selon trois modes d'acquisition :
 
 - **achat comptant**, payé par carte ou par virement ;
 - **mise à disposition mensuelle**, payée par abonnement avec prélèvement mensuel ;
+- **abonnement logiciel Cloud** (F12), souscrit à la fin de la période d'accès incluse à
+  l'achat d'un appareil, payé par prélèvement mensuel ;
 - **financement longue durée**, sans paiement en ligne, par une demande traitée par l'équipe.
 
 F04 livre le panier, le tunnel de commande, le paiement, la facture, le suivi de commande et
@@ -402,6 +404,11 @@ vérifier l'affichage côté client.
 - **FR-019** : Une mise à disposition mensuelle DOIT être payée par abonnement avec
   prélèvement mensuel, par carte ou par prélèvement SEPA. Le virement NE DOIT PAS être
   proposé pour un abonnement.
+- **FR-049** : Un abonnement mensuel au logiciel Cloud (F12) DOIT pouvoir être souscrit en
+  ligne depuis « Mon compte », par carte ou par prélèvement SEPA, au prix fixé dans Odoo,
+  avec les mêmes règles de paiement, d'échéances, de factures émises par Odoo, d'impayés et
+  de résiliation sans engagement que les abonnements de mise à disposition. Souscrit avant
+  la fin de la période incluse, il prend effet à cette date, sans interruption d'accès.
 - **FR-020** : Un panier mixte DOIT être validé en une seule fois, l'achat et l'abonnement
   étant chacun confirmés et suivis séparément.
 - **FR-021** : Un paiement refusé DOIT donner lieu à un message clair et permettre de
@@ -500,6 +507,8 @@ vérifier l'affichage côté client.
   Aucune donnée de carte.
 - **Abonnement de mise à disposition** : client, équipement, montant du premier mois et des
   suivants, moyen de prélèvement, état, échéances.
+- **Abonnement logiciel** : client, logiciel, montant mensuel, date de prise d'effet, moyen
+  de prélèvement, état, échéances.
 - **Facture** : numéro continu, commande ou échéance, lignes, montants, mentions légales,
   PDF.
 - **Avoir** : numéro continu, facture d'origine, montant remboursé, motif.
@@ -597,5 +606,7 @@ validés par la responsable du projet le 2026-10-12.
   back-office, réservé à l'administrateur, permet de modifier les prix, stocks et
   paramètres commerciaux de la base fictive et de la réinitialiser. Il disparaît en mode
   réel. C'est une exigence de F11 (connecteurs et base de démonstration).
+- **Abonnement logiciel** : ajouté le 2026-10-14 à la suite de F12 ; ses impayés suspendent
+  l'accès au logiciel (F12, FR-016) comme ceux d'une mise à disposition.
 - **Périmètre** : site en français, professionnels de santé de France métropolitaine, aucune
   donnée de patient.
