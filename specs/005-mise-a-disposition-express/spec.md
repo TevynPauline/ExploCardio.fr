@@ -26,7 +26,8 @@ gestion du parc de location.
 **Hors périmètre de F05** : le panier, le tunnel de commande, le paiement et la création de
 l'abonnement (F04) ; la fiche produit et son onglet « Mise à disposition » (F03) ; la
 création du compte (F02) ; l'ouverture et la fermeture techniques des accès au logiciel
-Cloud (F12) ; la prise de rendez-vous de formation (F08) ; le financement longue durée
+Cloud (F12) ; l'organisation de la formation, faite par l'équipe hors du site ; le
+financement longue durée
 (F04) ; le back-office complet (F13) ; la gestion du parc, des tarifs, des échéances et de
 leur facturation, qui se fait dans Odoo (base fictive en phase 1).
 
@@ -75,8 +76,9 @@ mois, la réservation d'un appareil du parc et la confirmation.
 6. **Given** un paiement confirmé, **When** la commande est enregistrée, **Then** un
    appareil du parc est réservé pour ce client et la location apparaît dans « Mon compte ».
 7. **Given** l'expédition de l'appareil, **When** elle est enregistrée, **Then** le numéro
-   de série est rattaché à la location, l'accès au logiciel Cloud est ouvert, un créneau de
-   formation est proposé et le client est prévenu avec le suivi du colis.
+   de série est rattaché à la location, l'accès au logiciel Cloud est ouvert, le client est
+   prévenu avec le suivi du colis, et l'équipe est alertée pour le contacter afin
+   d'organiser sa formation.
 8. **Given** aucun appareil disponible à la date voulue, **When** le médecin consulte
    l'offre, **Then** la première date possible lui est indiquée, sans promesse de
    lendemain.
@@ -320,8 +322,8 @@ disponible, et vérifier à chaque étape la disponibilité affichée sur le sit
 - Kit acheté puis remboursé : le client n'est plus considéré comme le possédant.
 - Compte suspendu pendant une location : la location en cours est traitée par
   l'administrateur ; aucune nouvelle location n'est possible.
-- Accès Cloud ou prise de rendez-vous indisponibles au moment de l'expédition :
-  l'administrateur est alerté et l'ouverture est rattrapée, sans bloquer l'expédition.
+- Accès Cloud indisponible au moment de l'expédition : l'administrateur est alerté et
+  l'ouverture est rattrapée, sans bloquer l'expédition.
 - Étiquette de retour perdue : le client peut la redemander.
 - Appareil rendu incomplet ou endommagé : l'administrateur l'enregistre, chiffre la
   dégradation et la facture (FR-047).
@@ -373,7 +375,9 @@ disponible, et vérifier à chaque étape la disponibilité affichée sur le sit
   premier mois et des suivants, la date de livraison, la date de la prochaine échéance, les
   conditions de résiliation et de retour, et les accepter.
 - **FR-012** : À l'expédition, l'accès au logiciel Cloud DOIT être ouvert automatiquement
-  (F12) et un créneau de formation proposé (F08).
+  (F12), et l'équipe DOIT être alertée pour contacter le médecin et organiser sa formation.
+  Aucun créneau n'est proposé en ligne. L'email d'expédition indique que l'équipe prendra
+  contact, et donne le contact WhatsApp (F09).
 
 **Kit d'accessoires**
 
@@ -449,9 +453,7 @@ disponible, et vérifier à chaque étape la disponibilité affichée sur le sit
 **Parc de location**
 
 - **FR-035** : Chaque appareil du parc DOIT être identifié par son numéro de série et porter
-  l'un des statuts : disponible, loué, en retour, en maintenance. Un appareil
-  prêté gratuitement dans le cadre du SAV (F07) est « loué » avec le motif « prêt SAV » :
-  il est indisponible à la location et ne donne lieu à aucune échéance.
+  l'un des statuts : disponible, loué, en retour, en maintenance.
 - **FR-036** : La disponibilité affichée sur le site DOIT refléter le parc en temps réel :
   seuls les appareils « disponibles » sont proposés.
 - **FR-037** : Un même appareil NE DOIT JAMAIS être affecté à deux locations en même temps.
@@ -551,9 +553,11 @@ validés par la responsable du projet le 2026-10-12.
   pas, le délai réel est affiché.
 - **Détection du kit (confirmé)** : fondée sur les achats du client enregistrés dans Odoo,
   complétée par un enregistrement manuel dans Odoo.
-- **Dépendances F12 et F08 (confirmé)** : tant que ces modules ne sont pas livrés,
-  l'ouverture de l'accès Cloud et la proposition d'un créneau de formation sont faites par
-  l'équipe, alertée à chaque expédition et à chaque résiliation.
+- **Dépendance F12 (confirmé)** : tant que ce module n'est pas livré, l'ouverture de
+  l'accès Cloud est faite par l'équipe, alertée à chaque expédition et à chaque résiliation.
+- **Formation** : elle reste comprise dans le pack ; l'équipe contacte le médecin après
+  l'expédition pour l'organiser (téléphone ou WhatsApp). La prise de rendez-vous en ligne
+  est hors du site.
 - **Annulation avant expédition (confirmé)** : gratuite et remboursée intégralement.
 - **Données sur l'appareil rendu (confirmé)** : l'effacement des données de patients
   éventuellement présentes dans un enregistreur rendu est une procédure interne

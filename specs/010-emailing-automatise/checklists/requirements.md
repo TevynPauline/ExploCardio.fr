@@ -43,3 +43,5 @@
 - Révisée le 2026-10-14 pour la constitution v2.1.0 : données de gestion lues et écrites dans
   Odoo par son connecteur (base fictive en phase 1), paramètres en euros dans Odoo,
   critères de succès marqués [Phase 1] ou [Phase 3].
+- Réduction de périmètre appliquée le 2026-10-14 : emails de rendez-vous, de SAV, de demande
+  de rappel et alerte de fin de garantie retirés ; contact WhatsApp dans chaque email.

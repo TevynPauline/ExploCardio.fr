@@ -305,7 +305,7 @@ vérifier leur affichage sur le site public.
   uniformes, logos en niveaux de gris, en couleur au survol ou au focus.
 - **FR-020** : La section offre digitale et flexibilité DOIT présenter : achat direct,
   financement, mise à disposition au mois, pack dépannage express, logiciel Cloud, outils en
-  ligne (tutos, agenda partagé, garantie express, espace client).
+  ligne (tutos, espace client, contact WhatsApp).
 - **FR-021** : Les éléments « Hébergement des données de santé » et « logiciel Cloud »
   DOIVENT porter le badge « En préparation » tant que l'administrateur ne l'a pas retiré.
 - **FR-022** : L'offre de bienvenue DOIT apparaître dans un encart lin avec un bouton

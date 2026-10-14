@@ -42,3 +42,5 @@
 - Révisée le 2026-10-14 pour la constitution v2.1.0 : données de gestion lues et écrites dans
   Odoo par son connecteur (base fictive en phase 1), paramètres en euros dans Odoo,
   critères de succès marqués [Phase 1] ou [Phase 3].
+- Réduction de périmètre appliquée le 2026-10-14 : « Mon compte » n'affiche plus garanties ni
+  rendez-vous ; il affiche le contact WhatsApp.

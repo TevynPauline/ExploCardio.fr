@@ -195,8 +195,8 @@ que le solde affiché égale la somme des mouvements de l'historique.
 
 ### User Story 6 - Vérifier les droits avant d'aider (Priority: P2)
 
-Avant d'aider un client, un membre de l'équipe d'assistance vérifie en quelques secondes si
-ses droits sont actifs.
+Un client contacte l'équipe sur WhatsApp (F09). Avant de l'aider, un membre de l'équipe
+ouvre le back-office et vérifie en quelques secondes si ses droits sont actifs.
 
 **Why this priority**: sans cette vérification, l'équipe ne peut pas appliquer le modèle au
 quotidien.
@@ -412,9 +412,9 @@ et vérifier qu'il est consommé.
   des mouvements.
 - **FR-024** : Le panier et les fiches consommables DOIVENT indiquer ce qu'un achat
   rapportera en bons d'achat et en droits d'assistance.
-- **FR-025** : L'équipe d'assistance DOIT pouvoir rechercher un client et consulter le
-  statut de ses droits, leur date de fin et leur origine, dans Odoo ou en lecture seule
-  depuis le back-office du site.
+- **FR-025** : Quand un client la contacte sur WhatsApp, l'équipe d'assistance DOIT pouvoir
+  le rechercher dans le back-office du site et y consulter, en lecture seule, le statut de
+  ses droits, leur date de fin et leur origine, lus dans Odoo par son connecteur.
 
 **Paramétrage et administration**
 
@@ -539,8 +539,10 @@ validés par la responsable du projet le 2026-10-12.
   la mise en ligne.
 - **Vocabulaire** : la cagnotte est exprimée en euros de bons d'achat, pas en points. Les
   « points » évoqués dans le parcours de la charte désignent cette cagnotte.
-- **Demandes d'assistance** : la façon dont le client sollicite l'assistance (téléphone,
-  formulaire, rendez-vous) et le traitement des demandes relèvent d'un autre module.
+- **Contact avec l'assistance** : le client sollicite l'assistance par la ligne WhatsApp
+  Business (F09), appel ou message. Le SAV (pannes, garanties, réparations) est géré hors
+  du site, par une application externe à venir. Les droits d'assistance gardent leur sens :
+  ils ouvrent l'accès gratuit à l'assistance, quel que soit l'outil qui la traite.
 - **Codes promo** : définis dans Odoo ; F04 les applique au panier.
 - **Traitement comptable et fiscal** : celui des bons d'achat et des remises est à valider
   par l'expert-comptable d'ExploCardio.fr.

@@ -13,10 +13,10 @@
 F10 rassemble tous les emails que le site envoie. Il poursuit deux objectifs :
 
 - **informer sans effort manuel** : chaque événement important (commande, expédition,
-  facture, rendez-vous, demande) donne lieu à un email envoyé automatiquement ;
+  facture, location, demande de financement) donne lieu à un email envoyé automatiquement ;
 - **faire revenir le client au bon moment** : relance de réapprovisionnement avant qu'il
-  manque de consommables, rappel avant la fin de ses droits d'assistance, de ses bons
-  d'achat ou d'une garantie.
+  manque de consommables, rappel avant la fin de ses droits d'assistance ou de ses bons
+  d'achat.
 
 F10 distingue trois familles d'emails, aux règles différentes :
 
@@ -26,13 +26,14 @@ F10 distingue trois familles d'emails, aux règles différentes :
 
 **Hors périmètre de F10** : le choix de l'outil d'envoi (fait lors de la planification) ; la
 décision d'envoyer, qui appartient à chaque module (F02 pour les comptes, F04 pour les
-commandes, F05 pour les locations, F06 pour la fidélité et les promotions, F07 pour les
-garanties et le SAV, F08 pour les rendez-vous, F09 pour les demandes de rappel) ; le
-recueil du consentement à la newsletter (F01, F02) ; le back-office complet (F13).
+commandes et les demandes de financement, F05 pour les locations, F06 pour la fidélité et
+les promotions) ; le recueil du consentement à la newsletter (F01, F02) ; le back-office
+complet (F13). Les emails de rendez-vous, de SAV, de garantie et de demande de rappel
+n'existent plus : ces sujets sont gérés hors du site.
 
 **Lien avec les autres modules** : les modules déclenchent, F10 met en forme, envoie et
 trace. « Mon compte » (F02) accueille le centre de préférences. Les emails affichent le
-numéro de la hotline et ses horaires (F09).
+numéro WhatsApp, ses horaires et le lien « Écrire sur WhatsApp » (F09).
 
 **Phases (constitution v2.1.0)** : en phase 1, F10 fonctionne avec le connecteur emailing de démonstration : aucun email
 n'est réellement envoyé, chacun est conservé dans une boîte de démonstration. Les données qui
@@ -44,20 +45,20 @@ scénarios et les préférences des clients sont réels dès la phase 1.
 ### User Story 1 - Être informé à chaque étape (Priority: P1)
 
 Le client reçoit, sans rien demander, un email à chaque étape importante : inscription,
-validation de son compte, commande, expédition, facture, location, rendez-vous, demandes.
+validation de son compte, commande, expédition, facture, location, demande de financement.
 
 **Why this priority**: ces emails sont attendus et parfois obligatoires. Sans eux, le client
 appelle pour savoir où en est sa commande.
 
 **Independent Test**: dérouler une inscription, une commande jusqu'à l'expédition et une
-réservation de rendez-vous, et vérifier la réception, le contenu et la présentation de
+demande de financement, et vérifier la réception, le contenu et la présentation de
 chaque email.
 
 **Acceptance Scenarios**:
 
 1. **Given** l'un des événements suivants : inscription, validation du compte, commande
    confirmée, expédition, facture disponible, échéance ou prélèvement de location,
-   résiliation, rendez-vous confirmé ou rappelé, demande de SAV, demande de financement,
+   résiliation, demande de financement,
    **When** il se produit, **Then** le client reçoit l'email correspondant.
 2. **Given** un email transactionnel, **When** le client a désactivé tous les emails
    facultatifs et n'est pas abonné à la newsletter, **Then** il le reçoit tout de même.
@@ -66,8 +67,8 @@ chaque email.
 4. **Given** un email annonçant une facture, **When** il est reçu, **Then** il mène à la
    facture dans « Mon compte », après connexion.
 5. **Given** n'importe quel email, **When** il s'affiche, **Then** il respecte la charte
-   (logo, police, couleur d'action, ton sobre, vouvoiement) et indique le numéro de la
-   hotline et ses horaires.
+   (logo, police, couleur d'action, ton sobre, vouvoiement) et indique le numéro WhatsApp,
+   ses horaires et le lien « Écrire sur WhatsApp ».
 6. **Given** un même événement signalé deux fois, **When** il est traité, **Then** le
    client ne reçoit qu'un seul email.
 7. **Given** un email transactionnel qui ne peut pas être délivré, **When** l'échec est
@@ -166,14 +167,14 @@ les autres le sont, puis le réactiver.
 
 ### User Story 5 - Être prévenu avant de perdre un avantage (Priority: P2)
 
-Le client est prévenu avant que ses bons d'achat n'expirent, que ses droits d'assistance ne
-prennent fin ou qu'une garantie n'arrive à échéance.
+Le client est prévenu avant que ses bons d'achat n'expirent ou que ses droits d'assistance ne
+prennent fin.
 
 **Why this priority**: ces alertes rendent le programme de fidélité vivant et évitent les
 mauvaises surprises, mais le programme fonctionne sans elles.
 
-**Independent Test**: placer un compte à quelques jours de la fin de ses droits, de
-l'expiration de bons et de la fin d'une garantie, et vérifier chaque alerte.
+**Independent Test**: placer un compte à quelques jours de la fin de ses droits et de
+l'expiration de bons, et vérifier chaque alerte.
 
 **Acceptance Scenarios**:
 
@@ -183,11 +184,9 @@ l'expiration de bons et de la fin d'une garantie, et vérifier chaque alerte.
 2. **Given** des bons d'achat proches de leur expiration, **When** le délai de prévenance
    est atteint, **Then** le client reçoit un email indiquant son solde, le montant qui
    expire et la date.
-3. **Given** une garantie proche de sa fin, **When** le délai de prévenance est atteint,
-   **Then** le client reçoit un email indiquant l'appareil et la date.
-4. **Given** une alerte déjà envoyée pour une échéance, **When** le temps passe, **Then**
+3. **Given** une alerte déjà envoyée pour une échéance, **When** le temps passe, **Then**
    elle n'est pas renvoyée pour la même échéance.
-5. **Given** une alerte devenue sans objet (droits prolongés, bons utilisés), **When**
+4. **Given** une alerte devenue sans objet (droits prolongés, bons utilisés), **When**
    l'échéance approche, **Then** elle n'est pas envoyée.
 
 ---
@@ -310,19 +309,18 @@ d'un modèle, envoyer un email de test, puis retrouver un envoi dans le suivi.
 - **FR-042** : En phase 1, le connecteur emailing de démonstration NE DOIT envoyer aucun email
   réel : chaque email est conservé dans une boîte de démonstration, consultable pour relire
   son contenu et sa mise en forme.
-- **FR-043** : Les notifications destinées à l'équipe (nouvelle demande de rappel, alertes,
-  F09) DOIVENT passer par le même connecteur, qui permet l'email et le SMS (principe III).
+- **FR-043** : Les notifications destinées à l'équipe (nouvelle demande de financement ou de
+  devis, alertes) DOIVENT passer par le même connecteur, qui permet l'email et le SMS
+  (principe III).
 
 **Emails transactionnels**
 
 - **FR-003** : Les emails transactionnels DOIVENT toujours être envoyés, sans condition de
   consentement ni de préférence. Ils comprennent au moins : confirmation d'inscription,
   validation du compte, confirmation de commande, expédition avec suivi, facture
-  disponible, échéance et prélèvement de location, résiliation, confirmation et rappel de
-  rendez-vous, demande de SAV, demande de financement.
+  disponible, échéance et prélèvement de location, résiliation, demande de financement.
 - **FR-004** : Les emails de sécurité et de suivi prévus par les autres modules (mot de
-  passe, changement d'email, remboursement et avoir, demande de rappel, décision sur un
-  compte) DOIVENT relever de cette même famille.
+  passe, changement d'email, remboursement et avoir, décision sur un compte) DOIVENT relever de cette même famille.
 - **FR-005** : Les relances de factures impayées DOIVENT relever de la famille
   transactionnelle : le client ne peut pas les désactiver.
 - **FR-006** : Un email transactionnel NE DOIT contenir aucun message promotionnel.
@@ -333,7 +331,7 @@ d'un modèle, envoyer un email de test, puis retrouver un envoi dans le suivi.
 - **FR-008** : Le site DOIT proposer les scénarios automatisés suivants, chacun activable,
   désactivable et réglable par l'administrateur : relance de réapprovisionnement, alerte de
   solde ou d'expiration de bons d'achat, alerte de fin prochaine des droits d'assistance,
-  alerte de fin de garantie, panier abandonné.
+  panier abandonné.
 - **FR-009** : Le client DOIT pouvoir désactiver chacun de ces scénarios séparément.
 - **FR-010** : Un scénario NE DOIT envoyer qu'un email par échéance ou par panier, et NE
   DOIT rien envoyer si son objet a disparu (commande passée, droits prolongés, bons
@@ -345,7 +343,7 @@ d'un modèle, envoyer un email de test, puis retrouver un envoi dans le suivi.
   uniquement aux abonnés à la newsletter, et comporter un lien de désinscription utilisable
   sans connexion.
 - **FR-012** : Les scénarios de réapprovisionnement, de panier abandonné et d'alerte (bons
-  d'achat, droits d'assistance, garantie) DOIVENT être envoyés à tout client, abonné ou non
+  d'achat, droits d'assistance) DOIVENT être envoyés à tout client, abonné ou non
   à la newsletter, tant qu'il ne les a pas désactivés. Seuls les emails de promotion, de
   vente flash et de nouveauté exigent l'abonnement à la newsletter.
 - **FR-041** : Chacun de ces emails de service DOIT rappeler pourquoi le client le reçoit et
@@ -401,7 +399,7 @@ d'un modèle, envoyer un email de test, puis retrouver un envoi dans le suivi.
 - **FR-026** : L'administrateur DOIT pouvoir modifier l'objet et le texte de chaque modèle
   sans développeur, le prévisualiser et s'envoyer un email de test.
 - **FR-027** : Chaque email DOIT indiquer l'identité de l'expéditeur, les mentions légales
-  requises, le numéro de la hotline et ses horaires (F09).
+  requises, le numéro WhatsApp, ses horaires et le lien « Écrire sur WhatsApp » (F09).
 - **FR-028** : Chaque email DOIT rester lisible sur mobile, sans images, et être utilisable
   avec un lecteur d'écran (structure, textes de remplacement, contrastes de la charte).
 - **FR-029** : Les montants DOIVENT être indiqués en euros HT, avec le TTC lorsqu'il s'agit
@@ -429,7 +427,7 @@ d'un modèle, envoyer un email de test, puis retrouver un envoi dans le suivi.
   résultats de chaque scénario (envoyés, remis, ouverts, suivis d'une commande).
 - **FR-037** : Les délais des scénarios, la fréquence maximale et les plages horaires DOIVENT
   être des paramètres du back-office, jamais codés en dur. Les données qui déclenchent les
-  scénarios (commandes, bons d'achat, droits, garanties, paiements) sont lues dans Odoo par
+  scénarios (commandes, bons d'achat, droits, paiements) sont lues dans Odoo par
   son connecteur.
 - **FR-038** : F10 DOIT livrer les écrans d'administration nécessaires : scénarios, modèles,
   suivi des envois. Le back-office complet (F13) les étendra.
@@ -449,8 +447,7 @@ d'un modèle, envoyer un email de test, puis retrouver un envoi dans le suivi.
 - **Preuve de consentement** : abonnement ou désinscription, date, origine.
 - **Rythme de commande** : pour un client et un consommable, intervalle habituel et date
   prévue de la prochaine commande.
-- **Échéance de relance** : objet concerné (consommable, bons, droits, garantie, panier,
-  impayé), date, relance déjà envoyée ou non.
+- **Échéance de relance** : objet concerné (consommable, bons, droits, panier, impayé), date, relance déjà envoyée ou non.
 - **Règles d'envoi** : fréquence maximale, plages horaires, expéditeur, mentions.
 
 ## Success Criteria *(mandatory)*
@@ -525,7 +522,7 @@ validés par la responsable du projet le 2026-10-13.
   au titre du fonctionnement du site (principe VI).
 - **Liste des emails transactionnels** : celle de la demande n'est pas limitative ; tout
   email de confirmation, de sécurité ou de suivi défini par un autre module en fait partie.
-- **Délais de prévenance** des alertes de bons, de droits et de garantie : fixés par F06 et
-  F07 ; F10 les applique.
+- **Délais de prévenance** des alertes de bons et de droits : fixés par F06 ; F10 les
+  applique.
 - **Périmètre** : emails en français, destinés à des professionnels de santé de France
   métropolitaine, sans aucune donnée de patient.

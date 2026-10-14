@@ -21,8 +21,8 @@ F02 livre l'inscription, la validation des comptes, la connexion, l'espace « Mo
 l'exercice des droits RGPD.
 
 **Hors périmètre de F02** : le contenu détaillé des rubriques de « Mon compte » qui relèvent
-d'autres modules (commandes, factures, locations, bons d'achat, droits d'assistance,
-garanties, rendez-vous, accès logiciels Cloud), le panier et le paiement, l'envoi des
+d'autres modules (commandes, factures, locations, bons d'achat, droits d'assistance, accès
+logiciels Cloud), le panier et le paiement, l'envoi des
 newsletters elles-mêmes, le back-office complet (F13), le branchement réel d'Odoo (phase 2), et le rattachement de plusieurs utilisateurs à un même compte client (reporté
 après la première version, voir FR-038). F02 fournit la structure du tableau de bord et les
 points d'entrée de ces rubriques.
@@ -201,8 +201,8 @@ la newsletter, et vérifier que chaque rubrique du tableau de bord s'ouvre sans 
 
 1. **Given** un professionnel connecté, **When** il ouvre « Mon compte », **Then** il voit
    le statut de son compte et les rubriques : commandes, factures, locations en cours, bons
-   d'achat, droits d'assistance, garanties, rendez-vous, accès logiciels Cloud,
-   informations et adresses, préférences de communication.
+   d'achat, droits d'assistance, accès logiciels Cloud, informations et adresses,
+   préférences de communication, ainsi que le contact WhatsApp (F09).
 2. **Given** une rubrique dont le module n'est pas encore livré ou qui est vide, **When**
    il l'ouvre, **Then** un message clair l'indique, sans erreur.
 3. **Given** ses informations, **When** il modifie son téléphone, une adresse ou son mot
@@ -372,8 +372,9 @@ conservée.
 
 - **FR-036** : Le tableau de bord « Mon compte » DOIT présenter le statut du compte et les
   rubriques : commandes, factures, locations en cours, solde de bons d'achat, droits
-  d'assistance, garanties, rendez-vous, accès logiciels Cloud, informations et adresses,
-  préférences de communication.
+  d'assistance, accès logiciels Cloud, informations et adresses, préférences de
+  communication. Il NE DOIT afficher ni garanties ni rendez-vous, gérés hors du site. Il
+  DOIT afficher le contact WhatsApp (F09).
 - **FR-037** : Le professionnel DOIT pouvoir modifier ses informations, ses adresses, son
   mot de passe et ses préférences de communication. Un changement d'email DOIT être
   confirmé ; un changement de numéro RPPS ou SIRET DOIT être vérifié par l'administrateur.

@@ -1,7 +1,7 @@
-# Specification Quality Checklist: F09 — Hotline téléphonique, demandes de rappel et centre d'aide
+# Specification Quality Checklist: F09 — Contact WhatsApp et centre d'aide
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning
-**Created**: 2026-10-13
+**Created**: 2026-10-14
 **Feature**: [spec.md](../spec.md)
 
 ## Content Quality
@@ -32,15 +32,8 @@
 ## Notes
 
 - Items marked incomplete require spec updates before `/speckit-clarify` or `/speckit-plan`
-- Cette spec remplace une première version de F09 (assistant IA et discussion écrite),
-  abandonnée le 2026-10-13 à la demande de la responsable du projet, avant tout commit.
-- Aucun marqueur [NEEDS CLARIFICATION] : le seul point signalé dans la demande (assistance
-  payante) a déjà été tranché dans F06.
-- Les hypothèses ont été confirmées le 2026-10-13, avec trois décisions : pas d'astreinte
-  hors horaires ; à urgence égale, priorité aux clients ayant des droits d'assistance
-  actifs ; numéro « vitrine », sans lien entre le site et la solution de téléphonie.
-- Aucun SMS : les notifications à l'équipe passent par email. Aucun amendement de la
-  constitution n'est nécessaire.
-- Révisée le 2026-10-14 pour la constitution v2.1.0 : données de gestion lues et écrites dans
-  Odoo par son connecteur (base fictive en phase 1), paramètres en euros dans Odoo,
-  critères de succès marqués [Phase 1] ou [Phase 3].
+- Spec réécrite le 2026-10-14 : elle remplace la version « Hotline téléphonique, demandes de
+  rappel et centre d'aide ». Le dossier a été renommé en `009-contact-whatsapp-aide`.
+- Les quatre critères d'acceptation de la demande sont repris en SC-001 à SC-004.
+- WhatsApp n'est pas un service connecté (constitution v2.2.0) : aucun connecteur.
+- Point à valider hors spec : mention de WhatsApp dans la politique de confidentialité.

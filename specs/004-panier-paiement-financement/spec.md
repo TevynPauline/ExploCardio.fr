@@ -457,7 +457,7 @@ vérifier l'affichage côté client.
 - **FR-038** : Une fois le financement accordé, l'équipe DOIT pouvoir créer dans Odoo, à
   partir de la demande, une commande marquée « financée », sans paiement du client. Cette commande DOIT
   décompter le stock et être suivie comme une commande normale (préparation, expédition,
-  livraison, garanties), et apparaître dans « Mon compte ».
+  livraison), et apparaître dans « Mon compte ».
 - **FR-047** : Une commande « financée » NE DOIT donner lieu à aucune facture adressée au
   client par le site ; la facturation relève de l'organisme de financement, hors du site.
 
