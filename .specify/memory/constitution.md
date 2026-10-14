@@ -29,23 +29,47 @@ dilue le positionnement et ralentit le médecin.
 **Justification** : le médecin décide vite s'il voit le prix et le chemin. Le sur-mesure
 et les prix masqués imposent un échange commercial que le site veut éviter.
 
-### III. Référentiel de gestion unique, remplaçable par Odoo
+### III. Trois phases et des connecteurs
 
-L'ERP Odoo (plan personnalisé avec API) ne sera branché qu'en fin de projet.
+Le projet avance en trois phases.
 
-- D'ici là, le site DOIT posséder son propre référentiel de gestion, administré dans le
-  back-office : produits, prix, stocks, parc de location, clients, commandes, factures,
-  bons d'achat, droits d'assistance, garanties.
-- Tout accès à ces données DOIT passer par une seule couche d'accès (interfaces de type
-  « dépôt » / « fournisseur de données »).
-- Les pages et les composants NE DOIVENT JAMAIS accéder directement à ces données.
-- La bascule vers Odoo DOIT se limiter au remplacement de l'implémentation de cette couche,
-  sans modification du reste du site.
-- Les modèles de données DOIVENT reprendre dès maintenant les notions et champs d'Odoo :
-  client / partenaire, article, variante, commande de vente, facture, numéro de série.
+- **Phase 1 — Site en démonstration** : tout le site est construit et critiqué sans aucun
+  service externe branché. Chaque service externe (Odoo, Stripe, plateforme Cloud PCA,
+  agenda, emailing) DOIT être utilisé uniquement à travers un connecteur. En
+  phase 1, chaque connecteur fonctionne en mode démonstration : il lit et écrit dans une
+  mini base de données fictive, ou simule le service.
+- **Phase 2 — Branchement** : chaque connecteur reçoit son mode réel. Le passage du mode
+  démonstration au mode réel DOIT se faire par configuration, connecteur par connecteur,
+  sans modifier les pages ni les composants.
+- **Phase 3 — Banc de tests et recette** : tests de bout en bout sur les services réels en
+  environnement de test (copie de test d'Odoo, Stripe en mode test). La mise en ligne N'A
+  LIEU que si tous les tests passent.
 
-**Justification** : une couche d'accès unique rend la migration vers Odoo mécanique et
-évite de réécrire le site en fin de projet.
+Règles :
+
+- Aucune page ni aucun composant NE DOIT appeler un service externe directement.
+- En démonstration comme en réel, un connecteur DOIT renvoyer les mêmes données et les mêmes
+  erreurs.
+- Aucune donnée fictive NE DOIT JAMAIS être envoyée dans Odoo ni dans un autre service réel.
+- À terme, Odoo est la source de vérité pour les produits, prix, stocks, parc de location,
+  clients, commandes, factures, bons d'achat, droits d'assistance, numéros de série et
+  garanties. Le site NE DOIT dupliquer ni ces données ni leurs règles de gestion.
+- La base fictive DOIT reprendre le vocabulaire et les champs d'Odoo, et les références
+  produits réelles de la brochure.
+- Le back-office du site NE DOIT gérer que les contenus, les paramètres, la validation des
+  comptes et les demandes. Ces données-là sont réelles dès la phase 1.
+- En phase 1, le connecteur Odoo de démonstration applique les mêmes règles qu'Odoo (prix,
+  remises, bons d'achat, droits d'assistance) à partir des paramètres stockés dans la base
+  fictive. Ce n'est pas une duplication : ce code ne sert qu'en mode démonstration ; en mode
+  réel, c'est Odoo qui calcule.
+- La téléphonie (hotline) n'est pas un service connecté : c'est un numéro partagé,
+  configuré à part dans l'outil de téléphonie, que le site affiche depuis un paramètre du
+  back-office. Les notifications d'équipe (email et SMS) passent par le connecteur
+  emailing.
+
+**Justification** : un site entièrement démontrable sans aucun service branché peut être
+critiqué et corrigé tôt, sans risque ni coût. Les connecteurs rendent le branchement
+mécanique et évitent toute double gestion des données avec Odoo.
 
 ### IV. Aucune donnée patient sur le site
 
@@ -64,22 +88,32 @@ Toute entorse changerait la nature réglementaire du projet.
   registre des traitements.
 - Aucune donnée de carte bancaire NE DOIT transiter par nos serveurs ni y être stockée :
   tout paiement passe par Stripe.
-- Les factures émises par le site DOIVENT respecter les mentions légales françaises et une
-  numérotation continue.
-- Les secrets (clés API Stripe, PCA, puis Odoo) NE DOIVENT JAMAIS figurer dans le code.
+- Les factures DOIVENT être émises par Odoo. En phase 1, les factures fictives DOIVENT
+  porter la mention « FICTIVE ».
+- Les secrets (clés API Odoo, Stripe, PCA, emailing, agenda) NE DOIVENT JAMAIS figurer dans
+  le code.
 - L'authentification DOIT être sécurisée et les actions sensibles DOIVENT être journalisées.
+- En phase 1, le site de démonstration DOIT être protégé par mot de passe, non indexé par
+  les moteurs de recherche, et afficher un bandeau « Version de démonstration ».
 
-**Justification** : le site émet des factures et encaisse des professionnels de santé.
-Une faille ou une non-conformité engage directement la responsabilité de l'entreprise.
+**Justification** : le site encaisse des professionnels de santé et s'appuie sur des
+factures légales. Une faille, une non-conformité ou une démonstration prise pour le vrai
+site engagerait directement la responsabilité de l'entreprise.
 
-### VI. Règles commerciales paramétrables
+### VI. Règles commerciales paramétrables, au bon endroit
 
-- Les taux de fidélité, seuils, durées d'assistance, tarifs de mise à disposition et
-  promotions DOIVENT être des paramètres modifiables depuis le back-office.
-- Ces valeurs NE DOIVENT JAMAIS être codées en dur.
+- Aucune règle commerciale NE DOIT être codée en dur.
+- Tout ce qui a une valeur en euros ou un effet comptable DOIT se paramétrer dans Odoo (base
+  fictive en phase 1) : prix d'achat et de mise à disposition (premier mois, mois suivants,
+  kit d'accessoires), frais de port, remises, promotions, codes promo et ventes flash, taux
+  et seuils des bons d'achat, seuil et durée des droits d'assistance, durées de garantie.
+- Le back-office du site NE DOIT paramétrer que le fonctionnement du site : textes et
+  bandeau, activation de l'offre de bienvenue, heure limite de commande pour une livraison
+  le lendemain, numéro et horaires de la hotline, délais d'alerte des demandes de rappel.
 
-**Justification** : l'offre commerciale évoluera plus vite que le code. Un changement de
-tarif ne doit pas exiger une mise en production.
+**Justification** : l'offre commerciale évoluera plus vite que le code. Chaque règle a un
+seul endroit où elle se règle : Odoo pour tout ce qui touche à l'argent et à la
+comptabilité, le back-office pour le fonctionnement du site.
 
 ### VII. Identité visuelle ExploCardio.fr
 
@@ -90,8 +124,6 @@ tarif ne doit pas exiger une mise en production.
   DOIT être codée en dur dans les composants.
 - Le logo DOIT toujours être intégré depuis `docs/brand/assets/*.svg`. Il NE DOIT JAMAIS
   être recomposé en texte, déformé ni recoloré.
-- Dans l'en-tête, la version horizontale `explocardio-fr-logo-horizontal.svg` est la seule
-  forme compacte admise.
 - Le nom s'écrit toujours « ExploCardio.fr ».
 - Police unique : Inter, graisses 300, 400, 500 et 600. Titres en Light, sous-titres en
   Semibold.
@@ -132,12 +164,15 @@ la confiance.
 ### X. Livraison par petits incréments testables
 
 - Chaque fonctionnalité DOIT être spécifiée, testée et livrable seule.
-- Chaque spec DOIT comporter des critères d'acceptation vérifiables.
-- Les tests automatisés DOIVENT couvrir les parcours d'achat, le paiement, la couche
-  d'accès au référentiel de gestion et les échanges avec PCA.
+- Chaque spec DOIT comporter des critères d'acceptation vérifiables, marqués [Phase 1]
+  s'ils se vérifient avec les connecteurs de démonstration, ou [Phase 3] s'ils nécessitent
+  les vrais services.
+- Chaque connecteur DOIT avoir des tests de contrat communs à ses deux modes.
+- La phase 3 DOIT couvrir tous les parcours, les cas limites, la sécurité et la charge.
 
-**Justification** : des incréments indépendants limitent le risque et permettent de
-vérifier chaque livraison sur des critères objectifs.
+**Justification** : des incréments indépendants limitent le risque. Le marquage par phase
+dit ce qui peut être validé tôt et ce qui attend les vrais services ; les tests de contrat
+garantissent que la démonstration ne ment pas.
 
 ### XI. Langue et périmètre
 
@@ -149,20 +184,23 @@ vérifier chaque livraison sur des critères objectifs.
 **Justification** : un périmètre unique simplifie la fiscalité, la facturation, la
 logistique et le contenu.
 
-## Contraintes techniques et intégrations
+## Connecteurs et services externes
 
 Cette section rassemble les contraintes d'architecture qui découlent des principes.
 
-- **Systèmes externes autorisés** : Stripe (paiement), PCA (ouverture et fermeture des
-  droits d'accès des médecins), un outil d'agenda (prise de rendez-vous), un outil
-  d'emailing (emails et newsletter), puis Odoo (ERP) en fin de projet. L'outil d'agenda et
-  l'outil d'emailing sont choisis lors de la planification ; ils NE DOIVENT recevoir que
-  les données strictement nécessaires, jamais de donnée de patient, et DOIVENT respecter le
-  RGPD. Toute autre intégration externe exige un amendement ou une justification dans le
-  plan.
-- **Frontière des données** : les données de gestion ne sont lues et écrites que par la
-  couche d'accès du principe III. Les échanges avec PCA ne portent que sur des comptes et
-  des droits de médecins, jamais sur des données de patients (principe IV).
+- **Services externes connectés** : Odoo (gestion), Stripe (paiement), PCA (ouverture et
+  fermeture des droits d'accès des médecins), un outil d'agenda et un outil d'emailing
+  (emails et SMS). Chacun passe par son connecteur (principe III). Toute autre intégration
+  externe exige un amendement.
+- **Téléphonie** : hors du site. Le numéro de la hotline est un paramètre du back-office.
+- **Données transmises** : un service externe NE DOIT recevoir que les données strictement
+  nécessaires, jamais de donnée de patient (principe IV) ni de donnée de carte (principe
+  V), et DOIT respecter le RGPD.
+- **Données de gestion** : produits, prix, stocks, parc de location, clients, commandes,
+  factures, bons d'achat, droits d'assistance, numéros de série et garanties sont lus et
+  écrits par le connecteur Odoo, en mode démonstration puis en mode réel.
+- **Back-office** : il ne gère que les contenus, les paramètres de fonctionnement du site,
+  la validation des comptes et les demandes (principes III et VI).
 - **Secrets** : fournis par la configuration de l'environnement, hors du dépôt
   (principe V).
 - **Interface** : les tokens de `docs/brand/` sont l'unique source des valeurs de style
@@ -177,8 +215,9 @@ Cette section rassemble les contraintes d'architecture qui découlent des princi
 - Le plan de chaque fonctionnalité DOIT comporter un contrôle de conformité à la
   constitution, principe par principe. Tout écart DOIT y être justifié par écrit ou
   corrigé avant l'implémentation.
-- Une fonctionnalité n'est livrable que si ses critères d'acceptation sont vérifiés et ses
-  tests automatisés passent (principe X).
+- Le plan DOIT identifier les connecteurs utilisés et leurs contrats.
+- Une fonctionnalité est livrable en phase 1 quand ses critères [Phase 1] sont vérifiés et
+  ses tests automatisés passent. Ses critères [Phase 3] sont vérifiés lors de la recette.
 - Avant livraison, toute interface DOIT être vérifiée sur trois points : conformité au
   design system (principe VII), accessibilité WCAG 2.2 AA (principe VIII) et ton éditorial
   (principe IX).
@@ -201,4 +240,4 @@ Cette section rassemble les contraintes d'architecture qui découlent des princi
 - Les onze principes étant non négociables, aucune dérogation ponctuelle n'est admise : un
   écart durable passe par un amendement.
 
-**Version**: 1.1.0 | **Ratified**: 2026-10-12 | **Last Amended**: 2026-10-13
+**Version**: 2.1.0 | **Ratified**: 2026-10-12 | **Last Amended**: 2026-10-14
