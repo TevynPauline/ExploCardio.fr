@@ -35,7 +35,7 @@ Le projet avance en trois phases.
 
 - **Phase 1 — Site en démonstration** : tout le site est construit et critiqué sans aucun
   service externe branché. Chaque service externe (Odoo, Stripe, plateforme Cloud PCA,
-  agenda, emailing) DOIT être utilisé uniquement à travers un connecteur. En
+  emailing) DOIT être utilisé uniquement à travers un connecteur. En
   phase 1, chaque connecteur fonctionne en mode démonstration : il lit et écrit dans une
   mini base de données fictive, ou simule le service.
 - **Phase 2 — Branchement** : chaque connecteur reçoit son mode réel. Le passage du mode
@@ -57,15 +57,19 @@ Règles :
 - La base fictive DOIT reprendre le vocabulaire et les champs d'Odoo, et les références
   produits réelles de la brochure.
 - Le back-office du site NE DOIT gérer que les contenus, les paramètres, la validation des
-  comptes et les demandes. Ces données-là sont réelles dès la phase 1.
+  comptes et les demandes (financement et devis). Ces données-là sont réelles dès la
+  phase 1.
 - En phase 1, le connecteur Odoo de démonstration applique les mêmes règles qu'Odoo (prix,
   remises, bons d'achat, droits d'assistance) à partir des paramètres stockés dans la base
   fictive. Ce n'est pas une duplication : ce code ne sert qu'en mode démonstration ; en mode
   réel, c'est Odoo qui calcule.
-- La téléphonie (hotline) n'est pas un service connecté : c'est un numéro partagé,
-  configuré à part dans l'outil de téléphonie, que le site affiche depuis un paramètre du
-  back-office. Les notifications d'équipe (email et SMS) passent par le connecteur
-  emailing.
+- La hotline est une ligne WhatsApp Business, qui n'est pas un service connecté : le site
+  affiche son numéro, paramètre du back-office, avec un bouton « Appeler » et un bouton
+  « Écrire sur WhatsApp ». Les notifications d'équipe (email et SMS) passent par le
+  connecteur emailing.
+- Le SAV (pannes, garanties, réparations, enregistrement des numéros de série) et la prise
+  de rendez-vous ne sont pas gérés par le site. Ils relèveront d'une application SAV
+  externe, hors du périmètre actuel.
 
 **Justification** : un site entièrement démontrable sans aucun service branché peut être
 critiqué et corrigé tôt, sans risque ni coût. Les connecteurs rendent le branchement
@@ -90,8 +94,8 @@ Toute entorse changerait la nature réglementaire du projet.
   tout paiement passe par Stripe.
 - Les factures DOIVENT être émises par Odoo. En phase 1, les factures fictives DOIVENT
   porter la mention « FICTIVE ».
-- Les secrets (clés API Odoo, Stripe, PCA, emailing, agenda) NE DOIVENT JAMAIS figurer dans
-  le code.
+- Les secrets (clés API Odoo, Stripe, PCA, emailing) NE DOIVENT JAMAIS figurer dans le
+  code.
 - L'authentification DOIT être sécurisée et les actions sensibles DOIVENT être journalisées.
 - En phase 1, le site de démonstration DOIT être protégé par mot de passe, non indexé par
   les moteurs de recherche, et afficher un bandeau « Version de démonstration ».
@@ -109,7 +113,7 @@ site engagerait directement la responsabilité de l'entreprise.
   et seuils des bons d'achat, seuil et durée des droits d'assistance, durées de garantie.
 - Le back-office du site NE DOIT paramétrer que le fonctionnement du site : textes et
   bandeau, activation de l'offre de bienvenue, heure limite de commande pour une livraison
-  le lendemain, numéro et horaires de la hotline, délais d'alerte des demandes de rappel.
+  le lendemain, numéro et horaires de la ligne WhatsApp.
 
 **Justification** : l'offre commerciale évoluera plus vite que le code. Chaque règle a un
 seul endroit où elle se règle : Odoo pour tout ce qui touche à l'argent et à la
@@ -189,10 +193,11 @@ logistique et le contenu.
 Cette section rassemble les contraintes d'architecture qui découlent des principes.
 
 - **Services externes connectés** : Odoo (gestion), Stripe (paiement), PCA (ouverture et
-  fermeture des droits d'accès des médecins), un outil d'agenda et un outil d'emailing
-  (emails et SMS). Chacun passe par son connecteur (principe III). Toute autre intégration
+  fermeture des droits d'accès des médecins) et un outil d'emailing (emails et SMS). Chacun passe par son connecteur (principe III). Toute autre intégration
   externe exige un amendement.
-- **Téléphonie** : hors du site. Le numéro de la hotline est un paramètre du back-office.
+- **Contact WhatsApp** : hors du site. Le numéro de la ligne WhatsApp Business et ses
+  horaires sont des paramètres du back-office.
+- **SAV et rendez-vous** : hors du site pour l'instant (application SAV externe à venir).
 - **Données transmises** : un service externe NE DOIT recevoir que les données strictement
   nécessaires, jamais de donnée de patient (principe IV) ni de donnée de carte (principe
   V), et DOIT respecter le RGPD.
@@ -200,7 +205,8 @@ Cette section rassemble les contraintes d'architecture qui découlent des princi
   factures, bons d'achat, droits d'assistance, numéros de série et garanties sont lus et
   écrits par le connecteur Odoo, en mode démonstration puis en mode réel.
 - **Back-office** : il ne gère que les contenus, les paramètres de fonctionnement du site,
-  la validation des comptes et les demandes (principes III et VI).
+  la validation des comptes et les demandes de financement et de devis (principes III et
+  VI).
 - **Secrets** : fournis par la configuration de l'environnement, hors du dépôt
   (principe V).
 - **Interface** : les tokens de `docs/brand/` sont l'unique source des valeurs de style
@@ -240,4 +246,4 @@ Cette section rassemble les contraintes d'architecture qui découlent des princi
 - Les onze principes étant non négociables, aucune dérogation ponctuelle n'est admise : un
   écart durable passe par un amendement.
 
-**Version**: 2.1.0 | **Ratified**: 2026-10-12 | **Last Amended**: 2026-10-14
+**Version**: 2.2.0 | **Ratified**: 2026-10-12 | **Last Amended**: 2026-10-14
