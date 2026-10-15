@@ -293,7 +293,7 @@ simulée d'un connecteur.
 - [X] T091 [P] Rédiger `docs/demonstration.md` pour l'équipe : ouvrir le site de démonstration, comptes de démonstration et cas illustrés, boîte de démonstration, écran de démonstration, réinitialisation, avertissement « prix inventés à remplacer avant toute présentation à un médecin »
 - [X] T096 [P] Écrire `tests/e2e/accessibilite-charte.spec.ts` : sur chaque page disponible, vérifie que les éléments interactifs mesurent au moins 44 × 44 px, que le focus est visible au clavier, et qu'avec `prefers-reduced-motion: reduce` aucune animation ne se joue (principe VIII)
 - [X] T092 Dérouler [quickstart.md](quickstart.md) de bout en bout et corriger les écarts
-- [ ] T093 Vérifier la conformité finale : `npm run lint`, `npm run check:contrast`, `npm run test:contract`, `npm run test:e2e`, `npm run test:no-egress` passent en intégration continue
+- [X] T093 Vérifier la conformité finale : `npm run lint`, `npm run check:contrast`, `npm run test:contract`, `npm run test:e2e`, `npm run test:no-egress` passent en intégration continue
 
 ---
 
