@@ -375,8 +375,9 @@ plusieurs pages, et vérifier l'absence d'indexation.
   l'équipe technique, et depuis le back-office par un administrateur uniquement, avec
   confirmation.
 - **FR-020** : La réinitialisation DOIT remettre à leur état de départ la base de
-  démonstration et toute l'activité de test enregistrée par le site : comptes créés,
-  demandes, boîte de démonstration. Les contenus (textes, photos, FAQ, tutoriels, bandeau)
+  démonstration et toute l'activité de test enregistrée par le site : comptes clients créés pendant les
+  séances, demandes, boîte de démonstration. Les comptes de l'équipe créés dans le
+  back-office (administrateur, commercial, support) DOIVENT toujours être conservés. Les contenus (textes, photos, FAQ, tutoriels, bandeau)
   et les paramètres du back-office DOIVENT toujours être conservés.
 - **FR-021** : Les demandes de financement et de devis DOIVENT être gérées par le site, dans
   son back-office. La base de démonstration (puis Odoo en phase 2) n'en reçoit qu'une
@@ -457,7 +458,7 @@ plusieurs pages, et vérifier l'absence d'indexation.
   destinataire, son type, sa date et son rendu.
 - **Paiement simulé** : commande ou échéance, carte ou prélèvement, issue choisie.
 - **Panne simulée** : connecteur concerné, état actif ou inactif.
-- **Journal de démonstration** : remplissages, réinitialisations, modifications de
+- **Journal des actions** : remplissages, réinitialisations, modifications de
   paramètres, pannes simulées, avec auteur et date.
 
 ## Success Criteria *(mandatory)*
@@ -469,7 +470,9 @@ ou [Phase 3] s'il nécessite les vrais services.
 
 - **SC-001** [Phase 1] : Tous les parcours (inscription, achat, mise à disposition,
   fidélité, demande de financement ou de devis) fonctionnent de bout en bout en mode
-  démonstration.
+  démonstration. Ce critère est vérifié au fur et à mesure de la livraison de F01 à F10 :
+  F11 fournit les connecteurs, les données et le cadre de test, et chaque module y ajoute
+  son parcours.
 - **SC-002** [Phase 1] : Réinitialiser la base remet le site dans son état de départ en
   moins d'une minute.
 - **SC-003** [Phase 1] : Aucune requête ne sort vers un service réel quand tous les

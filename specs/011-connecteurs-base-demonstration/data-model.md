@@ -111,8 +111,8 @@ Créé par le remplissage et recréé par chaque réinitialisation :
 | Remis à l'état de départ | Conservé |
 |---|---|
 | Toute la base de démonstration | Contenus (pages, bandeau, FAQ, tutoriels) |
-| Comptes clients et d'équipe créés pendant les séances | Contenus produits |
+| Comptes clients créés pendant les séances | Contenus produits |
 | Demandes de financement et de devis, messages de contact | Paramètres du site et leur historique |
 | Boîte de démonstration | Journal des actions (la réinitialisation y est tracée) |
-| Pannes simulées | |
+| Pannes simulées | Comptes de l'équipe créés dans le back-office (administrateur, commercial, support) |
 | Cinq comptes de démonstration (recréés) | |

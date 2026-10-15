@@ -42,14 +42,14 @@ vérifiable seule.
 
 **Purpose** : créer l'application et ses outils.
 
-- [ ] T001 Initialiser l'application Next.js (App Router, TypeScript strict) à la racine du dépôt : `package.json`, `tsconfig.json` (`"strict": true`), `next.config.ts`, `app/layout.tsx`, `app/page.tsx` provisoire, `.nvmrc` (Node.js LTS)
+- [ ] T001 Initialiser l'application Next.js (App Router, TypeScript strict) à la racine du dépôt : `package.json`, `tsconfig.json` (`"strict": true`), `next.config.ts`, `app/layout.tsx` minimal (complété par T026), `app/page.tsx` provisoire, `.nvmrc` (Node.js LTS)
 - [ ] T002 [P] Configurer ESLint et Prettier dans `eslint.config.mjs` et `.prettierrc`, avec les règles TypeScript et Next.js recommandées
 - [ ] T003 [P] Configurer Vitest dans `vitest.config.ts` (dossiers `tests/unit` et `tests/contract`) et Playwright dans `playwright.config.ts` (dossier `tests/e2e`, intégration `@axe-core/playwright`)
 - [ ] T004 [P] Créer `.env.example` listant, **sans aucune valeur réelle** : `SITE_MODE` (`demo` ou `prod`), `CONNECTOR_ODOO`, `CONNECTOR_STRIPE`, `CONNECTOR_PCA`, `CONNECTOR_EMAILING` (`demo` ou `real`, défaut `demo`), `PCA_DEMO_SUBMODE` (`auto` ou `manual`), `DATABASE_URL`, `DEMO_DATABASE_URL`, `AUTH_SECRET` ; compléter `.gitignore` pour exclure tous les `.env*` sauf `.env.example`
 - [ ] T005 [P] Ajouter les fichiers de la police Inter (graisses 300, 400, 500, 600 et italiques 300, 400) dans `public/fonts/inter/` et déclarer la police locale dans `app/fonts.ts` ; aucun appel à Google Fonts
-- [ ] T006 Retirer la ligne `@import url("https://fonts.googleapis.com/…")` de `docs/brand/tokens.css` (F11, FR-042) et importer `docs/brand/tokens.css` dans `app/globals.css`
+- [ ] T006 Retirer la ligne `@import url("https://fonts.googleapis.com/…")` de `docs/brand/tokens.css` (F11, FR-042) et importer `docs/brand/tokens.css` dans `app/globals.css` ; dans ce même fichier, couper toute animation et transition quand `prefers-reduced-motion: reduce` est actif (principe VIII)
 - [ ] T007 Créer `styles/theme.css` : bloc `@theme` de Tailwind CSS 4 déclarant couleurs, police, rayons et espacements **uniquement à partir des variables `--ec-*`** de `docs/brand/tokens.css` ; l'importer dans `app/globals.css`
-- [ ] T008 [P] Créer les composants à la charte dans `src/ui/` : `Button.tsx` (`ec-btn` principal et secondaire), `Card.tsx` (`ec-card`), `Kicker.tsx` (`ec-kicker` avec `ec-dots`), `Badge.tsx` (`ec-badge`), `Placeholder.tsx` (`ec-placeholder`), `Logo.tsx` (SVG de `docs/brand/assets/`, versions horizontale, empilée et blanche, jamais recomposées en texte)
+- [ ] T008 [P] Créer les composants à la charte dans `src/ui/` : `Button.tsx` (`ec-btn` principal et secondaire), `Card.tsx` (`ec-card`), `Kicker.tsx` (`ec-kicker` avec `ec-dots`), `Badge.tsx` (`ec-badge`), `Placeholder.tsx` (`ec-placeholder`), `Logo.tsx` (SVG de `docs/brand/assets/`, versions horizontale, empilée et blanche, jamais recomposées en texte) ; chaque élément interactif a une zone cliquable d'au moins 44 × 44 px et un contour de focus visible au clavier, aux couleurs de la charte (principe VIII)
 - [ ] T009 Ajouter dans `package.json` les scripts prévus par [quickstart.md](quickstart.md) : `dev`, `build`, `lint`, `test`, `test:contract`, `test:e2e`, `test:no-egress`, `test:lighthouse`, `check:contrast`, `demo:seed`, `demo:reset`, `db:migrate`
 
 ---
@@ -73,7 +73,7 @@ vérifiable seule.
 - [ ] T015 [P] Créer la validation de la configuration dans `src/lib/config.ts` : lecture de `SITE_MODE` et des `CONNECTOR_*` (défaut `demo`) ; liste des variables exigées par chaque connecteur en mode `real` ; aucune variable de service réel exigée en mode `demo`
 - [ ] T016 Créer le registre des connecteurs dans `src/connecteurs/registre.ts` : seul point d'accès aux connecteurs ; choisit l'implémentation `demo` ou `real` par connecteur selon `src/lib/config.ts` ; un connecteur `real` incomplet lève `ConfigurationIncomplete` à chaque appel et ne bascule jamais seul en démonstration (FR-007)
 - [ ] T017 [P] Créer l'enveloppe de journalisation dans `src/connecteurs/journal.ts` : chaque appel inscrit dans `JournalConnecteur` (connecteur, mode, opération, objet, résultat, motif, durée), sans donnée de carte, de patient ni mot de passe
-- [ ] T018 [P] Créer la file d'attente dans `src/file-attente/index.ts` avec pg-boss sur la base du site : clé d'idempotence obligatoire, reprises espacées, alerte à l'administrateur après 5 échecs successifs d'une même tâche
+- [ ] T018 [P] Créer la file d'attente dans `src/file-attente/index.ts` avec pg-boss sur la base du site : clé d'idempotence obligatoire, reprises espacées ; après un nombre d'échecs successifs d'une même tâche fixé par le paramètre `file_attente.seuil_alerte` du back-office (5 par défaut, principe VI), une alerte est inscrite dans `JournalConnecteur` avec le niveau « alerte » et signalée dans le back-office ; une fois US6 livrée, l'administrateur reçoit en plus une notification d'équipe par le connecteur emailing (T068)
 - [ ] T019 [P] Créer le harnais des tests de contrat dans `tests/contract/harness.ts` : exécute une même suite contre l'implémentation désignée par `CONNECTOR_*` ; ignore les suites `real` si les identifiants de test sont absents
 
 ### Contrôles automatiques
@@ -87,7 +87,7 @@ vérifiable seule.
 
 - [ ] T024 Configurer Better Auth dans `src/lib/auth.ts` avec l'adaptateur Prisma de la base du site : email et mot de passe, réinitialisation, double authentification par application avec codes de secours ; double authentification **obligatoire** pour les rôles `admin`, `commercial`, `support`
 - [ ] T025 Créer les gardes de rôle dans `src/lib/roles.ts` et la mise en page du back-office `app/(back-office)/admin/layout.tsx`, accessible aux seuls rôles d'équipe ; F13 l'étendra
-- [ ] T026 Créer la mise en page commune `app/layout.tsx` avec la police locale, le thème, et un emplacement pour le bandeau de démonstration (rempli par US8)
+- [ ] T026 Compléter la mise en page commune `app/layout.tsx` (créée par T001) avec la police locale, le thème, et un emplacement pour le bandeau de démonstration (rempli par US8)
 
 **Checkpoint** : socle prêt ; les user stories peuvent commencer.
 
@@ -108,7 +108,7 @@ présents, cinq comptes de démonstration créés, règles de fidélité appliqu
 - [ ] T027 [P] [US1] Tests de contrat du domaine catalogue dans `tests/contract/odoo/catalogue.test.ts` (catégories, articles d'une catégorie avec filtres, lecture d'un article, prix d'un client, recherche) selon [contracts/odoo.md](contracts/odoo.md) §1
 - [ ] T028 [P] [US1] Tests de contrat du domaine stock et parc dans `tests/contract/odoo/stock.test.ts` (disponibilité par formule, réservation avec `OutOfStock`, première date de livraison du parc)
 - [ ] T029 [P] [US1] Tests de contrat du domaine clients dans `tests/contract/odoo/clients.test.ts` (créer ou retrouver un partenaire sans doublon avec la même clé, mise à jour, situation d'un client)
-- [ ] T030 [P] [US1] Tests de contrat des domaines commandes et factures dans `tests/contract/odoo/commandes.test.ts` et `tests/contract/odoo/factures.test.ts` (commande payée créée une seule fois par clé, lecture, factures et avoirs, PDF)
+- [ ] T030 [P] [US1] Tests de contrat des domaines commandes et factures dans `tests/contract/odoo/commandes.test.ts` et `tests/contract/odoo/factures.test.ts` (commande payée créée une seule fois par clé, lecture, factures et avoirs, PDF) ; le test lit le texte de chaque facture et de chaque avoir en PDF et échoue s'il n'y trouve pas « FICTIVE » (SC-008)
 - [ ] T031 [P] [US1] Tests de contrat du domaine location et abonnements dans `tests/contract/odoo/location.test.ts` (objets `mise_a_disposition` et `logiciel`, résiliation et annulation de résiliation)
 - [ ] T032 [P] [US1] Tests de contrat du domaine fidélité dans `tests/contract/odoo/fidelite.test.ts` : avec les paramètres par défaut, une commande éligible de 1 200 € HT crédite 120 € ; 0 % sous 500 €, 5 % de 500 € à 1 000 €, 10 % au-dessus ; seuls consommables et accessoires éligibles ; droits d'assistance ouverts et prolongés ; retrait au remboursement (règles de F06)
 - [ ] T033 [P] [US1] Tests de contrat du domaine opportunités dans `tests/contract/odoo/opportunites.test.ts` (copie d'une demande de financement ou de devis, sans doublon par clé)
@@ -125,12 +125,12 @@ présents, cinq comptes de démonstration créés, règles de fidélité appliqu
 
 ### Jeu de données de départ
 
-- [ ] T041 [P] [US1] Créer le catalogue de démonstration dans `prisma/demo/seed/catalogue.ts` à partir de [demo-references.md](demo-references.md) : marques et modèles de la brochure, vraies références quand elles sont connues (par exemple SunTech Oscar 2 `99-0133-00`, brassards Orbit `98-0239-21` à `98-0239-24`, DMS300-ABP `dms25`), références fictives signalées sinon (Microlife, IEM, Norav, Ergoline, RAM, SunTech Tango M2) ; **prix inventés plausibles, marqués « prix inventé »** ; configurations, consommables compatibles, offres de mise à disposition, barèmes de financement ; aucune lampe MedLED
+- [ ] T041 [P] [US1] Créer le catalogue de démonstration dans `prisma/demo/seed/catalogue.ts` à partir de [demo-references.md](demo-references.md) : marques et modèles de la brochure, vraies références quand elles sont connues (par exemple SunTech Oscar 2 `99-0133-00`, brassards Orbit `98-0239-21` à `98-0239-24`, DMS300-ABP `dms25`), références fictives signalées sinon (Microlife, IEM, Norav, Ergoline, RAM, SunTech Tango M2) ; **prix inventés plausibles, marqués « prix inventé »** ; configurations, consommables compatibles, offres de mise à disposition, barèmes de financement ; aucune lampe MedLED ; les `default_code` sont fixes et identiques d'un remplissage à l'autre, pour que les contenus produits du back-office (rattachés par `default_code`) restent liés après chaque réinitialisation
 - [ ] T042 [P] [US1] Créer les partenaires fictifs dans `prisma/demo/seed/partenaires.ts` : une quinzaine de médecins et cabinets, noms, RPPS et SIRET ne correspondant à aucun professionnel réel (FR-016), adresses en France métropolitaine
 - [ ] T043 [US1] Créer les historiques et les cas utiles dans `prisma/demo/seed/historiques.ts` : commandes, factures, locations, bons d'achat ; cas de FR-015 : client sans droits d'assistance, client aux droits actifs, location en cours, location en retard de retour, produit en rupture, produit en « délai X jours », bénéficiaire de l'offre de bienvenue, compte en attente de validation
-- [ ] T044 [US1] Créer les cinq comptes de démonstration dans `prisma/demo/seed/comptes-demo.ts` (base du site, adresses en `@demo.explocardio.test`) : client avec droits, client sans droits, compte en attente, administrateur, support ; rattachés aux partenaires fictifs correspondants (FR-041) ; identifiants affichés à la fin du remplissage, jamais commités en clair
-- [ ] T045 [US1] Créer le point d'entrée `prisma/demo/seed/index.ts` (script `demo:seed`) qui enchaîne T041 à T044 et inscrit le remplissage dans `JournalAction`
-- [ ] T046 [US1] Écrire `tests/unit/seed.test.ts` : présence de tout le catalogue, de 15 partenaires environ, de chaque cas de FR-015, des cinq comptes de démonstration, et du drapeau « prix inventé » sur chaque prix (SC-006)
+- [ ] T044 [US1] Créer les cinq comptes de démonstration dans `prisma/site/seed/comptes-demo.ts` (base du site, adresses en `@demo.explocardio.test`) : client avec droits, client sans droits, compte en attente, administrateur, support ; rattachés aux partenaires fictifs correspondants (FR-041) ; identifiants affichés à la fin du remplissage, jamais commités en clair
+- [ ] T045 [US1] Créer le point d'entrée `prisma/demo/seed/index.ts` (script `demo:seed`) qui enchaîne T041 à T044 et T088 (`prisma/site/seed/`) et inscrit le remplissage dans `JournalAction` ; refuse de démarrer, avec un message explicite, si `CONNECTOR_ODOO` vaut `real` ou si `SITE_MODE` ne vaut pas `demo` (FR-023)
+- [ ] T046 [US1] Écrire `tests/unit/seed.test.ts` : présence de tout le catalogue, de 15 partenaires environ, de chaque cas de FR-015, des cinq comptes de démonstration, et du drapeau « prix inventé » sur chaque prix (SC-006) ; refus du remplissage quand `CONNECTOR_ODOO=real` ou `SITE_MODE=prod` (FR-023)
 
 **Checkpoint** : la base de démonstration est complète et le connecteur Odoo de démonstration
 passe ses tests de contrat.
@@ -145,7 +145,7 @@ passe ses tests de contrat.
 la plateforme PCA, l'outil d'emailing ni Google Fonts (SC-003, SC-014).
 
 - [ ] T047 [P] [US2] Écrire `tests/unit/garde-reseau.test.ts` : en mode `demo`, une requête vers un domaine de service réel est refusée et journalisée comme erreur
-- [ ] T048 [P] [US2] Écrire `tests/e2e/no-egress.spec.ts` : enregistre toutes les requêtes du navigateur pendant les parcours disponibles et échoue si l'une vise Odoo, Stripe, la plateforme PCA, l'outil d'emailing ou `fonts.googleapis.com` / `fonts.gstatic.com`
+- [ ] T048 [P] [US2] Écrire `tests/e2e/no-egress.spec.ts` : enregistre toutes les requêtes du navigateur pendant les parcours disponibles et échoue si l'une vise Odoo, Stripe, la plateforme PCA, l'outil d'emailing ou `fonts.googleapis.com` / `fonts.gstatic.com` ; échoue aussi si une page de démonstration contient un lien `tel:` ou `wa.me` vers un vrai numéro (FR-033)
 - [ ] T049 [US2] Implémenter le garde réseau dans `src/connecteurs/garde-reseau.ts` et l'activer au démarrage du serveur dans `instrumentation.ts` dès qu'un connecteur est en mode `demo` (liste des domaines par connecteur)
 - [ ] T050 [US2] Implémenter le refus des données fictives dans `src/connecteurs/garde-donnees-fictives.ts` : toute donnée marquée `est_fictif` transmise à une implémentation `real` lève `DemoDataRejected` et est signalée (FR-017) ; brancher ce contrôle dans le registre
 - [ ] T051 [US2] Écrire `tests/unit/donnees-fictives.test.ts` : une donnée de démonstration passée à une implémentation `real` (simulée) est refusée (SC-012)
@@ -180,8 +180,8 @@ configuration mixte fonctionnelle (SC-005).
 réinitialisation depuis le back-office : état de départ retrouvé en moins d'une minute,
 contenus et paramètres intacts, cinq comptes de démonstration utilisables (SC-002, SC-013).
 
-- [ ] T056 [P] [US4] Écrire `tests/e2e/reinitialisation.spec.ts` : séance (commande, modification de prix, compte créé), réinitialisation, vérification du périmètre de [data-model.md](data-model.md) §4, durée inférieure à une minute, connexion immédiate avec chacun des cinq comptes de démonstration
-- [ ] T057 [US4] Créer `scripts/demo-reset.ts` (script `demo:reset`) : vide et recrée la base de démonstration, supprime l'activité de test de la base du site (comptes créés pendant les séances, demandes de financement et de devis, messages de contact, boîte de démonstration, pannes simulées), conserve contenus, contenus produits, paramètres et leur historique, recrée le jeu de départ et les cinq comptes ; refuse de s'exécuter si un connecteur concerné est en mode `real` (FR-023)
+- [ ] T056 [P] [US4] Écrire `tests/e2e/reinitialisation.spec.ts` : séance (commande, modification de prix, compte client créé, compte d'équipe créé dans le back-office), réinitialisation, vérification que le compte d'équipe existe toujours, vérification du périmètre de [data-model.md](data-model.md) §4, durée inférieure à une minute, connexion immédiate avec chacun des cinq comptes de démonstration
+- [ ] T057 [US4] Créer `scripts/demo-reset.ts` (script `demo:reset`) : vide et recrée la base de démonstration, supprime l'activité de test de la base du site (comptes de rôle `client` créés pendant les séances, demandes de financement et de devis, messages de contact, boîte de démonstration, pannes simulées), conserve les comptes de l'équipe créés dans le back-office (rôles `admin`, `commercial`, `support`), contenus, contenus produits, paramètres et leur historique, recrée le jeu de départ et les cinq comptes ; refuse de s'exécuter si un connecteur concerné est en mode `real` (FR-023)
 - [ ] T058 [US4] Ajouter un verrou de réinitialisation dans `src/lib/demo/verrou.ts` : pendant l'opération, les pages affichent un message d'attente au lieu d'un état partiel, et une commande en cours est interrompue avec un message au testeur
 - [ ] T059 [US4] Créer l'action de réinitialisation du back-office dans `app/(back-office)/admin/demonstration/reinitialiser/page.tsx` et son action serveur : administrateur uniquement, confirmation explicite, inscription dans `JournalAction` (auteur, date)
 
@@ -257,7 +257,7 @@ simulée d'un connecteur.
 ### Pannes simulées
 
 - [ ] T080 [US7] Faire consulter `PanneSimulee` par chaque implémentation de démonstration (Odoo, Stripe, PCA, emailing) dans `src/connecteurs/panne-simulee.ts` : `ServiceUnavailable` si la panne est active (FR-025)
-- [ ] T081 [US7] Ajouter à l'écran de démonstration l'activation et la désactivation d'une panne par connecteur dans `app/(back-office)/admin/demonstration/pannes/page.tsx` (administrateur, mode démonstration)
+- [ ] T081 [US7] Ajouter à l'écran de démonstration l'activation et la désactivation d'une panne par connecteur dans `app/(back-office)/admin/demonstration/pannes/page.tsx` (administrateur, mode démonstration) ; chaque activation et désactivation est inscrite dans `JournalAction` (auteur, date)
 
 **Checkpoint** : paiements, accès Cloud et imprévus sont démontrables et testés.
 
@@ -277,9 +277,12 @@ simulée d'un connecteur.
 - [ ] T085 [P] [US8] Créer `app/robots.ts` : interdiction totale quand `SITE_MODE=demo`
 - [ ] T086 [P] [US8] Créer le bandeau `src/ui/BandeauDemo.tsx` « Version de démonstration — données fictives », non masquable, distinct du bandeau promotionnel, affiché par `app/layout.tsx` quand `SITE_MODE=demo`
 - [ ] T087 [US8] Ajouter le changement du mot de passe de démonstration dans `app/(back-office)/admin/demonstration/acces/page.tsx` : administrateur uniquement ; incrémente la version, ce qui ferme toutes les sessions ; inscrit l'action dans `JournalAction`
-- [ ] T088 [US8] Initialiser dans le jeu de départ les paramètres de démonstration : mot de passe initial (haché), numéro WhatsApp fictif, dans `prisma/demo/seed/parametres-demo.ts`
+- [ ] T088 [US8] Initialiser dans le jeu de départ les paramètres de démonstration : mot de passe initial (haché), numéro WhatsApp fictif, dans `prisma/site/seed/parametres-demo.ts` (base du site)
 
-**Checkpoint** : le site de démonstration peut être publié sur `demo.explocardio.fr`.
+- [ ] T094 [US8] Créer `src/lib/contact-whatsapp.ts` : fabrique les liens « Appeler » (`tel:`) et « Écrire sur WhatsApp » (`wa.me`, message pré-rempli) à partir du numéro du paramètre ; quand `SITE_MODE=demo`, renvoie à la place l'adresse de `app/demo/contact/page.tsx`, page qui explique qu'en démonstration personne n'est contacté (FR-033) ; F09 utilise obligatoirement ce module
+- [ ] T095 [US8] ⏸ Après vérification des points d'hébergement de [plan.md](plan.md) (D1) : publier le site de démonstration sur `demo.explocardio.fr` chez o2switch ; HTTPS ; sauvegarde quotidienne des deux bases ; construction dans GitHub Actions puis envoi sur le serveur (pas de construction sur l'hébergement) ; variables d'environnement saisies chez l'hébergeur, jamais dans le dépôt ; `SITE_MODE=demo` et tous les connecteurs en `demo` ; procédure décrite dans `docs/deploiement-demo.md` (FR-034)
+
+**Checkpoint** : le site de démonstration est publié sur `demo.explocardio.fr`.
 
 ---
 
@@ -288,6 +291,7 @@ simulée d'un connecteur.
 - [ ] T089 [P] Configurer Lighthouse CI dans `tests/lighthouse/lighthouserc.json` (profil mobile, réseau 4G simulé, budget : élément principal affiché en moins de 2 s) sur les pages catalogue dès qu'elles existent (F03)
 - [ ] T090 [P] Créer `tests/e2e/parcours/README.md` listant les parcours de bout en bout attendus par SC-001 (inscription, achat, mise à disposition, fidélité, demande de financement ou de devis) : chaque module F01 à F10 y ajoute son parcours en mode démonstration ; SC-001 est atteint quand tous passent
 - [ ] T091 [P] Rédiger `docs/demonstration.md` pour l'équipe : ouvrir le site de démonstration, comptes de démonstration et cas illustrés, boîte de démonstration, écran de démonstration, réinitialisation, avertissement « prix inventés à remplacer avant toute présentation à un médecin »
+- [ ] T096 [P] Écrire `tests/e2e/accessibilite-charte.spec.ts` : sur chaque page disponible, vérifie que les éléments interactifs mesurent au moins 44 × 44 px, que le focus est visible au clavier, et qu'avec `prefers-reduced-motion: reduce` aucune animation ne se joue (principe VIII)
 - [ ] T092 Dérouler [quickstart.md](quickstart.md) de bout en bout et corriger les écarts
 - [ ] T093 Vérifier la conformité finale : `npm run lint`, `npm run check:contrast`, `npm run test:contract`, `npm run test:e2e`, `npm run test:no-egress` passent en intégration continue
 

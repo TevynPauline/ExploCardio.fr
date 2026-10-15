@@ -296,7 +296,7 @@ Formulées simplement ; chacune a une proposition par défaut.
 
 | # | Question | Proposition | Quand |
 |---|---|---|---|
-| D1 | **Où héberger le site ?** | **Hébergeur français** (décidé le 2026-10-14) ; le prestataire précis (type Scalingo, Clever Cloud…) reste à choisir | Avant le premier déploiement de démonstration |
+| D1 | **Où héberger le site ?** | **o2switch** (décidé le 2026-10-15), sauvegarde quotidienne. Points à vérifier avant T095 : version de Node.js disponible, PostgreSQL disponible (deux bases), processus permanent possible pour la file d'attente, mémoire suffisante (construction faite dans GitHub Actions) | Avant le premier déploiement de démonstration |
 | D2 | **Le paiement se fait-il sur une page Stripe ou dans le site ?** | **Page Stripe (Checkout)** (décidé le 2026-10-14) | — |
 | D3 | **Quel outil d'emailing ?** | Brevo par défaut ; **à voir** | Avant la phase 2 |
 | D4 | **Quelle adresse pour le site de démonstration ?** | **`demo.explocardio.fr`** (validé le 2026-10-14) ; destinataires du mot de passe à préciser | Avant le premier déploiement |

@@ -202,7 +202,14 @@ documentées et simples à maintenir**, avec une seule base de code.
 - **Justification** : simplicité d'exploitation pour un porteur non développeur, données en
   France (RGPD), pas de serveur à administrer. Le site n'héberge aucune donnée de santé :
   la certification HDS n'est pas requise pour lui. Le porteur de projet a retenu un
-  hébergeur français le 2026-10-14 ; le prestataire reste à choisir.
+  hébergeur français le 2026-10-14, puis **o2switch** le 2026-10-15.
+- **Conséquences du choix d'o2switch** (hébergement mutualisé avec cPanel) : l'application
+  Node.js tourne via l'outil d'applications Node.js de cPanel ; la construction se fait dans
+  GitHub Actions, pas sur le serveur (mémoire limitée) ; à vérifier avant le premier
+  déploiement : version de Node.js proposée, disponibilité de PostgreSQL pour les deux
+  bases, possibilité d'un processus permanent pour pg-boss (sinon, tâche planifiée), et
+  sauvegarde quotidienne. Si PostgreSQL ou le processus permanent manquent, le plan sera
+  revu (D1).
 - **Écarté** : Vercel avec une base gérée en région UE (très simple pour Next.js,
   mais société américaine, contraire à la préférence « France » ; reste possible). Le
   choix final est une décision du porteur (plan, D1).
