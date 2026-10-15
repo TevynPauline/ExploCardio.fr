@@ -1,0 +1,39 @@
+import { expect, test } from "@playwright/test";
+import { motifDeBlocage } from "../../src/connecteurs/garde-reseau";
+import { COMPTES, connecterNavigateur } from "./session";
+
+// T048 (SC-003, SC-014, FR-033) : pendant les parcours disponibles, aucune requête du navigateur
+// ne vise Odoo, Stripe, la plateforme PCA, l'outil d'emailing ni Google Fonts, et aucune page
+// de démonstration ne contient de lien d'appel ou WhatsApp vers un vrai numéro.
+// Chaque module (F01 à F10) ajoute ses pages à cette liste.
+
+const PAGES_PUBLIQUES = ["/", "/connexion", "/demo/contact?moyen=appel"];
+const PAGES_BACK_OFFICE = ["/admin"];
+
+const demo = { CONNECTOR_ODOO: "demo", CONNECTOR_STRIPE: "demo", CONNECTOR_PCA: "demo", CONNECTOR_EMAILING: "demo" };
+
+test("aucune requête ne sort vers un service réel ni vers Google Fonts", async ({ page, context }) => {
+  const bloquees: string[] = [];
+  page.on("request", (requete) => {
+    if (motifDeBlocage(requete.url(), demo)) bloquees.push(requete.url());
+  });
+
+  for (const chemin of PAGES_PUBLIQUES) {
+    await page.goto(chemin);
+    await page.waitForLoadState("networkidle");
+  }
+  await connecterNavigateur(context, COMPTES.admin);
+  for (const chemin of PAGES_BACK_OFFICE) {
+    await page.goto(chemin);
+    await page.waitForLoadState("networkidle");
+  }
+  expect(bloquees).toEqual([]);
+});
+
+test("aucun lien d'appel ou WhatsApp vers un vrai numéro en démonstration (FR-033)", async ({ page }) => {
+  for (const chemin of PAGES_PUBLIQUES) {
+    await page.goto(chemin);
+    const liens = await page.locator('a[href^="tel:"], a[href*="wa.me"], a[href*="api.whatsapp.com"]').count();
+    expect(liens, chemin).toBe(0);
+  }
+});

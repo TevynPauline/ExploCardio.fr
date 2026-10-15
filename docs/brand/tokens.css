@@ -1,5 +1,5 @@
 /* ExploCardio.fr — design tokens (identité « Les trois temps », variante 2C) */
-@import url("https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap");
+/* Police Inter hébergée par le site (styles/fonts.css) : aucun chargement depuis Google Fonts (RGPD). */
 
 :root {
   /* Couleurs de marque (symbole) */

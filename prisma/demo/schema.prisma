@@ -1,0 +1,494 @@
+// Base de démonstration ExploCardio.fr — data-model.md §2 (F11).
+// Équivalent FICTIF d'Odoo, utilisé seulement par les connecteurs en mode démonstration.
+// Vocabulaire d'Odoo entre parenthèses (FR-012). Montants en centimes d'euro, HT sauf mention.
+// Chaque objet porte « estFictif » (toujours vrai) : les implémentations réelles le refusent (FR-017).
+// Ni garanties ni demandes de SAV (FR-010). Aucune donnée de patient (FR-039).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../../generated/demo"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// Partenaire (res.partner) : médecin ou cabinet fictif.
+model Partenaire {
+  id            Int          @id @default(autoincrement())
+  /// Référence stable exposée par le connecteur (équivalent de l'identifiant Odoo).
+  ref           String       @unique
+  nom           String
+  estSociete    Boolean      @default(false)
+  parentId      Int?
+  parent        Partenaire?  @relation("SocieteParente", fields: [parentId], references: [id])
+  membres       Partenaire[] @relation("SocieteParente")
+  email         String?
+  telephone     String?
+  rpps          String?      @unique
+  siret         String?
+  adresses      Json         @default("[]")
+  /// Clé d'idempotence de création (créer ou retrouver sans doublon).
+  cleCreation   String?      @unique
+  /// A bénéficié de l'offre de bienvenue (F02).
+  bienvenueRecue Boolean     @default(false)
+  estFictif     Boolean      @default(true)
+
+  commandes     CommandeVente[]
+  abonnements   Abonnement[]
+  factures      Facture[]
+  mouvements    MouvementCagnotte[]
+  droits        DroitAssistance?
+  listesPrix    ListePrix[]
+  opportunites  Opportunite[]
+  accesCloud    AccesCloud[]
+
+  @@map("res_partner")
+}
+
+/// Catégorie (product.category).
+model Categorie {
+  id        Int             @id @default(autoincrement())
+  code      String          @unique
+  nom       String
+  ordre     Int             @default(0)
+  parentId  Int?
+  parent    Categorie?      @relation("CategorieParente", fields: [parentId], references: [id])
+  enfants   Categorie[]     @relation("CategorieParente")
+  modeles   ModeleArticle[]
+  estFictif Boolean         @default(true)
+
+  @@map("product_category")
+}
+
+enum TypeArticle {
+  equipement
+  consommable
+  accessoire
+  logiciel
+  service
+}
+
+/// Modèle d'article (product.template).
+model ModeleArticle {
+  id                    Int          @id @default(autoincrement())
+  nom                   String
+  marque                String
+  categorieId           Int
+  categorie             Categorie    @relation(fields: [categorieId], references: [id])
+  type                  TypeArticle
+  description           String?
+  /// Formules proposées : achat, mise_a_disposition, financement.
+  formules              String[]
+  eligibleBonsAchat     Boolean      @default(false)
+  suiviNumeroSerie      Boolean      @default(false)
+  /// Référence fictive signalée (aucune référence fabricant connue).
+  referenceFictive      Boolean      @default(false)
+  /// Compatibilités : default_code des équipements compatibles (consommables, accessoires).
+  compatibleAvec        String[]     @default([])
+  estFictif             Boolean      @default(true)
+  variantes             Variante[]
+
+  @@map("product_template")
+}
+
+/// Variante (product.product).
+model Variante {
+  id                 Int        @id @default(autoincrement())
+  modeleId           Int
+  modele             ModeleArticle @relation(fields: [modeleId], references: [id], onDelete: Cascade)
+  /// Référence interne (default_code), fixe d'un remplissage à l'autre.
+  defaultCode        String     @unique
+  referenceFabricant String?
+  /// Libellé de la configuration (ex. « 26-34 cm »).
+  configuration      String?
+  attributs          Json       @default("{}")
+  prixHtCentimes     Int
+  tauxTva            Decimal    @db.Decimal(5, 2) @default(20)
+  /// Prix inventé, à remplacer avant toute présentation à un médecin (décision D6).
+  prixInvente        Boolean    @default(true)
+  estFictif          Boolean    @default(true)
+
+  stock              Stock?
+  numerosSerie       NumeroSerie[]
+  offreMad           OffreMiseADisposition?
+  lignes             LigneCommande[]
+  abonnements        Abonnement[]
+
+  @@map("product_product")
+}
+
+enum EtatStock {
+  disponible
+  delai
+  indisponible
+}
+
+/// Stock (stock.quant).
+model Stock {
+  id          Int       @id @default(autoincrement())
+  varianteId  Int       @unique
+  variante    Variante  @relation(fields: [varianteId], references: [id], onDelete: Cascade)
+  quantite    Int       @default(0)
+  /// État quand la quantité est épuisée : délai X jours ou indisponible.
+  etatHorsStock EtatStock @default(delai)
+  delaiJours  Int?
+  estFictif   Boolean   @default(true)
+
+  @@map("stock_quant")
+}
+
+/// Réservation de stock (stock.move), idempotente par clé.
+model Reservation {
+  id         Int      @id @default(autoincrement())
+  cle        String
+  defaultCode String
+  quantite   Int
+  creeLe     DateTime @default(now())
+
+  @@unique([cle, defaultCode])
+  @@map("stock_move")
+}
+
+enum StatutParc {
+  disponible
+  loue
+  en_retour
+  en_maintenance
+}
+
+/// Numéro de série (stock.lot) : parc de location.
+model NumeroSerie {
+  id          Int        @id @default(autoincrement())
+  varianteId  Int
+  variante    Variante   @relation(fields: [varianteId], references: [id], onDelete: Cascade)
+  numero      String     @unique
+  statut      StatutParc @default(disponible)
+  /// Date prévue de retour au parc (pour la première date de livraison possible).
+  retourPrevu DateTime?
+  estFictif   Boolean    @default(true)
+  abonnements Abonnement[]
+
+  @@map("stock_lot")
+}
+
+/// Liste de prix (product.pricelist) : prix par client, mensualités forcées (F03).
+model ListePrix {
+  id           Int         @id @default(autoincrement())
+  nom          String
+  partenaireId Int?
+  partenaire   Partenaire? @relation(fields: [partenaireId], references: [id], onDelete: Cascade)
+  /// Règles : [{ defaultCode, prixHtCentimes?, remisePourcent?, mensualiteCentimes? }]
+  regles       Json
+  estFictif    Boolean     @default(true)
+
+  @@map("product_pricelist")
+}
+
+/// Barème de financement : paramètre commercial (principe VI).
+model BaremeFinancement {
+  id          Int     @id @default(autoincrement())
+  dureeMois   Int     @unique
+  /// Coefficient mensuel en pourcentage du montant financé (ex. 3,05).
+  coefficient Decimal @db.Decimal(6, 3)
+  estFictif   Boolean @default(true)
+
+  @@map("financing_scale")
+}
+
+/// Offre de mise à disposition (F05) : paramètres commerciaux.
+model OffreMiseADisposition {
+  id                     Int      @id @default(autoincrement())
+  varianteId             Int      @unique
+  variante               Variante @relation(fields: [varianteId], references: [id], onDelete: Cascade)
+  premierMoisCentimes    Int
+  moisSuivantsCentimes   Int
+  /// default_code du kit de consommables requis à la première commande, s'il existe.
+  kitRequis              String?
+  valeurRemplacementCentimes Int
+  estFictif              Boolean  @default(true)
+
+  @@map("rental_offer")
+}
+
+enum StatutCommande {
+  brouillon
+  confirmee
+  expediee
+  livree
+  annulee
+  remboursee
+}
+
+/// Commande de vente (sale.order).
+model CommandeVente {
+  id                Int             @id @default(autoincrement())
+  ref               String          @unique
+  cle               String?         @unique
+  partenaireId      Int
+  partenaire        Partenaire      @relation(fields: [partenaireId], references: [id])
+  date              DateTime        @default(now())
+  montantHtCentimes Int
+  tvaCentimes       Int
+  montantTtcCentimes Int
+  fraisPortCentimes Int             @default(0)
+  bonsUtilisesCentimes Int          @default(0)
+  modePaiement      String
+  referencePaiement String?
+  statut            StatutCommande  @default(confirmee)
+  financee          Boolean         @default(false)
+  livraison         Json            @default("{}")
+  suivi             String?
+  estFictif         Boolean         @default(true)
+
+  lignes            LigneCommande[]
+  factures          Facture[]
+  mouvements        MouvementCagnotte[]
+
+  @@map("sale_order")
+}
+
+/// Ligne de commande (sale.order.line).
+model LigneCommande {
+  id                 Int           @id @default(autoincrement())
+  commandeId         Int
+  commande           CommandeVente @relation(fields: [commandeId], references: [id], onDelete: Cascade)
+  varianteId         Int
+  variante           Variante      @relation(fields: [varianteId], references: [id])
+  quantite           Int
+  prixUnitaireHtCentimes Int
+  remiseCentimes     Int           @default(0)
+
+  @@map("sale_order_line")
+}
+
+enum ObjetAbonnement {
+  mise_a_disposition
+  logiciel
+}
+
+enum EtatAbonnement {
+  en_cours
+  resiliation_prevue
+  termine
+  en_retard_retour
+}
+
+/// Abonnement (sale.order récurrente) : location ou abonnement logiciel (F05, F12).
+model Abonnement {
+  id              Int             @id @default(autoincrement())
+  ref             String          @unique
+  cle             String?         @unique
+  partenaireId    Int
+  partenaire      Partenaire      @relation(fields: [partenaireId], references: [id])
+  objet           ObjetAbonnement
+  varianteId      Int
+  variante        Variante        @relation(fields: [varianteId], references: [id])
+  numeroSerieId   Int?
+  numeroSerie     NumeroSerie?    @relation(fields: [numeroSerieId], references: [id])
+  montantMensuelCentimes Int
+  debut           DateTime
+  fin             DateTime?
+  prochaineEcheance DateTime?
+  etat            EtatAbonnement  @default(en_cours)
+  estFictif       Boolean         @default(true)
+
+  @@map("sale_subscription")
+}
+
+enum TypeFacture {
+  facture
+  remboursement
+}
+
+/// Facture (account.move) ; les avoirs sont du type « remboursement ».
+model Facture {
+  id                 Int            @id @default(autoincrement())
+  /// Numéro continu (ex. FICT/2026/00001).
+  numero             String         @unique
+  type               TypeFacture    @default(facture)
+  partenaireId       Int
+  partenaire         Partenaire     @relation(fields: [partenaireId], references: [id])
+  commandeId         Int?
+  commande           CommandeVente? @relation(fields: [commandeId], references: [id])
+  date               DateTime       @default(now())
+  montantHtCentimes  Int
+  tvaCentimes        Int
+  montantTtcCentimes Int
+  etatPaiement       String         @default("paye")
+  lignes             Json           @default("[]")
+  estFictif          Boolean        @default(true)
+
+  @@map("account_move")
+}
+
+/// Programme de fidélité (loyalty.program) : règles de F06, une seule ligne active.
+model ProgrammeFidelite {
+  id               Int     @id @default(autoincrement())
+  /// Paliers : [{ plancherCentimes, inclusif, tauxPourcent }] (défaut 0 % / 5 % dès 500 € / 10 % au-delà de 1 000 €).
+  paliers          Json
+  validiteMois     Int     @default(12)
+  estFictif        Boolean @default(true)
+
+  @@map("loyalty_program")
+}
+
+/// Règles des droits d'assistance (F06) : seuil, durée, prolongation, plafond.
+model RegleAssistance {
+  id                    Int     @id @default(autoincrement())
+  seuilCentimes         Int
+  dureeJours            Int
+  /// cumul (la durée s'ajoute) ou remise_a_zero (la durée repart de la commande).
+  prolongation          String  @default("cumul")
+  plafondJours          Int
+  prixActeCentimes      Int
+  estFictif             Boolean @default(true)
+
+  @@map("assistance_rule")
+}
+
+/// Mouvement de cagnotte (loyalty.card + historique). Le solde est la somme des mouvements.
+model MouvementCagnotte {
+  id             Int            @id @default(autoincrement())
+  partenaireId   Int
+  partenaire     Partenaire     @relation(fields: [partenaireId], references: [id])
+  /// credit, utilisation, retrait, restitution, expiration
+  type           String
+  montantCentimes Int
+  commandeId     Int?
+  commande       CommandeVente? @relation(fields: [commandeId], references: [id])
+  /// Évite de compter deux fois un même événement (F06, FR-018).
+  cle            String         @unique
+  date           DateTime       @default(now())
+  validiteFin    DateTime?
+  estFictif      Boolean        @default(true)
+
+  @@map("loyalty_history")
+}
+
+/// Droits d'assistance d'un partenaire (spécifique ; à reproduire dans Odoo en phase 2).
+model DroitAssistance {
+  id             Int        @id @default(autoincrement())
+  partenaireId   Int        @unique
+  partenaire     Partenaire @relation(fields: [partenaireId], references: [id])
+  fin            DateTime
+  /// Commande ou origine de la période.
+  origine        String
+  /// Jours apportés par chaque commande : { "FICT-SO-00001": 30 } — retirés si elle est annulée (F06, FR-015).
+  apports        Json       @default("{}")
+  estFictif      Boolean    @default(true)
+
+  @@map("assistance_right")
+}
+
+/// Promotion / code promo (loyalty.program de type promotion).
+model Promotion {
+  id          Int       @id @default(autoincrement())
+  code        String?   @unique
+  nom         String
+  /// remise_automatique, vente_flash, code_promo
+  type        String
+  cible       Json      @default("{}")
+  remisePourcent Decimal? @db.Decimal(5, 2)
+  remiseCentimes Int?
+  debut       DateTime?
+  fin         DateTime?
+  conditions  Json      @default("{}")
+  cumulable   Boolean   @default(false)
+  estFictif   Boolean   @default(true)
+
+  @@map("loyalty_promotion")
+}
+
+enum TypeOpportunite {
+  financement
+  devis
+}
+
+/// Opportunité (crm.lead) : copie d'une demande de financement ou de devis du site.
+model Opportunite {
+  id             Int             @id @default(autoincrement())
+  ref            String          @unique
+  cle            String          @unique
+  type           TypeOpportunite
+  partenaireId   Int?
+  partenaire     Partenaire?     @relation(fields: [partenaireId], references: [id])
+  referenceDemande String
+  contenu        Json
+  statut         String          @default("nouvelle")
+  creeLe         DateTime        @default(now())
+  estFictif      Boolean         @default(true)
+
+  @@map("crm_lead")
+}
+
+enum EtatAccesCloud {
+  a_ouvrir
+  a_fermer
+  actif
+  grace
+  suspendu
+  ferme
+}
+
+/// Accès Cloud simulé par le connecteur PCA de démonstration (F12).
+model AccesCloud {
+  id           Int            @id @default(autoincrement())
+  ref          String         @unique
+  cle          String?        @unique
+  partenaireId Int
+  partenaire   Partenaire     @relation(fields: [partenaireId], references: [id])
+  logiciel     String
+  etat         EtatAccesCloud
+  debut        DateTime
+  finPrevue    DateTime?
+  motif        String?
+  modifieLe    DateTime       @updatedAt
+  estFictif    Boolean        @default(true)
+
+  @@map("cloud_access")
+}
+
+/// Compteur de numérotation continue (factures, commandes).
+model Sequence {
+  code    String @id
+  valeur  Int    @default(0)
+
+  @@map("ir_sequence")
+}
+
+/// Session de paiement simulée par le connecteur Stripe de démonstration (US7).
+model SessionPaiementDemo {
+  id             String   @id
+  cle            String   @unique
+  /// paiement ou abonnement
+  nature         String
+  commandeRef    String?
+  abonnementRef  String?
+  partenaireRef  String
+  montantTtcCentimes Int
+  montantMensuelTtcCentimes Int?
+  moyens         String[]
+  urlRetour      String
+  urlAnnulation  String
+  /// ouverte, payee, refusee, authentification
+  etat           String   @default("ouverte")
+  paiementRef    String?
+  creeLe         DateTime @default(now())
+  estFictif      Boolean  @default(true)
+
+  @@map("payment_session_demo")
+}
+
+/// Remboursement simulé (US7).
+model RemboursementDemo {
+  id             String   @id
+  cle            String   @unique
+  paiementRef    String
+  montantTtcCentimes Int
+  motif          String
+  creeLe         DateTime @default(now())
+  estFictif      Boolean  @default(true)
+
+  @@map("refund_demo")
+}

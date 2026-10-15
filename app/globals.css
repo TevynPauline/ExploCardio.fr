@@ -1,0 +1,41 @@
+@import "tailwindcss";
+@import "../docs/brand/tokens.css";
+@import "../styles/fonts.css";
+@import "../styles/theme.css";
+
+/* Accessibilité (principe VIII) */
+
+/* Focus visible sur tous les éléments interactifs */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--ec-deep-strong);
+  outline-offset: 3px;
+}
+
+/* Cases à cocher et boutons radio aux couleurs de la charte */
+:root {
+  accent-color: var(--ec-deep-strong);
+}
+
+/* Cibles tactiles d'au moins 44 × 44 px pour les boutons de la charte */
+.ec-btn {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Le texte des emplacements photo de la charte (--ec-ph-text) n'atteint pas 4,5:1 :
+   on utilise la couleur de texte principale (scripts/check-contrast.ts). */
+.ec-placeholder {
+  color: var(--ec-ink);
+}
+
+/* Respect de la préférence « animations réduites » */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

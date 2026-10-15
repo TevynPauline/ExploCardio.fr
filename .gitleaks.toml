@@ -1,0 +1,10 @@
+# Recherche de secrets : aucune clé de service réel ne doit figurer dans le dépôt (FR-038).
+title = "ExploCardio.fr"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Valeurs non sensibles de l'intégration continue et exemples sans valeur"
+paths = ['''\.env\.example''', '''package-lock\.json''']
+regexes = ['''integration-continue-secret-non-sensible''']

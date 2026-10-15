@@ -1,0 +1,395 @@
+// Base du site ExploCardio.fr — data-model.md §1 (F11).
+// Données propres au site, réelles dès la phase 1. Aucune donnée de patient (principe IV),
+// aucune donnée de carte bancaire (principe V).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../../generated/site"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Comptes et équipe
+// Les modèles Utilisateur, Session, CompteConnexion, Verification et DoubleAuthentification
+// suivent le schéma attendu par Better Auth (src/lib/auth.ts).
+// ---------------------------------------------------------------------------
+
+enum Role {
+  client
+  admin
+  commercial
+  support
+}
+
+model Utilisateur {
+  id               String   @id
+  name             String
+  email            String   @unique
+  emailVerified    Boolean  @default(false)
+  image            String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  twoFactorEnabled Boolean? @default(false)
+
+  prenom     String?
+  nom        String?
+  civilite   String?
+  telephone  String?
+  specialite String?
+  role       Role    @default(client)
+
+  sessions       Session[]
+  comptes        CompteConnexion[]
+  doubleAuth     DoubleAuthentification[]
+  compteClient   CompteClient?
+  historiques    HistoriqueParametre[]
+
+  @@map("utilisateur")
+}
+
+model Session {
+  id        String      @id
+  expiresAt DateTime
+  token     String      @unique
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      Utilisateur @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("session")
+}
+
+/// Moyen de connexion (mot de passe haché par Better Auth).
+model CompteConnexion {
+  id                    String      @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  Utilisateur @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  @@index([userId])
+  @@map("compte_connexion")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+model DoubleAuthentification {
+  id                      String      @id
+  secret                  String
+  backupCodes             String
+  userId                  String
+  user                    Utilisateur @relation(fields: [userId], references: [id], onDelete: Cascade)
+  verified                Boolean?    @default(true)
+  failedVerificationCount Int?        @default(0)
+  lockedUntil             DateTime?
+
+  @@index([secret])
+  @@index([userId])
+  @@map("double_authentification")
+}
+
+enum TypeCompteClient {
+  medecin
+  structure
+}
+
+enum StatutCompteClient {
+  email_a_confirmer
+  en_attente
+  valide
+  refuse
+  suspendu
+}
+
+model CompteClient {
+  id                 String             @id @default(cuid())
+  utilisateurId      String             @unique
+  utilisateur        Utilisateur        @relation(fields: [utilisateurId], references: [id], onDelete: Cascade)
+  type               TypeCompteClient
+  /// Un RPPS (ou un SIRET) par compte (F02).
+  rpps               String?            @unique
+  siret              String?            @unique
+  nomCabinet         String?
+  statut             StatutCompteClient @default(email_a_confirmer)
+  motifRefus         String?
+  /// Identifiant du partenaire dans Odoo, rempli à la validation par le connecteur.
+  odooPartnerRef     String?
+  /// Compte de démonstration (FR-041) : recréé à chaque réinitialisation.
+  estDemonstration   Boolean            @default(false)
+  creeLe             DateTime           @default(now())
+  modifieLe          DateTime           @updatedAt
+
+  adresses           Adresse[]
+  demandesFinancement DemandeFinancement[]
+
+  @@map("compte_client")
+}
+
+enum TypeAdresse {
+  cabinet
+  livraison
+  facturation
+}
+
+model Adresse {
+  id         String       @id @default(cuid())
+  compteId   String
+  compte     CompteClient @relation(fields: [compteId], references: [id], onDelete: Cascade)
+  type       TypeAdresse
+  ligne1     String
+  ligne2     String?
+  codePostal String
+  ville      String
+
+  @@index([compteId])
+  @@map("adresse")
+}
+
+/// Historique des consentements : jamais écrasé (RGPD).
+model Consentement {
+  id          String   @id @default(cuid())
+  compteId    String?
+  email       String?
+  objet       String
+  etat        Boolean
+  date        DateTime @default(now())
+  origine     String
+  textePresente String
+
+  @@index([compteId])
+  @@index([email])
+  @@map("consentement")
+}
+
+// ---------------------------------------------------------------------------
+// Contenus et paramètres
+// ---------------------------------------------------------------------------
+
+enum TypeContenu {
+  bandeau
+  tuile
+  actualite
+  page
+  faq
+  tutoriel
+  notice
+}
+
+enum EtatPublication {
+  preparation
+  publie
+  retire
+}
+
+model Contenu {
+  id        String          @id @default(cuid())
+  type      TypeContenu
+  titre     String
+  corps     String
+  /// Images : [{ url, texteRemplacement }] — texte de remplacement obligatoire.
+  images    Json            @default("[]")
+  etat      EtatPublication @default(preparation)
+  debut     DateTime?
+  fin       DateTime?
+  creeLe    DateTime        @default(now())
+  modifieLe DateTime        @updatedAt
+
+  @@map("contenu")
+}
+
+/// Contenu éditorial d'un article d'Odoo, rattaché par sa référence, jamais par copie.
+model ContenuProduit {
+  id              String          @id @default(cuid())
+  defaultCode     String          @unique
+  textes          Json            @default("{}")
+  photos          Json            @default("[]")
+  documents       Json            @default("[]")
+  compatibilites  String[]        @default([])
+  produitsAssocies String[]       @default([])
+  categorieAffichage String?
+  ordre           Int             @default(0)
+  etat            EtatPublication @default(preparation)
+  orphelin        Boolean         @default(false)
+  modifieLe       DateTime        @updatedAt
+
+  @@map("contenu_produit")
+}
+
+/// Paramètre de fonctionnement du site (principe VI) — jamais une règle commerciale.
+model Parametre {
+  cle             String                @id
+  valeur          String
+  type            String                @default("texte")
+  roleModification Role                 @default(admin)
+  modifieLe       DateTime              @updatedAt
+  historique      HistoriqueParametre[]
+
+  @@map("parametre")
+}
+
+model HistoriqueParametre {
+  id             String       @id @default(cuid())
+  cle            String
+  parametre      Parametre    @relation(fields: [cle], references: [cle], onDelete: Cascade)
+  auteurId       String?
+  auteur         Utilisateur? @relation(fields: [auteurId], references: [id], onDelete: SetNull)
+  date           DateTime     @default(now())
+  ancienneValeur String?
+  nouvelleValeur String
+
+  @@index([cle])
+  @@map("historique_parametre")
+}
+
+// ---------------------------------------------------------------------------
+// Demandes et messages
+// ---------------------------------------------------------------------------
+
+enum StatutDemandeFinancement {
+  recue
+  en_etude
+  accordee
+  refusee
+}
+
+model DemandeFinancement {
+  id               String                   @id @default(cuid())
+  compteId         String
+  compte           CompteClient             @relation(fields: [compteId], references: [id], onDelete: Cascade)
+  equipements      Json
+  dureeMois        Int
+  statut           StatutDemandeFinancement @default(recue)
+  notesInternes    String?
+  opportuniteRef   String?
+  creeLe           DateTime                 @default(now())
+
+  @@map("demande_financement")
+}
+
+enum StatutDemandeDevis {
+  recue
+  en_cours
+  traitee
+}
+
+model DemandeDevis {
+  id             String             @id @default(cuid())
+  demandeur      Json
+  objet          String
+  statut         StatutDemandeDevis @default(recue)
+  notes          String?
+  opportuniteRef String?
+  creeLe         DateTime           @default(now())
+
+  @@map("demande_devis")
+}
+
+model MessageContact {
+  id           String   @id @default(cuid())
+  motif        String
+  coordonnees  Json
+  texte        String
+  date         DateTime @default(now())
+  etat         String   @default("nouveau")
+
+  @@map("message_contact")
+}
+
+// ---------------------------------------------------------------------------
+// Exploitation et démonstration
+// ---------------------------------------------------------------------------
+
+model JournalConnecteur {
+  id          String   @id @default(cuid())
+  date        DateTime @default(now())
+  connecteur  String
+  mode        String
+  operation   String
+  objet       String?
+  resultat    String
+  /// Niveau : info, erreur ou alerte (seuil d'échecs de la file d'attente).
+  niveau      String   @default("info")
+  motifErreur String?
+  dureeMs     Int
+
+  @@index([date])
+  @@index([connecteur, date])
+  @@map("journal_connecteur")
+}
+
+model JournalAction {
+  id       String   @id @default(cuid())
+  auteurId String?
+  /// Libellé lisible de l'auteur (ex. « équipe technique (commande) »).
+  auteur   String
+  action   String
+  objet    String?
+  date     DateTime @default(now())
+  detail   Json?
+
+  @@index([date])
+  @@map("journal_action")
+}
+
+model EvenementPaiementTraite {
+  id     String   @id
+  type   String
+  date   DateTime @default(now())
+
+  @@map("evenement_paiement_traite")
+}
+
+enum TypeMessageDemonstration {
+  email_client
+  notification_equipe_email
+  notification_equipe_sms
+}
+
+model MessageDemonstration {
+  id           String                   @id @default(cuid())
+  type         TypeMessageDemonstration
+  destinataire String
+  objet        String
+  rendu        String
+  date         DateTime                 @default(now())
+  declencheur  String
+  etatRemise   String                   @default("remis")
+  /// Clé d'idempotence : rejouer le même envoi n'ajoute rien.
+  cle          String                   @unique
+
+  @@index([date])
+  @@map("message_demonstration")
+}
+
+model PanneSimulee {
+  connecteur String   @id
+  active     Boolean  @default(false)
+  date       DateTime @updatedAt
+
+  @@map("panne_simulee")
+}

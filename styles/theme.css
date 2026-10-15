@@ -1,0 +1,64 @@
+/*
+ * Thème Tailwind CSS 4 d'ExploCardio.fr.
+ * Toutes les valeurs proviennent des variables --ec-* de docs/brand/tokens.css (principe VII).
+ * Aucune couleur, police ni rayon n'est défini ici en valeur brute.
+ */
+@theme inline {
+  /* Pas de palette Tailwind par défaut : seules les couleurs de la charte existent. */
+  --color-*: initial;
+  --color-euca: var(--ec-euca);
+  --color-sage: var(--ec-sage);
+  --color-blue: var(--ec-blue);
+  --color-deep: var(--ec-deep);
+  --color-action: var(--ec-deep-strong);
+  --color-ink: var(--ec-ink);
+  --color-muted: var(--ec-muted);
+  --color-bg: var(--ec-bg);
+  --color-surface: var(--ec-surface);
+  --color-pale: var(--ec-pale);
+  --color-mint: var(--ec-mint);
+  --color-blue-soft: var(--ec-blue-soft);
+  --color-lin: var(--ec-lin);
+  --color-dark: var(--ec-dark);
+  --color-line: var(--ec-line);
+  --color-ph-fill: var(--ec-ph-fill);
+  --color-ph-line: var(--ec-ph-line);
+  --color-ph-text: var(--ec-ph-text);
+  --color-white: var(--ec-surface);
+  --color-transparent: transparent;
+  --color-current: currentcolor;
+
+  /* Police unique */
+  --font-*: initial;
+  --font-sans: var(--ec-font);
+
+  /* Graisses autorisées */
+  --font-weight-*: initial;
+  --font-weight-light: var(--ec-fw-light);
+  --font-weight-normal: var(--ec-fw-regular);
+  --font-weight-medium: var(--ec-fw-medium);
+  --font-weight-semibold: var(--ec-fw-semibold);
+
+  /* Tailles de texte */
+  --text-display: var(--ec-fs-display);
+  --text-h2: var(--ec-fs-h2);
+  --text-h3: var(--ec-fs-h3);
+  --text-body: var(--ec-fs-body);
+  --text-small: var(--ec-fs-small);
+  --text-kicker: var(--ec-fs-kicker);
+
+  /* Rayons */
+  --radius-*: initial;
+  --radius-sm: var(--ec-radius-sm);
+  --radius: var(--ec-radius);
+  --radius-lg: var(--ec-radius-lg);
+  --radius-pill: var(--ec-radius-pill);
+
+  /* Ombre unique, légère */
+  --shadow-*: initial;
+  --shadow: var(--ec-shadow);
+
+  /* Espacements nommés (l'échelle numérique de Tailwind, multiple de 4 px, reste disponible) */
+  --spacing: var(--ec-space-1);
+  --container-page: var(--ec-container);
+}

@@ -1,0 +1,78 @@
+# Intégration continue d'ExploCardio.fr — tous les connecteurs en mode démonstration.
+# Aucune clé de service réel n'est utilisée ni nécessaire (FR-038).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  secrets:
+    name: Recherche de secrets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_CONFIG: .gitleaks.toml
+
+  verifications:
+    name: Types, charte, tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: explocardio
+          POSTGRES_PASSWORD: explocardio
+          POSTGRES_DB: explocardio_site
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U explocardio"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      SITE_MODE: demo
+      CONNECTOR_ODOO: demo
+      CONNECTOR_STRIPE: demo
+      CONNECTOR_PCA: demo
+      CONNECTOR_EMAILING: demo
+      PCA_DEMO_SUBMODE: auto
+      DATABASE_URL: postgresql://explocardio:explocardio@localhost:5432/explocardio_site
+      DEMO_DATABASE_URL: postgresql://explocardio:explocardio@localhost:5432/explocardio_demo
+      AUTH_SECRET: integration-continue-secret-non-sensible-0123456789
+      SITE_URL: http://localhost:3100
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Base de démonstration
+        run: PGPASSWORD=explocardio psql -h localhost -U explocardio -d explocardio_site -c "CREATE DATABASE explocardio_demo"
+      - run: npm ci
+      - run: npm run db:deploy
+      - run: npm run typecheck
+      - name: Lint (dont règles de charte et de connecteurs)
+        run: npm run lint
+      - run: npm run check:contrast
+      - name: Remplissage de la base de démonstration
+        run: npm run demo:seed
+      - name: Tests unitaires et de contrat
+        run: npm test
+      - run: npx playwright install --with-deps chromium
+      - name: Parcours, accessibilité et non-sortie réseau
+        run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: rapport-playwright
+          path: playwright-report/
+          retention-days: 7

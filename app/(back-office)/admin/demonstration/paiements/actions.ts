@@ -1,0 +1,54 @@
+"use server";
+
+import { redirect } from "next/navigation";
+import { paiementDemo, ValeurRefusee } from "@/connecteurs/demonstration";
+import { estErreurConnecteur } from "@/connecteurs/erreurs";
+import { centimesDepuisSaisie } from "@/lib/montants";
+import { exigerAdministrateur } from "@/lib/roles";
+
+const CHEMIN = "/admin/demonstration/paiements";
+
+async function auteur() {
+  const { user } = await exigerAdministrateur();
+  return { id: user.id, libelle: `${user.name} (${user.email})` };
+}
+
+function retour(r: { ok: string } | { erreur: string }): never {
+  redirect(`${CHEMIN}?${new URLSearchParams(r).toString()}`);
+}
+
+async function executer(succes: string, operation: () => Promise<void>): Promise<never> {
+  try {
+    await operation();
+  } catch (e) {
+    if (e instanceof ValeurRefusee || estErreurConnecteur(e)) retour({ erreur: e.message });
+    throw e;
+  }
+  retour({ ok: succes });
+}
+
+export async function ouvrirPaiementDeTest(donnees: FormData) {
+  await exigerAdministrateur();
+  const montant = centimesDepuisSaisie(String(donnees.get("montant") ?? ""));
+  if (!montant || montant <= 0) retour({ erreur: "Montant invalide (exemple : 120,00)." });
+  const moyens = donnees.getAll("moyens").map(String).filter((m): m is "carte" | "sepa" => m === "carte" || m === "sepa");
+  const { url } = await paiementDemo.ouvrirPaiementDeTest(montant, moyens.length ? moyens : ["carte"]);
+  redirect(url);
+}
+
+export async function simulerEcheance(donnees: FormData) {
+  const a = await auteur();
+  const ref = String(donnees.get("abonnement"));
+  const payee = donnees.get("issue") === "payee";
+  await executer(`Échéance ${payee ? "payée" : "refusée"} simulée pour ${ref}.`, () => paiementDemo.simulerEcheance(a, ref, payee));
+}
+
+export async function simulerRemboursement(donnees: FormData) {
+  const a = await auteur();
+  const ref = String(donnees.get("paiement"));
+  await executer(`Remboursement simulé pour ${ref}.`, async () => {
+    const montant = centimesDepuisSaisie(String(donnees.get("montant") ?? ""));
+    if (montant === null) throw new ValeurRefusee("Remboursement : montant invalide (exemple : 50,00).");
+    await paiementDemo.simulerRemboursement(a, ref, montant, String(donnees.get("motif") || "remboursement de démonstration"));
+  });
+}

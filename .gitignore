@@ -1,1 +1,33 @@
 .DS_Store
+Thumbs.db
+*.tmp
+*.swp
+.vscode/
+.idea/
+
+# Dépendances et constructions
+node_modules/
+.next/
+out/
+build/
+dist/
+coverage/
+generated/
+*.tsbuildinfo
+next-env.d.ts
+
+# Journaux
+*.log
+npm-debug.log*
+
+# Secrets : seuls les exemples sans valeur sont versionnés
+.env
+.env.*
+!.env.example
+
+# Tests
+test-results/
+playwright-report/
+blob-report/
+.lighthouseci/
+playwright/.auth/
