@@ -27,7 +27,7 @@ fidélité, tutoriels et FAQ, back-office complet (F13), branchement des service
 points d'entrée vers ces modules, une page de présentation simple par famille et par service,
 et un mini back-office limité aux contenus de l'accueil et de l'en-tête.
 
-**Phases (constitution v2.1.0)** : en phase 1, F01 fonctionne avec les connecteurs de démonstration : les produits et
+**Phases (constitution v2.2.0)** : en phase 1, F01 fonctionne avec les connecteurs de démonstration : les produits et
 les prix viennent de la base fictive du connecteur Odoo, et les emails sont simulés par le
 connecteur emailing. Les contenus gérés dans le mini back-office (bandeau, tuiles,
 actualités, coordonnées) sont réels dès la phase 1. Le site de démonstration est protégé
@@ -468,8 +468,9 @@ validés par la responsable du projet le 2026-10-12.
   produits. « Demander une mise à disposition » mène au parcours de mise à disposition, ou
   au formulaire de contact avec ce motif présélectionné tant que ce parcours n'existe pas.
 - **Motifs du formulaire de contact (confirmé)** : liste initiale proposée — information
-  produit, mise à disposition, financement, assistance et SAV, autre. Liste modifiable par
-  l'administrateur.
+  produit, mise à disposition, financement, assistance, autre. Liste modifiable par
+  l'administrateur. Le SAV n'étant pas géré par le site (constitution v2.2.0), le motif
+  « Assistance » affiche au-dessus du formulaire les boutons de contact WhatsApp (F09).
 - **Contenu des méga-menus (confirmé)** : sous-catégories issues du catalogue ; produits
   phares et liens rapides choisis par l'administrateur.
 - **Engagements de réactivité (confirmé)** : les délais annoncés (réponse, dépannage) ne
@@ -488,6 +489,12 @@ validés par la responsable du projet le 2026-10-12.
   l'espace client relèvent d'autres modules ; le compteur affiche le contenu réel du panier
   dès que celui-ci existe.
 - **Cookies** : le choix est conservé 6 mois, conformément aux recommandations de la CNIL.
+  Le bandeau ne propose que les finalités réellement utilisées. Tant que le site n'utilise
+  que des cookies strictement nécessaires (décision du 2026-10-15 : pas de mesure
+  d'audience pour l'instant), il informe le visiteur sans lui demander de consentement, et
+  le lien « Gestion des cookies » mène à la page qui décrit ces cookies ; dès qu'une finalité
+  soumise au consentement est ajoutée, les boutons « Tout accepter » et « Tout refuser »
+  apparaissent (FR-033 à FR-035).
 - **Newsletter** : l'envoi passe par l'outil d'emailing d'ExploCardio.fr ; l'inscription est
   confirmée par email (double consentement).
 - **Marques affichées** : celles de la brochure — Holter ECG : DMS ; Holter tensionnel /

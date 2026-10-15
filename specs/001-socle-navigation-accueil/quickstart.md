@@ -42,10 +42,12 @@ le même résultat. Saisir « zzzz » : message « aucun résultat » et chemins
 
 ## 5. Cookies (US3, SC-007)
 
-Ouvrir le site dans une fenêtre de navigation privée. Attendu : le bandeau cookies apparaît,
-« Tout accepter » et « Tout refuser » côte à côte, de même apparence. Refuser : seul le cookie
-de choix est déposé ; le bandeau ne revient pas. « Gestion des cookies » (pied de page) rouvre
-le panneau par finalité.
+Ouvrir le site dans une fenêtre de navigation privée. Attendu, tant qu'aucune mesure
+d'audience n'est utilisée : un bandeau d'information indique que seuls des cookies
+nécessaires sont utilisés ; « J'ai compris » le ferme ; « Gestion des cookies » (pied de page)
+mène à la page Cookies. Dès qu'une finalité soumise au consentement existe : « Tout accepter »
+et « Tout refuser » côte à côte, de même apparence, rien de déposé avant le choix, choix
+modifiable par finalité.
 
 ## 6. Contact et newsletter (US5)
 

@@ -43,6 +43,12 @@ page de présentation simple, jamais une erreur ni une page d'attente vide.
 | Tuile Assistance et service | `/services/assistance` |
 | Tuile Financement | `/financement` |
 | Bouton de l'offre de bienvenue | `/connexion` puis, dès F02, la création de compte |
+| Offre digitale — achat direct | `/catalogue` |
+| Offre digitale — financement | `/financement` |
+| Offre digitale — mise à disposition au mois | `/mise-a-disposition` |
+| Offre digitale — pack dépannage express | `/mise-a-disposition#depannage-express` (section de la page, F05 l'enrichira) |
+| Offre digitale — logiciel Cloud | `/services/hebergement-donnees-sante` |
+| Offre digitale — outils en ligne | tutoriels : `/services/assistance#aide` (F09 l'enrichira) ; espace client : `/connexion` ; WhatsApp : liens de `src/lib/contact-whatsapp.ts` |
 
 Les liens des tuiles sont modifiables dans le mini back-office ; un lien interne vers une page
 inexistante est refusé à l'enregistrement.

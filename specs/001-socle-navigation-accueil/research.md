@@ -90,7 +90,13 @@ les choix propres à F01. Les choix de F11 sont dans
 - **Constat** : à ce jour, le site ne dépose **aucun traceur non essentiel** : la session de
   connexion, l'accès au site de démonstration, le panier et le choix de consentement sont des
   cookies strictement nécessaires, exemptés de consentement.
-- **Décision** : un bandeau maison, sans service tiers (aucune requête externe, principe V et
+- **Décision du 2026-10-15** (analyse, point A2) : le bandeau ne propose que les finalités
+  réellement utilisées. Tant qu'il n'y en a aucune (décision D3 : pas de mesure d'audience),
+  il **informe** sobrement que seuls des cookies nécessaires au fonctionnement sont utilisés,
+  avec un bouton « J'ai compris » et un lien vers la page Cookies, sans demander de
+  consentement inutile. Le mécanisme ci-dessous est prêt et s'active dès qu'une finalité est
+  déclarée dans le code.
+- **Mécanisme** : un bandeau maison, sans service tiers (aucune requête externe, principe V et
   garde réseau de F11) :
   - boutons « Tout accepter », « Tout refuser » et « Personnaliser », les deux premiers au
     même niveau et de même apparence (FR-033, SC-007) ;
@@ -117,6 +123,11 @@ les choix propres à F01. Les choix de F11 sont dans
   3 secondes entre l'affichage et l'envoi, limite de 5 envois par heure et par adresse IP
   (empreinte de l'adresse, jamais l'adresse en clair), au-delà un message clair invite à
   réessayer plus tard.
+- **Adresse du visiteur** : lue dans l'en-tête `X-Forwarded-For` **uniquement** quand la
+  variable `TRUSTED_PROXY=1` indique que le site est derrière le proxy de l'hébergeur (dernier
+  saut ajouté par ce proxy), sinon l'adresse de la connexion. À vérifier lors de la
+  publication chez o2switch (T095 de F11) ; si aucune adresse fiable n'est disponible, la
+  limite s'applique par session de navigateur.
 - **Écarté** : CAPTCHA tiers (reCAPTCHA, hCaptcha) : traceur, requête externe, gêne pour les
   visiteurs ; Friendly Captcha ou Turnstile : idem.
 
@@ -143,7 +154,9 @@ les choix propres à F01. Les choix de F11 sont dans
 - **Images** (actualités, logos de marques) : téléversées dans le back-office, contrôlées
   (types PNG, JPEG, WebP, SVG nettoyé ; 2 Mo au plus ; texte de remplacement obligatoire),
   stockées dans un dossier de stockage du serveur hors du code (`STORAGE_DIR`), servies par une
-  route du site avec mise en cache. Chez o2switch, ce dossier est sur le disque de
+  route du site avec mise en cache et des en-têtes qui interdisent tout script
+  (`Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; sandbox`,
+  `X-Content-Type-Options: nosniff`) ; un SVG ouvert directement est servi en pièce jointe. Chez o2switch, ce dossier est sur le disque de
   l'hébergement, inclus dans la sauvegarde quotidienne.
 - **F13** reprendra et étendra ces écrans (FR-037).
 

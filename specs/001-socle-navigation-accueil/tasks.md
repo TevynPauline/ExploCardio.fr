@@ -52,7 +52,7 @@ listes de `tests/e2e/no-egress.spec.ts` et `tests/e2e/accessibilite-charte.spec.
 
 - [ ] T007 [P] Créer `src/domaine/contenus.ts` : lecture des contenus publiés (bandeau visible selon `etat`, `debut`, `fin` et `ordre` ; tuiles ; actualités triées par `publieLe` décroissant), des paramètres de F01 et des marques, mise en cache avec l'étiquette `contenus` (ajouter cette étiquette à `src/lib/cache.ts`)
 - [ ] T008 [P] Créer `src/domaine/liens.ts` : liste des chemins internes existants (d'après [contracts/pages-et-liens.md](contracts/pages-et-liens.md)) et fonction `lienValide(lien)` (chemin interne existant ou adresse `https://`), utilisée par le mini back-office
-- [ ] T009 [P] Créer `src/lib/stockage.ts` (dépôt d'un fichier image : types PNG, JPEG, WebP, SVG nettoyé par `isomorphic-dompurify` ; 2 Mo au plus ; nom aléatoire ; dossier `STORAGE_DIR`) et la route `app/stockage/[...chemin]/route.ts` qui sert ces fichiers avec mise en cache et en refusant toute sortie du dossier
+- [ ] T009 [P] Créer `src/lib/stockage.ts` (dépôt d'un fichier image : types PNG, JPEG, WebP, SVG nettoyé par `isomorphic-dompurify` ; 2 Mo au plus ; nom aléatoire ; dossier `STORAGE_DIR`) et la route `app/stockage/[...chemin]/route.ts` qui sert ces fichiers avec mise en cache, en refusant toute sortie du dossier, avec les en-têtes `Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; sandbox` et `X-Content-Type-Options: nosniff`, et en pièce jointe pour un SVG ouvert directement (R8)
 - [ ] T010 [P] Créer `src/domaine/textes.ts` : lecture d'un fichier de `contenus/` et rendu Markdown en HTML sûr (`marked` puis `isomorphic-dompurify`), et le composant `src/ui/TexteRiche.tsx` qui l'affiche aux styles de la charte
 
 ### Connecteur Odoo : opération « Lister les références »
@@ -88,7 +88,7 @@ sections, cliquer sur chacune des 6 tuiles (SC-001).
 - [ ] T019 [P] [US1] Créer `src/ui/accueil/Heros.tsx` : fond eucalyptus pâle, logo empilé, titre, « (hors imagerie) », grands points décoratifs, boutons « Découvrir le catalogue » (principal) et « Demander une mise à disposition » (secondaire)
 - [ ] T020 [P] [US1] Créer `src/ui/accueil/AccesRapide.tsx` et `src/ui/accueil/Tuile.tsx` : 6 tuiles carrées (fond d'encart, pastille des trois points, titre, phrase, lien, badge), grille 3/2/1, textes longs sans déformation
 - [ ] T021 [P] [US1] Créer `src/ui/accueil/Equipements.tsx` (3 cartes de familles, emplacements photo provisoires) et `src/ui/accueil/Marques.tsx` (tuiles uniformes, logos en niveaux de gris puis en couleur au survol et au focus, nom en texte sans logo)
-- [ ] T022 [P] [US1] Créer `src/ui/accueil/OffreDigitale.tsx` (achat direct, financement, mise à disposition au mois, pack dépannage express, logiciel Cloud avec badge, outils en ligne avec liens WhatsApp de `src/lib/contact-whatsapp.ts`)
+- [ ] T022 [P] [US1] Créer `src/ui/accueil/OffreDigitale.tsx` (achat direct, financement, mise à disposition au mois, pack dépannage express, logiciel Cloud avec badge, outils en ligne avec liens WhatsApp de `src/lib/contact-whatsapp.ts`), chaque élément menant à la destination de [contracts/pages-et-liens.md](contracts/pages-et-liens.md) ; créer la section `#depannage-express` de la page mise à disposition et la section `#aide` de la page assistance
 - [ ] T023 [P] [US1] Créer `src/ui/accueil/OffreBienvenue.tsx` (encart lin, texte du paramètre `accueil.offre_bienvenue`, bouton d'inscription) et `src/ui/accueil/ServiceFidelite.tsx` (trois cercles numérotés de taille croissante reliés par des flèches fines ; engagements de réactivité masqués si vides)
 - [ ] T024 [P] [US1] Créer `src/ui/accueil/Actualites.tsx` (plus récentes d'abord, image avec texte de remplacement, section absente si vide) et `src/ui/accueil/BlocContact.tsx` (fond sombre, « Régis Andrieu, fondateur », lignes email, téléphone et adresse masquées si vides)
 - [ ] T025 [US1] Assembler l'accueil dans `app/(public)/page.tsx` à partir de `src/domaine/contenus.ts`
@@ -134,10 +134,10 @@ au toucher ; vérifier chaque lien.
 
 **Independent Test** : session vierge, bandeau visible, refus, aucun traceur non essentiel (SC-007).
 
-- [ ] T040 [P] [US3] Écrire `tests/e2e/f01/cookies.spec.ts` : bandeau à la première visite ; « Tout accepter » et « Tout refuser » au même niveau, même apparence, un seul geste ; après refus, seul `ec_consentement` est ajouté aux cookies strictement nécessaires et le bandeau ne revient pas ; « Gestion des cookies » rouvre le panneau par finalité ; utilisable au clavier seul (SC-011)
+- [ ] T040 [P] [US3] Écrire `tests/e2e/f01/cookies.spec.ts` : **sans finalité déclarée** (situation actuelle, D3), bandeau d'information à la première visite, « J'ai compris » le ferme pour 6 mois, aucun cookie hormis les strictement nécessaires, « Gestion des cookies » mène à la page Cookies ; **avec une finalité de test déclarée**, « Tout accepter » et « Tout refuser » au même niveau, même apparence, un seul geste, rien de déposé avant le choix, le choix est conservé et modifiable par finalité ; utilisable au clavier seul (SC-007, SC-011)
 - [ ] T041 [P] [US3] Créer `src/domaine/consentement.ts` : lecture et écriture du cookie `ec_consentement` (version, date, finalités « Mesure d'audience » et « Contenus tiers », 6 mois, `SameSite=Lax`), redemande à expiration ou au changement de version
-- [ ] T042 [US3] Créer `src/ui/PanneauCookies.tsx` (bandeau et panneau de personnalisation, focus placé sur le bandeau sans bloquer la lecture de la page, accessible) et `src/ui/SiConsentement.tsx` (n'affiche un contenu tiers qu'après accord de sa finalité)
-- [ ] T043 [US3] Brancher le panneau dans `app/(public)/layout.tsx` et le lien « Gestion des cookies » du pied de page ; décrire les cookies réellement utilisés dans `contenus/cookies.md` ([data-model.md](data-model.md) §4)
+- [ ] T042 [US3] Créer `src/ui/PanneauCookies.tsx` : mode « information » tant qu'aucune finalité n'est déclarée dans `src/domaine/consentement.ts` (texte sobre, « J'ai compris », lien vers la page Cookies), mode « consentement » sinon (« Tout accepter », « Tout refuser », « Personnaliser ») ; accessible, sans bloquer la lecture de la page ; et `src/ui/SiConsentement.tsx` (n'affiche un contenu tiers qu'après accord de sa finalité)
+- [ ] T043 [US3] Brancher le panneau dans `app/(public)/layout.tsx` et le lien « Gestion des cookies » du pied de page (page Cookies en mode information, panneau de choix en mode consentement) ; décrire les cookies réellement utilisés dans `contenus/cookies.md` ([data-model.md](data-model.md) §4)
 
 ---
 
@@ -177,9 +177,9 @@ s'inscrire à la newsletter et confirmer.
 
 ### Implémentation
 
-- [ ] T054 [P] [US5] Créer `src/domaine/limites.ts` : limite d'envois par empreinte d'adresse IP, et la tâche quotidienne de nettoyage dans `src/file-attente/travailleurs.ts`
+- [ ] T054 [P] [US5] Créer `src/domaine/limites.ts` : limite d'envois par empreinte d'adresse IP ; adresse lue dans `X-Forwarded-For` seulement si `TRUSTED_PROXY=1` (ajouté à `.env.example`), sinon adresse de connexion, à défaut par session (R6) ; et la tâche quotidienne de nettoyage dans `src/file-attente/travailleurs.ts`
 - [ ] T055 [US5] Créer `src/domaine/contact.ts` et l'action serveur du formulaire : validation, champ piège, délai minimal de 3 s, limite d'envois, enregistrement du message de contact, notification d'équipe par `registre.emailing()` au destinataire du paramètre `contact.destinataire_messages` (R6)
-- [ ] T056 [US5] Créer `app/(public)/qui-sommes-nous/page.tsx` et `src/ui/FormulaireContact.tsx` (motifs du paramètre `contact.motifs`, motif présélectionné par `?motif=`, erreurs reliées aux champs et annoncées, confirmation)
+- [ ] T056 [US5] Créer `app/(public)/qui-sommes-nous/page.tsx` et `src/ui/FormulaireContact.tsx` (motifs du paramètre `contact.motifs`, motif présélectionné par `?motif=`, erreurs reliées aux champs et annoncées, confirmation) ; quand le motif « Assistance » est choisi, afficher au-dessus du formulaire les boutons « Appeler » et « Écrire sur WhatsApp » (le SAV n'est pas géré par le site)
 - [ ] T057 [US5] Créer `src/domaine/newsletter.ts` (demande, jeton aléatoire dont seule l'empreinte est conservée, confirmation, désinscription, consentement historisé, `registre.emailing().mettreAJourContact`) et les modèles d'email `src/emails/modeles.tsx` « Confirmez votre inscription » et le pied de désinscription
 - [ ] T058 [US5] Créer `src/ui/FormulaireNewsletter.tsx` (consentement explicite, réponse identique dans tous les cas) dans le pied de page, et les pages `app/(public)/newsletter/confirmation/page.tsx` et `app/(public)/newsletter/desinscription/page.tsx`
 
@@ -215,7 +215,7 @@ sur le site en moins d'une minute (SC-003).
 - [ ] T069 [P] Ajouter toutes les pages de F01 aux listes de `tests/e2e/no-egress.spec.ts` et `tests/e2e/accessibilite-charte.spec.ts` (cibles de 44 px, focus visible, animations réduites, SC-005, SC-011)
 - [ ] T070 [P] Ajouter l'accueil, `/catalogue` et `/holter-ecg` à `scripts/lighthouse.ts`, et une étape Lighthouse (construction de production, démarrage, mesure) à `.github/workflows/ci.yml` ; objectif : élément principal en moins de 2 s en profil mobile 4G
 - [ ] T071 [P] Mettre à jour `docs/demonstration.md` (rubrique Contenus du back-office) et `tests/e2e/parcours/README.md`
-- [ ] T072 Dérouler [quickstart.md](quickstart.md) de bout en bout et corriger les écarts
+- [ ] T072 Dérouler [quickstart.md](quickstart.md) de bout en bout et corriger les écarts ; relecture visuelle de chaque page : aucun visuel interdit par la charte (cœur, tracé ECG, pictogramme médical cliché, dégradé vif, ombre lourde, photo de stock générique, FR-045) ; préparer la séance d'essai avec la porteuse du projet (SC-003 : modification d'un contenu en moins de 5 minutes ; SC-010 : test avec des médecins)
 - [ ] T073 Vérifier la conformité finale : `npm run typecheck`, `npm run lint`, `npm run check:contrast`, `npm test`, `npm run test:e2e`, `npm run test:lighthouse` passent en local puis en intégration continue
 
 ---

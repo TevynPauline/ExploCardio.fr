@@ -43,7 +43,7 @@ Règles par type :
 | `contact.telephone` | téléphone affiché | vide |
 | `contact.adresse` | adresse affichée | vide |
 | `contact.destinataire_messages` | adresse qui reçoit les messages du formulaire | vide : notification à l'administrateur de démonstration en phase 1 |
-| `contact.motifs` | liste ordonnée des motifs du formulaire (JSON) | information produit, mise à disposition, financement, assistance et SAV, autre |
+| `contact.motifs` | liste ordonnée des motifs du formulaire (JSON) | information produit, mise à disposition, financement, assistance, autre (le motif « Assistance » affiche les boutons WhatsApp : le SAV n'est pas géré par le site) |
 | `accueil.offre_bienvenue` | texte de l'encart lin | texte initial de FR-022 |
 | `accueil.engagements_reactivite` | texte des engagements | vide : rien n'est affiché |
 | `accueil.badge_hebergement` | badge « En préparation » de l'hébergement des données de santé | `En préparation` |
