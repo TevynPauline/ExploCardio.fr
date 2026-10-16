@@ -54,7 +54,7 @@ export function FormulaireContact({ motifs, motifInitial, jeton, liensWhatsapp }
           onChange={(ev) => setMotif(ev.target.value)}
           aria-invalid={e.motif ? true : undefined}
           aria-describedby={e.motif ? "motif-erreur" : undefined}
-          className="min-h-11 rounded-sm border border-muted bg-surface px-3 text-ink"
+          className="min-h-11 w-full min-w-0 rounded-sm border border-muted bg-surface px-3 text-ink"
         >
           <option value="">Choisissez un motif</option>
           {motifs.map((m) => (
@@ -74,7 +74,7 @@ export function FormulaireContact({ motifs, motifInitial, jeton, liensWhatsapp }
         </div>
       ) : null}
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Champ id="nom" name="nom" libelle="Nom" autoComplete="name" required defaultValue={etat.saisie.nom} erreur={e.nom} />
         <Champ id="email" name="email" type="email" libelle="Email" autoComplete="email" required defaultValue={etat.saisie.email} erreur={e.email} />
         <Champ id="telephone" name="telephone" type="tel" libelle="Téléphone (facultatif)" autoComplete="tel" defaultValue={etat.saisie.telephone} erreur={e.telephone} />
@@ -94,7 +94,7 @@ export function FormulaireContact({ motifs, motifInitial, jeton, liensWhatsapp }
           defaultValue={etat.saisie.message}
           aria-invalid={e.message ? true : undefined}
           aria-describedby={["message-aide", e.message ? "message-erreur" : null].filter(Boolean).join(" ")}
-          className="rounded-sm border border-muted bg-surface p-3 text-ink"
+          className="w-full min-w-0 rounded-sm border border-muted bg-surface p-3 text-ink"
         />
         {e.message ? <p id="message-erreur" className="text-small font-medium text-ink">{e.message}</p> : null}
       </div>

@@ -14,7 +14,7 @@ export default async function QuiSommesNous({ searchParams }: { searchParams: Pr
   const [{ titre, html }, p, whatsapp] = await Promise.all([lireTexte("qui-sommes-nous"), lireParametresPublics(), liensContact()]);
   const motifInitial = motif && p.motifs.includes(motif) ? motif : null;
   return (
-    <div className="mx-auto grid max-w-page gap-10 px-4 py-10 lg:grid-cols-[1fr_1.1fr]">
+    <div className="mx-auto grid max-w-page grid-cols-1 gap-10 px-4 py-10 lg:grid-cols-[1fr_1.1fr]">
       <div className="flex flex-col gap-4">
         <Kicker>ExploCardio.fr</Kicker>
         <h1 className="text-display font-light">{titre}</h1>

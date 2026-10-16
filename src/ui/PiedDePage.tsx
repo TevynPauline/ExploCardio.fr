@@ -17,7 +17,7 @@ export async function PiedDePage({ newsletter }: { newsletter?: ReactNode }) {
   ];
   return (
     <footer className="ec-dark border-t border-line/20">
-      <div className="mx-auto grid max-w-page gap-10 px-4 py-12 md:grid-cols-[1fr_1fr_1.2fr]">
+      <div className="mx-auto grid max-w-page grid-cols-1 gap-10 px-4 py-12 md:grid-cols-[1fr_1fr_1.2fr]">
         <div className="flex flex-col gap-4">
           <Logo version="horizontal-blanc" hauteur={28} />
           <p className="text-small text-white">
