@@ -30,7 +30,13 @@ export function empreinte(valeur: string): string {
  * Compte un envoi ; renvoie false si la limite est atteinte. `repli` sert d'identifiant quand
  * aucune adresse fiable n'est disponible (session du navigateur).
  */
-export async function autoriserEnvoi(formulaire: string, adresse: string | null, repli: string, maintenant = new Date()): Promise<boolean> {
+export async function autoriserEnvoi(
+  formulaire: string,
+  adresse: string | null,
+  repli: string,
+  maintenant = new Date(),
+  limite = LIMITE_PAR_HEURE,
+): Promise<boolean> {
   const cle = `${formulaire}:${empreinte(adresse ?? `session:${repli}`)}`;
   return dbSite().$transaction(async (tx) => {
     const ligne = await tx.limiteEnvoi.findUnique({ where: { cle } });
@@ -38,7 +44,7 @@ export async function autoriserEnvoi(formulaire: string, adresse: string | null,
       await tx.limiteEnvoi.upsert({ where: { cle }, create: { cle, fenetreDebut: maintenant, compte: 1 }, update: { fenetreDebut: maintenant, compte: 1 } });
       return true;
     }
-    if (ligne.compte >= LIMITE_PAR_HEURE) return false;
+    if (ligne.compte >= limite) return false;
     await tx.limiteEnvoi.update({ where: { cle }, data: { compte: { increment: 1 } } });
     return true;
   });

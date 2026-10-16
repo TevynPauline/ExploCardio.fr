@@ -13,6 +13,10 @@ import { DOMAINE_EMAILS_DEMO } from "@/connecteurs/garde-donnees-fictives";
 
 export type CompteDemo = {
   email: string;
+  /** RPPS fictif (plage 99…), identique à celui du partenaire de démonstration. */
+  rpps?: string;
+  /** État du cadeau de bienvenue à recréer (F02). */
+  cadeau?: "remis" | "droit_ouvert";
   role: "client" | "admin" | "support";
   cas: string;
   partenaireRef: string | null;
@@ -21,11 +25,11 @@ export type CompteDemo = {
 };
 
 export const COMPTES_DEMO: CompteDemo[] = [
-  { email: `client.droits${DOMAINE_EMAILS_DEMO}`, role: "client", statut: "valide", partenaireRef: "FICT-P-00001", nom: "Dr Claire Valdrin",
+  { email: `client.droits${DOMAINE_EMAILS_DEMO}`, role: "client", statut: "valide", partenaireRef: "FICT-P-00001", nom: "Dr Claire Valdrin", rpps: "99000000101", cadeau: "remis",
     cas: "Client aux droits d'assistance actifs, avec commandes, location en cours, abonnement logiciel et bons d'achat" },
-  { email: `client.sans-droits${DOMAINE_EMAILS_DEMO}`, role: "client", statut: "valide", partenaireRef: "FICT-P-00002", nom: "Dr Marc Loubrac",
+  { email: `client.sans-droits${DOMAINE_EMAILS_DEMO}`, role: "client", statut: "valide", partenaireRef: "FICT-P-00002", nom: "Dr Marc Loubrac", rpps: "99000000102", cadeau: "droit_ouvert",
     cas: "Client sans droits d'assistance (droits expirés), demande de financement en cours" },
-  { email: `attente${DOMAINE_EMAILS_DEMO}`, role: "client", statut: "en_attente", partenaireRef: null, nom: "Dr Romain Esquelbec",
+  { email: `attente${DOMAINE_EMAILS_DEMO}`, role: "client", statut: "en_attente", partenaireRef: null, nom: "Dr Romain Esquelbec", rpps: "99000000199",
     cas: "Compte en attente de validation : consulte, ne peut pas commander" },
   { email: `admin${DOMAINE_EMAILS_DEMO}`, role: "admin", statut: null, partenaireRef: null, nom: "Administrateur de démonstration",
     cas: "Toutes les fonctions du back-office et les outils de démonstration" },
@@ -44,6 +48,11 @@ export type IdentifiantsDemo = {
 
 /** Supprime les comptes de démonstration et les comptes clients créés pendant les séances. */
 export async function supprimerComptesDeSeance(db: PrismaClient) {
+  // Données de F02 liées aux comptes de séance (le numéro du cadeau survit au compte).
+  await db.attributionCadeau.deleteMany({});
+  await db.echecConnexion.deleteMany({});
+  await db.demandeRgpd.deleteMany({});
+  await db.consentement.deleteMany({ where: { OR: [{ email: { endsWith: DOMAINE_EMAILS_DEMO } }, { compteId: { not: null } }] } });
   const demo = await db.utilisateur.deleteMany({ where: { email: { endsWith: DOMAINE_EMAILS_DEMO } } });
   // Comptes clients créés pendant les séances (A1) : rôle client uniquement. Les comptes de
   // l'équipe (admin, commercial, support) créés dans le back-office sont toujours conservés.
@@ -83,7 +92,8 @@ export async function creerComptesDemo(db: PrismaClient): Promise<IdentifiantsDe
               compteClient: {
                 create: {
                   type: "medecin",
-                  rpps: null,
+                  rpps: c.rpps ?? null,
+                  valideLe: c.statut === "valide" ? new Date() : null,
                   statut: c.statut,
                   odooPartnerRef: c.partenaireRef,
                   nomCabinet: c.nom,
@@ -95,6 +105,17 @@ export async function creerComptesDemo(db: PrismaClient): Promise<IdentifiantsDe
       },
     });
   }
+  // Abonnement à la newsletter et cadeau de bienvenue des comptes clients de démonstration (F02).
+  for (const c of COMPTES_DEMO.filter((x) => x.cadeau && x.rpps)) {
+    const compte = await db.compteClient.findFirstOrThrow({ where: { rpps: c.rpps } });
+    await db.consentement.create({
+      data: { compteId: compte.id, email: c.email, objet: "newsletter", etat: true, origine: "inscription", textePresente: "Consentement de démonstration" },
+    });
+    await db.attributionCadeau.create({
+      data: { numero: c.rpps!, compteId: compte.id, etat: c.cadeau!, remisLe: c.cadeau === "remis" ? new Date() : null },
+    });
+  }
+
   const totpUri = createOTP(totpSecret).url("ExploCardio.fr (démo)", "equipe-demo");
   return {
     motDePasse,

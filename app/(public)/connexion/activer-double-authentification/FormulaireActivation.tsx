@@ -11,7 +11,7 @@ function secretDepuisUri(uri: string): string {
   return new URL(uri).searchParams.get("secret") ?? "";
 }
 
-export function FormulaireActivation() {
+export function FormulaireActivation({ retour = "/admin" }: { retour?: string }) {
   const router = useRouter();
   const [etape, setEtape] = useState<Etape>(null);
   const [erreur, setErreur] = useState<string | null>(null);
@@ -37,7 +37,7 @@ export function FormulaireActivation() {
       setErreur("Ce code n'est pas valide. Vérifiez l'heure de votre téléphone et réessayez.");
       return;
     }
-    router.push("/admin");
+    router.push(retour);
     router.refresh();
   }
 
@@ -59,7 +59,7 @@ export function FormulaireActivation() {
       <p className="text-small text-muted">
         Codes de secours, à conserver en lieu sûr (chacun ne sert qu’une fois) :
       </p>
-      <ul className="grid grid-cols-2 gap-1 text-small">
+      <ul className="grid grid-cols-2 gap-1 text-small" aria-label="Codes de secours">
         {etape.codesSecours.map((c) => (
           <li key={c}>{c}</li>
         ))}

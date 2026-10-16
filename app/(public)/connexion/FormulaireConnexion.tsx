@@ -7,7 +7,9 @@ import { Button, Champ } from "@/ui";
 
 export function FormulaireConnexion() {
   const router = useRouter();
-  const retour = useSearchParams().get("retour") ?? "/";
+  const brut = useSearchParams().get("retour") ?? "/mon-compte";
+  // Retour vers une page du site uniquement (jamais vers un autre site).
+  const retour = brut.startsWith("/") && !brut.startsWith("//") ? brut : "/mon-compte";
   const [erreur, setErreur] = useState<string | null>(null);
   const [envoi, setEnvoi] = useState(false);
 
@@ -22,7 +24,13 @@ export function FormulaireConnexion() {
     });
     setEnvoi(false);
     if (error) {
-      setErreur("Adresse email ou mot de passe incorrect.");
+      setErreur(
+        error.status === 403
+          ? "Confirmez d'abord votre adresse email : un lien vous a été envoyé. Vous pouvez en demander un nouveau depuis la page « Consultez votre boîte email »."
+          : error.status === 429
+            ? "Trop de tentatives rapprochées. Patientez quelques secondes avant de réessayer."
+            : "Email ou mot de passe incorrect.",
+      );
       return;
     }
     if (data && "twoFactorRedirect" in data && data.twoFactorRedirect) {

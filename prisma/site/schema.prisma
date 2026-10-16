@@ -33,6 +33,8 @@ model Utilisateur {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   twoFactorEnabled Boolean? @default(false)
+  /// Blocage temporaire après des échecs de connexion répétés (F02).
+  bloqueJusqua     DateTime?
 
   prenom     String?
   nom        String?
@@ -124,6 +126,7 @@ enum StatutCompteClient {
   valide
   refuse
   suspendu
+  supprime
 }
 
 model CompteClient {
@@ -131,9 +134,9 @@ model CompteClient {
   utilisateurId      String             @unique
   utilisateur        Utilisateur        @relation(fields: [utilisateurId], references: [id], onDelete: Cascade)
   type               TypeCompteClient
-  /// Un RPPS (ou un SIRET) par compte (F02).
+  /// Un RPPS par compte (F02, FR-004). Un SIRET peut être partagé par plusieurs comptes.
   rpps               String?            @unique
-  siret              String?            @unique
+  siret              String?
   nomCabinet         String?
   statut             StatutCompteClient @default(email_a_confirmer)
   motifRefus         String?
@@ -143,10 +146,17 @@ model CompteClient {
   estDemonstration   Boolean            @default(false)
   creeLe             DateTime           @default(now())
   modifieLe          DateTime           @updatedAt
+  valideLe           DateTime?
 
   adresses           Adresse[]
   demandesFinancement DemandeFinancement[]
+  decisions          DecisionCompte[]
+  attribution        AttributionCadeau[]
+  demandesNumero     DemandeChangementNumero[]
+  demandesRgpd       DemandeRgpd[]
 
+  @@index([siret])
+  @@index([statut])
   @@map("compte_client")
 }
 
@@ -488,4 +498,109 @@ model PanneSimulee {
   date       DateTime @updatedAt
 
   @@map("panne_simulee")
+}
+
+// ---------------------------------------------------------------------------
+// F02 — Comptes professionnels
+// ---------------------------------------------------------------------------
+
+enum TypeDecision {
+  validation
+  refus
+  suspension
+  retablissement
+}
+
+/// Décision de l'équipe sur un compte (FR-012, FR-016).
+model DecisionCompte {
+  id       String       @id @default(cuid())
+  compteId String
+  compte   CompteClient @relation(fields: [compteId], references: [id], onDelete: Cascade)
+  decision TypeDecision
+  motif    String?
+  /// Vide pour une validation automatique.
+  auteurId String?
+  date     DateTime     @default(now())
+
+  @@index([compteId])
+  @@map("decision_compte")
+}
+
+enum EtatCadeau {
+  droit_ouvert
+  en_attente_stock
+  remis
+}
+
+/// Droit au tensiomètre de bienvenue : un seul par numéro RPPS ou SIRET (FR-019, SC-002).
+model AttributionCadeau {
+  id          String       @id @default(cuid())
+  numero      String       @unique
+  compteId    String?
+  compte      CompteClient? @relation(fields: [compteId], references: [id], onDelete: SetNull)
+  etat        EtatCadeau   @default(droit_ouvert)
+  ouvertLe    DateTime     @default(now())
+  remisLe     DateTime?
+  commandeRef String?
+
+  @@map("attribution_cadeau")
+}
+
+enum EtatDemandeNumero {
+  en_attente
+  acceptee
+  refusee
+}
+
+/// Changement de RPPS ou SIRET demandé depuis « Mon compte » : vérifié par l'équipe (FR-037).
+model DemandeChangementNumero {
+  id            String            @id @default(cuid())
+  compteId      String
+  compte        CompteClient      @relation(fields: [compteId], references: [id], onDelete: Cascade)
+  ancienNumero  String?
+  nouveauNumero String
+  etat          EtatDemandeNumero @default(en_attente)
+  motif         String?
+  traiteePar    String?
+  demandeeLe    DateTime          @default(now())
+  traiteeLe     DateTime?
+
+  @@index([etat])
+  @@map("demande_changement_numero")
+}
+
+/// Échecs de connexion par compte (empreinte de l'email, jamais l'email en clair).
+model EchecConnexion {
+  cle          String   @id
+  premierEchec DateTime
+  compte       Int      @default(0)
+
+  @@map("echec_connexion")
+}
+
+enum TypeDemandeRgpd {
+  export
+  suppression
+}
+
+enum EtatDemandeRgpd {
+  recue
+  traitee
+  refusee
+}
+
+/// Demande d'export ou de suppression des données (FR-039 à FR-041).
+model DemandeRgpd {
+  id        String          @id @default(cuid())
+  compteId  String?
+  compte    CompteClient?   @relation(fields: [compteId], references: [id], onDelete: SetNull)
+  type      TypeDemandeRgpd
+  etat      EtatDemandeRgpd @default(recue)
+  motif     String?
+  origine   String          @default("mon_compte")
+  recueLe   DateTime        @default(now())
+  traiteeLe DateTime?
+
+  @@index([etat])
+  @@map("demande_rgpd")
 }

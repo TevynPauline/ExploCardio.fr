@@ -53,4 +53,6 @@ export interface ClientsOdoo {
     coordonnees: Partial<Omit<IdentitePartenaire, "rpps" | "siret">>,
   ): Promise<void>;
   lireSituation(ref: string): Promise<SituationClient>;
+  /** Archive le partenaire (suppression RGPD) ; Odoo conserve ses factures (F02). */
+  archiverPartenaire(ref: string, cle: Cle): Promise<void>;
 }

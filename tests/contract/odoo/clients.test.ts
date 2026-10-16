@@ -41,4 +41,23 @@ suiteDeContrat("odoo", "clients (contracts/odoo.md §3)", ({ registre }) => {
   it("lève NotFound pour un partenaire inconnu", async () => {
     await expect(clients().lireSituation("FICT-P-INCONNU")).rejects.toMatchObject({ code: "NOT_FOUND" });
   });
+
+  it("archive un partenaire ; ses factures restent lisibles ; l'opération est idempotente (F02)", async () => {
+    const rpps = `99${String(Math.floor(Math.random() * 1e9)).padStart(9, "0")}`;
+    const { ref } = await clients().creerOuRetrouverPartenaire(identite(rpps), cleDeTest("archive"));
+    await registre.odoo().commandes.creerCommandePayee(
+      {
+        partenaireRef: ref,
+        lignes: [{ defaultCode: "EC-DMS-SD-8GO", quantite: 1 }],
+        livraison: { adresse: "x", codePostal: "75001", ville: "Paris", fraisPortHt: 0 },
+        paiement: { mode: "carte", reference: "FICT-PAY-archive" },
+      },
+      cleDeTest("commande-archive"),
+    );
+    const cle = cleDeTest("archivage");
+    await clients().archiverPartenaire(ref, cle);
+    await clients().archiverPartenaire(ref, cle);
+    expect((await registre.odoo().factures.listerFactures(ref)).length).toBe(1);
+    await expect(clients().archiverPartenaire("FICT-P-INCONNU", cleDeTest("x"))).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
 });

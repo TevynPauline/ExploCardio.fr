@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react";
 import type { EntreeNavigation } from "@/domaine/navigation";
+import { authClient } from "@/lib/auth-client";
 import { Logo } from "../Logo";
 import { IconeChevron, IconeCompte, IconePanier } from "./icones";
 import { MegaMenu } from "./MegaMenu";
@@ -20,6 +21,9 @@ type Props = { entrees: EntreeNavigation[]; articlesPanier: number };
 
 export function BarreNavigation({ entrees, articlesPanier }: Props) {
   const [ouvert, setOuvert] = useState<string | null>(null);
+  // Lu dans le navigateur : les pages restent statiques (rapides) pour tous les visiteurs.
+  const { data: session } = authClient.useSession();
+  const lienCompte = session ? "/mon-compte" : "/connexion";
   const zone = useRef<HTMLDivElement>(null);
   const boutons = useRef<Record<string, HTMLButtonElement | null>>({});
   const minuteur = useRef<number | null>(null);
@@ -101,7 +105,7 @@ export function BarreNavigation({ entrees, articlesPanier }: Props) {
               ) : null}
             </Link>
             <Link
-              href="/connexion"
+              href={lienCompte}
               className="inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-pill px-2 text-small font-medium text-ink hover:bg-pale"
             >
               <IconeCompte />

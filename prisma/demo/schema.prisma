@@ -32,6 +32,8 @@ model Partenaire {
   cleCreation   String?      @unique
   /// A bénéficié de l'offre de bienvenue (F02).
   bienvenueRecue Boolean     @default(false)
+  /// Partenaire archivé (suppression du compte sur le site) : factures conservées (F02).
+  archive       Boolean      @default(false)
   estFictif     Boolean      @default(true)
 
   commandes     CommandeVente[]

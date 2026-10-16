@@ -1,5 +1,6 @@
 import type { Centimes } from "../../types";
 import type { LigneNouvelleCommande } from "./commandes";
+import type { EtatDisponibilite } from "./stock";
 
 // Domaine « Fidélité » du connecteur Odoo (contracts/odoo.md §7, règles de F06).
 // En démonstration, ces règles sont appliquées comme le fera Odoo (principe III).
@@ -34,6 +35,9 @@ export type EstimationGains = {
   seuilDroitsHt: Centimes;
 };
 
+/** Offre de bienvenue : article offert défini dans Odoo (F02). */
+export type OffreBienvenue = { defaultCode: string; disponibilite: EtatDisponibilite };
+
 export interface FideliteOdoo {
   lireCagnotte(partenaireRef: string): Promise<Cagnotte>;
   lireDroitsAssistance(partenaireRef: string): Promise<DroitsAssistance>;
@@ -43,4 +47,6 @@ export interface FideliteOdoo {
    * restitue. Idempotent : rejouer ne compte rien deux fois (F06, FR-018).
    */
   appliquerRegles(commandeRef: string): Promise<{ mouvements: MouvementCagnotte[] }>;
+  /** Article offert par le programme « cadeau de bienvenue », ou null s'il n'y en a pas. */
+  lireOffreBienvenue(): Promise<OffreBienvenue | null>;
 }

@@ -36,6 +36,17 @@ export const PARAMETRES_INITIAUX: Record<string, string> = {
   "accueil.engagements_reactivite": "",
   "accueil.badge_hebergement": "En préparation",
   "accueil.badge_logiciel_cloud": "En préparation",
+  // F02 : validation manuelle par défaut, offre de bienvenue active, spécialités (D3)
+  "comptes.validation_auto": "false",
+  "bienvenue.active": "true",
+  "comptes.specialites": JSON.stringify([
+    "Cardiologie",
+    "Médecine générale",
+    "Médecine du sport",
+    "Pneumologie",
+    "Médecine vasculaire",
+    "Autre",
+  ]),
 };
 
 export async function remplirContenusInitiaux(db: PrismaClient) {

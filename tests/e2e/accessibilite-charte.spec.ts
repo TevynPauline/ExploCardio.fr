@@ -16,7 +16,10 @@ const PAGES_PUBLIQUES = [
   "/qui-sommes-nous",
   "/recherche?q=oscar",
   "/cookies",
+  "/inscription",
+  "/mot-de-passe-oublie",
 ];
+const PAGES_MON_COMPTE = ["/mon-compte", "/mon-compte/informations", "/mon-compte/adresses", "/mon-compte/preferences", "/mon-compte/securite", "/mon-compte/donnees"];
 const PAGES_BACK_OFFICE = [
   "/admin",
   "/admin/demonstration",
@@ -28,6 +31,10 @@ const PAGES_BACK_OFFICE = [
   "/admin/contenus",
   "/admin/contenus/bandeau",
   "/admin/contenus/coordonnees",
+  "/admin/comptes",
+  "/admin/comptes/demandes",
+  "/admin/comptes/reglages",
+  "/admin/comptes/rgpd",
 ];
 
 async function ciblesTropPetites(page: Page): Promise<string[]> {
@@ -91,6 +98,12 @@ test.use({ colorScheme: "light", reducedMotion: "reduce" });
 
 test("pages publiques : cibles, focus et animations", async ({ page }) => {
   for (const chemin of PAGES_PUBLIQUES) await verifierPage(page, chemin);
+});
+
+test("Mon compte : cibles, focus et animations", async ({ page, context }) => {
+  test.setTimeout(120_000);
+  await connecterNavigateur(context, COMPTES.clientSansDroits);
+  for (const chemin of PAGES_MON_COMPTE) await verifierPage(page, chemin);
 });
 
 test("back-office : cibles, focus et animations", async ({ page, context }) => {

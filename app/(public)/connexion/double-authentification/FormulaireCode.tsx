@@ -7,7 +7,8 @@ import { Button, Champ } from "@/ui";
 
 export function FormulaireCode() {
   const router = useRouter();
-  const retour = useSearchParams().get("retour") ?? "/";
+  const brut = useSearchParams().get("retour") ?? "/mon-compte";
+  const retour = brut.startsWith("/") && !brut.startsWith("//") ? brut : "/mon-compte";
   const [erreur, setErreur] = useState<string | null>(null);
   const [secours, setSecours] = useState(false);
 

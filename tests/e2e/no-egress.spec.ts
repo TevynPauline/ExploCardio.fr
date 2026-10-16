@@ -20,18 +20,27 @@ const PAGES_PUBLIQUES = [
   "/qui-sommes-nous",
   "/recherche?q=oscar",
   "/cookies",
+  "/inscription",
+  "/mot-de-passe-oublie",
 ];
-const PAGES_BACK_OFFICE = ["/admin", "/admin/contenus", "/admin/contenus/tuiles"];
+const PAGES_MON_COMPTE = ["/mon-compte", "/mon-compte/informations", "/mon-compte/adresses", "/mon-compte/preferences", "/mon-compte/securite", "/mon-compte/donnees"];
+const PAGES_BACK_OFFICE = ["/admin", "/admin/contenus", "/admin/contenus/tuiles", "/admin/comptes", "/admin/comptes/demandes", "/admin/comptes/reglages", "/admin/comptes/rgpd"];
 
 const demo = { CONNECTOR_ODOO: "demo", CONNECTOR_STRIPE: "demo", CONNECTOR_PCA: "demo", CONNECTOR_EMAILING: "demo" };
 
 test("aucune requête ne sort vers un service réel ni vers Google Fonts", async ({ page, context }) => {
+  test.setTimeout(180_000);
   const bloquees: string[] = [];
   page.on("request", (requete) => {
     if (motifDeBlocage(requete.url(), demo)) bloquees.push(requete.url());
   });
 
   for (const chemin of PAGES_PUBLIQUES) {
+    await page.goto(chemin);
+    await page.waitForLoadState("networkidle");
+  }
+  await connecterNavigateur(context, COMPTES.clientSansDroits);
+  for (const chemin of PAGES_MON_COMPTE) {
     await page.goto(chemin);
     await page.waitForLoadState("networkidle");
   }
@@ -44,6 +53,7 @@ test("aucune requête ne sort vers un service réel ni vers Google Fonts", async
 });
 
 test("aucun lien d'appel ou WhatsApp vers un vrai numéro en démonstration (FR-033)", async ({ page }) => {
+  test.setTimeout(120_000);
   for (const chemin of PAGES_PUBLIQUES) {
     await page.goto(chemin);
     const liens = await page.locator('a[href^="tel:"], a[href*="wa.me"], a[href*="api.whatsapp.com"]').count();

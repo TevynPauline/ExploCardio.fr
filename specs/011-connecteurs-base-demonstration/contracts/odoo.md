@@ -30,6 +30,7 @@ vocabulaire d'Odoo (voir [../data-model.md](../data-model.md)).
 | Créer ou retrouver un partenaire | identité, RPPS ou SIRET, cabinet, adresses, clé | référence du partenaire | `ServiceUnavailable` | F02, F13 |
 | Mettre à jour les coordonnées | partenaire, coordonnées | — | `NotFound` | F02 |
 | Lire la situation d'un client | partenaire | commandes récentes, factures, locations, droits d'assistance | `NotFound` | F13 |
+| Archiver un partenaire | partenaire, clé | — (Odoo conserve les factures, obligation légale de 10 ans) | `NotFound` | F02 (suppression RGPD) |
 
 ## 4. Commandes
 
@@ -62,6 +63,7 @@ vocabulaire d'Odoo (voir [../data-model.md](../data-model.md)).
 | Lire les droits d'assistance | partenaire | statut, date de fin, origine | — | F06, F09, F13 |
 | Estimer les gains d'un panier | partenaire, lignes | bons d'achat et droits que la commande rapporterait | — | F03, F04 |
 | Appliquer les règles à une commande payée | commande | mouvements créés | — | F04, F06 |
+| Lire l'offre de bienvenue | — | article offert (référence) et disponibilité, ou « aucune offre » | `ServiceUnavailable` | F02, F04 |
 
 En mode démonstration, ce domaine **applique les mêmes règles qu'Odoo** à partir des
 paramètres de la base (principe III) ; en mode réel, c'est Odoo qui calcule.

@@ -72,4 +72,11 @@ suiteDeContrat("odoo", "fidélité (contracts/odoo.md §7, règles de F06)", ({ 
     expect(estimation.droitsJusquAu).toBeInstanceOf(Date);
     expect((await fidelite().lireCagnotte(partenaireRef)).soldeHt).toBe(0);
   });
+
+  it("lit l'offre de bienvenue : article offert et disponibilité (F02)", async () => {
+    const offre = await fidelite().lireOffreBienvenue();
+    expect(offre).not.toBeNull();
+    expect(offre!.defaultCode).toBe("EC-BIENVENUE-TENSIOMETRE");
+    expect(["disponible", "delai", "indisponible"]).toContain(offre!.disponibilite.etat);
+  });
 });

@@ -95,7 +95,7 @@ export default async function ParametresCommerciaux({
       <Card>
         <h2 className="text-h3 font-semibold">Promotions</h2>
         <ul className="mt-3 flex flex-col gap-3">
-          {promotions.map((promo) => (
+          {promotions.filter((promo) => promo.type !== "bienvenue").map((promo) => (
             <li key={promo.id}>
               <form action={modifierRemisePromotion} className="flex flex-wrap items-center gap-2">
                 <input type="hidden" name="id" value={promo.id} />

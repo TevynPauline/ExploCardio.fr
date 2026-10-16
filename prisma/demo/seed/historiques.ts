@@ -201,6 +201,11 @@ export async function remplirHistoriques(db: PrismaClient, p: Partenaires) {
     },
   });
 
+  // Programme « cadeau de bienvenue » (F02) : l'article offert est défini dans Odoo.
+  await db.promotion.create({
+    data: { nom: "Cadeau de bienvenue : tensiomètre électronique", type: "bienvenue", cible: { defaultCode: "EC-BIENVENUE-TENSIOMETRE" } },
+  });
+
   // Opportunités : copies de demandes de financement et de devis
   await db.opportunite.create({
     data: {

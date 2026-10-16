@@ -9,7 +9,7 @@ SC-001 est atteint quand tous les parcours ci-dessous existent et passent.
 | Parcours | Module | Fichier attendu | État |
 |---|---|---|---|
 | Accueil, navigation, recherche, contact, newsletter, cookies, contenus | F01 | `../f01/*.spec.ts` | ✅ |
-| Inscription (RPPS ou SIRET), validation du compte | F02 | `inscription.spec.ts` | à écrire |
+| Inscription (RPPS ou SIRET), validation, connexion, Mon compte, données personnelles | F02 | `../f02/*.spec.ts` | ✅ |
 | Achat : panier, paiement American Express (accepté, refusé, authentification forte), facture FICTIVE | F04 | `achat.spec.ts` | à écrire |
 | Mise à disposition : choix, abonnement mensuel, première échéance | F05 | `mise-a-disposition.spec.ts` | à écrire |
 | Fidélité : bons d'achat crédités, utilisés dans le panier, droits d'assistance | F06 | `fidelite.spec.ts` | à écrire |

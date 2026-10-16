@@ -73,6 +73,9 @@ test("recherche indisponible quand le connecteur Odoo est en panne", async ({ pa
     expect(corps.indisponible || corps.groupes.length > 0).toBe(true);
   } finally {
     await page.goto("/admin/demonstration/pannes");
-    await page.locator(".ec-card", { hasText: "Odoo" }).getByRole("button", { name: "Rétablir" }).click();
+    const carte = page.locator(".ec-card", { hasText: "Odoo" });
+    await carte.getByRole("button", { name: "Rétablir" }).click();
+    // Attendre que le rétablissement soit enregistré : sinon la panne déborde sur les parcours suivants.
+    await expect(carte.getByRole("button", { name: "Simuler une panne" })).toBeVisible();
   }
 });

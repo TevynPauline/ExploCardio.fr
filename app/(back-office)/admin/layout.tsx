@@ -18,6 +18,7 @@ export default async function MiseEnPageBackOffice({ children }: { children: Rea
   const outilsDemo = modeDuSite() === "demo" && modeDuConnecteur("odoo") === "demo" && role === "admin";
   const liens = [
     { href: "/admin", libelle: "Tableau de bord" },
+    ...(role === "admin" || role === "commercial" ? [{ href: "/admin/comptes", libelle: "Comptes" }] : []),
     ...(role === "admin" ? [{ href: "/admin/contenus", libelle: "Contenus" }] : []),
     ...(outilsDemo
       ? [

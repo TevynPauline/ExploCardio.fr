@@ -52,6 +52,21 @@ Dans le back-office, rubrique **Démonstration** :
   connectées devront saisir le nouveau.
 - **Réinitialiser** : revenez à l'état de départ en moins d'une minute.
 
+## Les comptes professionnels (F02)
+
+- **S'inscrire** : bouton « Mon compte / Connexion » puis « Créer un compte », ou
+  `/inscription`. Utilisez un RPPS fictif commençant par `99` (11 chiffres) et une adresse en
+  `@demo.explocardio.test`. L'email de confirmation arrive dans la **boîte de démonstration**.
+- **Valider un compte** (administrateur ou commercial) : rubrique **Comptes** du back-office.
+  Valider, refuser (motif obligatoire), suspendre, rétablir ; chaque décision envoie un email.
+  Les demandes de changement de RPPS ou SIRET sont dans **Comptes → Demandes**.
+- **Réglages** (administrateur) : validation automatique, offre de bienvenue, spécialités.
+- **Mon compte** : informations, adresses, préférences (newsletter), sécurité (mot de passe,
+  double authentification facultative), mes données (export JSON, suppression du compte).
+- **Sécurité** : 5 mots de passe erronés en 15 minutes bloquent le compte 15 minutes (email au
+  titulaire) ; « Mot de passe oublié » donne le même message que l'adresse existe ou non.
+- La suppression est refusée pour `client.droits` (location en cours) : c'est voulu.
+
 ## Les contenus du site (administrateur)
 
 Dans le back-office, rubrique **Contenus** : bandeau promotionnel, six tuiles d'accès rapide,

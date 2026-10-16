@@ -1,10 +1,14 @@
 import { betterAuth } from "better-auth";
+import { APIError, createAuthMiddleware, getSessionFromCtx } from "better-auth/api";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
 import { twoFactor } from "better-auth/plugins";
 import { registre } from "@/connecteurs/registre";
 import { dbSite } from "@/lib/db/site";
 import { emailConfirmationAdresse, emailReinitialisationMotDePasse } from "@/emails/modeles";
+import { emailsComptes } from "@/emails/modeles-comptes";
+import { MESSAGE_MOT_DE_PASSE, motDePasseConforme } from "@/domaine/comptes/motdepasse";
+import { compterEchec, estBloque, journaliserSecurite, notifier, reussiteConnexion } from "@/domaine/comptes/securite";
 
 // Authentification (R7) : email et mot de passe, réinitialisation, double authentification par
 // application avec codes de secours. Elle est OBLIGATOIRE pour les rôles d'équipe (admin,
@@ -12,6 +16,12 @@ import { emailConfirmationAdresse, emailReinitialisationMotDePasse } from "@/ema
 // Les emails partent par le connecteur emailing (boîte de démonstration en phase 1).
 
 export const ROLES_EQUIPE = ["admin", "commercial", "support"] as const;
+
+/** Message unique d'échec de connexion : ne révèle jamais si l'email existe (FR-031). */
+export const MESSAGE_ECHEC_CONNEXION = "Email ou mot de passe incorrect.";
+
+const CHEMINS_MOT_DE_PASSE = ["/sign-up/email", "/reset-password", "/change-password"];
+const CHEMINS_SESSION = ["/change-password", "/two-factor/verify-totp", "/two-factor/disable"];
 
 export const auth = betterAuth({
   appName: "ExploCardio.fr",
@@ -24,6 +34,9 @@ export const auth = betterAuth({
       role: { type: "string", required: false, defaultValue: "client", input: false },
       prenom: { type: "string", required: false },
       nom: { type: "string", required: false },
+      civilite: { type: "string", required: false },
+      telephone: { type: "string", required: false },
+      specialite: { type: "string", required: false },
     },
   },
   session: {
@@ -39,6 +52,12 @@ export const auth = betterAuth({
     autoSignIn: false,
     revokeSessionsOnPasswordReset: true,
     resetPasswordTokenExpiresIn: 60 * 60,
+    // F02 : un client se connecte seulement après avoir confirmé son email.
+    requireEmailVerification: true,
+    async onPasswordReset({ user }) {
+      await journaliserSecurite("mot_de_passe_modifie", user.id, { origine: "réinitialisation" });
+      await notifier(user.email, await emailsComptes.motDePasseModifie(), "mot de passe réinitialisé");
+    },
     async sendResetPassword({ user, url }) {
       const email = await emailReinitialisationMotDePasse(url);
       await registre.emailing().envoyerTransactionnel(
@@ -48,6 +67,12 @@ export const auth = betterAuth({
     },
   },
   emailVerification: {
+    sendOnSignUp: true,
+    expiresIn: 24 * 60 * 60,
+    async afterEmailVerification(user) {
+      const { confirmerEmail } = await import("@/domaine/comptes/inscription");
+      await confirmerEmail(user.id);
+    },
     async sendVerificationEmail({ user, url }) {
       const email = await emailConfirmationAdresse(url);
       await registre.emailing().envoyerTransactionnel(
@@ -57,6 +82,54 @@ export const auth = betterAuth({
     },
   },
   rateLimit: { enabled: true, window: 60, max: 30 },
+  hooks: {
+    // Règles du mot de passe (D1) et blocage temporaire après échecs répétés (D2).
+    before: createAuthMiddleware(async (ctx) => {
+      const corps = (ctx.body ?? {}) as { password?: string; newPassword?: string; email?: string };
+      if (CHEMINS_MOT_DE_PASSE.includes(ctx.path)) {
+        const mdp = corps.newPassword ?? corps.password ?? "";
+        if (!motDePasseConforme(mdp)) throw new APIError("BAD_REQUEST", { message: MESSAGE_MOT_DE_PASSE });
+      }
+      if (ctx.path === "/sign-in/email" && corps.email && (await estBloque(corps.email))) {
+        throw new APIError("UNAUTHORIZED", { message: MESSAGE_ECHEC_CONNEXION });
+      }
+    }),
+    after: createAuthMiddleware(async (ctx) => {
+      const reussi = !(ctx.context.returned instanceof APIError);
+      // Certaines routes (vérification du code TOTP) ne placent pas la session dans le contexte :
+      // on la relit depuis la requête pour les changements faits depuis « Mon compte ».
+      const session =
+        ctx.context.session ??
+        (reussi && CHEMINS_SESSION.includes(ctx.path) ? await getSessionFromCtx(ctx).catch(() => null) : null);
+      // Changements sensibles faits depuis « Mon compte » : journal et email (FR-034, FR-035).
+      if (reussi && session && ctx.path === "/change-password") {
+        await journaliserSecurite("mot_de_passe_modifie", session.user.id, { origine: "mon compte" });
+        await notifier(session.user.email, await emailsComptes.motDePasseModifie(), "mot de passe modifié");
+      }
+      if (reussi && session && ctx.path === "/two-factor/verify-totp") {
+        // Avec une session ouverte, c'est la confirmation d'une activation (pas une connexion).
+        await journaliserSecurite("double_authentification_activee", session.user.id);
+        await notifier(session.user.email, await emailsComptes.doubleAuthentification(true), "double authentification activée");
+      }
+      if (reussi && session && ctx.path === "/two-factor/disable") {
+        await journaliserSecurite("double_authentification_desactivee", session.user.id);
+        await notifier(session.user.email, await emailsComptes.doubleAuthentification(false), "double authentification désactivée");
+      }
+      if (ctx.path !== "/sign-in/email") return;
+      const email = ((ctx.body ?? {}) as { email?: string }).email;
+      if (!email) return;
+      const retour = ctx.context.returned;
+      if (retour instanceof APIError) {
+        if (retour.status === "UNAUTHORIZED") {
+          const { bloque, utilisateur } = await compterEchec(email);
+          if (bloque && utilisateur) await notifier(utilisateur.email, await emailsComptes.compteBloque(), "compte bloqué");
+        }
+        return;
+      }
+      const nouvelle = ctx.context.newSession;
+      if (nouvelle) await reussiteConnexion(email, nouvelle.user.id);
+    }),
+  },
   plugins: [
     twoFactor({
       issuer: "ExploCardio.fr",

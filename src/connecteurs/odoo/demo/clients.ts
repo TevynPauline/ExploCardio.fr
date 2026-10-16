@@ -77,6 +77,12 @@ export const clientsDemo: ClientsOdoo = {
     });
   },
 
+  async archiverPartenaire(ref: string) {
+    const p = await db().partenaire.findUnique({ where: { ref } });
+    if (!p) throw new NotFound("Partenaire", ref);
+    if (!p.archive) await db().partenaire.update({ where: { ref }, data: { archive: true } });
+  },
+
   async lireSituation(ref: string): Promise<SituationClient> {
     const p = await db().partenaire.findUnique({ where: { ref } });
     if (!p) throw new NotFound("Partenaire", ref);

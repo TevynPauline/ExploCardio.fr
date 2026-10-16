@@ -1,4 +1,5 @@
 import { NotFound } from "../../erreurs";
+import { disponibiliteAchat, INCLURE_DISPONIBILITE } from "./disponibilite";
 import type {
   Cagnotte,
   DroitsAssistance,
@@ -6,6 +7,7 @@ import type {
   FideliteOdoo,
   LigneNouvelleCommande,
   MouvementCagnotte,
+  OffreBienvenue,
   TypeMouvement,
 } from "../interfaces";
 import { prixClient } from "./catalogue";
@@ -150,6 +152,16 @@ export const fideliteDemo: FideliteOdoo = {
       droitsJusquAu: eligible >= assistance.seuilCentimes ? prolonger(droits.fin, maintenant, assistance) : null,
       seuilDroitsHt: assistance.seuilCentimes,
     };
+  },
+
+  async lireOffreBienvenue(): Promise<OffreBienvenue | null> {
+    // Programme de fidélité de type « cadeau de bienvenue » (vocabulaire d'Odoo).
+    const programme = await db().promotion.findFirst({ where: { type: "bienvenue" }, orderBy: { id: "desc" } });
+    const code = (programme?.cible as { defaultCode?: string } | null)?.defaultCode;
+    if (!code) return null;
+    const v = await db().variante.findUnique({ where: { defaultCode: code }, include: INCLURE_DISPONIBILITE });
+    if (!v) return null;
+    return { defaultCode: v.defaultCode, disponibilite: disponibiliteAchat(v) };
   },
 
   async appliquerRegles(commandeRef: string) {
