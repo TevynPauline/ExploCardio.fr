@@ -69,9 +69,18 @@ const resultat = spawnSync(
     `--collect.chromePath=${chrome}`,
     `--collect.settings.extraHeaders=${JSON.stringify(enTetes)}`,
     `--collect.settings.throttling.cpuSlowdownMultiplier=${multiplicateur}`,
+    // Ubuntu récent (machines d'intégration continue) : Chrome ne démarre pas avec son bac à sable.
+    "--collect.settings.chromeFlags=--headless=new --no-sandbox",
   ],
-  { stdio: "inherit" },
+  { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 },
 );
+const journal = `${resultat.stdout ?? ""}${resultat.stderr ?? ""}`;
+process.stdout.write(journal);
+if (resultat.status !== 0 && process.env.GITHUB_ACTIONS) {
+  // Fin du journal en annotation : lisible sur la page GitHub sans se connecter.
+  const fin = journal.trim().split("\n").slice(-25).join("\n").replace(/%/g, "%25").replace(/\r/g, "").replace(/\n/g, "%0A");
+  console.log(`::error title=Lighthouse (fin du journal)::${fin}`);
+}
 
 // Résumé lisible (et annotations sur la page GitHub, visibles sans se connecter).
 const lignes = new Map<string, { lcp: number[]; cls: number[]; tbt: number[] }>();
