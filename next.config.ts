@@ -5,6 +5,8 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
   typedRoutes: false,
+  // Images du back-office : 2 Mo au plus (contrôlé par src/lib/stockage.ts).
+  experimental: { serverActions: { bodySizeLimit: "3mb" } },
   // Site de démonstration : aucune réponse indexable, fichiers statiques compris (FR-035).
   async headers() {
     if (process.env.SITE_MODE === "prod") return [];

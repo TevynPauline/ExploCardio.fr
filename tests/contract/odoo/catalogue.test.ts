@@ -71,4 +71,23 @@ suiteDeContrat("odoo", "catalogue (contracts/odoo.md §1)", ({ registre }) => {
     const parReference = await catalogue().rechercher("98-0239-22");
     expect(parReference.some((a) => a.nom === "Brassard MAPA Orbit")).toBe(true);
   });
+
+  it("liste une ligne par variante pour l'index de recherche (F01)", async () => {
+    const references = await catalogue().listerReferences();
+    expect(references.length).toBeGreaterThan(40);
+    const orbit = references.find((r) => r.referenceFabricant === "98-0239-22");
+    expect(orbit).toMatchObject({
+      defaultCode: "EC-SUN-ORBIT-M",
+      referenceArticle: "EC-SUN-ORBIT-S",
+      nom: "Brassard MAPA Orbit",
+      marque: "SunTech",
+      type: "consommable",
+      categorie: "accessoires",
+      configuration: "26-34 cm",
+    });
+    expect(orbit!.prixHt).toBeGreaterThan(0);
+    expect(["disponible", "delai", "indisponible"]).toContain(orbit!.disponibilite.etat);
+    const codes = references.map((r) => r.defaultCode);
+    expect(new Set(codes).size).toBe(codes.length);
+  });
 });

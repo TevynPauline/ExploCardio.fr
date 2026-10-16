@@ -7,3 +7,4 @@ export { Kicker } from "./Kicker";
 export { Logo } from "./Logo";
 export { Placeholder } from "./Placeholder";
 export { Retour } from "./Retour";
+export { TexteRiche } from "./TexteRiche";

@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import "../docs/brand/tokens.css";
+@import "../docs/brand/tokens.css" layer(base);
 @import "../styles/fonts.css";
 @import "../styles/theme.css";
 
@@ -38,4 +38,73 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Liens dans un texte : soulignés, pour ne pas reposer sur la seule couleur (WCAG 1.4.1) */
+p a:not([class]),
+li a:not([class]),
+dd a:not([class]) {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Textes des pages de présentation (src/ui/TexteRiche.tsx) */
+.texte-riche {
+  max-width: 68ch;
+  font-size: var(--ec-fs-body);
+  line-height: var(--ec-lh-body);
+}
+
+.texte-riche p,
+.texte-riche ul,
+.texte-riche ol,
+.texte-riche table {
+  margin: 0 0 var(--ec-space-4);
+}
+
+.texte-riche ul,
+.texte-riche ol {
+  padding-left: var(--ec-space-6);
+}
+
+.texte-riche ul {
+  list-style: disc;
+}
+
+.texte-riche ol {
+  list-style: decimal;
+}
+
+.texte-riche h2 {
+  margin: var(--ec-space-8) 0 var(--ec-space-3);
+  font-size: var(--ec-fs-h2);
+}
+
+.texte-riche h3 {
+  margin: var(--ec-space-6) 0 var(--ec-space-2);
+  font-size: var(--ec-fs-h3);
+}
+
+.texte-riche strong {
+  font-weight: var(--ec-fw-semibold);
+}
+
+.texte-riche table {
+  border-collapse: collapse;
+  display: block;
+  overflow-x: auto;
+  width: 100%;
+}
+
+.texte-riche th,
+.texte-riche td {
+  border-bottom: 1px solid var(--ec-line);
+  padding: var(--ec-space-2) var(--ec-space-3) var(--ec-space-2) 0;
+  text-align: left;
+  vertical-align: top;
+}
+
+.texte-riche code {
+  font-size: var(--ec-fs-small);
+  overflow-wrap: anywhere;
 }

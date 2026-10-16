@@ -5,7 +5,18 @@ import { COMPTES, connecterNavigateur } from "./session";
 // 44 × 44 px, le focus est visible au clavier, et avec « animations réduites » aucune animation
 // ne se joue. Chaque module ajoute ses pages à ces listes.
 
-const PAGES_PUBLIQUES = ["/", "/connexion", "/demo/contact?moyen=appel"];
+const PAGES_PUBLIQUES = [
+  "/",
+  "/connexion",
+  "/demo/contact?moyen=appel",
+  "/catalogue",
+  "/holter-ecg",
+  "/accessoires-consommables",
+  "/services",
+  "/qui-sommes-nous",
+  "/recherche?q=oscar",
+  "/cookies",
+];
 const PAGES_BACK_OFFICE = [
   "/admin",
   "/admin/demonstration",
@@ -14,6 +25,9 @@ const PAGES_BACK_OFFICE = [
   "/admin/demonstration/paiements",
   "/admin/demonstration/acces",
   "/admin/demonstration/reinitialiser",
+  "/admin/contenus",
+  "/admin/contenus/bandeau",
+  "/admin/contenus/coordonnees",
 ];
 
 async function ciblesTropPetites(page: Page): Promise<string[]> {

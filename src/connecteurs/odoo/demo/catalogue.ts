@@ -6,6 +6,7 @@ import type {
   Categorie,
   FiltresArticles,
   PrixClient,
+  ReferenceArticle,
   ResumeArticle,
 } from "../interfaces";
 import { INCLURE_DISPONIBILITE, disponibiliteAchat } from "./disponibilite";
@@ -154,6 +155,28 @@ export const catalogueDemo: CatalogueOdoo = {
       take: 30,
     });
     return modeles.map(resumer).filter(nonNul);
+  },
+
+  async listerReferences(): Promise<ReferenceArticle[]> {
+    const modeles = await db().modeleArticle.findMany({
+      include: INCLURE_MODELE,
+      orderBy: [{ categorie: { ordre: "asc" } }, { marque: "asc" }, { nom: "asc" }],
+    });
+    return modeles.flatMap((m) =>
+      m.variantes.map((v) => ({
+        defaultCode: v.defaultCode,
+        referenceFabricant: v.referenceFabricant,
+        referenceArticle: m.variantes[0]!.defaultCode,
+        nom: m.nom,
+        marque: m.marque,
+        type: m.type,
+        categorie: m.categorie.code,
+        configuration: v.configuration,
+        prixHt: v.prixHtCentimes,
+        disponibilite: disponibiliteAchat(v),
+        estFictif: v.estFictif,
+      })),
+    );
   },
 };
 

@@ -51,3 +51,25 @@ export async function emailConfirmationAdresse(lien: string): Promise<EmailRendu
     ),
   };
 }
+
+export async function emailConfirmationNewsletter(lien: string): Promise<EmailRendu> {
+  const objet = "Confirmez votre inscription à la newsletter";
+  const desinscription = lien.replace("/newsletter/confirmation", "/newsletter/desinscription");
+  return {
+    modele: "confirmation_newsletter",
+    objet,
+    rendu: await render(
+      <Gabarit apercu="Un clic pour recevoir nos nouveautés" titre={objet}>
+        <Paragraphe>Bonjour,</Paragraphe>
+        <Paragraphe>
+          Pour recevoir la newsletter d’ExploCardio.fr, confirmez votre adresse. Ce lien est valable
+          7 jours. Sans confirmation, vous ne recevrez rien.
+        </Paragraphe>
+        <BoutonEmail href={lien}>Confirmer mon inscription</BoutonEmail>
+        <Paragraphe>
+          Vous pourrez vous désinscrire à tout moment : <a href={desinscription}>se désinscrire</a>.
+        </Paragraphe>
+      </Gabarit>,
+    ),
+  };
+}

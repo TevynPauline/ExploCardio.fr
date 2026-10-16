@@ -216,10 +216,106 @@ model Contenu {
   etat      EtatPublication @default(preparation)
   debut     DateTime?
   fin       DateTime?
+  /// Chemin interne (/…) ou adresse https:// (vérifié à l'enregistrement).
+  lien      String?
+  ordre     Int             @default(0)
+  /// Ex. « En préparation » (F01, FR-021).
+  badge     String?
+  /// Encart doux de la charte : pale, blue-soft, lin, mint (tuiles).
+  fond      String?
+  typeActualite TypeActualite?
+  publieLe  DateTime?
   creeLe    DateTime        @default(now())
   modifieLe DateTime        @updatedAt
 
+  @@index([type, etat])
   @@map("contenu")
+}
+
+enum TypeActualite {
+  actualite
+  nouveau_produit
+  nouvelle_offre
+}
+
+// ---------------------------------------------------------------------------
+// F01 — Marques, méga-menus, newsletter, limites d'envoi
+// ---------------------------------------------------------------------------
+
+/// Marque partenaire affichée sur l'accueil (FR-019) : contenu éditorial du site.
+model Marque {
+  id       String   @id @default(cuid())
+  nom      String   @unique
+  /// Chemin du logo dans le stockage (STORAGE_DIR), facultatif.
+  logo     String?
+  /// holter-ecg, mapa, effort
+  familles String[] @default([])
+  ordre    Int      @default(0)
+  visible  Boolean  @default(true)
+  modifieLe DateTime @updatedAt
+
+  @@map("marque")
+}
+
+enum EntreeMenu {
+  holter_ecg
+  holter_tensionnel
+  epreuve_effort
+  accessoires
+  services
+  financement
+  qui_sommes_nous
+}
+
+enum TypeElementMenu {
+  produit_phare
+  lien_rapide
+}
+
+/// Produit phare ou lien rapide d'un méga-menu, choisi par l'administrateur.
+model ElementMenu {
+  id          String          @id @default(cuid())
+  entree      EntreeMenu
+  type        TypeElementMenu
+  /// Référence d'article d'Odoo (produit phare).
+  defaultCode String?
+  libelle     String?
+  lien        String?
+  ordre       Int             @default(0)
+
+  @@index([entree, type])
+  @@map("element_menu")
+}
+
+enum EtatNewsletter {
+  en_attente
+  confirmee
+  desinscrite
+  expiree
+}
+
+/// Inscription à la newsletter à double consentement (FR-028).
+model InscriptionNewsletter {
+  id             String         @id @default(cuid())
+  email          String         @unique
+  etat           EtatNewsletter @default(en_attente)
+  /// Empreinte du jeton de confirmation ou de désinscription (jamais le jeton lui-même).
+  empreinteJeton String?        @unique
+  demandeeLe     DateTime       @default(now())
+  confirmeeLe    DateTime?
+  desinscriteLe  DateTime?
+  textePresente  String
+
+  @@map("inscription_newsletter")
+}
+
+/// Limite d'envois par empreinte d'adresse (FR-032), fenêtre d'une heure.
+model LimiteEnvoi {
+  cle          String   @id
+  fenetreDebut DateTime
+  compte       Int      @default(0)
+
+  @@map("limite_envoi")
 }
 
 /// Contenu éditorial d'un article d'Odoo, rattaché par sa référence, jamais par copie.

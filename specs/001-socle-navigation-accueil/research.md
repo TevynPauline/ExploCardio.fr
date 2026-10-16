@@ -202,6 +202,12 @@ les choix propres à F01. Les choix de F11 sont dans
 - **Contrôle** : Lighthouse sur l'accueil, la vue catalogue et une page de famille, objectif
   « élément principal affiché en moins de 2 s » en profil mobile 4G ; ajouté à l'intégration
   continue.
+- **Mesure retenue (2026-10-16)** : ralentissement **réel** du réseau et du processeur
+  (profil « 4G lente » de Lighthouse : latence 562 ms, 1,47 Mbit/s, processeur ralenti 4 fois),
+  et non l'estimation par simulation. La simulation donnait de 1,4 à 2,8 s pour une même
+  page, car elle ajoute au texte principal le téléchargement de tout le JavaScript chargé avant
+  lui, alors que ce JavaScript ne retarde pas l'affichage du texte. Mesures réelles : 1,5 à
+  1,8 s sur l'accueil, la vue catalogue et la page Holter ECG.
 
 ## R12. Pages d'erreur
 

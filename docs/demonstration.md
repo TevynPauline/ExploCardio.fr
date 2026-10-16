@@ -52,6 +52,14 @@ Dans le back-office, rubrique **Démonstration** :
   connectées devront saisir le nouveau.
 - **Réinitialiser** : revenez à l'état de départ en moins d'une minute.
 
+## Les contenus du site (administrateur)
+
+Dans le back-office, rubrique **Contenus** : bandeau promotionnel, six tuiles d'accès rapide,
+actualités, coordonnées et textes de l'accueil, produits phares et liens rapides des menus,
+marques partenaires. Une modification est visible sur le site en moins d'une minute et
+inscrite au journal. Ces contenus sont **réels** : ils sont conservés quand on réinitialise la
+démonstration.
+
 ## Réinitialiser entre deux séances
 
 La réinitialisation remet à zéro la base fictive, les comptes clients créés pendant la séance,

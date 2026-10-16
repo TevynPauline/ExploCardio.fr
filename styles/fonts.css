@@ -55,3 +55,20 @@
   font-display: swap;
   src: url("/fonts/inter/inter-latin-600-italic.woff2") format("woff2");
 }
+
+/*
+ * Police de repli aux métriques ajustées sur celles d'Inter (R11) : le passage du repli à Inter
+ * ne décale rien et ne provoque pas de nouveau rendu visible de l'élément principal.
+ */
+@font-face {
+  font-family: "Inter Fallback";
+  src: local("Arial"), local("Helvetica"), local("Liberation Sans");
+  ascent-override: 90.44%;
+  descent-override: 22.52%;
+  line-gap-override: 0%;
+  size-adjust: 107.12%;
+}
+
+:root {
+  --ec-font: "Inter", "Inter Fallback", system-ui, -apple-system, "Segoe UI", sans-serif;
+}

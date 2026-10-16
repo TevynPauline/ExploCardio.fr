@@ -78,10 +78,26 @@ export type PrixClient = {
   mensualiteForceeHt: Centimes | null;
 };
 
+/** Une ligne par variante, pour l'index de recherche du site (F01, R4). */
+export type ReferenceArticle = MarqueFictive & {
+  defaultCode: string;
+  referenceFabricant: string | null;
+  /** Référence de l'article (default_code de sa première variante). */
+  referenceArticle: string;
+  nom: string;
+  marque: string;
+  type: TypeArticle;
+  categorie: string;
+  configuration: string | null;
+  prixHt: Centimes;
+  disponibilite: EtatDisponibilite;
+};
+
 export interface CatalogueOdoo {
   listerCategories(): Promise<Categorie[]>;
   listerArticles(categorie: string, filtres?: FiltresArticles): Promise<ResumeArticle[]>;
   lireArticle(reference: string): Promise<Article>;
   lirePrixClient(partenaireRef: string, references: string[]): Promise<PrixClient[]>;
   rechercher(texte: string): Promise<ResumeArticle[]>;
+  listerReferences(): Promise<ReferenceArticle[]>;
 }

@@ -6,6 +6,7 @@ import { leverVerrou, poserVerrou } from "@/lib/demo/verrou";
 import { remplirJeuDeDepart, type BilanRemplissage } from "../../prisma/demo/seed/remplissage";
 import * as administration from "./odoo/demo/administration";
 import * as emission from "./stripe/demo/emission";
+import { invaliderIndexRecherche } from "@/domaine/recherche/index";
 import { definirPanne, panneActive } from "./panne-simulee";
 import { CONNECTEURS, type NomConnecteur } from "@/lib/config";
 import { registre } from "./registre";
@@ -39,6 +40,9 @@ export async function reinitialiserDemonstration(auteur: Auteur): Promise<BilanR
       site.messageDemonstration.deleteMany(),
       site.panneSimulee.deleteMany(),
       site.evenementPaiementTraite.deleteMany(),
+      // F01 : inscriptions à la newsletter et limites d'envoi, données de test en phase 1
+      site.inscriptionNewsletter.deleteMany(),
+      site.limiteEnvoi.deleteMany(),
     ]);
     const bilan = await remplirJeuDeDepart(dbDemo(), site);
     await site.journalAction.create({
@@ -87,21 +91,25 @@ export const ecranDemonstration = {
   async modifierPrix(auteur: Auteur, defaultCode: string, prixHtCentimes: number) {
     exigerOutils();
     const r = await administration.modifierPrix(defaultCode, prixHtCentimes);
+    invaliderIndexRecherche();
     await journaliser(auteur, "demo.prix", defaultCode, r.avant, r.apres);
   },
   async modifierStock(auteur: Auteur, defaultCode: string, m: administration.ModificationStock) {
     exigerOutils();
     const r = await administration.modifierStock(defaultCode, m);
+    invaliderIndexRecherche();
     await journaliser(auteur, "demo.stock", defaultCode, r.avant, r.apres);
   },
   async modifierOffreMad(auteur: Auteur, defaultCode: string, premierMois: number, moisSuivants: number) {
     exigerOutils();
     const r = await administration.modifierOffreMad(defaultCode, premierMois, moisSuivants);
+    invaliderIndexRecherche();
     await journaliser(auteur, "demo.offre_mad", defaultCode, r.avant, r.apres);
   },
   async modifierRemisePromotion(auteur: Auteur, id: number, remisePourcent: number) {
     exigerOutils();
     const r = await administration.modifierRemisePromotion(id, remisePourcent);
+    invaliderIndexRecherche();
     await journaliser(auteur, "demo.promotion", String(id), r.avant, r.apres);
   },
   async modifierParametresCommerciaux(auteur: Auteur, p: administration.ParametresCommerciaux) {

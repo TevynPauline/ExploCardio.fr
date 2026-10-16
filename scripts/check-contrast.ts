@@ -37,6 +37,10 @@ const PAIRES: Paire[] = [
   { nom: "Texte d'emplacement photo", texte: c.text.ink, fond: c.placeholder.fill, minimum: 4.5 },
   { nom: "Contour de focus sur ivoire", texte: c.brand.deepStrong, fond: c.surface.bg, minimum: 3 },
   { nom: "Contour du bouton secondaire sur ivoire", texte: c.text.ink, fond: c.surface.bg, minimum: 3 },
+  // F01 : tuiles d'accès rapide (texte principal sur les quatre encarts doux)
+  { nom: "Texte principal sur tuile menthe", texte: c.text.ink, fond: c.surface.mint, minimum: 4.5 },
+  { nom: "Pastille sur encart lin (offre de bienvenue)", texte: c.brand.deepStrong, fond: c.surface.lin, minimum: 4.5 },
+  { nom: "Lien du bandeau promotionnel (texte principal sur lin)", texte: c.text.ink, fond: c.surface.lin, minimum: 4.5 },
 ];
 
 function luminance(hexa: string): number {

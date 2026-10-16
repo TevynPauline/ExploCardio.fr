@@ -13,6 +13,7 @@ vocabulaire d'Odoo (voir [../data-model.md](../data-model.md)).
 | Lire un article | référence | modèle, variantes, prix HT, TVA, formules, offres de mise à disposition, barème de financement | `NotFound`, `ServiceUnavailable` | F03, F13 |
 | Lire les prix d'un client | client, références | prix applicables (liste de prix, remises, mensualités forcées) | `NotFound` | F03, F04 |
 | Rechercher | texte, référence | articles correspondants | `ServiceUnavailable` | F01 |
+| Lister les références | — | une ligne par variante : référence interne, référence fabricant, référence de l'article, nom, marque, type, catégorie, configuration, prix HT, disponibilité, marque « fictif » | `ServiceUnavailable` | F01 (index de recherche), F03 |
 
 ## 2. Stock et parc
 

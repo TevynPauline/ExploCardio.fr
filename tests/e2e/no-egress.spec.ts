@@ -7,8 +7,21 @@ import { COMPTES, connecterNavigateur } from "./session";
 // de démonstration ne contient de lien d'appel ou WhatsApp vers un vrai numéro.
 // Chaque module (F01 à F10) ajoute ses pages à cette liste.
 
-const PAGES_PUBLIQUES = ["/", "/connexion", "/demo/contact?moyen=appel"];
-const PAGES_BACK_OFFICE = ["/admin"];
+const PAGES_PUBLIQUES = [
+  "/",
+  "/connexion",
+  "/demo/contact?moyen=appel",
+  "/catalogue",
+  "/holter-ecg",
+  "/holter-tensionnel",
+  "/epreuve-effort",
+  "/accessoires-consommables",
+  "/services/assistance",
+  "/qui-sommes-nous",
+  "/recherche?q=oscar",
+  "/cookies",
+];
+const PAGES_BACK_OFFICE = ["/admin", "/admin/contenus", "/admin/contenus/tuiles"];
 
 const demo = { CONNECTOR_ODOO: "demo", CONNECTOR_STRIPE: "demo", CONNECTOR_PCA: "demo", CONNECTOR_EMAILING: "demo" };
 

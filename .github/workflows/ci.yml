@@ -74,6 +74,12 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - name: Parcours, accessibilité et non-sortie réseau
         run: npm run test:e2e
+      - name: Performance (Lighthouse, profil mobile 4G)
+        run: |
+          npm run build
+          npx next start -p 3300 &
+          for i in $(seq 1 30); do curl -sf http://localhost:3300/robots.txt > /dev/null && break; sleep 2; done
+          npx tsx scripts/lighthouse.ts http://localhost:3300
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

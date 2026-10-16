@@ -112,7 +112,7 @@ Créé par le remplissage et recréé par chaque réinitialisation :
 |---|---|
 | Toute la base de démonstration | Contenus (pages, bandeau, FAQ, tutoriels) |
 | Comptes clients créés pendant les séances | Contenus produits |
-| Demandes de financement et de devis, messages de contact | Paramètres du site et leur historique |
+| Demandes de financement et de devis, messages de contact, inscriptions à la newsletter (F01) | Paramètres du site et leur historique |
 | Boîte de démonstration | Journal des actions (la réinitialisation y est tracée) |
 | Pannes simulées | Comptes de l'équipe créés dans le back-office (administrateur, commercial, support) |
 | Cinq comptes de démonstration (recréés) | |

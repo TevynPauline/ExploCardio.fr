@@ -31,3 +31,4 @@ playwright-report/
 blob-report/
 .lighthouseci/
 playwright/.auth/
+stockage/

@@ -9,6 +9,8 @@ export const ETIQUETTES = {
   prix: "prix",
   stock: "stock",
   fidelite: "fidelite",
+  /** Contenus éditoriaux du site (bandeau, tuiles, actualités, paramètres, menus, marques). */
+  contenus: "contenus",
 } as const;
 
 export type Etiquette = (typeof ETIQUETTES)[keyof typeof ETIQUETTES];

@@ -35,6 +35,17 @@ export async function ecrireEtatAcces(baseURL: string) {
         secure: false,
         sameSite: "Lax" as const,
       },
+      // Information cookies déjà vue : le bandeau ne recouvre pas les parcours (US3 a ses propres tests).
+      {
+        name: "ec_consentement",
+        value: encodeURIComponent(JSON.stringify({ v: 1, date: new Date().toISOString(), finalites: {} })),
+        domain: new URL(baseURL).hostname,
+        path: "/",
+        expires: -1,
+        httpOnly: false,
+        secure: false,
+        sameSite: "Lax" as const,
+      },
     ],
     origins: [],
   };
