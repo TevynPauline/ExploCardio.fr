@@ -84,7 +84,7 @@ le blocage de la commande.
 
 - [ ] T016 [US1] Configurer Better Auth dans `src/lib/auth.ts` : `requireEmailVerification` pour les clients, `sendOnSignUp`, lien de confirmation valable 24 heures, longueur minimale de 12 caractères, champs supplémentaires (civilité, spécialité, téléphone) ; rappel après confirmation de l'email qui appelle `confirmerEmail` du domaine
 - [ ] T017 [US1] Créer `src/domaine/comptes/motdepasse.ts` : règles de la CNIL (12 caractères, majuscule, minuscule, chiffre, caractère spécial, D1) partagées par le navigateur et le serveur
-- [ ] T018 [US1] Créer `src/domaine/comptes/inscription.ts` : `inscrire` (transaction : utilisateur Better Auth, compte `email_a_confirmer`, adresses, consentements ; contrôle des numéros, des adresses et de l'unicité ; message neutre en cas de doublon ; signalement d'une réinscription refusée ; rattachement d'une inscription newsletter de F01 existante), `confirmerEmail` (→ `en_attente`, ou validation automatique selon `comptes.validation_auto` ; notification d'équipe « nouveau compte à valider »), `purgerNonConfirmes` (tâche quotidienne dans `src/file-attente/travailleurs.ts`)
+- [ ] T018 [US1] Créer `src/domaine/comptes/inscription.ts` : `inscrire` (transaction : utilisateur Better Auth, compte `email_a_confirmer`, adresses, consentements ; contrôle des numéros, des adresses et de l'unicité ; message neutre en cas de doublon ; signalement d'une réinscription refusée ; rattachement d'une inscription newsletter de F01 existante), `confirmerEmail` (→ `en_attente`, ou validation automatique selon `comptes.validation_auto` ; notification d'équipe « nouveau compte à valider » ; si la newsletter a été cochée, l'abonnement est confirmé par la vérification de l'email et transmis à l'outil d'emailing par `emailing.mettreAJourContact` (FR-028), et le droit au cadeau est ouvert si les conditions sont réunies), `purgerNonConfirmes` (tâche quotidienne dans `src/file-attente/travailleurs.ts`)
 - [ ] T019 [US1] Créer la page `app/(public)/inscription/page.tsx` et `src/ui/comptes/FormulaireInscription.tsx` : champs de FR-001, choix médecin (RPPS) ou structure (SIRET), spécialités du paramètre, cases « identique à l'adresse du cabinet », règles du mot de passe cochées en direct (`aria-live` poli), offre de bienvenue si active, information sur l'usage des données, aucune invitation à saisir une donnée de patient ; protections anti-robots et limites de F01
 - [ ] T020 [US1] Créer `app/(public)/inscription/verifier-email/page.tsx` (consulter sa boîte, renvoyer l'email : 3 par heure au plus) et la page d'arrivée du lien de confirmation (réussite, lien expiré avec renvoi)
 
@@ -124,13 +124,13 @@ code de secours.
 ### Tests
 
 - [ ] T026 [P] [US3] Écrire `tests/unit/comptes/securite.test.ts` : 5 échecs en 15 minutes → blocage de 15 minutes et email ; compteur par empreinte (jamais l'email en clair) ; remise à zéro après une connexion réussie ; même réponse pour un email inconnu
-- [ ] T027 [P] [US3] Écrire `tests/e2e/f02/connexion.spec.ts` : connexion et retour à la page consultée, déconnexion, message unique d'échec, blocage après 5 échecs (message identique, email), mot de passe oublié (même message pour un email inconnu, lien à usage unique, autres sessions fermées, email de notification, en moins de 2 minutes, SC-008), activation de la double authentification puis connexion avec un code et avec un code de secours ; clavier seul ; axe-core
+- [ ] T027 [P] [US3] Écrire `tests/e2e/f02/connexion.spec.ts` : connexion et retour à la page consultée, déconnexion, message unique d'échec, blocage après 5 échecs (message identique, email), mot de passe oublié (même message pour un email inconnu, lien à usage unique, autres sessions fermées, email de notification, en moins de 2 minutes, SC-008), activation de la double authentification puis connexion avec un code et avec un code de secours ; connexions, échecs, blocage, changements de mot de passe et de double authentification présents dans le journal de sécurité (FR-034) ; clavier seul ; axe-core
 
 ### Implémentation
 
 - [ ] T028 [US3] Ajouter à `src/lib/auth.ts` les crochets de connexion : refus si `bloqueJusqua` est dans le futur, comptage des échecs et blocage (`src/domaine/comptes/securite.ts`), remise à zéro après réussite, journal des connexions et des échecs ; à la réinitialisation, fermeture des autres sessions et email de notification
 - [ ] T029 [US3] Créer `app/(public)/mot-de-passe-oublie/page.tsx` et `app/(public)/reinitialiser-mot-de-passe/page.tsx` (règles affichées en direct, messages neutres)
-- [ ] T030 [US3] Créer `app/(public)/mon-compte/securite/page.tsx` : changement de mot de passe (mot de passe actuel exigé), activation et désactivation de la double authentification (composant de F11 adapté, retour vers « Mon compte »), nouveaux codes de secours ; notifications par email
+- [ ] T030 [US3] Créer `app/(public)/mon-compte/securite/page.tsx` : changement de mot de passe (mot de passe actuel exigé), activation et désactivation de la double authentification (composant de F11 adapté, retour vers « Mon compte »), nouveaux codes de secours ; chaque changement inscrit au journal de sécurité (FR-034) et notifié par email
 
 ---
 
@@ -161,12 +161,12 @@ rubrique sans erreur.
 
 ### Tests
 
-- [ ] T034 [P] [US5] Écrire `tests/e2e/f02/mon-compte.spec.ts` : tableau de bord (statut, rubriques de FR-036, contact WhatsApp, ni garanties ni rendez-vous), chaque rubrique s'ouvre sans erreur, modification du téléphone et d'une adresse reportée sur la fiche de démonstration, changement d'email confirmé par la nouvelle adresse avec notification de l'ancienne, demande de changement de RPPS visible dans `/admin/comptes/demandes` et non appliquée, désabonnement puis réabonnement historisés ; redirection vers la connexion sans session ; axe-core
+- [ ] T034 [P] [US5] Écrire `tests/e2e/f02/mon-compte.spec.ts` : tableau de bord (statut, rubriques de FR-036, contact WhatsApp, ni garanties ni rendez-vous), chaque rubrique s'ouvre sans erreur, modification du téléphone et d'une adresse reportée sur la fiche de démonstration, changement d'email confirmé par la nouvelle adresse avec notification de l'ancienne, demande de changement de RPPS visible dans `/admin/comptes/demandes` et non appliquée, désabonnement puis réabonnement historisés ; changement d'email inscrit au journal de sécurité ; redirection vers la connexion sans session ; axe-core
 
 ### Implémentation
 
 - [ ] T035 [US5] Créer `app/(public)/mon-compte/layout.tsx` (client connecté, sinon `/connexion?retour=…`) et `app/(public)/mon-compte/page.tsx` (statut, encart de bienvenue, rubriques, contact WhatsApp de `src/lib/contact-whatsapp.ts`) ; pages « Bientôt disponible » pour `commandes`, `factures`, `locations`, `bons-achat`, `assistance`, `logiciels`
-- [ ] T036 [US5] Créer `src/domaine/comptes/profil.ts` et les pages `app/(public)/mon-compte/informations/page.tsx` et `adresses/page.tsx` : modification enregistrée puis reportée par `clients.mettreAJourCoordonnees` (file d'attente si indisponible) ; changement d'email par Better Auth avec confirmation et notification de l'ancienne adresse ; demande de changement de numéro ; et l'écran `app/(back-office)/admin/comptes/demandes/page.tsx` (accepter ou refuser, signalements)
+- [ ] T036 [US5] Créer `src/domaine/comptes/profil.ts` et les pages `app/(public)/mon-compte/informations/page.tsx` et `adresses/page.tsx` : modification enregistrée puis reportée par `clients.mettreAJourCoordonnees` (file d'attente si indisponible) ; changement d'email par Better Auth avec confirmation et notification de l'ancienne adresse, inscrit au journal de sécurité (FR-034) ; demande de changement de numéro ; et l'écran `app/(back-office)/admin/comptes/demandes/page.tsx` (accepter ou refuser, signalements)
 - [ ] T037 [US5] Créer `src/domaine/comptes/newsletter.ts` et `app/(public)/mon-compte/preferences/page.tsx` : abonnement (origine `mon_compte`, texte présenté, confirmé par l'email déjà vérifié), désabonnement, `emailing.mettreAJourContact` (FR-028), ouverture du droit au cadeau ; lien de désinscription des emails (F01) relié au compte
 
 ---
@@ -186,7 +186,8 @@ factures conservées) ; refus si location en cours.
 ### Implémentation
 
 - [ ] T040 [US6] Créer `src/domaine/comptes/rgpd.ts` (`exporter`, `supprimer`, demande RGPD et journal) selon [research.md](research.md) R8
-- [ ] T041 [US6] Créer `app/(public)/mon-compte/donnees/page.tsx` et la route `app/(public)/mon-compte/donnees/export/route.ts` (fichier JSON, après nouvelle saisie du mot de passe), et l'action de suppression (confirmation explicite)
+- [ ] T041 [US6] Créer `app/(public)/mon-compte/donnees/page.tsx` et la route `app/(public)/mon-compte/donnees/export/route.ts` : un formulaire envoie le mot de passe (POST), le serveur le vérifie puis renvoie le fichier JSON en téléchargement ; et l'action de suppression (mot de passe et confirmation explicite)
+- [ ] T046 [US6] Créer `app/(back-office)/admin/comptes/rgpd/page.tsx` : saisie d'une demande d'export ou de suppression reçue par courrier ou par email, suivi du délai d'un mois (FR-039), traitement par l'équipe avec les fonctions de `src/domaine/comptes/rgpd.ts` ; administrateur uniquement ; journal
 
 ---
 

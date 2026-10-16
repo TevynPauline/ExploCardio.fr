@@ -31,7 +31,7 @@ points d'entrée de ces rubriques.
 de l'en-tête mènent aux écrans de F02. L'inscription à la newsletter depuis le pied de page
 (F01) reste possible sans compte, mais ne donne pas droit au cadeau à elle seule.
 
-**Phases (constitution v2.1.0)** : en phase 1, F02 fonctionne avec les connecteurs de démonstration : la fiche client et
+**Phases (constitution v2.2.0)** : en phase 1, F02 fonctionne avec les connecteurs de démonstration : la fiche client et
 le cadeau de bienvenue sont écrits dans la base fictive du connecteur Odoo, et les emails
 sont simulés par le connecteur emailing. Les comptes, leur validation et les consentements
 sont gérés par le site.

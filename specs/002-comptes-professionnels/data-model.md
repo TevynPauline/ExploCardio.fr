@@ -60,8 +60,7 @@ est rattachée au compte, sans doublon (cas limite).
 | Clé | Contenu | Valeur initiale |
 |---|---|---|
 | `comptes.validation_auto` | Validation automatique après contrôle de format | `false` |
-| `bienvenue.active` | Offre de bienvenue active | `true` |
-| `bienvenue.texte` | Texte de l'offre (formulaire et « Mon compte ») | texte de F01 (`accueil.offre_bienvenue`, une seule source) |
+| `bienvenue.active` | Offre de bienvenue active (le texte est `accueil.offre_bienvenue` de F01, une seule source) | `true` |
 | `comptes.specialites` | Liste ordonnée (JSON) | Cardiologie, Médecine générale, Médecine du sport, Pneumologie, Médecine vasculaire, Autre |
 
 ## 2. Nouvelles entités de la base du site
