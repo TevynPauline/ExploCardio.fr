@@ -1,12 +1,11 @@
 import { unstable_cache } from "next/cache";
-import { registre } from "@/connecteurs/registre";
-import type { ResumeArticle } from "@/connecteurs/odoo/interfaces";
 import { ETIQUETTES } from "@/lib/cache";
 import { dbSite } from "@/lib/db/site";
-import { FAMILLES, GROUPES_TYPES, cheminArticle, type Famille } from "./familles";
+import { lireCatalogue, type EntreeCatalogue } from "./catalogue/lecture";
+import { FAMILLES, type Famille } from "./familles";
 
 // Contenu de la barre de navigation et des méga-menus (F01, T034, FR-003 à FR-009) :
-// sous-catégories issues du catalogue (connecteur Odoo), produits phares et liens rapides
+// sous-catégories de filtre du catalogue (F03), produits phares et liens rapides
 // choisis par l'administrateur. Préparé côté serveur : aucun appel au connecteur depuis le
 // navigateur. En cas de panne du connecteur, les liens fixes restent disponibles.
 
@@ -38,6 +37,7 @@ const FIXES: Record<string, Lien[]> = {
     { libelle: "Hébergement des données de santé", href: "/services/hebergement-donnees-sante" },
     { libelle: "Assistance et service", href: "/services/assistance" },
     { libelle: "Financement", href: "/financement" },
+    { libelle: "Installation et formation", href: "/services/installation-formation" },
     { libelle: "Mise à disposition", href: "/mise-a-disposition" },
   ],
   financement: [
@@ -52,51 +52,48 @@ const FIXES: Record<string, Lien[]> = {
   ],
 };
 
-function sousCategoriesDeFamille(famille: Famille, articles: ResumeArticle[]): Lien[] {
-  const presents = new Set(articles.map((a) => a.type));
-  const liens: Lien[] = GROUPES_TYPES.filter((g) => presents.has(g.type)).map((g) => ({
-    libelle: g.libelle,
-    href: `${famille.chemin}#${g.ancre}`,
-  }));
+/** Sous-catégories de filtre de la catégorie (F03), menant à la page catégorie filtrée. */
+function sousCategoriesDeFamille(famille: Famille, sousCategories: { categorie: string; libelle: string; slug: string }[]): Lien[] {
+  const liens: Lien[] = sousCategories
+    .filter((sc) => sc.categorie === famille.categorie)
+    .map((sc) => ({ libelle: sc.libelle, href: `${famille.chemin}?type=${sc.slug}` }));
   if (famille.cle === "holter-ecg") liens.push({ libelle: "ECG de repos", href: FAMILLES["ecg-de-repos"].chemin });
   return liens.length ? liens : [{ libelle: `Tous les produits ${famille.libelle}`, href: famille.chemin }];
 }
 
+function prixAPartirDe(e: EntreeCatalogue): number {
+  return Math.min(...e.article.variantes.map((v) => v.prixHt));
+}
+
 async function construire(): Promise<EntreeNavigation[]> {
-  const elements = await dbSite().elementMenu.findMany({ orderBy: { ordre: "asc" } });
-  const odoo = registre.odoo();
-  return Promise.all(
-    ENTREES.map(async (e) => {
-      let articles: ResumeArticle[] = [];
-      if (e.famille) {
-        try {
-          articles = await odoo.catalogue.listerArticles(e.famille.categorie);
-        } catch {
-          articles = []; // connecteur indisponible : liens fixes seulement
-        }
-      }
-      const choisis = elements.filter((x) => x.entree === e.cle);
-      const phares = choisis
-        .filter((x) => x.type === "produit_phare" && x.defaultCode)
-        .map((x) => articles.find((a) => a.reference === x.defaultCode))
-        .filter((a): a is ResumeArticle => Boolean(a));
-      const produitsPhares = (phares.length ? phares : articles.filter((a) => a.type === "equipement").slice(0, 3))
-        .slice(0, 4)
-        .map((a) => ({ libelle: a.nom, sousTitre: a.marque, href: cheminArticle(a.categorie, a.reference), prixHt: a.prixAPartirDeHt }));
-      const liensRapides = choisis
-        .filter((x) => x.type === "lien_rapide" && x.libelle && x.lien)
-        .slice(0, 4)
-        .map((x) => ({ libelle: x.libelle!, href: x.lien! }));
-      return {
-        cle: e.cle,
-        libelle: e.libelle,
-        href: e.href,
-        sousCategories: e.famille ? sousCategoriesDeFamille(e.famille, articles) : (FIXES[e.cle] ?? []),
-        produitsPhares,
-        liensRapides,
-      };
-    }),
-  );
+  const [elements, sousCategories, catalogue] = await Promise.all([
+    dbSite().elementMenu.findMany({ orderBy: { ordre: "asc" } }),
+    dbSite().sousCategorie.findMany({ orderBy: { ordre: "asc" } }),
+    lireCatalogue(), // connecteur indisponible : liste vide, liens fixes seulement
+  ]);
+  return ENTREES.map((e) => {
+    const articles = e.famille ? catalogue.entrees.filter((x) => x.article.categorie === e.famille!.categorie) : [];
+    const choisis = elements.filter((x) => x.entree === e.cle);
+    const phares = choisis
+      .filter((x) => x.type === "produit_phare" && x.defaultCode)
+      .map((x) => articles.find((a) => a.article.variantes.some((v) => v.defaultCode === x.defaultCode)))
+      .filter((a): a is EntreeCatalogue => Boolean(a));
+    const produitsPhares = (phares.length ? phares : articles.filter((a) => a.article.type === "equipement").slice(0, 3))
+      .slice(0, 4)
+      .map((a) => ({ libelle: a.article.nom, sousTitre: a.article.marque, href: a.chemin, prixHt: prixAPartirDe(a) }));
+    const liensRapides = choisis
+      .filter((x) => x.type === "lien_rapide" && x.libelle && x.lien)
+      .slice(0, 4)
+      .map((x) => ({ libelle: x.libelle!, href: x.lien! }));
+    return {
+      cle: e.cle,
+      libelle: e.libelle,
+      href: e.href,
+      sousCategories: e.famille ? sousCategoriesDeFamille(e.famille, sousCategories) : (FIXES[e.cle] ?? []),
+      produitsPhares,
+      liensRapides,
+    };
+  });
 }
 
 export const lireNavigation = unstable_cache(construire, ["navigation"], {

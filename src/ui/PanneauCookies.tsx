@@ -19,8 +19,10 @@ export function PanneauCookies({ finalites = FINALITES }: { finalites?: Finalite
   const [detail, setDetail] = useState(false);
   const [coches, setCoches] = useState<Record<string, boolean> | null>(null);
   const titre = useRef<HTMLHeadingElement>(null);
-  // Visible à la première visite (choix absent ou expiré) ou quand le visiteur le rouvre.
-  const visible = rouvert || (connu && !choix);
+  // Visible à la première visite (choix absent ou expiré) ou quand le visiteur le rouvre. Rendu
+  // dès le serveur (choix encore inconnu) pour s'afficher sans attendre le JavaScript ; masqué
+  // par la feuille de style si le navigateur a déjà un choix (app/layout.tsx).
+  const visible = rouvert || !connu || !choix;
 
   useEffect(() => {
     const rouvrir = () => {
@@ -32,8 +34,8 @@ export function PanneauCookies({ finalites = FINALITES }: { finalites?: Finalite
   }, []);
 
   useEffect(() => {
-    if (visible) titre.current?.focus();
-  }, [visible, detail]);
+    if (visible && connu) titre.current?.focus();
+  }, [visible, connu, detail]);
 
   if (!visible) return null;
 
@@ -50,6 +52,7 @@ export function PanneauCookies({ finalites = FINALITES }: { finalites?: Finalite
   return (
     <section
       aria-labelledby="titre-cookies"
+      data-panneau-cookies={connu ? undefined : "serveur"}
       className="fixed inset-x-0 bottom-0 z-50 border-t border-line bg-surface shadow"
     >
       <div className="mx-auto flex max-w-page flex-col gap-4 px-4 py-4 md:flex-row md:items-center">

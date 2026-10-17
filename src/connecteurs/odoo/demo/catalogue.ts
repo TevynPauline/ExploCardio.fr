@@ -9,7 +9,8 @@ import type {
   ReferenceArticle,
   ResumeArticle,
 } from "../interfaces";
-import { INCLURE_DISPONIBILITE, disponibiliteAchat } from "./disponibilite";
+import type { EtatDisponibilite, MensualiteForcee, Palier } from "../interfaces";
+import { INCLURE_DISPONIBILITE, etatsAchat } from "./disponibilite";
 import { db } from "./outils";
 
 // Domaine « Catalogue » en démonstration (contracts/odoo.md §1).
@@ -21,12 +22,17 @@ const INCLURE_MODELE = {
 
 type ModeleComplet = Prisma.ModeleArticleGetPayload<{ include: typeof INCLURE_MODELE }>;
 
-function resumer(m: ModeleComplet): ResumeArticle | null {
+/** Disponibilités à l'achat de toutes les variantes de ces modèles (packs compris). */
+async function etatsDesModeles(modeles: ModeleComplet[]) {
+  return etatsAchat(modeles.flatMap((m) => m.variantes));
+}
+
+function resumer(m: ModeleComplet, dispo: Map<string, EtatDisponibilite>): ResumeArticle | null {
   const premiere = m.variantes[0];
   if (!premiere) return null;
   const prix = Math.min(...m.variantes.map((v) => v.prixHtCentimes));
   // Disponibilité de l'article : la meilleure de ses variantes.
-  const etats = m.variantes.map(disponibiliteAchat);
+  const etats = m.variantes.map((v) => dispo.get(v.defaultCode)!);
   const disponibilite =
     etats.find((e) => e.etat === "disponible") ??
     etats
@@ -77,8 +83,9 @@ export const catalogueDemo: CatalogueOdoo = {
       include: INCLURE_MODELE,
       orderBy: [{ marque: "asc" }, { nom: "asc" }],
     });
+    const dispo = await etatsDesModeles(modeles);
     return modeles
-      .map(resumer)
+      .map((m) => resumer(m, dispo))
       .filter(nonNul)
       .filter((a) => !filtres.disponibilite || a.disponibilite.etat === filtres.disponibilite);
   },
@@ -96,6 +103,7 @@ export const catalogueDemo: CatalogueOdoo = {
     const bareme = m.formules.includes("financement")
       ? await db().baremeFinancement.findMany({ orderBy: { dureeMois: "asc" } })
       : [];
+    const publiques = await reglesPubliques();
     return {
       reference: m.variantes[0]?.defaultCode ?? reference,
       nom: m.nom,
@@ -126,6 +134,10 @@ export const catalogueDemo: CatalogueOdoo = {
               valeurRemplacementHt: v.offreMad.valeurRemplacementCentimes,
             }
           : null,
+        quantiteParLot: v.quantiteParLot,
+        composants: v.composants,
+        paliers: paliersDe(publiques, v.defaultCode),
+        mensualitesForcees: m.formules.includes("financement") ? mensualitesDe(publiques, v.defaultCode) : [],
       })),
       baremeFinancement: bareme.map((b) => ({
         dureeMois: b.dureeMois,
@@ -154,7 +166,8 @@ export const catalogueDemo: CatalogueOdoo = {
       orderBy: [{ marque: "asc" }, { nom: "asc" }],
       take: 30,
     });
-    return modeles.map(resumer).filter(nonNul);
+    const dispo = await etatsDesModeles(modeles);
+    return modeles.map((m) => resumer(m, dispo)).filter(nonNul);
   },
 
   async listerReferences(): Promise<ReferenceArticle[]> {
@@ -162,6 +175,7 @@ export const catalogueDemo: CatalogueOdoo = {
       include: INCLURE_MODELE,
       orderBy: [{ categorie: { ordre: "asc" } }, { marque: "asc" }, { nom: "asc" }],
     });
+    const dispo = await etatsDesModeles(modeles);
     return modeles.flatMap((m) =>
       m.variantes.map((v) => ({
         defaultCode: v.defaultCode,
@@ -173,7 +187,7 @@ export const catalogueDemo: CatalogueOdoo = {
         categorie: m.categorie.code,
         configuration: v.configuration,
         prixHt: v.prixHtCentimes,
-        disponibilite: disponibiliteAchat(v),
+        disponibilite: dispo.get(v.defaultCode)!,
         estFictif: v.estFictif,
       })),
     );
@@ -184,8 +198,32 @@ type RegleListePrix = {
   defaultCode: string;
   prixHtCentimes?: number;
   remisePourcent?: number;
+  /** Prix dégressif : s'applique à partir de cette quantité (min_quantity d'Odoo). */
+  quantiteMin?: number;
+  /** Mensualité de financement forcée pour cette durée. */
+  dureeMois?: number;
   mensualiteCentimes?: number;
 };
+
+/** Règles des listes de prix sans partenaire (liste publique). */
+async function reglesPubliques(): Promise<RegleListePrix[]> {
+  const listes = await db().listePrix.findMany({ where: { partenaireId: null } });
+  return listes.flatMap((l) => l.regles as RegleListePrix[]);
+}
+
+function paliersDe(regles: RegleListePrix[], defaultCode: string): Palier[] {
+  return regles
+    .filter((r) => r.defaultCode === defaultCode && r.quantiteMin && r.prixHtCentimes !== undefined)
+    .map((r) => ({ quantiteMin: r.quantiteMin!, prixHt: r.prixHtCentimes! }))
+    .sort((a, b) => a.quantiteMin - b.quantiteMin);
+}
+
+function mensualitesDe(regles: RegleListePrix[], defaultCode: string): MensualiteForcee[] {
+  return regles
+    .filter((r) => r.defaultCode === defaultCode && r.dureeMois && r.mensualiteCentimes !== undefined)
+    .map((r) => ({ dureeMois: r.dureeMois!, montantHt: r.mensualiteCentimes! }))
+    .sort((a, b) => a.dureeMois - b.dureeMois);
+}
 
 /** Prix applicables à un client : liste de prix, remises, mensualités forcées (F03). */
 export async function prixClient(
@@ -204,7 +242,8 @@ export async function prixClient(
   if (manquante) throw new NotFound("Article", manquante);
   return references.map((ref) => {
     const v = variantes.find((x) => x.defaultCode === ref)!;
-    const regle = regles.find((r) => r.defaultCode === ref);
+    // Règle de prix du client (hors paliers et mensualités, traités à part).
+    const regle = regles.find((r) => r.defaultCode === ref && !r.quantiteMin && !r.dureeMois);
     let prix = v.prixHtCentimes;
     if (regle?.prixHtCentimes !== undefined) prix = regle.prixHtCentimes;
     else if (regle?.remisePourcent) prix = Math.round(prix * (1 - regle.remisePourcent / 100));
@@ -213,7 +252,7 @@ export async function prixClient(
       prixCatalogueHt: v.prixHtCentimes,
       prixHt: prix,
       remisePourcent: regle?.remisePourcent ?? null,
-      mensualiteForceeHt: regle?.mensualiteCentimes ?? null,
+      mensualitesForcees: mensualitesDe(regles, ref),
     };
   });
 }

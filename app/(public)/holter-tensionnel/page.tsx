@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
-import { PageFamille } from "@/ui/PageFamille";
+import { PageCategorie } from "@/ui/catalogue/PageCategorie";
 
-export const metadata: Metadata = { title: "Holter tensionnel \/ MAPA" };
+export const metadata: Metadata = { title: "Holter tensionnel / MAPA" };
 
-export default function Page() {
-  return <PageFamille cle="holter-tensionnel" />;
+type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> };
+
+export default async function Page({ searchParams }: Props) {
+  return <PageCategorie cle="holter-tensionnel" parametres={await searchParams} />;
 }

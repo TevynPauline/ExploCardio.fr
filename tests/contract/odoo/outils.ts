@@ -18,6 +18,12 @@ export const REF = {
   inconnue: "EC-REFERENCE-INCONNUE",
   partenaireDroitsActifs: "FICT-P-00001",
   partenaireSansDroits: "FICT-P-00002",
+  /** Client avec une mensualité de financement forcée sur `equipementMad` (F03). */
+  partenaireMensualiteForcee: "FICT-P-00007",
+  /** Consommable vendu par boîte et par carton, avec des prix dégressifs (F03). */
+  consommableParLot: "EC-ELEC-HOLTER-50",
+  /** Configuration en pack, dont la disponibilité suit celle de ses composants (F03). */
+  pack: "EC-DMS-3004L-PACK",
 } as const;
 
 export async function nouveauPartenaire(registre: Registre) {

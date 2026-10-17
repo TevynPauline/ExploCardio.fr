@@ -47,6 +47,13 @@ export const PARAMETRES_INITIAUX: Record<string, string> = {
     "Médecine vasculaire",
     "Autre",
   ]),
+  // F03 : tarifs HT standard des pages services (vide = non affiché) et mention du financement (D6).
+  // Le badge de la page hébergement est « accueil.badge_hebergement » (F01), une seule source.
+  "services.hebergement.tarif": "",
+  "services.assistance.tarif": "",
+  "services.financement.tarif": "",
+  "services.installation.tarif": "",
+  "financement.mention": "Montant indicatif, sous réserve d'acceptation par notre partenaire financier.",
 };
 
 export async function remplirContenusInitiaux(db: PrismaClient) {

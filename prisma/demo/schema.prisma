@@ -107,6 +107,10 @@ model Variante {
   attributs          Json       @default("{}")
   prixHtCentimes     Int
   tauxTva            Decimal    @db.Decimal(5, 2) @default(20)
+  /// Unités par conditionnement (product.packaging) : 50 pour une boîte de 50 (F03).
+  quantiteParLot     Int        @default(1)
+  /// Variantes qui composent un pack (nomenclature « kit », mrp.bom) (F03).
+  composants         String[]   @default([])
   /// Prix inventé, à remplacer avant toute présentation à un médecin (décision D6).
   prixInvente        Boolean    @default(true)
   estFictif          Boolean    @default(true)
@@ -180,7 +184,8 @@ model ListePrix {
   nom          String
   partenaireId Int?
   partenaire   Partenaire? @relation(fields: [partenaireId], references: [id], onDelete: Cascade)
-  /// Règles : [{ defaultCode, prixHtCentimes?, remisePourcent?, mensualiteCentimes? }]
+  /// Règles : [{ defaultCode, prixHtCentimes?, remisePourcent?, quantiteMin?, dureeMois?, mensualiteCentimes? }]
+  /// Sans partenaire : liste publique (paliers dégressifs, mensualités forcées pour tous).
   regles       Json
   estFictif    Boolean     @default(true)
 

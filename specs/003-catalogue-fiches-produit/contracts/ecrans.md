@@ -10,7 +10,7 @@
 | `/<catégorie>/<slug>` | Fiche équipement ou fiche consommable selon le type d'article | FR-010 à FR-026, US2 à US5 |
 | `/<catégorie>/<slug>?formule=achat\|mise-a-disposition\|financement&config=<réf>` | Fiche ouverte sur cette formule et cette configuration | US2-8 |
 | `/<catégorie>/<ancien-slug>` | Redirection permanente vers l'adresse actuelle | R2 |
-| `/<catégorie>/<slug>` d'un article retiré | « Ce produit n'est plus proposé » + lien vers la catégorie (statut 410) | Cas limite |
+| `/<catégorie>/<slug>` d’un article retiré | « Ce produit n’est plus proposé » + lien vers la catégorie (page non indexée) | Cas limite |
 | `/services/hebergement-donnees-sante`, `/services/assistance`, `/financement`, `/services/installation-formation` | Offre, bénéfices, tarif HT standard, badge, action | FR-034, FR-035, US8 |
 | `/panier` | Lignes ajoutées (lecture seule), mention « la commande arrive bientôt » | R6 (complété par F04) |
 

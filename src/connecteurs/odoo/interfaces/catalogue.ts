@@ -40,6 +40,12 @@ export type OffreMiseADisposition = {
   valeurRemplacementHt: Centimes;
 };
 
+/** Prix HT d'une variante à partir d'une quantité (liste de prix publique, `min_quantity`). */
+export type Palier = { quantiteMin: number; prixHt: Centimes };
+
+/** Mensualité de financement imposée pour une durée (FR-046, F03). */
+export type MensualiteForcee = { dureeMois: number; montantHt: Centimes };
+
 export type VarianteArticle = MarqueFictive & {
   defaultCode: string;
   referenceFabricant: string | null;
@@ -49,6 +55,14 @@ export type VarianteArticle = MarqueFictive & {
   tauxTva: number;
   prixInvente: boolean;
   offreMiseADisposition: OffreMiseADisposition | null;
+  /** Unités par conditionnement (boîte de 50 → 50) ; 1 pour un article vendu à l'unité. */
+  quantiteParLot: number;
+  /** Prix dégressifs, triés par quantité croissante (prix décroissant). */
+  paliers: Palier[];
+  /** Mensualités de financement forcées pour tous les visiteurs. */
+  mensualitesForcees: MensualiteForcee[];
+  /** Variantes qui composent un pack (nomenclature « kit » d'Odoo) ; vide sinon. */
+  composants: string[];
 };
 
 export type BaremeFinancement = { dureeMois: number; coefficientPourcent: number };
@@ -74,8 +88,8 @@ export type PrixClient = {
   prixCatalogueHt: Centimes;
   prixHt: Centimes;
   remisePourcent: number | null;
-  /** Mensualité de mise à disposition imposée pour ce client (F03). */
-  mensualiteForceeHt: Centimes | null;
+  /** Mensualités de financement imposées pour ce client, prioritaires (FR-046). */
+  mensualitesForcees: MensualiteForcee[];
 };
 
 /** Une ligne par variante, pour l'index de recherche du site (F01, R4). */

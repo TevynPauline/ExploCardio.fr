@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { pannesDemo } from "@/connecteurs/demonstration";
+import { ETIQUETTES, invaliderDepuisAction } from "@/lib/cache";
 import { CONNECTEURS, type NomConnecteur } from "@/lib/config";
 import { exigerAdministrateur } from "@/lib/roles";
 import { Button, Card, Kicker, Retour } from "@/ui";
@@ -21,6 +22,8 @@ async function basculer(donnees: FormData) {
   if (!CONNECTEURS.includes(connecteur)) redirect("/admin/demonstration/pannes");
   const active = donnees.get("active") === "oui";
   await pannesDemo.definir({ id: user.id, libelle: `${user.name} (${user.email})` }, connecteur, active);
+  // Les données mises en cache ne doivent pas masquer la panne (ni survivre à son retour) : F03, US5-5.
+  if (connecteur === "odoo") invaliderDepuisAction(ETIQUETTES.catalogue, ETIQUETTES.prix, ETIQUETTES.stock);
   redirect(`/admin/demonstration/pannes?ok=${encodeURIComponent(`Panne ${active ? "activée" : "désactivée"} : ${NOMS[connecteur]}.`)}`);
 }
 

@@ -12,6 +12,10 @@ type Variante = {
   configuration?: string;
   referenceFabricant?: string;
   prixHt: number; // euros HT
+  /** Unités par conditionnement (F03) ; 1 par défaut. */
+  quantiteParLot?: number;
+  /** Variantes qui composent un pack (F03). */
+  composants?: string[];
   stock?: { quantite: number; horsStock?: "delai" | "indisponible"; delaiJours?: number };
   mad?: { premierMois: number; moisSuivants: number; kitRequis?: string; valeurRemplacement: number };
   parc?: { numero: string; statut: "disponible" | "loue" | "en_retour" | "en_maintenance"; retourDansJours?: number }[];
@@ -58,7 +62,7 @@ export const MODELES: Modele[] = [
           { numero: "FICT-SN-3002E-001", statut: "disponible" },
           { numero: "FICT-SN-3002E-002", statut: "loue" },
         ] },
-      { defaultCode: "EC-DMS-3002E-PACK", configuration: PACK, prixHt: 2090, stock: { quantite: 3 } },
+      { defaultCode: "EC-DMS-3002E-PACK", configuration: PACK, composants: ["EC-DMS-3002E", "EC-ELEC-HOLTER-50"], prixHt: 2090, stock: { quantite: 3 } },
     ],
   },
   {
@@ -76,7 +80,7 @@ export const MODELES: Modele[] = [
           { numero: "FICT-SN-3003A-001", statut: "loue" },
           { numero: "FICT-SN-3003A-002", statut: "en_retour", retourDansJours: 6 },
         ] },
-      { defaultCode: "EC-DMS-3003A-PACK", configuration: PACK, prixHt: 2290, stock: { quantite: 2 } },
+      { defaultCode: "EC-DMS-3003A-PACK", configuration: PACK, composants: ["EC-DMS-3003A", "EC-ELEC-HOLTER-50"], prixHt: 2290, stock: { quantite: 2 } },
     ],
   },
   {
@@ -96,7 +100,7 @@ export const MODELES: Modele[] = [
           { numero: "FICT-SN-3004L-003", statut: "loue" },
           { numero: "FICT-SN-3004L-004", statut: "en_maintenance", retourDansJours: 12 },
         ] },
-      { defaultCode: "EC-DMS-3004L-PACK", configuration: PACK, prixHt: 2490, stock: { quantite: 2 } },
+      { defaultCode: "EC-DMS-3004L-PACK", configuration: PACK, composants: ["EC-DMS-3004L", "EC-ELEC-HOLTER-50"], prixHt: 2490, stock: { quantite: 2 } },
     ],
   },
   {
@@ -518,9 +522,10 @@ export const MODELES: Modele[] = [
     description: "Électrodes à usage unique pour Holter ECG. Référence fictive.",
     formules: ["achat"],
     referenceFictive: true,
+    compatibleAvec: ["EC-DMS-3002E", "EC-DMS-3002E-CLOUD", "EC-DMS-3002E-PACK", "EC-DMS-3003A", "EC-DMS-3003A-CLOUD", "EC-DMS-3003A-PACK", "EC-DMS-3004L", "EC-DMS-3004L-CLOUD", "EC-DMS-3004L-PACK", "EC-DMS-3002W", "EC-DMS-3002W-CLOUD"],
     variantes: [
-      { defaultCode: "EC-ELEC-HOLTER-50", configuration: "Boîte de 50", prixHt: 18, stock: { quantite: 200 } },
-      { defaultCode: "EC-ELEC-HOLTER-500", configuration: "Carton de 500", prixHt: 160, stock: { quantite: 40 } },
+      { defaultCode: "EC-ELEC-HOLTER-50", configuration: "Boîte de 50", quantiteParLot: 50, prixHt: 18, stock: { quantite: 200 } },
+      { defaultCode: "EC-ELEC-HOLTER-500", configuration: "Carton de 500", quantiteParLot: 500, prixHt: 160, stock: { quantite: 40 } },
     ],
   },
   {
@@ -588,6 +593,8 @@ export async function remplirCatalogue(db: PrismaClient): Promise<{ modeles: num
         referenceFabricant: v.referenceFabricant ?? null,
         configuration: v.configuration ?? null,
         prixHtCentimes: euros(v.prixHt),
+        quantiteParLot: v.quantiteParLot ?? 1,
+        composants: v.composants ?? [],
         prixInvente: true,
       };
       if (v.stock) {

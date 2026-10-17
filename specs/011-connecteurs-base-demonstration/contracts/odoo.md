@@ -10,10 +10,12 @@ vocabulaire d'Odoo (voir [../data-model.md](../data-model.md)).
 |---|---|---|---|---|
 | Lister les catégories | — | catégories | `ServiceUnavailable` | F01, F03 |
 | Lister les articles d'une catégorie | catégorie, filtres (marque, type, disponibilité) | articles avec prix « à partir de », formules, disponibilité | `ServiceUnavailable` | F03 |
-| Lire un article | référence | modèle, variantes, prix HT, TVA, formules, offres de mise à disposition, barème de financement | `NotFound`, `ServiceUnavailable` | F03, F13 |
-| Lire les prix d'un client | client, références | prix applicables (liste de prix, remises, mensualités forcées) | `NotFound` | F03, F04 |
+| Lire un article | référence | modèle, variantes, prix HT, TVA, formules, offres de mise à disposition, barème de financement ; par variante (F03) : quantité par lot, paliers dégressifs, mensualités de financement forcées pour tous, composants d'un pack | `NotFound`, `ServiceUnavailable` | F03, F13 |
+| Lire les prix d'un client | client, références | prix applicables (liste de prix, remises) et mensualités de financement forcées pour ce client, par durée (F03) | `NotFound` | F03, F04 |
 | Rechercher | texte, référence | articles correspondants | `ServiceUnavailable` | F01 |
 | Lister les références | — | une ligne par variante : référence interne, référence fabricant, référence de l'article, nom, marque, type, catégorie, configuration, prix HT, disponibilité, marque « fictif » | `ServiceUnavailable` | F01 (index de recherche), F03 |
+
+Détail des champs ajoutés par F03 : [../../003-catalogue-fiches-produit/contracts/odoo.md](../../003-catalogue-fiches-produit/contracts/odoo.md).
 
 ## 2. Stock et parc
 

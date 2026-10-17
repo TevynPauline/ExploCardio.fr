@@ -1,6 +1,6 @@
 import { NotFound, OutOfStock } from "../../erreurs";
 import type { Disponibilite, LigneReservation, StockOdoo } from "../interfaces";
-import { INCLURE_DISPONIBILITE, disponibilite, disponibiliteParc } from "./disponibilite";
+import { INCLURE_DISPONIBILITE, disponibilite, disponibiliteParc, etatsAchat } from "./disponibilite";
 import { ajouterJours, db, type Tx } from "./outils";
 
 // Domaine « Stock et parc » en démonstration (contracts/odoo.md §2).
@@ -44,10 +44,16 @@ export const stockDemo: StockOdoo = {
       where: { defaultCode: { in: references } },
       include: INCLURE_DISPONIBILITE,
     });
+    const achat = await etatsAchat(variantes);
     return references
       .map((r) => variantes.find((v) => v.defaultCode === r))
       .filter((v): v is NonNullable<typeof v> => Boolean(v))
-      .map(disponibilite);
+      .map((v) => ({
+        ...disponibilite(v),
+        achat: achat.get(v.defaultCode)!,
+        // Pack : sa quantité dépend de ses composants, non exposée ici.
+        ...(v.composants.length ? { quantiteDisponible: null } : {}),
+      }));
   },
 
   async reserver(lignes: LigneReservation[], cle: string): Promise<{ reference: string }> {

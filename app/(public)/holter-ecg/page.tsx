@@ -1,14 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { PageFamille } from "@/ui/PageFamille";
+import { PageCategorie } from "@/ui/catalogue/PageCategorie";
 
 export const metadata: Metadata = { title: "Holter ECG" };
 
-// L'ECG de repos est une sous-famille de Holter ECG (FR-009).
-export default function Page() {
+type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> };
+
+// L'ECG de repos est une catégorie à part entière, présentée sous Holter ECG (FR-001, I1).
+export default async function Page({ searchParams }: Props) {
   return (
-    <PageFamille
+    <PageCategorie
       cle="holter-ecg"
+      parametres={await searchParams}
       avant={
         <Link href="/holter-ecg/ecg-de-repos" className="ec-card flex items-center justify-between gap-4 no-underline hover:border-action">
           <span>

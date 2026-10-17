@@ -13,6 +13,7 @@ export const PAGES_INTERNES = [
   "/services",
   "/services/hebergement-donnees-sante",
   "/services/assistance",
+  "/services/installation-formation",
   "/financement",
   "/mise-a-disposition",
   "/qui-sommes-nous",

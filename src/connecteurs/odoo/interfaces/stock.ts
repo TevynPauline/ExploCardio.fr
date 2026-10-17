@@ -10,6 +10,10 @@ export type EtatDisponibilite =
 export type Disponibilite = {
   defaultCode: string;
   achat: EtatDisponibilite;
+  /** Quantité en stock à l'achat (F03 : « N disponibles, le reste sous X jours ») ; null pour un pack. */
+  quantiteDisponible: number | null;
+  /** Délai de réassort quand le stock est épuisé ; null si l'article devient indisponible. */
+  delaiReassortJours: number | null;
   /** Absente si l'article n'est pas proposé en mise à disposition. */
   miseADisposition: EtatDisponibilite | null;
 };

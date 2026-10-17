@@ -33,7 +33,7 @@ test("référence exacte en premier, avec ou sans tirets ; Entrée ouvre la dest
   await champ.press("ArrowDown");
   await expect(page.getByRole("option").first()).toHaveAttribute("aria-selected", "true");
   await champ.press("Enter");
-  await expect(page).toHaveURL(/\/accessoires-consommables#EC-SUN-ORBIT-M$/);
+  await expect(page).toHaveURL(/\/accessoires-consommables\/suntech-brassard-mapa-orbit\?config=EC-SUN-ORBIT-M/);
 });
 
 test("accents et casse ignorés ; prix HT", async ({ page }) => {

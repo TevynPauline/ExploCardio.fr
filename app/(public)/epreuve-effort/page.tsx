@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
-import { PageFamille } from "@/ui/PageFamille";
+import { PageCategorie } from "@/ui/catalogue/PageCategorie";
 
-export const metadata: Metadata = { title: "Épreuve et écho d'effort" };
+export const metadata: Metadata = { title: "Épreuve & écho d'effort" };
 
-export default function Page() {
-  return <PageFamille cle="epreuve-effort" />;
+type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> };
+
+export default async function Page({ searchParams }: Props) {
+  return <PageCategorie cle="epreuve-effort" parametres={await searchParams} />;
 }

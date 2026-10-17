@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
-import { PageFamille } from "@/ui/PageFamille";
+import { PageCategorie } from "@/ui/catalogue/PageCategorie";
 
-export const metadata: Metadata = { title: "Accessoires et consommables" };
+export const metadata: Metadata = { title: "Accessoires & consommables" };
 
-export default function Page() {
-  return <PageFamille cle="accessoires-consommables" />;
+type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> };
+
+export default async function Page({ searchParams }: Props) {
+  return <PageCategorie cle="accessoires-consommables" parametres={await searchParams} />;
 }

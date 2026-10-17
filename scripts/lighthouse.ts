@@ -3,7 +3,7 @@
  * Lance Lighthouse CI sur un site déjà démarré (`npm run build && npm run start`), en passant
  * le mot de passe du site de démonstration par un cookie d'accès calculé comme le site.
  * Usage : npm run test:lighthouse [-- http://localhost:3000]
- * Accueil, vue catalogue et une page de famille (F01) ; les fiches produit de F03 s'y ajouteront.
+ * Accueil, vue catalogue, une page catégorie (F01), une fiche équipement et une fiche consommable (F03).
  */
 import { spawnSync } from "node:child_process";
 import { createHmac } from "node:crypto";
@@ -16,7 +16,7 @@ import { chromium } from "@playwright/test";
 if (existsSync(".env.local")) process.loadEnvFile(".env.local");
 
 const base = (process.argv[2] ?? process.env.LHCI_BASE_URL ?? "http://localhost:3000").replace(/\/$/, "");
-const PAGES = ["/", "/catalogue", "/holter-ecg"];
+const PAGES = ["/", "/catalogue", "/holter-ecg", "/holter-ecg/dms-300-4l", "/accessoires-consommables/electrodes-holter"];
 
 async function cookieAcces(): Promise<string> {
   const client = new pg.Client({ connectionString: process.env.DATABASE_URL });

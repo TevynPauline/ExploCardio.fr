@@ -25,14 +25,14 @@ enum Role {
 }
 
 model Utilisateur {
-  id               String   @id
+  id               String    @id
   name             String
-  email            String   @unique
-  emailVerified    Boolean  @default(false)
+  email            String    @unique
+  emailVerified    Boolean   @default(false)
   image            String?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  twoFactorEnabled Boolean? @default(false)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  twoFactorEnabled Boolean?  @default(false)
   /// Blocage temporaire après des échecs de connexion répétés (F02).
   bloqueJusqua     DateTime?
 
@@ -43,11 +43,11 @@ model Utilisateur {
   specialite String?
   role       Role    @default(client)
 
-  sessions       Session[]
-  comptes        CompteConnexion[]
-  doubleAuth     DoubleAuthentification[]
-  compteClient   CompteClient?
-  historiques    HistoriqueParametre[]
+  sessions     Session[]
+  comptes      CompteConnexion[]
+  doubleAuth   DoubleAuthentification[]
+  compteClient CompteClient?
+  historiques  HistoriqueParametre[]
 
   @@map("utilisateur")
 }
@@ -130,30 +130,31 @@ enum StatutCompteClient {
 }
 
 model CompteClient {
-  id                 String             @id @default(cuid())
-  utilisateurId      String             @unique
-  utilisateur        Utilisateur        @relation(fields: [utilisateurId], references: [id], onDelete: Cascade)
-  type               TypeCompteClient
+  id               String             @id @default(cuid())
+  utilisateurId    String             @unique
+  utilisateur      Utilisateur        @relation(fields: [utilisateurId], references: [id], onDelete: Cascade)
+  type             TypeCompteClient
   /// Un RPPS par compte (F02, FR-004). Un SIRET peut être partagé par plusieurs comptes.
-  rpps               String?            @unique
-  siret              String?
-  nomCabinet         String?
-  statut             StatutCompteClient @default(email_a_confirmer)
-  motifRefus         String?
+  rpps             String?            @unique
+  siret            String?
+  nomCabinet       String?
+  statut           StatutCompteClient @default(email_a_confirmer)
+  motifRefus       String?
   /// Identifiant du partenaire dans Odoo, rempli à la validation par le connecteur.
-  odooPartnerRef     String?
+  odooPartnerRef   String?
   /// Compte de démonstration (FR-041) : recréé à chaque réinitialisation.
-  estDemonstration   Boolean            @default(false)
-  creeLe             DateTime           @default(now())
-  modifieLe          DateTime           @updatedAt
-  valideLe           DateTime?
+  estDemonstration Boolean            @default(false)
+  creeLe           DateTime           @default(now())
+  modifieLe        DateTime           @updatedAt
+  valideLe         DateTime?
 
-  adresses           Adresse[]
+  adresses            Adresse[]
   demandesFinancement DemandeFinancement[]
-  decisions          DecisionCompte[]
-  attribution        AttributionCadeau[]
-  demandesNumero     DemandeChangementNumero[]
-  demandesRgpd       DemandeRgpd[]
+  decisions           DecisionCompte[]
+  attribution         AttributionCadeau[]
+  demandesNumero      DemandeChangementNumero[]
+  demandesRgpd        DemandeRgpd[]
+  panier              Panier?
 
   @@index([siret])
   @@index([statut])
@@ -182,13 +183,13 @@ model Adresse {
 
 /// Historique des consentements : jamais écrasé (RGPD).
 model Consentement {
-  id          String   @id @default(cuid())
-  compteId    String?
-  email       String?
-  objet       String
-  etat        Boolean
-  date        DateTime @default(now())
-  origine     String
+  id            String   @id @default(cuid())
+  compteId      String?
+  email         String?
+  objet         String
+  etat          Boolean
+  date          DateTime @default(now())
+  origine       String
   textePresente String
 
   @@index([compteId])
@@ -217,26 +218,26 @@ enum EtatPublication {
 }
 
 model Contenu {
-  id        String          @id @default(cuid())
-  type      TypeContenu
-  titre     String
-  corps     String
+  id            String          @id @default(cuid())
+  type          TypeContenu
+  titre         String
+  corps         String
   /// Images : [{ url, texteRemplacement }] — texte de remplacement obligatoire.
-  images    Json            @default("[]")
-  etat      EtatPublication @default(preparation)
-  debut     DateTime?
-  fin       DateTime?
+  images        Json            @default("[]")
+  etat          EtatPublication @default(preparation)
+  debut         DateTime?
+  fin           DateTime?
   /// Chemin interne (/…) ou adresse https:// (vérifié à l'enregistrement).
-  lien      String?
-  ordre     Int             @default(0)
+  lien          String?
+  ordre         Int             @default(0)
   /// Ex. « En préparation » (F01, FR-021).
-  badge     String?
+  badge         String?
   /// Encart doux de la charte : pale, blue-soft, lin, mint (tuiles).
-  fond      String?
+  fond          String?
   typeActualite TypeActualite?
-  publieLe  DateTime?
-  creeLe    DateTime        @default(now())
-  modifieLe DateTime        @updatedAt
+  publieLe      DateTime?
+  creeLe        DateTime        @default(now())
+  modifieLe     DateTime        @updatedAt
 
   @@index([type, etat])
   @@map("contenu")
@@ -254,14 +255,14 @@ enum TypeActualite {
 
 /// Marque partenaire affichée sur l'accueil (FR-019) : contenu éditorial du site.
 model Marque {
-  id       String   @id @default(cuid())
-  nom      String   @unique
+  id        String   @id @default(cuid())
+  nom       String   @unique
   /// Chemin du logo dans le stockage (STORAGE_DIR), facultatif.
-  logo     String?
+  logo      String?
   /// holter-ecg, mapa, effort
-  familles String[] @default([])
-  ordre    Int      @default(0)
-  visible  Boolean  @default(true)
+  familles  String[] @default([])
+  ordre     Int      @default(0)
+  visible   Boolean  @default(true)
   modifieLe DateTime @updatedAt
 
   @@map("marque")
@@ -330,30 +331,87 @@ model LimiteEnvoi {
 
 /// Contenu éditorial d'un article d'Odoo, rattaché par sa référence, jamais par copie.
 model ContenuProduit {
-  id              String          @id @default(cuid())
-  defaultCode     String          @unique
-  textes          Json            @default("{}")
-  photos          Json            @default("[]")
-  documents       Json            @default("[]")
-  compatibilites  String[]        @default([])
-  produitsAssocies String[]       @default([])
+  id                 String          @id @default(cuid())
+  defaultCode        String          @unique
+  /// Identifiant lisible de l'adresse de la fiche (F03, D3) : /holter-tensionnel/suntech-oscar-2
+  slug               String          @unique
+  /// Anciens identifiants, redirigés vers l'adresse actuelle.
+  anciensSlugs       String[]        @default([])
+  sousCategorieId    String?
+  sousCategorie      SousCategorie?  @relation(fields: [sousCategorieId], references: [id], onDelete: SetNull)
+  publieLe           DateTime?
+  textes             Json            @default("{}")
+  photos             Json            @default("[]")
+  documents          Json            @default("[]")
+  compatibilites     String[]        @default([])
+  produitsAssocies   String[]        @default([])
   categorieAffichage String?
-  ordre           Int             @default(0)
-  etat            EtatPublication @default(preparation)
-  orphelin        Boolean         @default(false)
-  modifieLe       DateTime        @updatedAt
+  ordre              Int             @default(0)
+  etat               EtatPublication @default(preparation)
+  orphelin           Boolean         @default(false)
+  modifieLe          DateTime        @updatedAt
 
   @@map("contenu_produit")
 }
 
+/// Sous-catégorie de filtre d'une catégorie du catalogue (F03, filtre « type »).
+model SousCategorie {
+  id        String           @id @default(cuid())
+  /// Code de la catégorie d'Odoo (holter-ecg, mapa, effort, ecg-repos, accessoires).
+  categorie String
+  libelle   String
+  slug      String
+  ordre     Int              @default(0)
+  contenus  ContenuProduit[]
+
+  @@unique([categorie, libelle])
+  @@unique([categorie, slug])
+  @@map("sous_categorie")
+}
+
+enum FormulePanier {
+  achat
+  mise_a_disposition
+}
+
+/// Panier minimal (F03, D1) : complété par F04 (modification, fusion, commande).
+model Panier {
+  id             String        @id @default(cuid())
+  /// Empreinte du jeton du cookie d'un visiteur (jamais le jeton lui-même).
+  jetonEmpreinte String?       @unique
+  compteId       String?       @unique
+  compte         CompteClient? @relation(fields: [compteId], references: [id], onDelete: Cascade)
+  lignes         LignePanier[]
+  creeLe         DateTime      @default(now())
+  modifieLe      DateTime      @updatedAt
+
+  @@map("panier")
+}
+
+model LignePanier {
+  id             String        @id @default(cuid())
+  panierId       String
+  panier         Panier        @relation(fields: [panierId], references: [id], onDelete: Cascade)
+  /// Variante d'Odoo (default_code).
+  defaultCode    String
+  formule        FormulePanier
+  quantite       Int
+  /// Prix HT lu à l'ajout, pour signaler un changement (jamais un prix de référence).
+  prixHtConstate Int
+  ajouteLe       DateTime      @default(now())
+
+  @@unique([panierId, defaultCode, formule])
+  @@map("ligne_panier")
+}
+
 /// Paramètre de fonctionnement du site (principe VI) — jamais une règle commerciale.
 model Parametre {
-  cle             String                @id
-  valeur          String
-  type            String                @default("texte")
-  roleModification Role                 @default(admin)
-  modifieLe       DateTime              @updatedAt
-  historique      HistoriqueParametre[]
+  cle              String                @id
+  valeur           String
+  type             String                @default("texte")
+  roleModification Role                  @default(admin)
+  modifieLe        DateTime              @updatedAt
+  historique       HistoriqueParametre[]
 
   @@map("parametre")
 }
@@ -384,15 +442,15 @@ enum StatutDemandeFinancement {
 }
 
 model DemandeFinancement {
-  id               String                   @id @default(cuid())
-  compteId         String
-  compte           CompteClient             @relation(fields: [compteId], references: [id], onDelete: Cascade)
-  equipements      Json
-  dureeMois        Int
-  statut           StatutDemandeFinancement @default(recue)
-  notesInternes    String?
-  opportuniteRef   String?
-  creeLe           DateTime                 @default(now())
+  id             String                   @id @default(cuid())
+  compteId       String
+  compte         CompteClient             @relation(fields: [compteId], references: [id], onDelete: Cascade)
+  equipements    Json
+  dureeMois      Int
+  statut         StatutDemandeFinancement @default(recue)
+  notesInternes  String?
+  opportuniteRef String?
+  creeLe         DateTime                 @default(now())
 
   @@map("demande_financement")
 }
@@ -416,12 +474,12 @@ model DemandeDevis {
 }
 
 model MessageContact {
-  id           String   @id @default(cuid())
-  motif        String
-  coordonnees  Json
-  texte        String
-  date         DateTime @default(now())
-  etat         String   @default("nouveau")
+  id          String   @id @default(cuid())
+  motif       String
+  coordonnees Json
+  texte       String
+  date        DateTime @default(now())
+  etat        String   @default("nouveau")
 
   @@map("message_contact")
 }
@@ -463,9 +521,9 @@ model JournalAction {
 }
 
 model EvenementPaiementTraite {
-  id     String   @id
-  type   String
-  date   DateTime @default(now())
+  id   String   @id
+  type String
+  date DateTime @default(now())
 
   @@map("evenement_paiement_traite")
 }
@@ -534,12 +592,12 @@ enum EtatCadeau {
 
 /// Droit au tensiomètre de bienvenue : un seul par numéro RPPS ou SIRET (FR-019, SC-002).
 model AttributionCadeau {
-  id          String       @id @default(cuid())
-  numero      String       @unique
+  id          String        @id @default(cuid())
+  numero      String        @unique
   compteId    String?
   compte      CompteClient? @relation(fields: [compteId], references: [id], onDelete: SetNull)
-  etat        EtatCadeau   @default(droit_ouvert)
-  ouvertLe    DateTime     @default(now())
+  etat        EtatCadeau    @default(droit_ouvert)
+  ouvertLe    DateTime      @default(now())
   remisLe     DateTime?
   commandeRef String?
 

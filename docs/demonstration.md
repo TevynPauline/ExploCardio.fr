@@ -67,6 +67,28 @@ Dans le back-office, rubrique **Démonstration** :
   titulaire) ; « Mot de passe oublié » donne le même message que l'adresse existe ou non.
 - La suppression est refusée pour `client.droits` (location en cours) : c'est voulu.
 
+## Le catalogue (F03)
+
+- **Parcourir** : chaque catégorie présente ses produits en cartes, avec des filtres (marque,
+  type, disponibilité) et un tri par prix. Les filtres restent dans l'adresse : on peut
+  partager une liste filtrée.
+- **Fiche équipement** : choisissez « Acheter », « Mise à disposition mensuelle » ou
+  « Financement longue durée » ; le prix et le contenu changent aussitôt. L'adresse garde le
+  choix. Les fiches **Oscar 2** et **DMS 300-2e** sont complètes (onglets, notice PDF de
+  démonstration) ; les autres ont des textes provisoires.
+- **Fiche consommable** (par exemple les électrodes Holter) : conditionnements, prix à l'unité
+  et par lot, prix dégressifs, ajout rapide au panier.
+- **Panier** : il liste ce qui a été ajouté ; la commande en ligne arrive avec F04.
+- **Mensualité imposée** : le Dr Delvaux-Arnoux (client fictif) a une mensualité de
+  financement négociée sur le DMS 300-4L avec logiciel Cloud, visible de lui seul.
+- **Back-office → Catalogue** (administrateur) : rédigez textes, photos et documents,
+  choisissez le type et l'ordre, publiez. Les prix, stocks et configurations restent en
+  lecture seule (ils se gèrent dans Odoo ; en démonstration, dans **Démonstration → Prix** et
+  **Stocks**). « Types » règle les filtres ; « Pages services » le badge de l'hébergement, les
+  tarifs des services et la mention sous les mensualités.
+- **Rupture** : passez un article en rupture dans **Démonstration → Stocks** : la carte et la
+  fiche l'indiquent au rechargement suivant.
+
 ## Les contenus du site (administrateur)
 
 Dans le back-office, rubrique **Contenus** : bandeau promotionnel, six tuiles d'accès rapide,

@@ -18,6 +18,11 @@ const PAGES_PUBLIQUES = [
   "/cookies",
   "/inscription",
   "/mot-de-passe-oublie",
+  "/holter-tensionnel/suntech-oscar-2",
+  "/accessoires-consommables/electrodes-holter",
+  "/holter-ecg/ecg-de-repos",
+  "/services/installation-formation",
+  "/panier",
 ];
 const PAGES_MON_COMPTE = ["/mon-compte", "/mon-compte/informations", "/mon-compte/adresses", "/mon-compte/preferences", "/mon-compte/securite", "/mon-compte/donnees"];
 const PAGES_BACK_OFFICE = [
@@ -35,6 +40,10 @@ const PAGES_BACK_OFFICE = [
   "/admin/comptes/demandes",
   "/admin/comptes/reglages",
   "/admin/comptes/rgpd",
+  "/admin/catalogue",
+  "/admin/catalogue/EC-SUN-OSCAR2",
+  "/admin/catalogue/sous-categories",
+  "/admin/catalogue/services",
 ];
 
 async function ciblesTropPetites(page: Page): Promise<string[]> {

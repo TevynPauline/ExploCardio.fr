@@ -170,7 +170,21 @@ export async function remplirHistoriques(db: PrismaClient, p: Partenaires) {
     });
   }
 
-  // Listes de prix : remise client et mensualité de mise à disposition forcée (F03)
+  // Liste de prix publique (F03) : prix dégressifs et mensualités de financement forcées pour tous
+  await db.listePrix.create({
+    data: {
+      nom: "Liste de prix publique",
+      regles: [
+        { defaultCode: "EC-ELEC-HOLTER-50", quantiteMin: 5, prixHtCentimes: 1650 },
+        { defaultCode: "EC-ELEC-HOLTER-50", quantiteMin: 10, prixHtCentimes: 1500 },
+        { defaultCode: "EC-SUN-ORBIT-M", quantiteMin: 3, prixHtCentimes: 5500 },
+        { defaultCode: "EC-SUN-ORBIT-L", quantiteMin: 3, prixHtCentimes: 5900 },
+        { defaultCode: "EC-SUN-OSCAR2", dureeMois: 36, mensualiteCentimes: 5500 },
+      ],
+    },
+  });
+
+  // Listes de prix : remise client et mensualité de financement forcée (F03)
   await db.listePrix.create({
     data: {
       nom: "Remise consommables — Centre des Lavandes",
@@ -182,7 +196,7 @@ export async function remplirHistoriques(db: PrismaClient, p: Partenaires) {
     data: {
       nom: "Mensualité négociée — Dr Delvaux-Arnoux",
       partenaireId: p.get("delvaux")!.id,
-      regles: [{ defaultCode: "EC-DMS-3004L-CLOUD", mensualiteCentimes: 7900 }],
+      regles: [{ defaultCode: "EC-DMS-3004L-CLOUD", dureeMois: 48, mensualiteCentimes: 7900 }],
     },
   });
 

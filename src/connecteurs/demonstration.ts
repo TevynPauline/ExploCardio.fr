@@ -43,6 +43,8 @@ export async function reinitialiserDemonstration(auteur: Auteur): Promise<BilanR
       // F01 : inscriptions à la newsletter et limites d'envoi, données de test en phase 1
       site.inscriptionNewsletter.deleteMany(),
       site.limiteEnvoi.deleteMany(),
+      // F03 : paniers des séances (les lignes suivent) ; contenus et sous-catégories conservés
+      site.panier.deleteMany(),
     ]);
     const bilan = await remplirJeuDeDepart(dbDemo(), site);
     await site.journalAction.create({

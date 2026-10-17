@@ -22,14 +22,19 @@ const PAGES_PUBLIQUES = [
   "/cookies",
   "/inscription",
   "/mot-de-passe-oublie",
+  "/holter-tensionnel/suntech-oscar-2",
+  "/accessoires-consommables/electrodes-holter",
+  "/holter-ecg/ecg-de-repos",
+  "/services/installation-formation",
+  "/panier",
 ];
 const PAGES_MON_COMPTE = ["/mon-compte", "/mon-compte/informations", "/mon-compte/adresses", "/mon-compte/preferences", "/mon-compte/securite", "/mon-compte/donnees"];
-const PAGES_BACK_OFFICE = ["/admin", "/admin/contenus", "/admin/contenus/tuiles", "/admin/comptes", "/admin/comptes/demandes", "/admin/comptes/reglages", "/admin/comptes/rgpd"];
+const PAGES_BACK_OFFICE = ["/admin", "/admin/contenus", "/admin/contenus/tuiles", "/admin/comptes", "/admin/comptes/demandes", "/admin/comptes/reglages", "/admin/comptes/rgpd", "/admin/catalogue", "/admin/catalogue/EC-SUN-OSCAR2", "/admin/catalogue/services"];
 
 const demo = { CONNECTOR_ODOO: "demo", CONNECTOR_STRIPE: "demo", CONNECTOR_PCA: "demo", CONNECTOR_EMAILING: "demo" };
 
 test("aucune requête ne sort vers un service réel ni vers Google Fonts", async ({ page, context }) => {
-  test.setTimeout(180_000);
+  test.setTimeout(360_000);
   const bloquees: string[] = [];
   page.on("request", (requete) => {
     if (motifDeBlocage(requete.url(), demo)) bloquees.push(requete.url());

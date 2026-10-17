@@ -108,3 +108,8 @@ dd a:not([class]) {
   font-size: var(--ec-fs-small);
   overflow-wrap: anywhere;
 }
+
+/* Panneau cookies rendu par le serveur : masqué si un choix est déjà enregistré (F01, F03). */
+html[data-consentement="oui"] [data-panneau-cookies="serveur"] {
+  display: none;
+}

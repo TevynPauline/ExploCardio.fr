@@ -23,6 +23,9 @@ export async function demarrerTravailleurs() {
   await boss.schedule("purge-comptes", "30 3 * * *");
   await boss.work("purge-comptes", async () => {
     await purgerNonConfirmes();
+    // F03 : paniers de visiteurs inactifs depuis 30 jours.
+    const { purgerPaniersAnonymes } = await import("@/domaine/catalogue/panier");
+    await purgerPaniersAnonymes();
   });
   await traiterFile<{ compteId: string }>(FILE_FICHE_CLIENT, async ({ compteId }) => {
     await creerFicheClient(compteId);

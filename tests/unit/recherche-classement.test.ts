@@ -11,7 +11,8 @@ describe("classement de la recherche", () => {
 
   beforeAll(async () => {
     references = await creerRegistre(process.env).odoo().catalogue.listerReferences();
-    elements = construireElements(references);
+    // Tous les articles considérés comme publiés (la publication est testée par F03).
+    elements = construireElements(references, new Map(references.map((r) => [r.defaultCode, `/fiche/${r.referenceArticle}`])));
   });
 
   it("SC-009 : chaque référence interne et fabricant, saisie exactement, arrive en première position (100 %)", () => {

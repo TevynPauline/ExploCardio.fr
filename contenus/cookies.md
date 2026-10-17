@@ -8,6 +8,7 @@ demandent donc pas votre consentement.
 |---|---|---|
 | `ec_consentement` | Mémorise que vous avez pris connaissance de cette information | 6 mois |
 | Cookies de session | Maintiennent votre connexion à votre compte | Durée de la session, 7 jours au plus |
+| `ec_panier` | Retrouve votre panier quand vous n’êtes pas connecté (aucune autre information) | 30 jours |
 | `ec_demo_acces` | Donne accès au site de démonstration (version de démonstration uniquement) | 30 jours |
 
 Si un service soumis à votre consentement est ajouté un jour (mesure d'audience, vidéo d'un

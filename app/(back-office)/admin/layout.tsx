@@ -19,6 +19,7 @@ export default async function MiseEnPageBackOffice({ children }: { children: Rea
   const liens = [
     { href: "/admin", libelle: "Tableau de bord" },
     ...(role === "admin" || role === "commercial" ? [{ href: "/admin/comptes", libelle: "Comptes" }] : []),
+    ...(role === "admin" || role === "commercial" ? [{ href: "/admin/catalogue", libelle: "Catalogue" }] : []),
     ...(role === "admin" ? [{ href: "/admin/contenus", libelle: "Contenus" }] : []),
     ...(outilsDemo
       ? [

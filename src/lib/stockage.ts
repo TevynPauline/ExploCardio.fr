@@ -3,8 +3,9 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { extname, join, resolve, sep } from "node:path";
 import DOMPurify from "isomorphic-dompurify";
 
-// Fichiers téléversés dans le back-office (F01, T009, R8) : images d'actualités et logos de
-// marques. Stockés hors du code, dans STORAGE_DIR (sauvegardé chez l'hébergeur).
+// Fichiers téléversés dans le back-office (F01, T009, R8) : images d'actualités, logos de
+// marques, photos et documents PDF des produits (F03). Stockés hors du code, dans STORAGE_DIR
+// (sauvegardé chez l'hébergeur).
 
 export const TAILLE_MAX = 2 * 1024 * 1024;
 
@@ -14,6 +15,9 @@ export const TYPES_AUTORISES: Record<string, string> = {
   "image/webp": ".webp",
   "image/svg+xml": ".svg",
 };
+
+/** Documents des produits (notices, fiches techniques) : PDF de 10 Mo au plus (F03, D4). */
+export const TAILLE_MAX_DOCUMENT = 10 * 1024 * 1024;
 
 export class FichierRefuse extends Error {}
 
@@ -32,7 +36,7 @@ function typeReel(octets: Buffer): string | null {
 }
 
 /** Enregistre une image et renvoie son chemin public (« /stockage/images/… »). */
-export async function deposerImage(fichier: File, dossier: "actualites" | "marques"): Promise<string> {
+export async function deposerImage(fichier: File, dossier: "actualites" | "marques" | "produits"): Promise<string> {
   if (fichier.size === 0) throw new FichierRefuse("Le fichier est vide.");
   if (fichier.size > TAILLE_MAX) throw new FichierRefuse("Le fichier dépasse 2 Mo.");
   let octets: Buffer = Buffer.from(await fichier.arrayBuffer());
@@ -54,9 +58,23 @@ export async function deposerImage(fichier: File, dossier: "actualites" | "marqu
   return `/stockage/${dossier}/${nom}`;
 }
 
-const TYPES_PAR_EXTENSION: Record<string, string> = Object.fromEntries(
-  Object.entries(TYPES_AUTORISES).map(([type, ext]) => [ext, type]),
-);
+/** Enregistre un document PDF (type réel vérifié) et renvoie son chemin public et sa taille. */
+export async function deposerDocument(fichier: File): Promise<{ chemin: string; octets: number }> {
+  if (fichier.size === 0) throw new FichierRefuse("Le fichier est vide.");
+  if (fichier.size > TAILLE_MAX_DOCUMENT) throw new FichierRefuse("Le document dépasse 10 Mo.");
+  const octets = Buffer.from(await fichier.arrayBuffer());
+  if (octets.subarray(0, 5).toString("latin1") !== "%PDF-") throw new FichierRefuse("Format refusé : PDF uniquement.");
+  const nom = `${randomBytes(12).toString("hex")}.pdf`;
+  const repertoire = join(racine(), "documents");
+  await mkdir(repertoire, { recursive: true });
+  await writeFile(join(repertoire, nom), octets);
+  return { chemin: `/stockage/documents/${nom}`, octets: octets.length };
+}
+
+const TYPES_PAR_EXTENSION: Record<string, string> = {
+  ...Object.fromEntries(Object.entries(TYPES_AUTORISES).map(([type, ext]) => [ext, type])),
+  ".pdf": "application/pdf",
+};
 
 /** Lit un fichier du stockage ; null s'il n'existe pas ou sort du dossier. */
 export async function lireFichier(segments: string[]): Promise<{ octets: Buffer; type: string } | null> {

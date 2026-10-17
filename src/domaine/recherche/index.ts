@@ -1,6 +1,7 @@
 import { registre } from "@/connecteurs/registre";
 import type { ReferenceArticle } from "@/connecteurs/odoo/interfaces";
-import { FAMILLES, cheminArticle } from "../familles";
+import { cheminsDesFiches } from "../catalogue/lecture";
+import { FAMILLES } from "../familles";
 import { rechercherDans, type ResultatRecherche } from "./classer";
 import { normaliserReference, normaliserTexte } from "./normaliser";
 
@@ -36,12 +37,17 @@ const PAGES: { titre: string; sousTitre: string; destination: string; motsCles: 
   { titre: "Hébergement des données de santé", sousTitre: "Service · en préparation", destination: "/services/hebergement-donnees-sante", motsCles: "hds cloud logiciel plateforme" },
   { titre: "Assistance et service", sousTitre: "Service", destination: "/services/assistance", motsCles: "hotline aide sav whatsapp fidelite bons d'achat" },
   { titre: "Financement", sousTitre: "Service", destination: "/financement", motsCles: "leasing credit mensualite" },
+  { titre: "Installation et formation", sousTitre: "Service", destination: "/services/installation-formation", motsCles: "installation formation parametrage mise en service" },
   { titre: "Mise à disposition", sousTitre: "Service", destination: "/mise-a-disposition", motsCles: "location louer mois depannage express" },
   { titre: "Qui sommes-nous / Contact", sousTitre: "ExploCardio.fr", destination: "/qui-sommes-nous", motsCles: "contact equipe telephone email" },
 ];
 
-export function construireElements(references: ReferenceArticle[]): ElementIndex[] {
-  const articles: ElementIndex[] = references.map((r) => {
+/**
+ * Éléments de l'index : seules les variantes d'un article publié (F03, US6-3), qui mènent à sa
+ * fiche (`chemins` : référence de variante → adresse de la fiche).
+ */
+export function construireElements(references: ReferenceArticle[], chemins: Map<string, string>): ElementIndex[] {
+  const articles: ElementIndex[] = references.filter((r) => chemins.has(r.defaultCode)).map((r) => {
     const titre = r.configuration ? `${r.nom} — ${r.configuration}` : r.nom;
     return {
       code: r.defaultCode,
@@ -52,7 +58,8 @@ export function construireElements(references: ReferenceArticle[]): ElementIndex
       sousTitre: [r.marque, r.referenceFabricant ? `réf. ${r.referenceFabricant}` : null].filter(Boolean).join(" · "),
       texte: normaliserTexte([r.nom, r.marque, r.configuration, r.defaultCode, r.referenceFabricant].filter(Boolean).join(" ")),
       references: [r.defaultCode, r.referenceFabricant].filter((x): x is string => Boolean(x)).map(normaliserReference),
-      destination: cheminArticle(r.categorie, r.defaultCode),
+      // La fiche s'ouvre sur la configuration trouvée (F03, US2-8).
+      destination: r.defaultCode === r.referenceArticle ? chemins.get(r.defaultCode)! : `${chemins.get(r.defaultCode)!}?config=${encodeURIComponent(r.defaultCode)}`,
       prixHt: r.prixHt,
     };
   });
@@ -83,7 +90,10 @@ async function index(): Promise<ElementIndex[] | null> {
   const actuel = globale.__indexRecherche;
   if (actuel && Date.now() - actuel.construitLe < DUREE_MS) return actuel.elements;
   try {
-    const elements = construireElements(await registre.odoo().catalogue.listerReferences());
+    const [references, chemins] = await Promise.all([registre.odoo().catalogue.listerReferences(), cheminsDesFiches()]);
+    // Catalogue illisible (connecteur injoignable) : on garde l'ancien index s'il existe.
+    if (chemins.size === 0 && actuel) return actuel.elements;
+    const elements = construireElements(references, chemins);
     globale.__indexRecherche = { elements, construitLe: Date.now() };
     return elements;
   } catch {

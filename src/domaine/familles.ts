@@ -25,16 +25,3 @@ export const FAMILLES: Record<CleFamille, Famille> = {
 export function cheminDeCategorie(categorie: string): string {
   return Object.values(FAMILLES).find((f) => f.categorie === categorie)?.chemin ?? "/catalogue";
 }
-
-/** Ancre d'un article dans sa page de famille (en attendant les fiches produit de F03). */
-export function cheminArticle(categorie: string, reference: string): string {
-  return `${cheminDeCategorie(categorie)}#${reference}`;
-}
-
-export const GROUPES_TYPES = [
-  { type: "equipement", libelle: "Équipements", ancre: "equipements" },
-  { type: "logiciel", libelle: "Logiciels Cloud", ancre: "logiciels" },
-  { type: "consommable", libelle: "Consommables", ancre: "consommables" },
-  { type: "accessoire", libelle: "Accessoires", ancre: "accessoires" },
-  { type: "service", libelle: "Services et garanties", ancre: "services" },
-] as const;
