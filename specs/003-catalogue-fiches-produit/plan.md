@@ -49,7 +49,8 @@ démonstration (SC-013) et 5 minutes en réel (SC-003)
 
 **Constraints** : prix HT en premier et TTC en complément (SC-001) ; jamais « prix sur
 demande » (SC-005) ; aucune page n'appelle Odoo hors connecteur (SC-009) ; aucun prix ou stock
-modifiable dans le back-office du site (US6-4) ; WCAG 2.2 AA, clavier et lecteur d'écran
+modifiable dans le back-office du site (US6-4) ; montants propres à un client jamais mis en
+cache partagé ni montrés à un autre visiteur (FR-046) ; WCAG 2.2 AA, clavier et lecteur d'écran
 (FR-042) ; aucune donnée de patient
 
 **Scale/Scope** : quelques dizaines d'équipements, quelques centaines de consommables et

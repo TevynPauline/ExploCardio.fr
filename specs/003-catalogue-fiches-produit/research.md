@@ -30,6 +30,12 @@ propres à F03.
   leur catégorie : `/holter-tensionnel/suntech-oscar-2` (identifiant lisible `slug` tiré de la
   marque et du nom, enregistré avec le contenu, unique, modifiable sans casser l'ancien lien :
   l'ancienne adresse redirige).
+- **ECG de repos** : catégorie à part entière (FR-001 : filtres, cartes, fiches), dont
+  l'adresse reste sous Holter ECG comme dans F01 : `/holter-ecg/ecg-de-repos` et ses fiches
+  `/holter-ecg/ecg-de-repos/<slug>` ; le nom `ecg-de-repos` est réservé parmi les fiches de
+  Holter ECG.
+- **Routes** : un dossier `[slug]` par catégorie, qui utilise un composant de fiche commun
+  (une route commune à la racine entrerait en conflit avec les autres pages).
 - **3 clics** : accueil → méga-menu ou tuile (catégorie) → carte (fiche) ; vérifié par un
   parcours qui suit les liens depuis l'accueil pour chaque produit publié (SC-004).
 - **Filtres** (FR-007) : marque, sous-catégorie (« type »), disponibilité ; dans l'adresse
@@ -55,6 +61,10 @@ propres à F03.
   coefficient de la durée ; ordre de priorité (FR-046) : mensualité forcée pour le client
   connecté → mensualité forcée pour tous → calcul. Mention indicative (formulation à valider
   par le conseil juridique, déjà notée dans la spec).
+- **Confidentialité des montants d'un client** (FR-046) : la partie commune de la fiche
+  (contenus, prix publics, barème) est mise en cache ; les prix et mensualités propres au
+  client connecté sont lus à chaque affichage, hors cache partagé, et ne sont jamais rendus
+  pour un autre visiteur.
 - **Prix** : HT en premier, TTC en complément calculé avec le taux de TVA de la variante
   (FR-027). Montants en centimes, formatés par `src/lib/montants.ts` (F11).
 - **Boutons** : achat → ajout au panier (R6) ; mise à disposition → parcours de F05 ;
@@ -82,6 +92,11 @@ propres à F03.
   cache avec l'étiquette `stock`. En démonstration, l'écran Stocks de F11 invalide l'étiquette :
   le changement est visible au rechargement suivant (SC-013 < 1 min). En réel, cache de
   1 minute pour la disponibilité (SC-003 < 5 min).
+- **Une seule source pour la disponibilité** : cartes, fiches, listes et recherche lisent
+  la disponibilité par la même lecture rafraîchie chaque minute en mode réel (la liste des
+  références de F01, en cache 5 minutes, ne sert plus pour la disponibilité).
+- **Packs** : une configuration qui regroupe plusieurs articles est indisponible si l'un de
+  ses composants l'est ; son délai est le plus long de ses composants (hypothèse de la spec).
 - **Connecteur injoignable** (US5-5) : la fiche reste consultable avec ses contenus ; prix et
   disponibilité sont remplacés par « Information momentanément indisponible » et une
   invitation à réessayer ou à nous contacter ; aucun ajout au panier.
@@ -97,6 +112,8 @@ propres à F03.
   liste les lignes, sans modification ni paiement (« la commande arrive bientôt »). Le prix
   appliqué est relu à l'ajout ; s'il diffère de celui affiché, le visiteur en est informé
   (cas limite de la spec).
+- **Cookie** : le jeton du panier d'un visiteur est un cookie nécessaire au service (sans
+  consentement à demander), déclaré dans la page Cookies (`contenus/cookies.md`).
 - **Écarté** : un panier seulement dans le navigateur (perdu d'un appareil à l'autre, et F04
   demande la fusion avec le compte).
 

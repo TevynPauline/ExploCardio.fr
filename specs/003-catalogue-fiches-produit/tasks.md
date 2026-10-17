@@ -34,7 +34,7 @@ connecteur → « Information momentanément indisponible », jamais une erreur 
 
 ## Phase 1: Setup
 
-- [ ] T001 Ajouter les paramètres de F03 à `prisma/site/seed/contenus-initiaux.ts` (créés s'ils manquent) : `services.hebergement.badge` = `En préparation`, `services.assistance.tarif`, `services.financement.tarif`, `services.installation.tarif`, `services.hebergement.tarif` (vides), `financement.mention` = « Montant indicatif, sous réserve d'acceptation par notre partenaire financier. » (D6) ; et le texte `contenus/installation-formation.md`
+- [ ] T001 Ajouter les paramètres de F03 à `prisma/site/seed/contenus-initiaux.ts` (créés s'ils manquent) : `services.hebergement.badge` = `En préparation`, `services.assistance.tarif`, `services.financement.tarif`, `services.installation.tarif`, `services.hebergement.tarif` (vides), `financement.mention` = « Montant indicatif, sous réserve d'acceptation par notre partenaire financier. » (D6) ; les tarifs sont saisis HT et affichés avec le TTC calculé à 20 % ; et le texte `contenus/installation-formation.md`
 
 ---
 
@@ -46,7 +46,7 @@ connecteur → « Information momentanément indisponible », jamais une erreur 
 
 - [ ] T002 Reporter dans [../011-connecteurs-base-demonstration/contracts/odoo.md](../011-connecteurs-base-demonstration/contracts/odoo.md) les champs de [contracts/odoo.md](contracts/odoo.md) : `VarianteArticle.quantiteParLot` (entier ≥ 1, 1 par défaut), `VarianteArticle.paliers` (`[{ quantiteMin, prixUnitaireHt }]` de la liste de prix publique), `Article.mensualitesForcees` (`[{ dureeMois, montantHt }]`, pour tous), `PrixClient.mensualitesForcees` (remplace `mensualiteForceeHt`, D5)
 - [ ] T003 [P] Écrire les tests de contrat dans `tests/contract/odoo/catalogue.test.ts` : `quantiteParLot ≥ 1` pour toute variante ; paliers triés par quantité croissante et prix unitaire décroissant ; mensualités forcées sur une durée du barème ; client sans liste de prix → `mensualitesForcees: []` ; Dr Delvaux-Arnoux → mensualité forcée sur `EC-DMS-3004L-CLOUD` ; client inconnu → `NotFound`
-- [ ] T004 Mettre à jour `src/connecteurs/odoo/interfaces/catalogue.ts` ; ajouter `Variante.quantiteParLot` à `prisma/demo/schema.prisma` (migration `scripts/nouvelle-migration.sh demo f03_catalogue`) ; compléter le jeu de départ (`prisma/demo/seed/`) : quantités par lot des électrodes (50, 500), liste de prix publique (sans partenaire) avec paliers des électrodes et des brassards et une mensualité forcée générale de démonstration, `dureeMois` sur la règle du Dr Delvaux-Arnoux ; implémenter dans `src/connecteurs/odoo/demo/catalogue.ts` ; adapter les usages de `mensualiteForceeHt`
+- [ ] T004 Mettre à jour `src/connecteurs/odoo/interfaces/catalogue.ts` ; ajouter `Variante.quantiteParLot` à `prisma/demo/schema.prisma` (migration `scripts/nouvelle-migration.sh demo f03_catalogue`) ; compléter le jeu de départ (`prisma/demo/seed/`) : quantités par lot des électrodes (50, 500), liste de prix publique (sans partenaire) avec paliers des électrodes et des brassards et une mensualité forcée générale de démonstration, `dureeMois` sur la règle du Dr Delvaux-Arnoux ; disponibilité d'une configuration en pack = la moins bonne de ses composants (indisponible si l'un l'est, sinon le délai le plus long) ; implémenter dans `src/connecteurs/odoo/demo/catalogue.ts` ; adapter les usages de `mensualiteForceeHt`
 
 ### Base du site
 
@@ -58,7 +58,7 @@ connecteur → « Information momentanément indisponible », jamais une erreur 
 
 - [ ] T008 [P] Écrire `tests/unit/catalogue/prix.test.ts` : `prixTtc` (taux de la variante, arrondi au centime) ; `mensualites` : calcul prix × coefficient pour chaque durée, priorité client > général > calcul (FR-046) ; `prixPourQuantite` : prix unitaire du palier atteint, total, conditionnement (prix ÷ quantité par lot)
 - [ ] T009 [P] Écrire `tests/unit/catalogue/publication.test.ts` : `peutPublier` refuse un article absent d'Odoo, sans prix, sans catégorie, sans description courte, sans photo ni emplacement accepté, avec la liste de ce qui manque ; article publié puis disparu d'Odoo → orphelin, invisible
-- [ ] T010 Transformer `src/domaine/catalogue.ts` en dossier `src/domaine/catalogue/` : `prix.ts` (`prixTtc`, `mensualites`, `prixPourQuantite`), `publication.ts` (`peutPublier`, `articlesPublies`, `cheminFiche`, slugs et anciennes adresses), lecture mise en cache des articles et disponibilités (étiquettes `catalogue`, `prix`, `stock` ; disponibilité 1 minute en mode réel, R5) ; garder l'export utilisé par F01
+- [ ] T010 Transformer `src/domaine/catalogue.ts` en dossier `src/domaine/catalogue/` : `prix.ts` (`prixTtc`, `mensualites`, `prixPourQuantite`), `publication.ts` (`peutPublier`, `articlesPublies`, `cheminFiche`, slugs et anciennes adresses), lecture mise en cache des articles et disponibilités (étiquettes `catalogue`, `prix`, `stock` ; disponibilité 1 minute en mode réel, R5) ; cartes, fiches, listes et recherche lisent la disponibilité par cette seule lecture, plus par la liste des références de F01 en cache 5 minutes ; garder l'export utilisé par F01
 - [ ] T011 Remplacer `cheminArticle` (ancre de F01) par `cheminFiche` dans `src/domaine/familles.ts`, `src/domaine/navigation.ts` et `src/domaine/recherche/index.ts` ; limiter l'index de recherche aux articles publiés (US6-3)
 - [ ] T012 [P] Créer les composants de base dans `src/ui/catalogue/` : `Prix.tsx` (HT en Semibold, TTC en complément moins appuyé, « à partir de »), `Disponibilite.tsx` (disponible, délai X jours, indisponible, information indisponible), `PhotoProduit.tsx` (`next/image`, texte de remplacement, emplacement provisoire de la charte)
 
@@ -100,10 +100,10 @@ connecteur → « Information momentanément indisponible », jamais une erreur 
 
 ### Implementation for User Story 2
 
-- [ ] T020 [US2] Créer `src/domaine/catalogue/fiches.ts` : `lireFiche(categorie, slug, compte?)` (fiche équipement ou consommable, redirection d'un ancien slug, article retiré, prix client et mensualités forcées du client connecté)
-- [ ] T021 [US2] Créer `src/domaine/catalogue/panier.ts` (`panierCourant`, `ajouterAuPanier`, `lignesPanier`) et l'action serveur `src/actions/panier.ts` (D1) ; purge des paniers anonymes dans `src/file-attente/travailleurs.ts`
+- [ ] T020 [US2] Créer `src/domaine/catalogue/fiches.ts` : `lireFiche(categorie, slug, compte?)` (fiche équipement ou consommable, redirection d'un ancien slug, article retiré, prix client et mensualités forcées du client connecté, **lus à chaque affichage hors du cache partagé** : la partie commune de la fiche est mise en cache, jamais les montants propres à un client, FR-046)
+- [ ] T021 [US2] Créer `src/domaine/catalogue/panier.ts` (`panierCourant`, `ajouterAuPanier`, `lignesPanier`) et l'action serveur `src/actions/panier.ts` (D1) ; déclarer le cookie du panier (nécessaire au service, sans consentement) dans `contenus/cookies.md` ; purge des paniers anonymes dans `src/file-attente/travailleurs.ts`
 - [ ] T022 [P] [US2] Créer `src/ui/catalogue/SelecteurFormule.tsx` (pilules `radiogroup`, panneau `aria-live`, adresse mise à jour par `history.replaceState`), `src/ui/catalogue/Galerie.tsx` et `src/ui/catalogue/AjoutPanier.tsx` (confirmation `role="status"` sans quitter la page)
-- [ ] T023 [US2] Créer la route des fiches `app/(public)/[categorie]/[slug]/page.tsx` — ou une route par catégorie selon la structure de F01 — avec la fiche équipement ; article retiré → « Ce produit n'est plus proposé » et lien vers la catégorie (statut 410) ; ancien slug → redirection permanente ; métadonnées (titre, description)
+- [ ] T023 [US2] Créer un dossier `[slug]` par catégorie (`app/(public)/holter-ecg/[slug]/`, `holter-ecg/ecg-de-repos/[slug]/`, `holter-tensionnel/[slug]/`, `epreuve-effort/[slug]/`, `accessoires-consommables/[slug]/`), chacun rendant le composant commun `src/ui/catalogue/Fiche.tsx` ; `ecg-de-repos` réservé parmi les slugs de Holter ECG ; fiche équipement ; montants propres au client rendus à part, hors cache partagé (C1) ; article retiré → « Ce produit n'est plus proposé » et lien vers la catégorie (statut 410) ; ancien slug → redirection permanente ; métadonnées (titre, description)
 - [ ] T024 [US2] Remplacer `app/(public)/panier/page.tsx` : lignes en lecture seule (article, formule, quantité, prix en vigueur, délai), mention « la commande arrive bientôt » ; panier vide → lien vers le catalogue
 
 **Checkpoint** : on choisit sa formule et on ajoute au panier.
@@ -154,11 +154,11 @@ connecteur → « Information momentanément indisponible », jamais une erreur 
 
 ### Tests for User Story 5
 
-- [ ] T031 [P] [US5] Écrire `tests/e2e/f03/disponibilite.spec.ts` : rupture saisie dans **Démonstration → Stocks** visible en moins d'une minute sur la carte, la fiche, les consommables compatibles et la recherche (SC-013) ; parc de location épuisé mais vente disponible → disponibilité indiquée par formule ; « indisponible » → pas d'ajout, contact proposé ; « délai X jours » → ajout et délai rappelé ; panne d'Odoo simulée → fiche consultable, ni prix ni disponibilité affirmés, invitation à réessayer (rétablir la panne en fin de test **et attendre la confirmation**)
+- [ ] T031 [P] [US5] Écrire `tests/e2e/f03/disponibilite.spec.ts` : rupture saisie dans **Démonstration → Stocks** visible en moins d'une minute sur la carte, la fiche, les consommables compatibles et la recherche (SC-013) ; prix modifié dans **Démonstration → Prix** visible en moins d'une minute (US6-2) ; pack indisponible quand l'un de ses composants l'est ; parc de location épuisé mais vente disponible → disponibilité indiquée par formule ; « indisponible » → pas d'ajout, contact proposé ; « délai X jours » → ajout et délai rappelé ; panne d'Odoo simulée → fiche consultable, ni prix ni disponibilité affirmés, invitation à réessayer (rétablir la panne en fin de test **et attendre la confirmation**)
 
 ### Implementation for User Story 5
 
-- [ ] T032 [US5] Afficher la disponibilité par formule sur la fiche et les cartes (FR-032) ; vérifier que les écrans de démonstration Stocks et Prix invalident les étiquettes `stock` et `prix` ; état « information momentanément indisponible » sur toutes les pages de F03
+- [ ] T032 [US5] Afficher la disponibilité par formule sur la fiche et les cartes (FR-032), y compris celle des packs ; vérifier que les écrans de démonstration Stocks et Prix invalident les étiquettes `stock` et `prix` ; état « information momentanément indisponible » sur toutes les pages de F03
 
 ---
 
@@ -209,7 +209,7 @@ connecteur → « Information momentanément indisponible », jamais une erreur 
 
 ### Implementation for User Story 8
 
-- [ ] T041 [US8] Compléter `app/(public)/services/hebergement-donnees-sante/page.tsx`, `services/assistance/page.tsx`, `financement/page.tsx` et créer `services/installation-formation/page.tsx` (texte, bénéfices, tarif en paramètre, badge, action) ; ajouter la page aux liens de F01
+- [ ] T041 [US8] Compléter `app/(public)/services/hebergement-donnees-sante/page.tsx`, `services/assistance/page.tsx`, `financement/page.tsx` et créer `services/installation-formation/page.tsx` (texte, bénéfices, tarif HT en paramètre avec TTC à 20 % en complément, badge, action) ; ajouter la page aux liens de F01
 - [ ] T042 [P] [US8] Créer `app/(back-office)/admin/catalogue/services/page.tsx` : badge et tarifs des pages services, mention du financement (administrateur, historique des paramètres)
 
 ---

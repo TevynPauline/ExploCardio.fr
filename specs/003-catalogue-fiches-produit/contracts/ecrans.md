@@ -6,7 +6,7 @@
 |---|---|---|
 | `/catalogue` | Les cinq catégories (F01, liens mis à jour vers les fiches) | FR-001 |
 | `/holter-ecg`, `/holter-tensionnel`, `/epreuve-effort`, `/accessoires-consommables` | Introduction, filtres, cartes des articles publiés | FR-005 à FR-007, US1 |
-| `/holter-ecg/ecg-de-repos` | Idem + formulaire « Vous cherchez un autre modèle ? » | FR-008, FR-009, US7 |
+| `/holter-ecg/ecg-de-repos` | Catégorie à part entière (fiches en `/holter-ecg/ecg-de-repos/<slug>`) + formulaire « Vous cherchez un autre modèle ? » | FR-008, FR-009, US7 |
 | `/<catégorie>/<slug>` | Fiche équipement ou fiche consommable selon le type d'article | FR-010 à FR-026, US2 à US5 |
 | `/<catégorie>/<slug>?formule=achat\|mise-a-disposition\|financement&config=<réf>` | Fiche ouverte sur cette formule et cette configuration | US2-8 |
 | `/<catégorie>/<ancien-slug>` | Redirection permanente vers l'adresse actuelle | R2 |

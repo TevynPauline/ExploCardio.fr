@@ -308,8 +308,6 @@ leur parcours détaillé relève d'autres modules.
 - Nom de produit ou liste de caractéristiques très longs : la mise en page reste lisible.
 - Navigation au clavier ou avec un lecteur d'écran : sélecteur de formule, onglets, galerie
   et filtres restent utilisables.
-- Fichier d'import contenant des références en double ou des prix invalides : les lignes
-  concernées sont rejetées et signalées, les autres sont traitées.
 
 ## Requirements *(mandatory)*
 
@@ -432,7 +430,7 @@ leur parcours détaillé relève d'autres modules.
   réelles de la brochure, avec des prix, stocks et configurations de démonstration
   (principe III).
 - **FR-037** : Un produit DOIT pouvoir être en préparation ou publié. Seul un produit
-  présent dans Odoo et complet (nom, catégorie, prix, photo ou emplacement provisoire) est
+  présent dans Odoo et complet (nom, catégorie, prix, description courte, photo ou emplacement provisoire) est
   visible.
 - **FR-038** : Toutes les données de produits, prix et stocks DOIVENT être lues par le
   connecteur Odoo (principe III), avec les notions d'Odoo : article, variante, référence.
@@ -532,8 +530,8 @@ validés par la responsable du projet le 2026-10-12.
 - **Ordre des produits (confirmé)** : ordre choisi par l'administrateur, avec un tri
   possible par prix. Pas de pagination tant que le catalogue reste court.
 - **Demande de devis ECG de repos (confirmé)** : ouverte à tout visiteur, sans compte.
-  Elle est transmise à l'équipe comme un message de contact (F01), avec le motif « devis
-  ECG de repos ».
+  Elle est enregistrée comme demande de devis, avec l'objet « devis ECG de repos », et
+  l'équipe en est prévenue.
 - **Points et droits d'assistance (confirmé)** : l'indication n'apparaît sur les fiches
   consommables qu'une fois F06 livré ; d'ici là, rien n'est affiché.
 - **« Commander à nouveau » (confirmé)** : l'action dépend de l'historique des commandes
