@@ -26,7 +26,7 @@ additionnées par référence et formule), puis panier du visiteur supprimé.
 
 | Champ | Changement |
 |---|---|
-| `statut` | `recue`, `en_etude`, `accordee`, `refusee` (énuméré à compléter) |
+| `statut` | `recue`, `en_etude`, `accordee`, `refusee` (existant) |
 | `equipements` | `[{ defaultCode, quantite, mensualiteIndicativeHt }]` |
 | `cabinet` | **Ajout** : informations sur le cabinet (JSON : nom, SIRET éventuel, adresse, nombre de praticiens) |
 | `mensualiteIndicativeHt` | **Ajout** : total indicatif affiché au client |
