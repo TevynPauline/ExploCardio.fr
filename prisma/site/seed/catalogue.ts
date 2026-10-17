@@ -1,7 +1,7 @@
-import { mkdir, writeFile } from "node:fs/promises";
-import { join, resolve } from "node:path";
+import { stat } from "node:fs/promises";
+import { join } from "node:path";
 import type { PrismaClient } from "@generated/site/client";
-import { slugArticle, versSlug } from "@/domaine/slugs";
+import { slugArticle } from "@/domaine/slugs";
 import { MODELES } from "../../demo/seed/catalogue";
 
 // Contenus de départ du catalogue (F03, T007, D2) : chaque article de la base fictive reçoit
@@ -66,31 +66,12 @@ const FICHES_COMPLETES: Record<string, { textes: Record<string, unknown>; docume
   },
 };
 
-/** Petit PDF de démonstration (document fictif) déposé dans le stockage. */
-async function notice(nom: string): Promise<{ chemin: string; octets: number }> {
-  const texte = `Notice de demonstration - ${nom} - document fictif`;
-  const flux = `BT /F1 14 Tf 72 720 Td (${texte}) Tj ET`;
-  const objets = [
-    "<< /Type /Catalog /Pages 2 0 R >>",
-    "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
-    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>",
-    `<< /Length ${flux.length} >>\nstream\n${flux}\nendstream`,
-    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
-  ];
-  let pdf = "%PDF-1.4\n";
-  const positions: number[] = [];
-  objets.forEach((o, i) => {
-    positions.push(pdf.length);
-    pdf += `${i + 1} 0 obj\n${o}\nendobj\n`;
-  });
-  const xref = pdf.length;
-  pdf += `xref\n0 ${objets.length + 1}\n0000000000 65535 f \n${positions.map((p) => `${String(p).padStart(10, "0")} 00000 n \n`).join("")}`;
-  pdf += `trailer\n<< /Size ${objets.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
-  const dossier = join(resolve(process.env.STORAGE_DIR || "./stockage"), "documents");
-  await mkdir(dossier, { recursive: true });
-  const fichier = `notice-demonstration-${versSlug(nom)}.pdf`;
-  await writeFile(join(dossier, fichier), pdf, "latin1");
-  return { chemin: `/stockage/documents/${fichier}`, octets: Buffer.byteLength(pdf, "latin1") };
+/** Notice de démonstration (document fictif), fichier statique du site : public/demonstration/. */
+const NOTICE_DEMO = "/demonstration/notice-demonstration.pdf";
+
+async function notice(): Promise<{ chemin: string; octets: number }> {
+  const { size } = await stat(join(process.cwd(), "public", NOTICE_DEMO));
+  return { chemin: NOTICE_DEMO, octets: size };
 }
 
 export async function remplirContenusCatalogue(db: PrismaClient) {
@@ -113,7 +94,7 @@ export async function remplirContenusCatalogue(db: PrismaClient) {
     if (await db.contenuProduit.findUnique({ where: { defaultCode } })) continue;
     const publie = !NON_PUBLIES.has(defaultCode);
     const complete = FICHES_COMPLETES[defaultCode];
-    const documents = complete?.documents ? [{ ...(await notice(m.nom)), titre: `Notice ${m.nom} (démonstration)`, type: "notice" }] : [];
+    const documents = complete?.documents ? [{ ...(await notice()), titre: `Notice ${m.nom} (démonstration)`, type: "notice" }] : [];
     await db.contenuProduit.create({
       data: {
         defaultCode,
