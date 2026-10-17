@@ -7,7 +7,7 @@ avec leurs tests de contrat communs aux deux modes.
 
 | Domaine | Opération | Entrée | Sortie | Erreurs |
 |---|---|---|---|---|
-| Commandes | **Calculer un devis** | client (facultatif), lignes (référence, formule, quantité), code promo, bons demandés, mode de livraison | lignes avec prix appliqué et remises ; remise du code promo ou motif du refus ; bons retenus ; frais de port (forfait, franco, frais des équipements volumineux) ; TVA ; totaux HT et TTC ; montants des mises à disposition (1er mois, mois suivants) ; modes de livraison disponibles | `NotFound`, `ServiceUnavailable` |
+| Commandes | **Calculer un devis** | client (facultatif), lignes (référence, formule, quantité), code promo, bons demandés, mode de livraison | lignes avec prix appliqué et remises ; remise du code promo ou motif du refus ; bons retenus ; frais de port (forfait, franco, frais des équipements volumineux) ; TVA ; totaux HT et TTC ; montants des mises à disposition (1er mois, mois suivants) ; modes de livraison disponibles ; texte de la règle de cumul des remises appliquée | `NotFound`, `ServiceUnavailable` |
 | Commandes | **Créer une commande à régler par virement** | comme « Créer une commande payée », clé | référence, échéance de réservation | `OutOfStock` |
 | Commandes | **Lister les changements de commandes** | depuis (date) | commandes modifiées : statut, transporteur, suivi, remboursements | — |
 | Commandes | **Lister les remboursements à exécuter** | — | remboursements décidés dans Odoo, non exécutés (commande, paiement, montant, motif) | — |

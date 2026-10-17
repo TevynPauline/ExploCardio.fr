@@ -65,6 +65,11 @@ mensualités). Ce document ne traite que les choix propres à F04.
   événement « paiement réussi » reçu par le gestionnaire de F11 → **effet F04** : création de
   la commande dans Odoo (`creerCommandePayee`, clé = commande du site), cadeau, règles de
   fidélité, email, panier vidé, commande du site marquée « payée » avec la référence d'Odoo.
+- **Réservation du stock avant le paiement** (FR-024, cas limite « dernier exemplaire ») :
+  au lancement du paiement, les quantités sont réservées dans Odoo (`stock.reserver`, clé =
+  commande et tentative) ; la réservation est libérée en cas de refus, d'abandon ou
+  d'expiration de la session, et consommée par la commande. Deux clients ne peuvent donc pas
+  payer le même dernier exemplaire : le second est alerté avant de payer.
 - **Une seule commande par paiement** (FR-022, SC-002) : événement traité une seule fois (F11)
   et création idempotente dans Odoo (même clé → même commande) ; confirmation tardive après
   fermeture de la page : traitée de la même façon ; la page de retour affiche l'état réel
@@ -102,10 +107,14 @@ mensualités). Ce document ne traite que les choix propres à F04.
 - **Réception** : enregistrée dans Odoo par l'équipe ; en démonstration, depuis l'écran de
   démonstration (« Virement reçu », montant reçu). Montant différent → commande laissée en
   attente et alerte à l'administrateur.
-- **Rappel et annulation** : une tâche quotidienne du site lit les commandes en attente :
-  rappel 2 jours avant l'échéance ; à l'échéance, Odoo annule et libère le stock (en
-  démonstration, la tâche appelle l'annulation de la base fictive) ; email au client.
-- Pas de virement pour un abonnement (FR-019).
+- **Rappel et annulation** : une tâche quotidienne du site lit ses commandes en attente de
+  virement (échéance renvoyée par Odoo à la création) : rappel 2 jours avant l'échéance ; à
+  l'échéance, elle appelle l'opération du contrat « Annuler une commande en attente » (dans
+  les deux modes), qui libère le stock ; email au client et cadeau de bienvenue rétabli.
+- Pas de virement pour un abonnement (FR-019). Panier mixte réglé par virement pour l'achat :
+  la commande en attente est créée, puis l'abonnement est payé aussitôt par carte ou SEPA.
+- Chaque virement reçu, rappel, annulation et remboursement est journalisé avec son auteur
+  (FR-041).
 
 ## R7. Suivi, notifications et remboursements (US7, US8)
 

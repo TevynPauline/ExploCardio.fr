@@ -255,6 +255,10 @@ souscription n'est possible.
 - **FR-029** : Avant la fin de la période incluse, le médecin DOIT être prévenu par email et
   dans « Mon compte », et se voir proposer de poursuivre par un abonnement mensuel payant,
   au prix fixé dans Odoo, souscrit en ligne (F04).
+- **Note (F04, décision D3 du 2026-10-17)** : la souscription en ligne de l'abonnement au
+  logiciel Cloud (FR-049 de F04 : carte ou SEPA, prix fixé dans Odoo, prise d'effet à la fin de
+  la période incluse) est livrée avec F12, depuis « Mes logiciels Cloud », en réutilisant le
+  mécanisme d'abonnement de F04.
 - **FR-030** : Un médecin qui souscrit l'abonnement avant la fin de la période incluse DOIT
   conserver son accès sans interruption. Sans souscription, l'accès suit les règles de fin
   des droits (délai de grâce, puis fermeture).

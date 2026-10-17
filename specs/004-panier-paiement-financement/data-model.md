@@ -56,6 +56,8 @@ Chaque action est journalisée (`journal_action`, FR-041).
 | `sessionAchat`, `sessionAbonnement` | texte | Sessions Stripe (une par tentative) |
 | `tentative` | entier | Numéro de tentative (clé d'idempotence) |
 | `odooCommandeRef` | texte | Commande d'Odoo créée |
+| `echeanceVirement` | date | Fin de la réservation d'une commande en virement (renvoyée par Odoo), pour le rappel et l'annulation |
+| `reservationRef` | texte | Réservation de stock faite au lancement du paiement |
 | `odooAbonnementRefs` | liste | Abonnements créés |
 | `lignes` | JSON | Copie des lignes validées (référence, formule, quantité) |
 | `creeLe`, `modifieLe` | dates | |

@@ -78,7 +78,7 @@ et au contrôle des largeurs de `tests/e2e/f03/transverses.spec.ts`.
 ### Implementation for User Story 1
 
 - [ ] T012 [US1] Compléter `src/domaine/catalogue/panier.ts` (`modifierLigne`, `supprimerLigne`, `appliquerCodePromo`, `utiliserBons`, `fusionnerPaniers`) et les actions de `src/actions/panier.ts` ; brancher la fusion sur la connexion dans `src/lib/auth.ts` (crochet après `/sign-in/email` et vérification à deux facteurs)
-- [ ] T013 [US1] Remplacer `app/(public)/panier/page.tsx` et créer `src/ui/commande/` (`BlocPaiementUnique.tsx`, `BlocAbonnement.tsx`, `LignePanier.tsx` avec quantité et suppression sans rechargement, `CodePromo.tsx`) ; boutons « Commander » et « Demander un financement » ; compteur du panier dans l'en-tête
+- [ ] T013 [US1] Remplacer `app/(public)/panier/page.tsx` et créer `src/ui/commande/` (`BlocPaiementUnique.tsx` avec le texte de la règle de cumul des remises, `BlocAbonnement.tsx`, `LignePanier.tsx` avec quantité et suppression sans rechargement, `CodePromo.tsx`) ; boutons « Commander » et « Demander un financement » ; compteur du panier dans l'en-tête
 
 **Checkpoint** : le panier est complet.
 
@@ -98,7 +98,7 @@ et au contrôle des largeurs de `tests/e2e/f03/transverses.spec.ts`.
 
 ### Implementation for User Story 2
 
-- [ ] T017 [US2] Créer `src/domaine/commande/tunnel.ts` (`ouvrirCommande`, `enregistrerAdresses`, `choisirLivraison`, `choisirPaiement`, `verifierAvantPaiement`) et `src/domaine/commande/paiement.ts` (`lancerPaiement` : une seule session par tentative, clé `commande:tentative`)
+- [ ] T017 [US2] Créer `src/domaine/commande/tunnel.ts` (`ouvrirCommande`, `enregistrerAdresses`, `choisirLivraison`, `choisirPaiement`, `verifierAvantPaiement`) et `src/domaine/commande/paiement.ts` (`lancerPaiement` : réservation du stock dans Odoo (`stock.reserver`, clé `commande:tentative`) puis une seule session par tentative ; réservation libérée en cas de refus, d'abandon ou d'expiration, consommée par la commande)
 - [ ] T018 [US2] Créer `src/domaine/commande/effets.ts` (effets `paiement_reussi` et `paiement_refuse` enregistrés auprès du gestionnaire de F11 au démarrage) et le rattrapage dans `src/file-attente/travailleurs.ts` (rejeu, alerte à l'administrateur)
 - [ ] T019 [US2] Créer les pages `app/(public)/commande/adresses`, `livraison`, `paiement`, `recapitulatif`, `retour`, `confirmation/[ref]` avec `src/ui/commande/Etapes.tsx` (liste ordonnée, `aria-current="step"`) ; contrôle `peutCommander` à chaque étape
 - [ ] T020 [US2] Créer `app/(public)/mon-compte/commandes/page.tsx`, `commandes/[ref]/page.tsx`, `factures/page.tsx` et la route `mon-compte/factures/[numero]/pdf/route.ts` (PDF lu dans Odoo, servi au seul titulaire) ; remplacer les pages « Bientôt disponible » de F02
@@ -115,11 +115,11 @@ et au contrôle des largeurs de `tests/e2e/f03/transverses.spec.ts`.
 
 ### Tests for User Story 3
 
-- [ ] T021 [P] [US3] Écrire `tests/e2e/f04/fiabilite.spec.ts` : paiement refusé (message, panier et saisies conservés, nouvelle tentative), authentification forte abandonnée (traitée comme un refus), confirmation répétée (une seule commande, une seule facture), confirmation tardive après fermeture de la page (commande créée, email, panier vidé), double clic sur « Payer » (une seule session), article passé indisponible avant le paiement (alerte, retour au panier), Stripe en panne simulée (message, rien de débité, panier conservé), Odoo en panne au moment de la confirmation puis rétabli (commande rattrapée, alerte) — pannes rétablies **en attendant la confirmation**
+- [ ] T021 [P] [US3] Écrire `tests/e2e/f04/fiabilite.spec.ts` : paiement refusé (message, panier et saisies conservés, nouvelle tentative), authentification forte abandonnée (traitée comme un refus), confirmation répétée (une seule commande, une seule facture), confirmation tardive après fermeture de la page (commande créée, email, panier vidé), double clic sur « Payer » (une seule session), article passé indisponible avant le paiement (alerte, retour au panier), deux clients sur le dernier exemplaire au même moment (un seul paie, l'autre est alerté avant de payer, aucun paiement sans commande), Stripe en panne simulée (message, rien de débité, panier conservé), Odoo en panne au moment de la confirmation puis rétabli (commande rattrapée, alerte) — pannes rétablies **en attendant la confirmation**
 
 ### Implementation for User Story 3
 
-- [ ] T022 [US3] Compléter `src/domaine/commande/paiement.ts` et `app/(public)/commande/retour/page.tsx` : état réel affiché (« paiement en cours de confirmation » tant que l'événement n'est pas arrivé, rafraîchi), refus avec motif et nouvelle tentative, sessions réutilisées sur rechargement ; vérification de stock juste avant le paiement
+- [ ] T022 [US3] Compléter `src/domaine/commande/paiement.ts` et `app/(public)/commande/retour/page.tsx` : état réel affiché (« paiement en cours de confirmation » tant que l'événement n'est pas arrivé, rafraîchi), refus avec motif et nouvelle tentative, sessions réutilisées sur rechargement ; vérification de stock et réservation juste avant le paiement, libération sur refus ou abandon
 
 ---
 
@@ -136,7 +136,7 @@ et au contrôle des largeurs de `tests/e2e/f03/transverses.spec.ts`.
 
 ### Implementation for User Story 4
 
-- [ ] T025 [US4] Créer `src/domaine/commande/virement.ts` (création, rappel, annulation, écart de montant) et la tâche quotidienne dans `src/file-attente/travailleurs.ts` ; RIB lu dans les paramètres ; ajouter « Virement reçu » à `app/(back-office)/admin/demonstration/paiements/` et les coordonnées bancaires et l'heure limite à `app/(back-office)/admin/contenus/coordonnees/`
+- [ ] T025 [US4] Créer `src/domaine/commande/virement.ts` (création avec `echeanceVirement`, rappel, annulation par l'opération « Annuler une commande en attente » dans les deux modes, écart de montant ; chaque action journalisée avec son auteur, FR-041) et la tâche quotidienne dans `src/file-attente/travailleurs.ts` ; RIB lu dans les paramètres ; ajouter « Virement reçu » à `app/(back-office)/admin/demonstration/paiements/` et les coordonnées bancaires et l'heure limite à `app/(back-office)/admin/contenus/coordonnees/`
 
 ---
 
@@ -148,11 +148,11 @@ et au contrôle des largeurs de `tests/e2e/f03/transverses.spec.ts`.
 
 ### Tests for User Story 5
 
-- [ ] T026 [P] [US5] Écrire `tests/e2e/f04/mise-a-disposition.spec.ts` : choix carte ou SEPA pour les échéances, récapitulatif (1er mois, mois suivants, date de prélèvement, sans engagement), abonnement créé et matériel réservé, location dans « Mon compte », facture du 1er mois ; panier mixte : achat payé puis abonnement, échec du second → repris depuis « Mon compte › Commandes » sans repayer l'achat ; échéance simulée → facture et email
+- [ ] T026 [P] [US5] Écrire `tests/e2e/f04/mise-a-disposition.spec.ts` : choix carte ou SEPA pour les échéances, récapitulatif (1er mois, mois suivants, date de prélèvement, sans engagement), abonnement créé et matériel réservé, location dans « Mon compte », facture du 1er mois ; panier mixte : achat payé puis abonnement, échec du second → repris depuis « Mon compte › Commandes » sans repayer l'achat ; échéance simulée → facture et email ; panier mixte avec achat par virement : commande en attente créée puis abonnement payé aussitôt
 
 ### Implementation for User Story 5
 
-- [ ] T027 [US5] Compléter `src/domaine/commande/paiement.ts` et `effets.ts` : session d'abonnement à la suite de l'achat, effet « paiement réussi » d'un abonnement (`location.creerAbonnement` par équipement, facture du 1er mois), effet `echeance_payee` (facture, email) ; reprise depuis « Mon compte »
+- [ ] T027 [US5] Compléter `src/domaine/commande/paiement.ts` et `effets.ts` : session d'abonnement à la suite de l'achat, effet « paiement réussi » d'un abonnement (`location.creerAbonnement` par équipement, facture du 1er mois), effet `echeance_payee` (facture, email) ; reprise depuis « Mon compte » ; panier mixte avec achat par virement
 - [ ] T028 [US5] Créer `app/(public)/mon-compte/locations/page.tsx` (mises à disposition souscrites, montants, prochaine échéance ; complété par F05)
 
 ---
@@ -187,7 +187,7 @@ et au contrôle des largeurs de `tests/e2e/f03/transverses.spec.ts`.
 
 ### Implementation for User Story 7
 
-- [ ] T034 [US7] Créer `src/domaine/commande/suivi.ts` (`suivreCommandes` : changements, remboursements à exécuter ; effet `remboursement`) et la tâche toutes les 5 minutes dans `src/file-attente/travailleurs.ts` (D6) ; ajouter « Marquer expédiée / livrée » et « Décider un remboursement » à l'écran de démonstration
+- [ ] T034 [US7] Créer `src/domaine/commande/suivi.ts` (`suivreCommandes` : changements, remboursements à exécuter ; effet `remboursement`) et la tâche toutes les 5 minutes dans `src/file-attente/travailleurs.ts` (D6), chaque remboursement exécuté ou enregistré journalisé (FR-041) ; ajouter « Marquer expédiée / livrée » et « Décider un remboursement » à l'écran de démonstration
 
 ---
 
@@ -252,5 +252,6 @@ US3 (T021–T022) · US4 (T023–T025) · US5 (T026–T028) · US7 (T032–T034)
 3. US4, US5, US6, US7 (P2), puis US8 (P3).
 4. Polish.
 
-**Remarque** : l'abonnement au logiciel Cloud (FR-049) est livré avec F12 (décision D3) ;
+**Remarque** : l'abonnement au logiciel Cloud (FR-049) est livré avec F12 (décision D3, noté
+dans la spec de F12) ;
 le cycle de vie de la mise à disposition (offre, retours, impayés) relève de F05.
