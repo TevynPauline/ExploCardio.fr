@@ -216,7 +216,7 @@ sur le site en moins d'une minute (SC-003).
 - [X] T070 [P] Ajouter l'accueil, `/catalogue` et `/holter-ecg` à `scripts/lighthouse.ts`, et une étape Lighthouse (construction de production, démarrage, mesure) à `.github/workflows/ci.yml` ; objectif : élément principal en moins de 2 s en profil mobile 4G
 - [X] T071 [P] Mettre à jour `docs/demonstration.md` (rubrique Contenus du back-office) et `tests/e2e/parcours/README.md`
 - [X] T072 Dérouler [quickstart.md](quickstart.md) de bout en bout et corriger les écarts ; relecture visuelle de chaque page : aucun visuel interdit par la charte (cœur, tracé ECG, pictogramme médical cliché, dégradé vif, ombre lourde, photo de stock générique, FR-045) ; préparer la séance d'essai avec la porteuse du projet (SC-003 : modification d'un contenu en moins de 5 minutes ; SC-010 : test avec des médecins)
-- [ ] T073 Vérifier la conformité finale : `npm run typecheck`, `npm run lint`, `npm run check:contrast`, `npm test`, `npm run test:e2e`, `npm run test:lighthouse` passent en local puis en intégration continue
+- [X] T073 Vérifier la conformité finale : `npm run typecheck`, `npm run lint`, `npm run check:contrast`, `npm test`, `npm run test:e2e`, `npm run test:lighthouse` passent en local puis en intégration continue
 
 ---
 
