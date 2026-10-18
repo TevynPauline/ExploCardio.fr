@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { usePathname } from "next/navigation";
+import { actionNombreArticles } from "@/actions/panier";
 import type { EntreeNavigation } from "@/domaine/navigation";
 import { authClient } from "@/lib/auth-client";
 import { Logo } from "../Logo";
@@ -19,7 +21,23 @@ const DELAI_SURVOL_MS = 150;
 
 type Props = { entrees: EntreeNavigation[]; articlesPanier: number };
 
-export function BarreNavigation({ entrees, articlesPanier }: Props) {
+/** Événement émis après une modification du panier (ajout, quantité, suppression). */
+export const EVENEMENT_PANIER = "ec:panier";
+
+export function BarreNavigation({ entrees, articlesPanier: initial }: Props) {
+  // Pastille du panier lue après l'affichage : les pages restent statiques (F04).
+  const [articlesPanier, setArticlesPanier] = useState(initial);
+  const chemin = usePathname();
+  useEffect(() => {
+    let actif = true;
+    const relire = () => actionNombreArticles().then((n) => actif && setArticlesPanier(n)).catch(() => undefined);
+    relire();
+    window.addEventListener(EVENEMENT_PANIER, relire);
+    return () => {
+      actif = false;
+      window.removeEventListener(EVENEMENT_PANIER, relire);
+    };
+  }, [chemin]);
   const [ouvert, setOuvert] = useState<string | null>(null);
   // Lu dans le navigateur : les pages restent statiques (rapides) pour tous les visiteurs.
   const { data: session } = authClient.useSession();

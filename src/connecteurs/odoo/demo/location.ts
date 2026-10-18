@@ -1,6 +1,6 @@
 import { NotFound, OutOfStock } from "../../erreurs";
 import type { Location, LocationOdoo, NouvelAbonnement } from "../interfaces";
-import { ajouterMois, db, prochaineReference } from "./outils";
+import { ajouterMois, db, prochaineReference, prochainNumeroFacture } from "./outils";
 
 // Domaine « Location et abonnements » en démonstration (contracts/odoo.md §6).
 
@@ -83,5 +83,30 @@ export const locationDemo: LocationOdoo = {
       etat: a.etat,
       estFictif: a.estFictif,
     }));
+  },
+
+  async facturerEcheance(e, cle) {
+    return db().$transaction(async (tx) => {
+      const deja = await tx.facture.findUnique({ where: { cle } });
+      if (deja) return { facture: deja.numero };
+      const abonnements = await tx.abonnement.findMany({ where: { ref: { in: e.abonnementRefs } }, include: { variante: { include: { modele: true } } } });
+      if (!abonnements.length) throw new NotFound("Abonnement", e.abonnementRefs.join(", "));
+      const taux = Number(abonnements[0]!.variante.tauxTva);
+      const ht = Math.round((e.montantTtc * 100) / (100 + taux));
+      const facture = await tx.facture.create({
+        data: {
+          numero: await prochainNumeroFacture(tx, new Date()),
+          type: "facture",
+          cle,
+          partenaireId: abonnements[0]!.partenaireId,
+          montantHtCentimes: ht,
+          tvaCentimes: e.montantTtc - ht,
+          montantTtcCentimes: e.montantTtc,
+          etatPaiement: "paye",
+          lignes: [{ libelle: e.libelle, reference: abonnements.map((a) => a.ref).join(", "), quantite: 1, prixUnitaireHtCentimes: ht, remiseCentimes: 0, totalHtCentimes: ht }],
+        },
+      });
+      return { facture: facture.numero };
+    });
   },
 };

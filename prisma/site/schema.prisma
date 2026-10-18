@@ -155,6 +155,7 @@ model CompteClient {
   demandesNumero      DemandeChangementNumero[]
   demandesRgpd        DemandeRgpd[]
   panier              Panier?
+  commandes           CommandeSite[]
 
   @@index([siret])
   @@index([statut])
@@ -381,6 +382,10 @@ model Panier {
   jetonEmpreinte String?       @unique
   compteId       String?       @unique
   compte         CompteClient? @relation(fields: [compteId], references: [id], onDelete: Cascade)
+  /// Code promo saisi (F04) ; sa validité est vérifiée par le devis d'Odoo.
+  codePromo      String?
+  /// Utiliser le solde de bons d'achat (F06).
+  utiliserBons   Boolean       @default(false)
   lignes         LignePanier[]
   creeLe         DateTime      @default(now())
   modifieLe      DateTime      @updatedAt
@@ -402,6 +407,84 @@ model LignePanier {
 
   @@unique([panierId, defaultCode, formule])
   @@map("ligne_panier")
+}
+
+enum EtapeCommande {
+  adresses
+  livraison
+  paiement
+  recapitulatif
+  terminee
+}
+
+enum MoyenPaiementCommande {
+  carte
+  sepa
+  virement
+}
+
+enum EtatPartieCommande {
+  a_payer
+  paiement_en_cours
+  payee
+  a_enregistrer
+  en_attente_virement
+  refusee
+  sans_objet
+}
+
+/// Commande du site (F04) : état du tunnel, référence et clé d'idempotence d'un paiement.
+/// Les commandes, factures et stocks sont dans Odoo ; ce modèle garantit une seule commande
+/// par paiement et la reprise du tunnel sans ressaisie.
+model CommandeSite {
+  id                   String                 @id @default(cuid())
+  /// EC-AAAA-NNNNNN, rappelée au client (virement)
+  ref                  String                 @unique
+  compteId             String
+  compte               CompteClient           @relation(fields: [compteId], references: [id], onDelete: Cascade)
+  etape                EtapeCommande          @default(adresses)
+  adresses             Json                   @default("{}")
+  modeLivraison        String?
+  moyenPaiement        MoyenPaiementCommande?
+  /// Moyen des échéances mensuelles (carte ou SEPA)
+  moyenAbonnement      MoyenPaiementCommande?
+  cgvAccepteesLe       DateTime?
+  /// Dernier devis d'Odoo affiché, pour signaler un écart
+  devis                Json?
+  lignes               Json                   @default("[]")
+  codePromo            String?
+  bonsHt               Int                    @default(0)
+  etatAchat            EtatPartieCommande     @default(sans_objet)
+  etatAbonnement       EtatPartieCommande     @default(sans_objet)
+  sessionAchat         String?
+  sessionAbonnement    String?
+  tentative            Int                    @default(0)
+  reservationRef       String?
+  /// Paiement accepté (référence Stripe) et moyen utilisé, pour enregistrer ou rattraper la commande
+  paiementRef          String?
+  moyenEffectif        String?
+  odooCommandeRef      String?
+  odooAbonnementRefs   String[]               @default([])
+  echeanceVirement     DateTime?
+  rappelVirementLe     DateTime?
+  motifRefus           String?
+  echecsEnregistrement Int                    @default(0)
+  creeLe               DateTime               @default(now())
+  modifieLe            DateTime               @updatedAt
+
+  @@index([compteId, etape])
+  @@index([etatAchat])
+  @@map("commande_site")
+}
+
+/// Dernier statut notifié au client pour une commande d'Odoo (F04, FR-032).
+model SuiviCommande {
+  odooCommandeRef   String   @id
+  dernierStatut     String
+  remboursementsTtc Int      @default(0)
+  notifieLe         DateTime @default(now())
+
+  @@map("suivi_commande")
 }
 
 /// Paramètre de fonctionnement du site (principe VI) — jamais une règle commerciale.
@@ -442,15 +525,22 @@ enum StatutDemandeFinancement {
 }
 
 model DemandeFinancement {
-  id             String                   @id @default(cuid())
-  compteId       String
-  compte         CompteClient             @relation(fields: [compteId], references: [id], onDelete: Cascade)
-  equipements    Json
-  dureeMois      Int
-  statut         StatutDemandeFinancement @default(recue)
-  notesInternes  String?
-  opportuniteRef String?
-  creeLe         DateTime                 @default(now())
+  id                     String                   @id @default(cuid())
+  compteId               String
+  compte                 CompteClient             @relation(fields: [compteId], references: [id], onDelete: Cascade)
+  equipements            Json
+  dureeMois              Int
+  statut                 StatutDemandeFinancement @default(recue)
+  notesInternes          String?
+  opportuniteRef         String?
+  /// Informations sur le cabinet (F04) : nom, SIRET, adresse, nombre de praticiens.
+  cabinet                Json                     @default("{}")
+  /// Mensualité indicative totale affichée au client (F04).
+  mensualiteIndicativeHt Int?
+  /// Commande « financée » créée dans Odoo (F04, FR-038).
+  commandeRef            String?
+  creeLe                 DateTime                 @default(now())
+  modifieLe              DateTime                 @default(now()) @updatedAt
 
   @@map("demande_financement")
 }

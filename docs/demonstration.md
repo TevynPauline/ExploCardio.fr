@@ -78,7 +78,7 @@ Dans le back-office, rubrique **Démonstration** :
   démonstration) ; les autres ont des textes provisoires.
 - **Fiche consommable** (par exemple les électrodes Holter) : conditionnements, prix à l'unité
   et par lot, prix dégressifs, ajout rapide au panier.
-- **Panier** : il liste ce qui a été ajouté ; la commande en ligne arrive avec F04.
+- **Panier** : il liste ce qui a été ajouté (voir F04 ci-dessous pour commander).
 - **Mensualité imposée** : le Dr Delvaux-Arnoux (client fictif) a une mensualité de
   financement négociée sur le DMS 300-4L avec logiciel Cloud, visible de lui seul.
 - **Back-office → Catalogue** (administrateur) : rédigez textes, photos et documents,
@@ -88,6 +88,54 @@ Dans le back-office, rubrique **Démonstration** :
   tarifs des services et la mention sous les mensualités.
 - **Rupture** : passez un article en rupture dans **Démonstration → Stocks** : la carte et la
   fiche l'indiquent au rechargement suivant.
+
+## Commander, payer et suivre (F04)
+
+- **Panier** : deux blocs, « Paiement unique » (achats) et « Abonnement mensuel » (mises à
+  disposition). Quantités modifiables, code promo, total HT, TVA et TTC calculés par Odoo.
+  Un prix qui a changé depuis l'ajout est signalé. Le panier d'un visiteur rejoint son compte
+  à la connexion.
+- **Commander** (compte validé) : adresses (préremplies, France métropolitaine), livraison
+  (standard, ou express avant l'heure limite et si l'article est en stock), moyen de paiement,
+  récapitulatif et conditions générales de vente. Le stock est réservé avant le paiement.
+- **Payer par carte** : la page de paiement de démonstration s'ouvre ; choisissez
+  **American Express** et « Paiement accepté ». La commande et sa **facture FICTIVE** (PDF)
+  apparaissent dans **Mon compte → Commandes** et **Factures** ; l'email de confirmation est
+  dans la boîte de démonstration. « Paiement refusé » rend la main sans rien débiter, panier
+  conservé.
+- **Payer par virement** : la commande est réservée jusqu'à l'échéance ; l'écran et l'email
+  donnent le RIB fictif et la référence. Dans **Démonstration → Paiements**, carte
+  « Commandes », bouton **Virement reçu** : la commande passe payée et facturée, le client est
+  prévenu. Un montant différent laisse la commande en attente et alerte l'équipe. Sans
+  virement, un rappel part 2 jours avant l'échéance et la commande est annulée à l'échéance.
+  Le RIB et ces délais se règlent dans **Contenus → Coordonnées et textes**.
+- **Mise à disposition** : sur une fiche, « Mise à disposition mensuelle » puis « Ajouter la
+  mise à disposition au panier ». Le récapitulatif donne le premier mois, les mois suivants et
+  la date de prélèvement (carte ou SEPA). La location apparaît dans **Mon compte → Locations
+  en cours**. Panier mixte : l'achat se paie d'abord, puis l'abonnement ; si l'abonnement
+  échoue, il se reprend depuis **Mon compte → Commandes**. Pour montrer une échéance :
+  **Démonstration → Paiements → Simuler une échéance**.
+- **Expédier, livrer, rembourser** : dans **Démonstration → Paiements**, carte « Commandes »
+  (ce que l'équipe fera dans Odoo) : **Marquer expédiée** (transporteur et suivi),
+  **Marquer livrée**, **Décider un remboursement** (partiel ou total). Le client voit le
+  statut, le suivi et l'**avoir** dans Mon compte, et reçoit un email à chaque étape. Un
+  remboursement fait directement chez Stripe se montre avec **Simuler un remboursement**.
+- **Commandes du site** (toute l'équipe) : **Back-office → Commandes**, en lecture seule ; les
+  commandes payées mais pas encore enregistrées dans Odoo y sont signalées (le site réessaie
+  seul toutes les 5 minutes).
+
+## Demander un financement (F04)
+
+- Sur une fiche, formule « Financement longue durée » → **Demander mon financement** ; ou
+  depuis le panier. Équipements, durée (24 à 60 mois) et cabinet sont préremplis ; la
+  mensualité affichée est **indicative**. Aucun paiement en ligne. Les équipements demandés
+  depuis le panier en sont retirés.
+- La demande est visible dans **Mon compte → Financements** dès l'envoi, et dans
+  **Back-office → Financements** (administrateur et commercial, pas le support) : changer le
+  statut (reçue, en étude, accordée, refusée) prévient le client par email ; les notes
+  internes ne sont jamais visibles du client. Une fois accordée, **Créer la commande
+  financée** : commande sans montant à régler et sans facture au client, stock décompté.
+- Aucun nom d'organisme de financement n'apparaît côté client.
 
 ## Les contenus du site (administrateur)
 

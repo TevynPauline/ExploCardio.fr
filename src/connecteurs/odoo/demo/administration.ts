@@ -177,3 +177,86 @@ export async function modifierRemisePromotion(id: number, remisePourcent: number
   await db().promotion.update({ where: { id }, data: { remisePourcent } });
   return { avant: promo.remisePourcent ? Number(promo.remisePourcent) : null, apres: remisePourcent };
 }
+
+// ------------------------------------------------------------------ Cycle des commandes (F04)
+// Ce que l'équipe fait dans Odoo en mode réel : virement reçu, expédition, livraison,
+// remboursement décidé. Appelé par l'écran Démonstration → Paiements.
+
+export async function listerCommandesRecentes(limite = 30) {
+  return db().commandeVente.findMany({
+    include: { partenaire: true, remboursements: true },
+    orderBy: { date: "desc" },
+    take: limite,
+  });
+}
+
+/** Virement reçu : payé et facturé si le montant est exact ; sinon la commande reste en attente. */
+export async function virementRecu(ref: string, montantTtc: number): Promise<{ ecart: number }> {
+  return db().$transaction(async (tx) => {
+    const c = await tx.commandeVente.findUnique({ where: { ref } });
+    if (!c) throw new NotFound("Commande", ref);
+    if (c.statut !== "en_attente_paiement") throw new ValeurRefusee("Cette commande n'attend pas de virement.");
+    const ecart = montantTtc - c.montantTtcCentimes;
+    if (ecart !== 0) return { ecart };
+    await tx.commandeVente.update({ where: { id: c.id }, data: { statut: "payee", echeancePaiement: null } });
+    const { prochainNumeroFacture } = await import("./outils");
+    const lignes = await tx.ligneCommande.findMany({ where: { commandeId: c.id }, include: { variante: { include: { modele: true } } } });
+    await tx.facture.create({
+      data: {
+        numero: await prochainNumeroFacture(tx, new Date()),
+        type: "facture",
+        partenaireId: c.partenaireId,
+        commandeId: c.id,
+        montantHtCentimes: c.montantHtCentimes,
+        tvaCentimes: c.tvaCentimes,
+        montantTtcCentimes: c.montantTtcCentimes,
+        etatPaiement: "paye",
+        lignes: lignes.map((l) => ({
+          libelle: `${l.variante.modele.marque} ${l.variante.modele.nom}`,
+          reference: l.variante.defaultCode,
+          quantite: l.quantite,
+          prixUnitaireHtCentimes: l.prixUnitaireHtCentimes,
+          remiseCentimes: l.remiseCentimes,
+          totalHtCentimes: l.prixUnitaireHtCentimes * l.quantite - l.remiseCentimes,
+        })),
+      },
+    });
+    return { ecart: 0 };
+  });
+}
+
+export async function marquerExpediee(ref: string, transporteur: string, suivi: string) {
+  if (!transporteur.trim() || !suivi.trim()) throw new ValeurRefusee("Indiquez le transporteur et le numéro de suivi.");
+  const c = await db().commandeVente.findUnique({ where: { ref } });
+  if (!c) throw new NotFound("Commande", ref);
+  if (!["payee", "confirmee", "en_preparation"].includes(c.statut)) throw new ValeurRefusee("Seule une commande payée peut être expédiée.");
+  await db().commandeVente.update({ where: { ref }, data: { statut: "expediee", transporteur: transporteur.trim(), suivi: suivi.trim() } });
+}
+
+export async function marquerLivree(ref: string) {
+  const c = await db().commandeVente.findUnique({ where: { ref } });
+  if (!c) throw new NotFound("Commande", ref);
+  if (c.statut !== "expediee") throw new ValeurRefusee("Seule une commande expédiée peut être livrée.");
+  await db().commandeVente.update({ where: { ref }, data: { statut: "livree" } });
+}
+
+/**
+ * Remboursement décidé par l'équipe. Carte ou SEPA : exécuté ensuite par le site via Stripe.
+ * Virement : remboursé par virement, enregistré aussitôt (avoir).
+ */
+export async function deciderRemboursement(ref: string, montantTtc: number, motif: string) {
+  entierPositif(montantTtc, "Montant du remboursement", { zero: false });
+  if (!motif.trim()) throw new ValeurRefusee("Indiquez le motif du remboursement.");
+  const c = await db().commandeVente.findUnique({ where: { ref }, include: { remboursements: true } });
+  if (!c) throw new NotFound("Commande", ref);
+  const deja = c.remboursements.reduce((s, r) => s + r.montantTtcCentimes, 0);
+  if (deja + montantTtc > c.montantTtcCentimes) throw new ValeurRefusee("Le remboursement dépasse le montant de la commande.");
+  if (c.modePaiement === "virement") {
+    const { enregistrerRemboursementTx } = await import("./commandes");
+    await db().$transaction((tx) =>
+      enregistrerRemboursementTx(tx, { commandeRef: ref, montantTtc, motif: motif.trim(), source: "odoo", referenceStripe: null }, `virement:${ref}:${deja + montantTtc}`),
+    );
+    return;
+  }
+  await db().remboursement.create({ data: { commandeId: c.id, montantTtcCentimes: montantTtc, motif: motif.trim(), source: "odoo" } });
+}

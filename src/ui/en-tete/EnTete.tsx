@@ -4,6 +4,6 @@ import { BarreNavigation } from "./BarreNavigation";
 /** En-tête commun (FR-001, FR-003, FR-006) : données préparées côté serveur. */
 export async function EnTete() {
   const entrees = await lireNavigation();
-  // Le panier arrive avec F04 : en attendant, il est toujours vide (pas de pastille).
+  // Pastille du panier : lue par la barre après l'affichage (F04).
   return <BarreNavigation entrees={entrees} articlesPanier={0} />;
 }

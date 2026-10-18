@@ -1,146 +1,230 @@
 import { NotFound } from "../../erreurs";
-import type { Commande, CommandesOdoo, NouvelleCommande, ResumeCommande, StatutCommande } from "../interfaces";
-import { prixClient } from "./catalogue";
-import { soldeCagnotte } from "./fidelite";
-import { db, prochaineReference, prochainNumeroFacture, tva, type Tx } from "./outils";
+import type {
+  ChangementCommande,
+  Commande,
+  CommandesOdoo,
+  DemandeDevis,
+  EnregistrementRemboursement,
+  NouvelleCommande,
+  RemboursementAExecuter,
+  ResumeCommande,
+  StatutCommande,
+} from "../interfaces";
+import { calculerDevis } from "./devis";
+import { ajouterJours, db, prochaineReference, prochainNumeroFacture, type Tx } from "./outils";
 import { decompterStock } from "./stock";
 
-// Domaine « Commandes » en démonstration (contracts/odoo.md §4).
-// Une commande payée crée aussi sa facture (numérotation continue, mention FICTIVE au PDF).
-
-const TVA_PORT = 20;
+// Domaine « Commandes » en démonstration (contracts/odoo.md §4, complété par F04).
+// Les montants viennent du devis (F04, R1) : la commande facture ce qui a été affiché.
+// Une commande payée crée sa facture (numérotation continue, mention FICTIVE au PDF) ; une
+// commande « financée » n'en donne aucune au client (F04, FR-047).
 
 function statutPublic(statut: string): StatutCommande {
-  return (statut === "brouillon" ? "confirmee" : statut) as StatutCommande;
+  return (statut === "brouillon" || statut === "confirmee" ? "payee" : statut) as StatutCommande;
 }
 
-async function remiseCodePromo(tx: Tx, code: string | undefined, maintenant: Date) {
-  if (!code) return null;
-  const promo = await tx.promotion.findUnique({ where: { code } });
-  if (!promo || promo.type !== "code_promo") return null;
-  if ((promo.debut && promo.debut > maintenant) || (promo.fin && promo.fin < maintenant)) return null;
-  return promo.remisePourcent ? Number(promo.remisePourcent) : null;
+type Creation = { statut: "payee" | "en_attente_paiement"; echeance: Date | null };
+
+/** Consomme une réservation faite avant le paiement, ou décompte le stock. */
+async function sortirStock(tx: Tx, c: NouvelleCommande) {
+  const reservees = c.reservationCle ? await tx.reservation.findMany({ where: { cle: c.reservationCle } }) : [];
+  if (reservees.length) {
+    await tx.reservation.deleteMany({ where: { cle: c.reservationCle } });
+    // Lignes ajoutées depuis la réservation (cadeau de bienvenue, par exemple) : décomptées.
+    const reste = c.lignes
+      .map((l) => ({ ...l, quantite: l.quantite - reservees.filter((r) => r.defaultCode === l.defaultCode).reduce((s, r) => s + r.quantite, 0) }))
+      .filter((l) => l.quantite > 0);
+    if (reste.length) await decompterStock(tx, reste);
+    return;
+  }
+  await decompterStock(tx, c.lignes);
 }
 
-export async function creerCommande(tx: Tx, c: NouvelleCommande, cle: string, date = new Date()) {
+async function creerFacture(tx: Tx, commandeId: number, date: Date) {
+  const c = await tx.commandeVente.findUniqueOrThrow({ where: { id: commandeId }, include: { lignes: { include: { variante: { include: { modele: true } } } } } });
+  return tx.facture.create({
+    data: {
+      numero: await prochainNumeroFacture(tx, date),
+      type: "facture",
+      partenaireId: c.partenaireId,
+      commandeId: c.id,
+      date,
+      montantHtCentimes: c.montantHtCentimes,
+      tvaCentimes: c.tvaCentimes,
+      montantTtcCentimes: c.montantTtcCentimes,
+      etatPaiement: "paye",
+      lignes: [
+        ...c.lignes.map((l) => ({
+          libelle: `${l.variante.modele.marque} ${l.variante.modele.nom}${l.variante.configuration ? ` — ${l.variante.configuration}` : ""}${l.prixUnitaireHtCentimes === 0 ? " (offert)" : ""}`,
+          reference: l.variante.defaultCode,
+          quantite: l.quantite,
+          prixUnitaireHtCentimes: l.prixUnitaireHtCentimes,
+          remiseCentimes: l.remiseCentimes,
+          totalHtCentimes: l.prixUnitaireHtCentimes * l.quantite - l.remiseCentimes,
+        })),
+        ...(c.fraisPortCentimes > 0
+          ? [{ libelle: "Livraison", reference: "PORT", quantite: 1, prixUnitaireHtCentimes: c.fraisPortCentimes, remiseCentimes: 0, totalHtCentimes: c.fraisPortCentimes }]
+          : []),
+        ...(c.bonsUtilisesCentimes > 0
+          ? [{ libelle: "Bons d'achat utilisés", reference: "BONS", quantite: 1, prixUnitaireHtCentimes: -c.bonsUtilisesCentimes, remiseCentimes: 0, totalHtCentimes: -c.bonsUtilisesCentimes }]
+          : []),
+      ],
+    },
+  });
+}
+
+export async function creerCommande(tx: Tx, c: NouvelleCommande, cle: string, date = new Date(), creation: Creation = { statut: "payee", echeance: null }) {
   const deja = await tx.commandeVente.findUnique({ where: { cle } });
-  if (deja) return { ref: deja.ref, id: deja.id, creee: false };
+  if (deja) return { ref: deja.ref, id: deja.id, creee: false, echeance: deja.echeancePaiement };
 
   const partenaire = await tx.partenaire.findUnique({ where: { ref: c.partenaireRef } });
   if (!partenaire) throw new NotFound("Partenaire", c.partenaireRef);
 
-  const refs = c.lignes.map((l) => l.defaultCode);
-  const prix = await prixClient(c.partenaireRef, refs, tx);
-  const variantes = await tx.variante.findMany({
-    where: { defaultCode: { in: refs } },
-    include: { modele: true },
+  const demande: DemandeDevis = {
+    partenaireRef: c.partenaireRef,
+    lignes: c.lignes.map((l) => ({ defaultCode: l.defaultCode, formule: "achat", quantite: l.quantite, offerte: l.offerte })),
+    codePromo: c.codePromo ?? null,
+    bonsDemandesHt: c.bonsUtilisesHt ?? 0,
+    modeLivraison: c.livraison.mode ?? null,
+  };
+  const devis = await calculerDevis(demande, tx, {
+    maintenant: date,
+    ...(c.livraison.mode ? {} : { fraisPortImposeHt: c.livraison.fraisPortHt ?? 0 }),
   });
-  const remisePromo = await remiseCodePromo(tx, c.codePromo, date);
+  const achat = devis.achat!;
 
-  const lignes = c.lignes.map((l) => {
-    const v = variantes.find((x) => x.defaultCode === l.defaultCode)!;
-    const p = prix.find((x) => x.defaultCode === l.defaultCode)!;
-    const prixUnitaire = l.offerte ? 0 : p.prixHt;
-    const brut = prixUnitaire * l.quantite;
-    const remise = remisePromo && !l.offerte ? Math.round((brut * remisePromo) / 100) : 0;
-    return { v, quantite: l.quantite, prixUnitaire, remise, net: brut - remise, offerte: Boolean(l.offerte) };
-  });
+  await sortirStock(tx, c);
 
-  await decompterStock(tx, c.lignes);
-
-  const bons = c.bonsUtilisesHt ?? 0;
-  if (bons > 0) {
-    const solde = await soldeCagnotte(tx, partenaire.id);
-    if (bons > solde) throw new Error(`Bons d'achat insuffisants : solde ${solde}, demandé ${bons}.`);
-  }
-
-  const totalLignes = lignes.reduce((s, l) => s + l.net, 0);
-  const tvaLignes = lignes.reduce((s, l) => s + tva(l.net, Number(l.v.tauxTva)), 0);
-  const port = c.livraison.fraisPortHt;
-  const montantHt = totalLignes + port - bons;
-  const montantTva = tvaLignes + tva(port, TVA_PORT) - tva(bons, TVA_PORT);
-
+  const variantes = await tx.variante.findMany({ where: { defaultCode: { in: devis.lignes.map((l) => l.defaultCode) } } });
   const ref = await prochaineReference(tx, "SO");
+  const financee = c.paiement.mode === "financement";
   const commande = await tx.commandeVente.create({
     data: {
       ref,
       cle,
       partenaireId: partenaire.id,
       date,
-      montantHtCentimes: montantHt,
-      tvaCentimes: montantTva,
-      montantTtcCentimes: montantHt + montantTva,
-      fraisPortCentimes: port,
-      bonsUtilisesCentimes: bons,
+      montantHtCentimes: achat.totalHt,
+      tvaCentimes: achat.tva,
+      montantTtcCentimes: achat.totalTtc,
+      fraisPortCentimes: achat.fraisPortHt + achat.fraisSpecifiquesHt,
+      bonsUtilisesCentimes: achat.bonsHt,
       modePaiement: c.paiement.mode,
       referencePaiement: c.paiement.reference,
-      statut: "confirmee",
-      financee: c.paiement.mode === "financement",
-      livraison: c.livraison,
+      statut: creation.statut,
+      echeancePaiement: creation.echeance,
+      financee,
+      livraison: { ...c.livraison, mode: devis.modeLivraison, fraisPortHt: achat.fraisPortHt, fraisSpecifiquesHt: achat.fraisSpecifiquesHt },
       lignes: {
-        create: lignes.map((l) => ({
-          varianteId: l.v.id,
+        create: devis.lignes.map((l) => ({
+          varianteId: variantes.find((v) => v.defaultCode === l.defaultCode)!.id,
           quantite: l.quantite,
-          prixUnitaireHtCentimes: l.prixUnitaire,
-          remiseCentimes: l.remise,
+          prixUnitaireHtCentimes: l.prixUnitaireHt,
+          remiseCentimes: l.remiseHt,
         })),
       },
     },
   });
 
-  if (bons > 0) {
+  if (achat.bonsHt > 0) {
     await tx.mouvementCagnotte.create({
-      data: {
-        partenaireId: partenaire.id,
-        type: "utilisation",
-        montantCentimes: -bons,
-        commandeId: commande.id,
-        cle: `utilisation:${ref}`,
-        date,
-      },
+      data: { partenaireId: partenaire.id, type: "utilisation", montantCentimes: -achat.bonsHt, commandeId: commande.id, cle: `utilisation:${ref}`, date },
     });
   }
-  if (lignes.some((l) => l.offerte)) {
+  if (devis.lignes.some((l) => l.offerte)) {
     await tx.partenaire.update({ where: { id: partenaire.id }, data: { bienvenueRecue: true } });
   }
+  if (creation.statut === "payee" && !financee) await creerFacture(tx, commande.id, date);
 
-  await tx.facture.create({
+  return { ref, id: commande.id, creee: true, echeance: creation.echeance };
+}
+
+/** Avoir d'un remboursement (numérotation continue, la facture d'origine n'est jamais modifiée). */
+async function creerAvoir(tx: Tx, commandeId: number, montantTtc: number, motif: string, date: Date) {
+  const c = await tx.commandeVente.findUniqueOrThrow({ where: { id: commandeId } });
+  const ht = c.montantTtcCentimes ? Math.round((montantTtc * c.montantHtCentimes) / c.montantTtcCentimes) : montantTtc;
+  return tx.facture.create({
     data: {
       numero: await prochainNumeroFacture(tx, date),
-      type: "facture",
-      partenaireId: partenaire.id,
-      commandeId: commande.id,
+      type: "remboursement",
+      partenaireId: c.partenaireId,
+      commandeId: c.id,
       date,
-      montantHtCentimes: commande.montantHtCentimes,
-      tvaCentimes: commande.tvaCentimes,
-      montantTtcCentimes: commande.montantTtcCentimes,
-      etatPaiement: "paye",
-      lignes: [
-        ...lignes.map((l) => ({
-          libelle: `${l.v.modele.marque} ${l.v.modele.nom}${l.v.configuration ? ` — ${l.v.configuration}` : ""}${l.offerte ? " (offert)" : ""}`,
-          reference: l.v.defaultCode,
-          quantite: l.quantite,
-          prixUnitaireHtCentimes: l.prixUnitaire,
-          remiseCentimes: l.remise,
-          totalHtCentimes: l.net,
-        })),
-        ...(port > 0
-          ? [{ libelle: "Frais de port", reference: "PORT", quantite: 1, prixUnitaireHtCentimes: port, remiseCentimes: 0, totalHtCentimes: port }]
-          : []),
-        ...(bons > 0
-          ? [{ libelle: "Bons d'achat utilisés", reference: "BONS", quantite: 1, prixUnitaireHtCentimes: -bons, remiseCentimes: 0, totalHtCentimes: -bons }]
-          : []),
-      ],
+      montantHtCentimes: -ht,
+      tvaCentimes: -(montantTtc - ht),
+      montantTtcCentimes: -montantTtc,
+      etatPaiement: "rembourse",
+      lignes: [{ libelle: `Remboursement — ${motif}`, reference: c.ref, quantite: 1, prixUnitaireHtCentimes: -ht, remiseCentimes: 0, totalHtCentimes: -ht }],
     },
   });
+}
 
-  return { ref, id: commande.id, creee: true };
+/** Enregistre un remboursement (idempotent par clé) : avoir, statut de la commande. */
+export async function enregistrerRemboursementTx(tx: Tx, r: EnregistrementRemboursement, cle: string, date = new Date()) {
+  const deja = await tx.remboursement.findUnique({ where: { cle } });
+  if (deja?.avoirNumero) return { avoir: deja.avoirNumero };
+  // Même remboursement Stripe déjà enregistré (décidé dans Odoo, puis notifié par Stripe).
+  if (r.referenceStripe) {
+    const meme = await tx.remboursement.findFirst({ where: { referenceStripe: r.referenceStripe, etat: "execute" } });
+    if (meme?.avoirNumero) return { avoir: meme.avoirNumero };
+  }
+  const commande = await tx.commandeVente.findUnique({ where: { ref: r.commandeRef }, include: { remboursements: true } });
+  if (!commande) throw new NotFound("Commande", r.commandeRef);
+  const avoir = await creerAvoir(tx, commande.id, r.montantTtc, r.motif, date);
+  const donnees = { etat: "execute" as const, referenceStripe: r.referenceStripe, cle, avoirNumero: avoir.numero };
+  if (r.remboursementId) {
+    await tx.remboursement.update({ where: { id: Number(r.remboursementId) }, data: donnees });
+  } else {
+    await tx.remboursement.create({ data: { commandeId: commande.id, montantTtcCentimes: r.montantTtc, motif: r.motif, source: r.source, ...donnees } });
+  }
+  const executes = await tx.remboursement.findMany({ where: { commandeId: commande.id, etat: "execute" } });
+  const total = executes.reduce((s, x) => s + x.montantTtcCentimes, 0);
+  const complet = total >= commande.montantTtcCentimes;
+  await tx.commandeVente.update({ where: { id: commande.id }, data: { statut: complet ? "remboursee" : "remboursee_partiellement" } });
+  if (complet) await tx.facture.updateMany({ where: { commandeId: commande.id, type: "facture" }, data: { etatPaiement: "rembourse" } });
+  return { avoir: avoir.numero };
 }
 
 export const commandesDemo: CommandesOdoo = {
+  async calculerDevis(demande) {
+    return calculerDevis(demande);
+  },
+
   async creerCommandePayee(commande: NouvelleCommande, cle: string) {
     const { ref } = await db().$transaction((tx) => creerCommande(tx, commande, cle));
     return { ref };
+  },
+
+  async creerCommandeVirement(commande: NouvelleCommande, cle: string) {
+    return db().$transaction(async (tx) => {
+      const parametres = await tx.parametresVente.findFirst({ orderBy: { id: "desc" } });
+      const maintenant = new Date();
+      const r = await creerCommande(tx, commande, cle, maintenant, {
+        statut: "en_attente_paiement",
+        echeance: ajouterJours(maintenant, parametres?.delaiVirementJours ?? 7),
+      });
+      return { ref: r.ref, echeance: r.echeance! };
+    });
+  },
+
+  async annulerCommandeEnAttente(ref: string, motif: string) {
+    await db().$transaction(async (tx) => {
+      const c = await tx.commandeVente.findUnique({ where: { ref }, include: { lignes: { include: { variante: { include: { stock: true } } } } } });
+      if (!c) throw new NotFound("Commande", ref);
+      if (c.statut !== "en_attente_paiement") return;
+      for (const l of c.lignes) {
+        if (l.variante.stock) await tx.stock.update({ where: { id: l.variante.stock.id }, data: { quantite: { increment: l.quantite } } });
+      }
+      if (c.bonsUtilisesCentimes > 0) {
+        await tx.mouvementCagnotte.create({
+          data: { partenaireId: c.partenaireId, type: "restitution", montantCentimes: c.bonsUtilisesCentimes, commandeId: c.id, cle: `restitution:${ref}`, date: new Date() },
+        });
+      }
+      if (c.lignes.some((l) => l.prixUnitaireHtCentimes === 0)) {
+        await tx.partenaire.update({ where: { id: c.partenaireId }, data: { bienvenueRecue: false } });
+      }
+      await tx.commandeVente.update({ where: { id: c.id }, data: { statut: "annulee", livraison: { ...(c.livraison as object), motifAnnulation: motif } } });
+    });
   },
 
   async listerCommandes(partenaireRef: string): Promise<ResumeCommande[]> {
@@ -161,7 +245,7 @@ export const commandesDemo: CommandesOdoo = {
   async lireCommande(ref: string): Promise<Commande> {
     const c = await db().commandeVente.findUnique({
       where: { ref },
-      include: { partenaire: true, lignes: { include: { variante: { include: { modele: true } } } } },
+      include: { partenaire: true, lignes: { include: { variante: { include: { modele: true } } } }, remboursements: { where: { etat: "execute" } } },
     });
     if (!c) throw new NotFound("Commande", ref);
     return {
@@ -176,15 +260,52 @@ export const commandesDemo: CommandesOdoo = {
       fraisPortHt: c.fraisPortCentimes,
       bonsUtilisesHt: c.bonsUtilisesCentimes,
       modePaiement: c.modePaiement,
+      referencePaiement: c.referencePaiement,
       financee: c.financee,
+      transporteur: c.transporteur,
       suivi: c.suivi,
+      echeancePaiement: c.echeancePaiement,
+      remboursementsTtc: c.remboursements.reduce((s, r) => s + r.montantTtcCentimes, 0),
       lignes: c.lignes.map((l) => ({
         defaultCode: l.variante.defaultCode,
-        libelle: `${l.variante.modele.marque} ${l.variante.modele.nom}`,
+        libelle: `${l.variante.modele.marque} ${l.variante.modele.nom}${l.variante.configuration ? ` — ${l.variante.configuration}` : ""}`,
         quantite: l.quantite,
         prixUnitaireHt: l.prixUnitaireHtCentimes,
         remiseHt: l.remiseCentimes,
       })),
     };
+  },
+
+  async listerChangements(depuis: Date): Promise<ChangementCommande[]> {
+    const commandes = await db().commandeVente.findMany({
+      where: { modifieLe: { gt: depuis } },
+      include: { partenaire: true, remboursements: { where: { etat: "execute" } } },
+      orderBy: { modifieLe: "asc" },
+    });
+    return commandes.map((c) => ({
+      ref: c.ref,
+      partenaireRef: c.partenaire.ref,
+      statut: statutPublic(c.statut),
+      transporteur: c.transporteur,
+      suivi: c.suivi,
+      remboursementsTtc: c.remboursements.reduce((s, r) => s + r.montantTtcCentimes, 0),
+      modifieLe: c.modifieLe,
+    }));
+  },
+
+  async listerRemboursementsAExecuter(): Promise<RemboursementAExecuter[]> {
+    const liste = await db().remboursement.findMany({ where: { etat: "a_executer", source: "odoo" }, include: { commande: true }, orderBy: { id: "asc" } });
+    return liste.map((r) => ({
+      id: String(r.id),
+      commandeRef: r.commande.ref,
+      paiementRef: r.commande.modePaiement === "virement" ? null : r.commande.referencePaiement,
+      modePaiement: r.commande.modePaiement,
+      montantTtc: r.montantTtcCentimes,
+      motif: r.motif,
+    }));
+  },
+
+  async enregistrerRemboursement(r: EnregistrementRemboursement, cle: string) {
+    return db().$transaction((tx) => enregistrerRemboursementTx(tx, r, cle));
   },
 };

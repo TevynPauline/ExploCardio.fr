@@ -69,6 +69,17 @@ export const stockDemo: StockOdoo = {
     });
   },
 
+  async liberer(cle: string): Promise<void> {
+    await db().$transaction(async (tx) => {
+      const reservees = await tx.reservation.findMany({ where: { cle } });
+      for (const r of reservees) {
+        const v = await tx.variante.findUnique({ where: { defaultCode: r.defaultCode }, include: { stock: true } });
+        if (v?.stock) await tx.stock.update({ where: { id: v.stock.id }, data: { quantite: { increment: r.quantite } } });
+      }
+      await tx.reservation.deleteMany({ where: { cle } });
+    });
+  },
+
   async lireDisponibiliteParc(reference: string, dateSouhaitee: Date): Promise<{ premiereDate: Date }> {
     const v = await db().variante.findUnique({
       where: { defaultCode: reference },

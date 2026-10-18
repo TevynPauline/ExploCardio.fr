@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { pagePaiementDemoDisponible, paiementDemo } from "@/connecteurs/demonstration";
+import { commandesDemo, pagePaiementDemoDisponible, paiementDemo } from "@/connecteurs/demonstration";
 import { euros } from "@/lib/montants";
 import { Button, Card, Champ, Kicker, Retour } from "@/ui";
-import { ouvrirPaiementDeTest, simulerEcheance, simulerRemboursement } from "./actions";
+import { deciderRemboursement, expedierCommande, livrerCommande, ouvrirPaiementDeTest, simulerEcheance, simulerRemboursement, virementRecu } from "./actions";
 
 export const metadata: Metadata = { title: "Paiements de démonstration" };
 
@@ -18,7 +18,7 @@ export default async function Paiements({
 }) {
   if (!pagePaiementDemoDisponible()) notFound();
   const { ok, erreur, paiement } = await searchParams;
-  const [abonnements, paiements] = await Promise.all([paiementDemo.listerAbonnements(), paiementDemo.listerPaiementsAcceptes()]);
+  const [abonnements, paiements, commandes] = await Promise.all([paiementDemo.listerAbonnements(), paiementDemo.listerPaiementsAcceptes(), commandesDemo.lister()]);
   const message = paiement ? `Retour de la page de paiement : paiement ${paiement === "accepte" ? "accepté" : "refusé"}.` : ok;
   return (
     <div className="flex max-w-3xl flex-col gap-6">
@@ -86,6 +86,55 @@ export default async function Paiements({
             <Button type="submit" variante="secondaire">Simuler le remboursement</Button>
           </form>
         )}
+      </Card>
+
+      <Card className="flex flex-col gap-4">
+        <h2 className="text-h3 font-semibold">Commandes (ce que l’équipe fait dans Odoo)</h2>
+        <p className="text-small text-muted">Virement reçu, expédition, livraison, remboursement décidé : le site en informe le client sous quelques minutes.</p>
+        {commandes.length === 0 ? <p>Aucune commande.</p> : null}
+        <ul className="flex list-none flex-col gap-4 p-0">
+          {commandes.map((c) => {
+            const id = c.ref.replace(/[^A-Za-z0-9]/g, "");
+            const rembourse = c.remboursements.reduce((s, r) => s + r.montantTtcCentimes, 0);
+            return (
+              <li key={c.ref} className="flex flex-col gap-2 border-b border-line pb-4" aria-label={`Commande ${c.ref}`}>
+                <p>
+                  <strong>{c.ref}</strong> · {c.partenaire.nom} · {euros(c.montantTtcCentimes)} TTC · {c.modePaiement} · statut : <strong>{c.statut}</strong>
+                  {rembourse ? ` · remboursé ${euros(rembourse)}` : ""}
+                </p>
+                {c.statut === "en_attente_paiement" ? (
+                  <form action={virementRecu} className="flex flex-wrap items-end gap-2">
+                    <input type="hidden" name="commande" value={c.ref} />
+                    <Champ id={`virement-${id}`} name="montant" libelle={`Montant reçu pour ${c.ref} (€ TTC)`} defaultValue={(c.montantTtcCentimes / 100).toFixed(2).replace(".", ",")} />
+                    <Button type="submit" variante="secondaire">Virement reçu</Button>
+                  </form>
+                ) : null}
+                {["payee", "confirmee", "en_preparation"].includes(c.statut) ? (
+                  <form action={expedierCommande} className="flex flex-wrap items-end gap-2">
+                    <input type="hidden" name="commande" value={c.ref} />
+                    <Champ id={`transporteur-${id}`} name="transporteur" libelle={`Transporteur (${c.ref})`} defaultValue="Colissimo" />
+                    <Champ id={`suivi-${id}`} name="suivi" libelle={`Numéro de suivi (${c.ref})`} defaultValue={`FICT-COLIS-${id.slice(-6)}`} />
+                    <Button type="submit" variante="secondaire">Marquer expédiée</Button>
+                  </form>
+                ) : null}
+                {c.statut === "expediee" ? (
+                  <form action={livrerCommande}>
+                    <input type="hidden" name="commande" value={c.ref} />
+                    <Button type="submit" variante="secondaire">Marquer livrée ({c.ref})</Button>
+                  </form>
+                ) : null}
+                {["payee", "confirmee", "en_preparation", "expediee", "livree", "remboursee_partiellement"].includes(c.statut) && !c.financee ? (
+                  <form action={deciderRemboursement} className="flex flex-wrap items-end gap-2">
+                    <input type="hidden" name="commande" value={c.ref} />
+                    <Champ id={`rembourser-${id}`} name="montant" libelle={`Montant à rembourser (${c.ref}, € TTC)`} defaultValue={((c.montantTtcCentimes - rembourse) / 100).toFixed(2).replace(".", ",")} />
+                    <Champ id={`motif-${id}`} name="motif" libelle={`Motif (${c.ref})`} defaultValue="Retour accepté" />
+                    <Button type="submit" variante="secondaire">Décider un remboursement</Button>
+                  </form>
+                ) : null}
+              </li>
+            );
+          })}
+        </ul>
       </Card>
     </div>
   );

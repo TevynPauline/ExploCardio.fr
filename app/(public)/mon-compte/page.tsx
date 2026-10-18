@@ -13,6 +13,7 @@ const RUBRIQUES = [
   { href: "/mon-compte/commandes", titre: "Commandes", texte: "Suivi de vos commandes." },
   { href: "/mon-compte/factures", titre: "Factures", texte: "Vos factures et avoirs." },
   { href: "/mon-compte/locations", titre: "Locations en cours", texte: "Vos mises à disposition." },
+  { href: "/mon-compte/financements", titre: "Financements", texte: "Vos demandes et leur statut." },
   { href: "/mon-compte/bons-achat", titre: "Bons d'achat", texte: "Le solde de votre cagnotte." },
   { href: "/mon-compte/assistance", titre: "Droits d'assistance", texte: "Votre assistance offerte." },
   { href: "/mon-compte/logiciels", titre: "Logiciels Cloud", texte: "Vos accès à la plateforme." },

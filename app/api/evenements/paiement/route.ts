@@ -1,6 +1,10 @@
 import { registre } from "@/connecteurs/registre";
 import { estErreurConnecteur } from "@/connecteurs/erreurs";
+import { enregistrerEffetsCommande } from "@/domaine/commande/effets";
 import { traiterEvenementPaiement } from "@/domaine/paiements";
+
+// Effets métier des paiements : commandes et abonnements (F04).
+enregistrerEffetsCommande();
 
 // Gestionnaire des événements de paiement (T076) : reçoit les événements de Stripe en mode réel
 // et ceux de la page de paiement de démonstration en mode démonstration. La signature est

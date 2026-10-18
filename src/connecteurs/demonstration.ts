@@ -45,6 +45,9 @@ export async function reinitialiserDemonstration(auteur: Auteur): Promise<BilanR
       site.limiteEnvoi.deleteMany(),
       // F03 : paniers des séances (les lignes suivent) ; contenus et sous-catégories conservés
       site.panier.deleteMany(),
+      // F04 : commandes du site et suivis des séances (les demandes de financement sont supprimées plus haut)
+      site.commandeSite.deleteMany(),
+      site.suiviCommande.deleteMany(),
     ]);
     const bilan = await remplirJeuDeDepart(dbDemo(), site);
     await site.journalAction.create({
@@ -199,5 +202,37 @@ export const pannesDemo = {
     exigerOutils();
     await definirPanne(connecteur, active);
     await journaliser(auteur, active ? "demo.panne_activee" : "demo.panne_desactivee", connecteur, null, { active });
+  },
+};
+
+/**
+ * Cycle des commandes en démonstration (F04) : ce que l'équipe fait dans Odoo en mode réel
+ * (virement reçu, expédition, livraison, remboursement décidé). Chaque action est journalisée.
+ */
+export const commandesDemo = {
+  lister: () => {
+    exigerOutils();
+    return administration.listerCommandesRecentes();
+  },
+  async virementRecu(auteur: Auteur, ref: string, montantTtc: number) {
+    exigerOutils();
+    const r = await administration.virementRecu(ref, montantTtc);
+    await journaliser(auteur, "demo.virement_recu", ref, null, { montantTtc, ecart: r.ecart });
+    return r;
+  },
+  async marquerExpediee(auteur: Auteur, ref: string, transporteur: string, suivi: string) {
+    exigerOutils();
+    await administration.marquerExpediee(ref, transporteur, suivi);
+    await journaliser(auteur, "demo.commande_expediee", ref, null, { transporteur, suivi });
+  },
+  async marquerLivree(auteur: Auteur, ref: string) {
+    exigerOutils();
+    await administration.marquerLivree(ref);
+    await journaliser(auteur, "demo.commande_livree", ref, null, {});
+  },
+  async deciderRemboursement(auteur: Auteur, ref: string, montantTtc: number, motif: string) {
+    exigerOutils();
+    await administration.deciderRemboursement(ref, montantTtc, motif);
+    await journaliser(auteur, "demo.remboursement_decide", ref, null, { montantTtc, motif });
   },
 };

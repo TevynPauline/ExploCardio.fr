@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { paiementDemo, ValeurRefusee } from "@/connecteurs/demonstration";
+import { commandesDemo, paiementDemo, ValeurRefusee } from "@/connecteurs/demonstration";
 import { estErreurConnecteur } from "@/connecteurs/erreurs";
 import { centimesDepuisSaisie } from "@/lib/montants";
 import { exigerAdministrateur } from "@/lib/roles";
@@ -50,5 +50,76 @@ export async function simulerRemboursement(donnees: FormData) {
     const montant = centimesDepuisSaisie(String(donnees.get("montant") ?? ""));
     if (montant === null) throw new ValeurRefusee("Remboursement : montant invalide (exemple : 50,00).");
     await paiementDemo.simulerRemboursement(a, ref, montant, String(donnees.get("motif") || "remboursement de démonstration"));
+    await suivreAussitot();
   });
+}
+
+// --- Cycle des commandes (F04) -----------------------------------------------------------------
+
+export async function virementRecu(donnees: FormData) {
+  const a = await auteur();
+  const ref = String(donnees.get("commande"));
+  const montant = centimesDepuisSaisie(String(donnees.get("montant") ?? ""));
+  if (montant === null || montant <= 0) retour({ erreur: "Virement : montant invalide (exemple : 120,00)." });
+  let ecart = 0;
+  await executerSans(async () => {
+    ecart = (await commandesDemo.virementRecu(a, ref, montant!)).ecart;
+  });
+  if (ecart !== 0) {
+    const { alerterEquipe } = await import("@/domaine/commande/notifications");
+    await alerterEquipe(
+      "Virement d'un montant différent",
+      `Le virement reçu pour la commande ${ref} diffère du montant attendu de ${(ecart / 100).toFixed(2)} €. La commande reste en attente.`,
+      `ecart-virement:${ref}`,
+    );
+    retour({ erreur: `Montant différent de la commande (écart ${(ecart / 100).toFixed(2).replace(".", ",")} €) : la commande reste en attente et l'équipe est alertée.` });
+  }
+  // En démonstration, le site est mis à jour tout de suite (en temps normal : tâche du matin).
+  const { traiterVirements } = await import("@/domaine/commande/virement");
+  await traiterVirements();
+  retour({ ok: `Virement enregistré pour ${ref} : commande payée et facturée, client prévenu.` });
+}
+
+/** En démonstration, le suivi des commandes passe aussitôt (en temps normal : toutes les 5 minutes). */
+async function suivreAussitot() {
+  const { suivreCommandes } = await import("@/domaine/commande/suivi");
+  await suivreCommandes();
+}
+
+export async function expedierCommande(donnees: FormData) {
+  const a = await auteur();
+  const ref = String(donnees.get("commande"));
+  await executer(`Commande ${ref} marquée expédiée : client prévenu.`, async () => {
+    await commandesDemo.marquerExpediee(a, ref, String(donnees.get("transporteur") ?? ""), String(donnees.get("suivi") ?? ""));
+    await suivreAussitot();
+  });
+}
+
+export async function livrerCommande(donnees: FormData) {
+  const a = await auteur();
+  const ref = String(donnees.get("commande"));
+  await executer(`Commande ${ref} marquée livrée.`, async () => {
+    await commandesDemo.marquerLivree(a, ref);
+    await suivreAussitot();
+  });
+}
+
+export async function deciderRemboursement(donnees: FormData) {
+  const a = await auteur();
+  const ref = String(donnees.get("commande"));
+  const montant = centimesDepuisSaisie(String(donnees.get("montant") ?? ""));
+  if (montant === null || montant <= 0) retour({ erreur: "Remboursement : montant invalide (exemple : 50,00)." });
+  await executer(`Remboursement décidé pour ${ref} : exécuté, avoir émis, client prévenu.`, async () => {
+    await commandesDemo.deciderRemboursement(a, ref, montant!, String(donnees.get("motif") ?? ""));
+    await suivreAussitot();
+  });
+}
+
+async function executerSans(operation: () => Promise<void>) {
+  try {
+    await operation();
+  } catch (e) {
+    if (e instanceof ValeurRefusee || estErreurConnecteur(e)) retour({ erreur: e.message });
+    throw e;
+  }
 }

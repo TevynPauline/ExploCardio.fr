@@ -54,6 +54,15 @@ export const PARAMETRES_INITIAUX: Record<string, string> = {
   "services.financement.tarif": "",
   "services.installation.tarif": "",
   "financement.mention": "Montant indicatif, sous réserve d'acceptation par notre partenaire financier.",
+  // F04 : heure limite de l'express (D2) ; coordonnées du virement (D4, fictives en démonstration) ;
+  // rappel avant la fin de la réservation d'une commande en virement (D5).
+  "commande.heure_limite_express": "14:00",
+  "virement.titulaire": "ExploCardio.fr (démonstration — coordonnées fictives)",
+  "virement.iban": "FR76 0000 0000 0000 0000 0000 000",
+  "virement.bic": "DEMOFRPPXXX",
+  "virement.rappel_jours": "2",
+  // Bons d'achat au panier : activés quand F06 est livré (D7).
+  "fidelite.bons_au_panier": "false",
 };
 
 export async function remplirContenusInitiaux(db: PrismaClient) {

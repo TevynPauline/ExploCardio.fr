@@ -134,7 +134,17 @@ export function SelecteurFormule({ nom, formules, variantes, contenuPackMad, men
               </p>
             ) : null}
             <Disponibilite etat={dispo} />
-            <Link href={contact("Mise à disposition")} className="ec-btn ec-btn--primary self-start">Demander une mise à disposition</Link>
+            {dispo && dispo.etat !== "indisponible" ? (
+              <AjoutPanier
+                key={`mad-${variante.defaultCode}`}
+                defaultCode={variante.defaultCode}
+                formule="mise_a_disposition"
+                prixAffiche={variante.offreMad.premierMoisHt}
+                libelle="Ajouter la mise à disposition au panier"
+              />
+            ) : (
+              <Link href={contact("Mise à disposition")} className="ec-btn ec-btn--secondary self-start">Nous contacter</Link>
+            )}
           </>
         ) : null}
 
@@ -159,7 +169,7 @@ export function SelecteurFormule({ nom, formules, variantes, contenuPackMad, men
               ))}
             </ul>
             <p className="text-small text-muted">{mentionFinancement}</p>
-            <Link href={contact("Financement")} className="ec-btn ec-btn--primary self-start">Demander mon financement</Link>
+            <Link href={`/financement/demande?article=${encodeURIComponent(variante.defaultCode)}`} className="ec-btn ec-btn--primary self-start">Demander mon financement</Link>
           </>
         ) : null}
       </div>

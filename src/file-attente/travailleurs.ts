@@ -27,6 +27,32 @@ export async function demarrerTravailleurs() {
     const { purgerPaniersAnonymes } = await import("@/domaine/catalogue/panier");
     await purgerPaniersAnonymes();
   });
+  // F04 : rattrapage des commandes payées non enregistrées et des paiements abandonnés.
+  await boss.createQueue("rattrapage-commandes").catch(() => undefined);
+  await boss.schedule("rattrapage-commandes", "*/5 * * * *");
+  await boss.work("rattrapage-commandes", async () => {
+    const { rattraperCommandes } = await import("@/domaine/commande/effets");
+    await rattraperCommandes();
+  });
+  // F04 : suivi des commandes (expédition, annulation, remboursements), toutes les 5 minutes (D6).
+  await boss.createQueue("suivi-commandes").catch(() => undefined);
+  await boss.schedule("suivi-commandes", "*/5 * * * *");
+  await boss.work("suivi-commandes", async () => {
+    const { suivreCommandes } = await import("@/domaine/commande/suivi");
+    await suivreCommandes();
+  });
+  // F04 : virements (rappel, réception, annulation à l'échéance), chaque matin.
+  await boss.createQueue("virements").catch(() => undefined);
+  await boss.schedule("virements", "0 7 * * *");
+  await boss.work("virements", async () => {
+    const { traiterVirements } = await import("@/domaine/commande/virement");
+    await traiterVirements();
+  });
+  // F04 : copie des demandes de financement en opportunités, quand Odoo était injoignable.
+  const { FILE_OPPORTUNITES, copierEnOpportunite } = await import("@/domaine/financement/demande");
+  await traiterFile<{ demandeId: string }>(FILE_OPPORTUNITES, async ({ demandeId }) => {
+    if (!(await copierEnOpportunite(demandeId, { depuisFile: true }))) throw new Error("Odoo injoignable : copie de la demande reportée.");
+  });
   await traiterFile<{ compteId: string }>(FILE_FICHE_CLIENT, async ({ compteId }) => {
     await creerFicheClient(compteId);
   });

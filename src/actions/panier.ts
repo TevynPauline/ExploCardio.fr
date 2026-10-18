@@ -3,7 +3,18 @@
 import { randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
 import { compteConnecte } from "@/domaine/comptes/session";
-import { ajouterAuPanier, COOKIE_PANIER, PURGE_APRES_JOURS, type ResultatAjout } from "@/domaine/catalogue/panier";
+import {
+  ajouterAuPanier,
+  appliquerCodePromo,
+  COOKIE_PANIER,
+  lignesPanier,
+  modifierLigne,
+  panierPour,
+  PURGE_APRES_JOURS,
+  supprimerLigne,
+  utiliserBons,
+  type ResultatAjout,
+} from "@/domaine/catalogue/panier";
 
 // Ajout au panier (F03, D1) : client connecté → panier du compte ; visiteur → panier lié à un
 // cookie nécessaire au service (sans consentement, déclaré dans la page Cookies).
@@ -39,4 +50,36 @@ export async function actionAjouterAuPanier(saisie: {
     });
   }
   return resultat;
+}
+
+// --- Édition du panier (F04, US1) ------------------------------------------------------------
+
+/** Identité du panier courant : compte connecté, sinon cookie du visiteur. */
+async function identiteCourante() {
+  const compte = await compteConnecte();
+  if (compte) return { compteId: compte.id };
+  return { jeton: (await cookies()).get(COOKIE_PANIER)?.value ?? null };
+}
+
+export async function actionModifierLigne(ligneId: string, quantite: number): Promise<boolean> {
+  return modifierLigne(await identiteCourante(), String(ligneId), Math.trunc(Number(quantite)));
+}
+
+export async function actionSupprimerLigne(ligneId: string): Promise<boolean> {
+  return supprimerLigne(await identiteCourante(), String(ligneId));
+}
+
+export async function actionCodePromo(code: string): Promise<void> {
+  await appliquerCodePromo(await identiteCourante(), String(code ?? ""));
+}
+
+export async function actionUtiliserBons(utiliser: boolean): Promise<void> {
+  await utiliserBons(await identiteCourante(), Boolean(utiliser));
+}
+
+/** Nombre d'articles du panier, pour la pastille de l'en-tête (lu après l'affichage). */
+export async function actionNombreArticles(): Promise<number> {
+  const panier = await panierPour(await identiteCourante(), false);
+  if (!panier) return 0;
+  return (await lignesPanier(panier.id)).reduce((s, l) => s + l.quantite, 0);
 }

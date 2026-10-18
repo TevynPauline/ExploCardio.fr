@@ -9,6 +9,7 @@ import { emailConfirmationAdresse, emailReinitialisationMotDePasse } from "@/ema
 import { emailsComptes } from "@/emails/modeles-comptes";
 import { MESSAGE_MOT_DE_PASSE, motDePasseConforme } from "@/domaine/comptes/motdepasse";
 import { compterEchec, estBloque, journaliserSecurite, notifier, reussiteConnexion } from "@/domaine/comptes/securite";
+import { COOKIE_PANIER, fusionnerPaniers } from "@/domaine/catalogue/panier";
 
 // Authentification (R7) : email et mot de passe, réinitialisation, double authentification par
 // application avec codes de secours. Elle est OBLIGATOIRE pour les rôles d'équipe (admin,
@@ -115,6 +116,12 @@ export const auth = betterAuth({
         await journaliserSecurite("double_authentification_desactivee", session.user.id);
         await notifier(session.user.email, await emailsComptes.doubleAuthentification(false), "double authentification désactivée");
       }
+      // Connexion réussie (mot de passe, ou code de double authentification) : le panier du
+      // visiteur rejoint celui du compte (F04, FR-005).
+      const ouverte = ctx.context.newSession;
+      if (reussi && ouverte && ["/sign-in/email", "/two-factor/verify-totp", "/two-factor/verify-backup-code"].includes(ctx.path)) {
+        await fusionnerPanierALaConnexion(ctx.headers?.get("cookie") ?? null, ouverte.user.id);
+      }
       if (ctx.path !== "/sign-in/email") return;
       const email = ((ctx.body ?? {}) as { email?: string }).email;
       if (!email) return;
@@ -140,5 +147,16 @@ export const auth = betterAuth({
     nextCookies(),
   ],
 });
+
+/** Fusion du panier du visiteur (cookie) dans celui du compte client qui se connecte. */
+async function fusionnerPanierALaConnexion(cookies: string | null, utilisateurId: string) {
+  const jeton = cookies
+    ?.split(/;\s*/)
+    .find((c) => c.startsWith(`${COOKIE_PANIER}=`))
+    ?.slice(COOKIE_PANIER.length + 1);
+  if (!jeton) return;
+  const compte = await dbSite().compteClient.findUnique({ where: { utilisateurId }, select: { id: true } });
+  if (compte) await fusionnerPaniers(decodeURIComponent(jeton), compte.id);
+}
 
 export type SessionAuth = typeof auth.$Infer.Session;

@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: "Coordonnées et textes" };
 
 export default async function Coordonnees({ searchParams }: { searchParams: Promise<{ ok?: string; erreur?: string }> }) {
   const r = await searchParams;
-  const lignes = await dbSite().parametre.findMany({ where: { OR: [{ cle: { startsWith: "contact." } }, { cle: { startsWith: "accueil." } }] } });
+  const lignes = await dbSite().parametre.findMany({ where: { OR: [{ cle: { startsWith: "contact." } }, { cle: { startsWith: "accueil." } }, { cle: { startsWith: "virement." } }, { cle: "commande.heure_limite_express" }] } });
   const v = (cle: string) => lignes.find((l) => l.cle === cle)?.valeur ?? "";
   let motifs: string[] = [];
   try {
@@ -44,6 +44,27 @@ export default async function Coordonnees({ searchParams }: { searchParams: Prom
           </ChampAdmin>
           <ChampAdmin id="motifs" libelle="Motifs (un par ligne)" aide="Le motif « Assistance » affiche les boutons WhatsApp au-dessus du formulaire.">
             <textarea id="motifs" name="motifs" rows={5} defaultValue={motifs.join("\n")} className={`${classeChamp} py-2`} />
+          </ChampAdmin>
+        </Card>
+        <Card className="grid gap-3 sm:grid-cols-2">
+          <h2 className="text-h3 font-semibold sm:col-span-2">Commandes et virement</h2>
+          <p className="text-muted sm:col-span-2">Coordonnées bancaires indiquées aux clients qui paient par virement. Le virement ne s’affiche pas tant que l’IBAN est vide.</p>
+          <ChampAdmin id="titulaire" libelle="Titulaire du compte">
+            <input id="titulaire" name="titulaire" defaultValue={v("virement.titulaire")} className={classeChamp} />
+          </ChampAdmin>
+          <ChampAdmin id="bic" libelle="BIC">
+            <input id="bic" name="bic" defaultValue={v("virement.bic")} className={classeChamp} />
+          </ChampAdmin>
+          <div className="sm:col-span-2">
+            <ChampAdmin id="iban" libelle="IBAN">
+              <input id="iban" name="iban" defaultValue={v("virement.iban")} className={classeChamp} />
+            </ChampAdmin>
+          </div>
+          <ChampAdmin id="rappelJours" libelle="Rappel avant l’échéance (jours)">
+            <input id="rappelJours" name="rappelJours" type="number" min={1} max={15} defaultValue={v("virement.rappel_jours") || "2"} className={classeChamp} />
+          </ChampAdmin>
+          <ChampAdmin id="heureExpress" libelle="Heure limite de la livraison express" aide="Après cette heure, l’express part le jour ouvré suivant.">
+            <input id="heureExpress" name="heureExpress" type="time" defaultValue={v("commande.heure_limite_express") || "14:00"} className={classeChamp} />
           </ChampAdmin>
         </Card>
         <Card className="grid gap-3 sm:grid-cols-2">

@@ -24,5 +24,7 @@ export interface StockOdoo {
   lireDisponibilite(references: string[]): Promise<Disponibilite[]>;
   /** Lève OutOfStock si une quantité n'est pas disponible. */
   reserver(lignes: LigneReservation[], cle: Cle): Promise<{ reference: string }>;
+  /** Libère une réservation non consommée (paiement refusé ou abandonné, F04) ; sans effet sinon. */
+  liberer(cle: Cle): Promise<void>;
   lireDisponibiliteParc(reference: string, dateSouhaitee: Date): Promise<{ premiereDate: Date }>;
 }

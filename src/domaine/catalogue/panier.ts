@@ -117,3 +117,72 @@ export async function purgerPaniersAnonymes(maintenant = new Date()): Promise<nu
   const { count } = await dbSite().panier.deleteMany({ where: { compteId: null, modifieLe: { lt: limite } } });
   return count;
 }
+
+// --- Édition du panier et fusion à la connexion (F04, US1) ---------------------------------
+
+/** Ligne appartenant au panier de l'identité, sinon null (on ne touche jamais au panier d'un autre). */
+async function ligneDe(identite: IdentitePanier, ligneId: string) {
+  const panier = await panierPour(identite, false);
+  if (!panier) return null;
+  return dbSite().lignePanier.findFirst({ where: { id: ligneId, panierId: panier.id } });
+}
+
+export async function modifierLigne(identite: IdentitePanier, ligneId: string, quantite: number): Promise<boolean> {
+  if (!Number.isInteger(quantite) || quantite < 1 || quantite > QUANTITE_MAX) return false;
+  const ligne = await ligneDe(identite, ligneId);
+  if (!ligne) return false;
+  await dbSite().lignePanier.update({ where: { id: ligne.id }, data: { quantite } });
+  await dbSite().panier.update({ where: { id: ligne.panierId }, data: { modifieLe: new Date() } });
+  return true;
+}
+
+export async function supprimerLigne(identite: IdentitePanier, ligneId: string): Promise<boolean> {
+  const ligne = await ligneDe(identite, ligneId);
+  if (!ligne) return false;
+  await dbSite().lignePanier.delete({ where: { id: ligne.id } });
+  await dbSite().panier.update({ where: { id: ligne.panierId }, data: { modifieLe: new Date() } });
+  return true;
+}
+
+/** Enregistre le code promo (sa validité est donnée par le devis d'Odoo) ; vide = retiré. */
+export async function appliquerCodePromo(identite: IdentitePanier, code: string): Promise<void> {
+  const panier = await panierPour(identite, false);
+  if (!panier) return;
+  const propre = code.trim().toUpperCase().slice(0, 40);
+  await dbSite().panier.update({ where: { id: panier.id }, data: { codePromo: propre || null } });
+}
+
+export async function utiliserBons(identite: IdentitePanier, utiliser: boolean): Promise<void> {
+  const panier = await panierPour(identite, false);
+  if (panier) await dbSite().panier.update({ where: { id: panier.id }, data: { utiliserBons: utiliser } });
+}
+
+/**
+ * À la connexion (FR-005) : le panier du visiteur est versé dans celui du compte (quantités
+ * additionnées par référence et formule, plafonnées), puis supprimé. Sans effet s'il est vide.
+ */
+export async function fusionnerPaniers(jeton: string | null | undefined, compteId: string): Promise<void> {
+  if (!jeton) return;
+  const visiteur = await panierPour({ jeton }, false);
+  if (!visiteur) return;
+  const lignes = await lignesPanier(visiteur.id);
+  if (lignes.length) {
+    const compte = await panierPour({ compteId }, true);
+    await dbSite().$transaction(async (tx) => {
+      for (const l of lignes) {
+        const existante = await tx.lignePanier.findUnique({
+          where: { panierId_defaultCode_formule: { panierId: compte!.id, defaultCode: l.defaultCode, formule: l.formule } },
+        });
+        if (existante) {
+          await tx.lignePanier.update({ where: { id: existante.id }, data: { quantite: Math.min(QUANTITE_MAX, existante.quantite + l.quantite) } });
+        } else {
+          await tx.lignePanier.create({
+            data: { panierId: compte!.id, defaultCode: l.defaultCode, formule: l.formule, quantite: l.quantite, prixHtConstate: l.prixHtConstate },
+          });
+        }
+      }
+      if (!compte!.codePromo && visiteur.codePromo) await tx.panier.update({ where: { id: compte!.id }, data: { codePromo: visiteur.codePromo } });
+    });
+  }
+  await dbSite().panier.delete({ where: { id: visiteur.id } });
+}

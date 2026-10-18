@@ -29,6 +29,7 @@ export function AjoutPanier({ defaultCode, formule = "achat", quantite = 1, prix
     demarrer(async () => {
       const r = await actionAjouterAuPanier({ defaultCode, formule, quantite, prixAffiche });
       if (!r.ok) return setMessage({ ok: false, texte: r.message });
+      window.dispatchEvent(new Event("ec:panier"));
       const morceaux = [`Ajouté au panier${quantite > 1 ? ` (${quantite})` : ""}.`];
       if (r.prixAChange) morceaux.push(`Le prix a changé : ${euros(r.prixHt)} HT.`);
       if (r.delaiJours) morceaux.push(`Délai : ${r.delaiJours} jours.`);

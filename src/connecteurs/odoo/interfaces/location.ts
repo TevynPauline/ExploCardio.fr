@@ -30,4 +30,9 @@ export interface LocationOdoo {
   resilier(ref: string, date: Date): Promise<{ fin: Date }>;
   annulerResiliation(ref: string): Promise<{ fin: null }>;
   listerLocations(partenaireRef: string): Promise<Location[]>;
+  /**
+   * Facture d'une échéance payée (premier mois ou mois suivant) des abonnements donnés (F04,
+   * FR-029) ; idempotent par clé.
+   */
+  facturerEcheance(echeance: { abonnementRefs: string[]; montantTtc: Centimes; paiementRef: string | null; libelle: string }, cle: Cle): Promise<{ facture: string }>;
 }

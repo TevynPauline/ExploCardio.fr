@@ -20,6 +20,8 @@ export default async function MiseEnPageBackOffice({ children }: { children: Rea
     { href: "/admin", libelle: "Tableau de bord" },
     ...(role === "admin" || role === "commercial" ? [{ href: "/admin/comptes", libelle: "Comptes" }] : []),
     ...(role === "admin" || role === "commercial" ? [{ href: "/admin/catalogue", libelle: "Catalogue" }] : []),
+    { href: "/admin/commandes", libelle: "Commandes" },
+    ...(role === "admin" || role === "commercial" ? [{ href: "/admin/financements", libelle: "Financements" }] : []),
     ...(role === "admin" ? [{ href: "/admin/contenus", libelle: "Contenus" }] : []),
     ...(outilsDemo
       ? [
@@ -46,8 +48,8 @@ export default async function MiseEnPageBackOffice({ children }: { children: Rea
               ))}
             </ul>
           </nav>
-          <div className="flex items-center gap-3 text-small text-muted">
-            <span>
+          <div className="flex min-w-0 flex-wrap items-center gap-3 text-small text-muted">
+            <span className="min-w-0 break-all">
               {user.email} · {role}
             </span>
             <BoutonDeconnexion />

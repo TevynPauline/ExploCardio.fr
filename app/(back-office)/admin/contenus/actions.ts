@@ -157,7 +157,20 @@ export async function enregistrerCoordonnees(d: FormData) {
     if (telephone && !/^[+0-9 ().-]{6,20}$/.test(telephone)) throw new SaisieRefusee("Téléphone : numéro invalide.");
     const motifs = t(d, "motifs").split("\n").map((m) => m.trim()).filter(Boolean);
     if (!motifs.length) throw new SaisieRefusee("Motifs : indiquez au moins un motif (un par ligne).");
+    const iban = t(d, "iban").replace(/\s+/g, "").toUpperCase();
+    if (iban && !/^[A-Z]{2}[0-9]{2}[A-Z0-9]{10,30}$/.test(iban)) throw new SaisieRefusee("IBAN : format invalide.");
+    const bic = t(d, "bic").trim().toUpperCase();
+    if (bic && !/^[A-Z0-9]{8}([A-Z0-9]{3})?$/.test(bic)) throw new SaisieRefusee("BIC : format invalide (8 ou 11 caractères).");
+    const heureExpress = t(d, "heureExpress").trim();
+    if (!/^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(heureExpress)) throw new SaisieRefusee("Heure limite express : format HH:MM attendu.");
+    const rappel = Number(t(d, "rappelJours"));
+    if (!Number.isInteger(rappel) || rappel < 1 || rappel > 15) throw new SaisieRefusee("Rappel de virement : entre 1 et 15 jours.");
     const valeurs: Record<string, string> = {
+      "virement.titulaire": exigerTexte(t(d, "titulaire"), "Titulaire du compte", 0, 100),
+      "virement.iban": iban,
+      "virement.bic": bic,
+      "virement.rappel_jours": String(rappel),
+      "commande.heure_limite_express": heureExpress,
       "contact.email": email,
       "contact.telephone": telephone,
       "contact.adresse": exigerTexte(t(d, "adresse"), "Adresse", 0, 200),

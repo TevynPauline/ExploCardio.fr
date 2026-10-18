@@ -42,6 +42,21 @@ Détail des champs ajoutés par F03 : [../../003-catalogue-fiches-produit/contra
 | Lire les commandes d'un client | partenaire | commandes et statuts, suivi | — | F02, F04 |
 | Lire une commande | référence | détail, statut, expédition | `NotFound` | F04 |
 
+Ajouts de F04 (détail : [../../004-panier-paiement-financement/contracts/odoo.md](../../004-panier-paiement-financement/contracts/odoo.md)) :
+
+| Opération | Entrée | Sortie | Erreurs | Utilisée par |
+|---|---|---|---|---|
+| Calculer un devis | client (facultatif), lignes, code promo, bons demandés, mode de livraison | prix appliqués, remises, code promo (ou motif), bons, frais de port, TVA, totaux, blocs achat et abonnement, modes de livraison, règle de cumul | `NotFound`, `ServiceUnavailable` | F04 |
+| Créer une commande à régler par virement | comme une commande payée, clé | référence, échéance de réservation | `OutOfStock` | F04 |
+| Annuler une commande en attente | commande, motif | — (stock libéré) | `NotFound` | F04 |
+| Lister les changements de commandes | depuis (date) | statut, transporteur, suivi, remboursements | — | F04 |
+| Lister les remboursements à exécuter | — | remboursements décidés dans Odoo | — | F04 |
+| Enregistrer un remboursement | commande, montant, source, référence Stripe, clé | avoir | `NotFound` | F04 |
+
+Statuts d'une commande (F04) : `en_attente_paiement`, `payee`, `en_preparation`, `expediee`,
+`livree`, `annulee`, `remboursee_partiellement`, `remboursee`. Le stock gagne « Libérer une
+réservation » (clé), utilisée quand un paiement est refusé ou abandonné.
+
 ## 5. Factures
 
 | Opération | Entrée | Sortie | Erreurs | Utilisée par |
