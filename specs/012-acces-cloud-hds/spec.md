@@ -226,8 +226,9 @@ souscription n'est possible.
   données hébergées sur la plateforme relèvent du contrat entre le médecin, ExploCardio.fr
   et Nelson.
 - Compte suspendu sur le site : les accès sont suspendus aussi.
-- Appareil acheté puis remboursé avant usage : l'accès ouvert est fermé, sans délai de
-  grâce s'il n'a jamais été utilisé.
+- Appareil acheté puis remboursé intégralement **avant sa livraison** : l'accès ouvert est
+  fermé sans délai de grâce ; après la livraison, le délai de grâce s'applique (le site ne
+  sait pas si l'accès a servi — décision D2 du plan).
 - Plateforme indisponible au moment d'une fermeture : la fermeture est reprise ; l'accès
   n'est jamais laissé ouvert au-delà de la date prévue sans alerte.
 - Médecin qui écrit sur WhatsApp en mentionnant un patient : cela se passe hors du site ;
@@ -261,7 +262,8 @@ souscription n'est possible.
   mécanisme d'abonnement de F04.
 - **FR-030** : Un médecin qui souscrit l'abonnement avant la fin de la période incluse DOIT
   conserver son accès sans interruption. Sans souscription, l'accès suit les règles de fin
-  des droits (délai de grâce, puis fermeture).
+  des droits (délai de grâce, puis fermeture). Il DOIT pouvoir résilier son abonnement
+  depuis « Mes logiciels Cloud » : fin au terme du mois payé, puis délai de grâce.
 
 **Fin des droits**
 
@@ -292,8 +294,8 @@ souscription n'est possible.
 
 - **FR-015** : L'administrateur et le support DOIVENT pouvoir ouvrir, suspendre ou fermer un
   accès depuis le back-office (F13), avec un motif. Le client DOIT en être prévenu.
-- **FR-016** : Un impayé non régularisé (F05) DOIT suspendre l'accès ; la régularisation DOIT
-  le rétablir.
+- **FR-016** : Un impayé non régularisé, d'une location (F05) comme d'un abonnement
+  logiciel, DOIT suspendre l'accès ; la régularisation DOIT le rétablir.
 - **FR-017** : Une suspension ou une fermeture de compte sur le site DOIT suspendre ou fermer
   les accès correspondants.
 - **FR-018** : Toute ouverture, suspension, réouverture et fermeture DOIT être journalisée
@@ -309,8 +311,9 @@ souscription n'est possible.
   professionnelles, le logiciel, l'action et la date à respecter. L'équipe DOIT confirmer
   la tâche dans le back-office une fois réalisée ; le statut et le client sont alors mis à
   jour.
-- **FR-021** : En mode manuel, une tâche d'ouverture non confirmée à l'approche de la date
-  de livraison, ou une tâche de fermeture non confirmée à sa date, DOIT alerter l'équipe.
+- **FR-021** : En mode manuel, une tâche d'ouverture non confirmée la veille de la date de
+  livraison (location) ou un jour ouvré après le paiement (achat, abonnement), ou une tâche
+  de fermeture non confirmée à sa date, DOIT alerter l'équipe.
 - **FR-022** : Le choix du mode NE DOIT modifier ni les pages, ni le parcours du médecin, ni
   les emails qu'il reçoit (principe III).
 
@@ -321,8 +324,10 @@ souscription n'est possible.
   souscription possible.
 - **FR-024** : La page DOIT proposer un formulaire d'intérêt (coordonnées, besoin), dont les
   demandes sont visibles par l'équipe dans le back-office.
-- **FR-025** : L'administrateur DOIT pouvoir retirer le badge « En préparation » et ouvrir la
-  souscription quand le partenariat est finalisé.
+- **FR-025** : L'administrateur DOIT pouvoir retirer le badge « En préparation » quand le
+  partenariat est finalisé : la page présente alors l'offre avec son tarif (fixé dans Odoo)
+  et renvoie vers les logiciels Cloud souscriptibles ; aucun parcours de souscription
+  distinct n'est prévu en V1.
 
 **Données et conformité**
 
@@ -338,7 +343,8 @@ souscription n'est possible.
 ### Key Entities
 
 - **Compte plateforme** : médecin concerné, identifiant sur la plateforme (jamais de mot de
-  passe), état.
+  passe), état ; tenu par la plateforme et relu par le connecteur, il n'est pas copié sur le
+  site.
 - **Droit logiciel** : logiciel, origine (période incluse à l'achat, location, abonnement,
   geste manuel), date
   de début, date de fin prévue, délai de grâce, état (en cours d'ouverture, actif, en délai
@@ -374,10 +380,10 @@ d'acceptation des parcours se vérifient en phase 1.
   en moins de 5 minutes après son déclenchement.
 - **SC-009** [Phase 3] : Un accès fermé sur le site n'est plus utilisable sur la plateforme
   réelle au terme du délai de grâce.
-- **SC-011** [Phase 1] : Un médecin qui souscrit l'abonnement avant la fin de sa période
-  incluse ne subit aucune interruption d'accès.
 - **SC-010** [Phase 1] : Un audit de la rubrique « Mes logiciels Cloud » ne relève aucune
   non-conformité WCAG 2.2 AA.
+- **SC-011** [Phase 1] : Un médecin qui souscrit l'abonnement avant la fin de sa période
+  incluse ne subit aucune interruption d'accès.
 
 ## Assumptions
 
