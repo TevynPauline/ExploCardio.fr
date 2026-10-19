@@ -8,6 +8,9 @@ import { modeDuSite } from "@/lib/config";
 import { Kicker } from "../Kicker";
 import { CarteProduit } from "./CarteProduit";
 import { FicheConsommable } from "./FicheConsommable";
+import { gainsDe } from "@/domaine/fidelite/gains";
+import { GainsFidelite } from "../fidelite/Gains";
+import { PromotionsFiche } from "../fidelite/PromotionsFiche";
 import { Galerie } from "./Galerie";
 import { OngletsFiche } from "./OngletsFiche";
 import { SelecteurFormule } from "./SelecteurFormule";
@@ -90,6 +93,7 @@ export async function Fiche({ cle, slug, parametres }: Props) {
             {f.textes.descriptionCourte ? <p className="text-lead">{f.textes.descriptionCourte}</p> : null}
             {modeDuSite() === "demo" ? <p className="text-small text-muted">Version de démonstration : les prix affichés sont inventés.</p> : null}
           </div>
+          <PromotionsFiche variantes={f.variantes} />
           {f.type === "equipement" ? (
             <SelecteurFormule
               nom={f.nom}
@@ -101,7 +105,10 @@ export async function Fiche({ cle, slug, parametres }: Props) {
               configInitiale={un(parametres.config) ?? null}
             />
           ) : (
-            <FicheConsommable variantes={f.variantes} configInitiale={un(parametres.config) ?? null} />
+            <>
+              <FicheConsommable variantes={f.variantes} configInitiale={un(parametres.config) ?? null} />
+              <GainsAchat compteId={compte?.id ?? null} defaultCode={f.variantes[0]!.defaultCode} />
+            </>
           )}
         </div>
       </div>
@@ -120,4 +127,10 @@ export async function Fiche({ cle, slug, parametres }: Props) {
       ) : null}
     </div>
   );
+}
+
+/** F06 (FR-024) : ce qu'un achat de ce consommable rapporte (bons, droits, palier suivant). */
+async function GainsAchat({ compteId, defaultCode }: { compteId: string | null; defaultCode: string }) {
+  const gains = await gainsDe(compteId, [{ defaultCode, quantite: 1 }]);
+  return gains ? <GainsFidelite gains={gains} titre="Cet achat compte pour vos avantages" /> : null;
 }

@@ -2,7 +2,7 @@ import { NotFound } from "../../erreurs";
 import type { DemandeDevis, Devis, LigneDevisCalculee, ModeLivraisonDevis } from "../interfaces";
 import { prixClient } from "./catalogue";
 import { INCLURE_DISPONIBILITE, etatsAchat } from "./disponibilite";
-import { soldeCagnotte } from "./fidelite";
+import { soldeUtilisable } from "./fidelite";
 import { db, tva, type Tx } from "./outils";
 
 // Calcul d'un devis en démonstration (F04, R1) : les règles qu'appliquera Odoo — liste de prix
@@ -16,14 +16,32 @@ type RegleListePrix = { defaultCode: string; quantiteMin?: number; prixHtCentime
 
 type CodePromo = { code: string; applique: boolean; motif: string | null; remisePourcent: number; cumulable: boolean };
 
-async function lireCodePromo(tx: Tx, code: string | null | undefined, maintenant: Date): Promise<CodePromo | null> {
+type LimitesCode = { usagesMax?: number; parClient?: number; montantMinimumCentimes?: number; nouveauxClients?: boolean };
+
+async function lireCodePromo(tx: Tx, code: string | null | undefined, maintenant: Date, partenaireRef: string | null | undefined, brutAchats: number): Promise<CodePromo | null> {
   const propre = code?.trim().toUpperCase();
   if (!propre) return null;
   const promo = await tx.promotion.findUnique({ where: { code: propre } });
   const refus = (motif: string): CodePromo => ({ code: propre, applique: false, motif, remisePourcent: 0, cumulable: false });
   if (!promo || promo.type !== "code_promo") return refus("Ce code n'existe pas.");
   if (promo.debut && promo.debut > maintenant) return refus("Ce code n'est pas encore valable.");
-  if (promo.fin && promo.fin < maintenant) return refus("Ce code a expiré.");
+  if (promo.fin && promo.fin <= maintenant) return refus("Ce code a expiré.");
+  // F06 (FR-032) : limites d'usage fixées dans Odoo.
+  const limites = (promo.limites ?? {}) as LimitesCode;
+  const actives = { codePromo: propre, statut: { notIn: ["annulee" as const, "brouillon" as const] } };
+  if (limites.usagesMax !== undefined && (await tx.commandeVente.count({ where: actives })) >= limites.usagesMax) return refus("Ce code a atteint son nombre d'utilisations.");
+  if (limites.montantMinimumCentimes && brutAchats < limites.montantMinimumCentimes) {
+    return refus(`Ce code est valable dès ${(limites.montantMinimumCentimes / 100).toLocaleString("fr-FR")} € HT d'achats.`);
+  }
+  if (partenaireRef && (limites.parClient !== undefined || limites.nouveauxClients)) {
+    const p = await tx.partenaire.findUnique({ where: { ref: partenaireRef } });
+    if (p && limites.parClient !== undefined && (await tx.commandeVente.count({ where: { ...actives, partenaireId: p.id } })) >= limites.parClient) {
+      return refus("Vous avez déjà utilisé ce code.");
+    }
+    if (p && limites.nouveauxClients && (await tx.commandeVente.count({ where: { partenaireId: p.id, statut: { notIn: ["annulee", "brouillon"] } } })) > 0) {
+      return refus("Ce code est réservé à une première commande.");
+    }
+  }
   return { code: propre, applique: true, motif: null, remisePourcent: Number(promo.remisePourcent ?? 0), cumulable: promo.cumulable };
 }
 
@@ -32,7 +50,8 @@ async function promotionsEnCours(tx: Tx, maintenant: Date): Promise<Map<string, 
   const promos = await tx.promotion.findMany({ where: { type: { in: ["vente_flash", "remise_automatique"] } } });
   const parRef = new Map<string, { nom: string; remisePourcent: number }>();
   for (const p of promos) {
-    if ((p.debut && p.debut > maintenant) || (p.fin && p.fin < maintenant) || !p.remisePourcent) continue;
+    // Arrêt à la minute de la date de fin (SC-010).
+    if ((p.debut && p.debut > maintenant) || (p.fin && p.fin <= maintenant) || !p.remisePourcent) continue;
     for (const ref of ((p.cible as { defaultCodes?: string[] }).defaultCodes ?? [])) {
       const existante = parRef.get(ref);
       if (!existante || Number(p.remisePourcent) > existante.remisePourcent) parRef.set(ref, { nom: p.nom, remisePourcent: Number(p.remisePourcent) });
@@ -63,7 +82,11 @@ export async function calculerDevis(demande: DemandeDevis, tx: Tx = db(), option
   const prix = demande.partenaireRef ? await prixClient(demande.partenaireRef, refs, tx) : [];
   const publiques = (await tx.listePrix.findMany({ where: { partenaireId: null } })).flatMap((l) => l.regles as RegleListePrix[]);
   const promotions = await promotionsEnCours(tx, maintenant);
-  const code = await lireCodePromo(tx, demande.codePromo, maintenant);
+  // Montant d'achats avant remises, pour le minimum d'un code promo.
+  const brutAchats = demande.lignes
+    .filter((l) => l.formule === "achat" && !l.offerte)
+    .reduce((s, l) => s + (prix.find((p) => p.defaultCode === l.defaultCode)?.prixHt ?? variantes.find((v) => v.defaultCode === l.defaultCode)!.prixHtCentimes) * l.quantite, 0);
+  const code = await lireCodePromo(tx, demande.codePromo, maintenant, demande.partenaireRef, brutAchats);
 
   let remisesAuto = 0;
   let remiseCode = 0;
@@ -133,11 +156,10 @@ export async function calculerDevis(demande: DemandeDevis, tx: Tx = db(), option
     let bons = 0;
     if (demande.partenaireRef && (demande.bonsDemandesHt ?? 0) > 0) {
       const partenaire = await tx.partenaire.findUnique({ where: { ref: demande.partenaireRef } });
-      const solde = partenaire ? await soldeCagnotte(tx, partenaire.id) : 0;
-      const eligible = achats
-        .filter((l) => variantes.find((v) => v.defaultCode === l.defaultCode)!.modele.eligibleBonsAchat)
-        .reduce((s, l) => s + l.totalHt, 0);
-      bons = Math.max(0, Math.min(demande.bonsDemandesHt ?? 0, solde, eligible));
+      // F06 : bons encore valables ; utilisables sur les achats (hors port et mises à disposition).
+      const solde = partenaire ? await soldeUtilisable(tx, partenaire.id, maintenant) : 0;
+      const montantAchats = achats.reduce((s, l) => s + l.totalHt, 0);
+      bons = Math.max(0, Math.min(demande.bonsDemandesHt ?? 0, solde, montantAchats));
     }
 
     // Livraison : modes actifs ; express seulement si tous les articles sont en stock.
@@ -149,10 +171,12 @@ export async function calculerDevis(demande: DemandeDevis, tx: Tx = db(), option
     });
     const modes = await tx.modeLivraison.findMany({ where: { actif: true }, orderBy: { ordre: "asc" } });
     const francoAtteint = seuilFranco > 0 && net >= seuilFranco;
+    // F06 (D5) : une commande de services seuls (assistance à l'acte) n'est pas expédiée.
+    const servicesSeuls = achats.every((l) => variantes.find((x) => x.defaultCode === l.defaultCode)?.modele.type === "service");
     modesLivraison = modes.map((m) => ({
       code: m.code,
       libelle: m.libelle,
-      forfaitHt: m.franco && francoAtteint ? 0 : m.forfaitCentimes,
+      forfaitHt: servicesSeuls || (m.franco && francoAtteint) ? 0 : m.forfaitCentimes,
       delaiJours: m.delaiJours,
       disponible: !m.exigeStock || toutEnStock,
       motif: m.exigeStock && !toutEnStock ? "Proposé seulement quand tous les articles sont en stock." : null,

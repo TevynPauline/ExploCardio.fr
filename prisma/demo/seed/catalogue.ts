@@ -548,6 +548,18 @@ export const MODELES: Modele[] = [
     referenceFictive: true,
     variantes: [{ defaultCode: "EC-BIENVENUE-TENSIOMETRE", prixHt: 59, stock: { quantite: 50 } }],
   },
+  {
+    // F06 (D5) : assistance payée à l'acte, pour un client sans droits actifs ; prix fixé dans Odoo.
+    // Rangé avec les accessoires pour ne pas créer de catégorie ; non publié au catalogue.
+    categorie: "accessoires",
+    marque: "ExploCardio.fr",
+    nom: "Assistance à l'acte",
+    type: "service",
+    description: "Une intervention de l'équipe d'assistance (hotline et SAV réactif), pour un client sans droits d'assistance actifs.",
+    formules: ["achat"],
+    referenceFictive: true,
+    variantes: [{ defaultCode: "EC-ASSISTANCE-ACTE", configuration: "Une intervention", prixHt: 150, stock: { quantite: 9999 } }],
+  },
 ];
 
 /** Barèmes de financement (coefficient mensuel en % du montant financé), inventés. */

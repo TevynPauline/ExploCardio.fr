@@ -1,3 +1,4 @@
+import { bonsDemandes } from "../catalogue/panier";
 import { registre } from "@/connecteurs/registre";
 import type { Devis, EtatDisponibilite } from "@/connecteurs/odoo/interfaces";
 import { estErreurConnecteur } from "@/connecteurs/erreurs";
@@ -22,6 +23,8 @@ export type LigneDetaillee = {
   /** Prix différent de celui constaté à l'ajout (FR-006). */
   prixAChange: boolean;
   ancienPrixHt: number;
+  /** F06 (A4) : promotion vue à l'ajout et terminée depuis ; le prix en vigueur s'applique. */
+  promotionTerminee: string | null;
   etat: EtatDisponibilite | null;
   delaiJours: number | null;
   indisponible: boolean;
@@ -46,6 +49,12 @@ export async function partenaireDuCompte(compteId: string | null | undefined): P
   return c?.odooPartnerRef ?? null;
 }
 
+/** Un compte suspendu ou en attente ne peut pas utiliser ses bons (F06, A6). */
+async function compteValideId(compteId: string | null | undefined): Promise<boolean> {
+  if (!compteId) return false;
+  return (await dbSite().compteClient.findUnique({ where: { id: compteId }, select: { statut: true } }))?.statut === "valide";
+}
+
 /** Bons d'achat au panier : seulement une fois F06 livré (décision D7). */
 export async function bonsAuPanierActifs(): Promise<boolean> {
   return (await lireParametre("fidelite.bons_au_panier")) === "true";
@@ -67,6 +76,7 @@ export async function panierDetaille(panierId: string, compteId: string | null, 
     promotion: null,
     prixAChange: false,
     ancienPrixHt: l.prixHtConstate,
+    promotionTerminee: null,
     etat: null,
     delaiJours: null,
     indisponible: false,
@@ -76,7 +86,7 @@ export async function panierDetaille(panierId: string, compteId: string | null, 
   try {
     const odoo = registre.odoo();
     const partenaireRef = await partenaireDuCompte(compteId);
-    const bons = partenaireRef && panier.utiliserBons && (await bonsAuPanierActifs()) ? Number.MAX_SAFE_INTEGER : 0;
+    const bons = partenaireRef && (await bonsAuPanierActifs()) && (await compteValideId(compteId)) ? bonsDemandes(panier) : 0;
     const [devis, dispos] = await Promise.all([
       odoo.commandes.calculerDevis({
         partenaireRef,
@@ -100,6 +110,7 @@ export async function panierDetaille(panierId: string, compteId: string | null, 
         tauxTva: calc.tauxTva,
         promotion: calc.promotion,
         prixAChange: calc.prixUnitaireHt !== b.ancienPrixHt,
+        promotionTerminee: panier.lignes[i]!.promotionConstatee && !calc.promotion ? panier.lignes[i]!.promotionConstatee : null,
         etat,
         delaiJours: etat?.etat === "delai" ? etat.delaiJours : null,
         indisponible: !etat || etat.etat === "indisponible",

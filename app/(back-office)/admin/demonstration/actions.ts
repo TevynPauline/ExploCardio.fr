@@ -118,6 +118,106 @@ export async function modifierRemisePromotion(donnees: FormData) {
   await executer("/admin/demonstration/parametres-commerciaux", "Promotion modifiée.", async () => {
     const remise = Number(texte(donnees, "remise").replace(",", "."));
     await ecranDemonstration.modifierRemisePromotion(a, entier(donnees, "id", "Promotion"), remise);
-    invaliderDepuisAction("catalogue", "prix");
+    invaliderDepuisAction("catalogue", "prix", "fidelite");
+  });
+}
+
+// --- F05 : règles de location (ce que l'équipe règle dans Odoo) ----------------------------
+
+export async function modifierReglesLocation(donnees: FormData) {
+  const a = await auteur();
+  await executer("/admin/demonstration/parametres-commerciaux", "Règles de location enregistrées.", async () => {
+    const { locationsDemo } = await import("@/connecteurs/demonstration");
+    await locationsDemo.modifierRegles(a, {
+      tentativesPrelevement: entier(donnees, "tentatives", "Nouvelles tentatives"),
+      espacementTentativesJours: entier(donnees, "espacement", "Espacement des tentatives"),
+      delaiRegularisationJours: entier(donnees, "regularisation", "Délai de régularisation"),
+      delaiRetourJoursOuvres: entier(donnees, "retour", "Délai de retour"),
+      toleranceRetardJours: entier(donnees, "tolerance", "Tolérance de retard"),
+      delaiNonRetourJours: entier(donnees, "nonRetour", "Délai de non-retour"),
+    });
+  });
+}
+
+// --- F06 : programme de fidélité (ce que l'équipe fait dans Odoo) ---------------------------
+
+const FIDELITE = "/admin/demonstration/fidelite";
+
+async function suivreFideliteAussitot() {
+  const { suivreFidelite } = await import("@/domaine/fidelite/suivi");
+  await suivreFidelite();
+}
+
+export async function ajusterCagnotte(donnees: FormData) {
+  const a = await auteur();
+  await executer(FIDELITE, "Cagnotte ajustée : le client voit le mouvement et son motif.", async () => {
+    const { fideliteDemoOps } = await import("@/connecteurs/demonstration");
+    const sens = texte(donnees, "sens") === "debit" ? -1 : 1;
+    await fideliteDemoOps.ajusterCagnotte(a, texte(donnees, "partenaire"), sens * montant(donnees, "montant", "Montant"), texte(donnees, "motif"));
+    await suivreFideliteAussitot();
+  });
+}
+
+export async function ajusterDroits(donnees: FormData) {
+  const a = await auteur();
+  await executer(FIDELITE, "Droits d'assistance ajustés.", async () => {
+    const { fideliteDemoOps } = await import("@/connecteurs/demonstration");
+    const jour = texte(donnees, "fin");
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(jour)) throw new ValeurRefusee("Date de fin invalide.");
+    await fideliteDemoOps.ajusterDroits(a, texte(donnees, "partenaire"), new Date(`${jour}T21:59:59Z`), texte(donnees, "motif"));
+    await suivreFideliteAussitot();
+  });
+}
+
+export async function cloreIntervention(donnees: FormData) {
+  const a = await auteur();
+  await executer(FIDELITE, "Intervention close : le client est prévenu.", async () => {
+    const { fideliteDemoOps } = await import("@/connecteurs/demonstration");
+    await fideliteDemoOps.cloreIntervention(a, entier(donnees, "id", "Intervention"));
+    await suivreFideliteAussitot();
+  });
+}
+
+export async function expirerBons(donnees: FormData) {
+  const a = await auteur();
+  const jour = texte(donnees, "date");
+  await executer(FIDELITE, `Bons échus au ${jour} expirés ; rappels envoyés.`, async () => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(jour)) throw new ValeurRefusee("Date invalide.");
+    const date = new Date(`${jour}T21:59:59Z`);
+    const { fideliteDemoOps } = await import("@/connecteurs/demonstration");
+    await fideliteDemoOps.expirerBons(a, date);
+    await suivreFideliteAussitot();
+    const { envoyerRappelsFidelite } = await import("@/domaine/fidelite/rappels");
+    await envoyerRappelsFidelite(date);
+  });
+}
+
+export async function creerPromotion(donnees: FormData) {
+  const a = await auteur();
+  await executer(FIDELITE, "Promotion créée.", async () => {
+    const { fideliteDemoOps } = await import("@/connecteurs/demonstration");
+    const type = texte(donnees, "type") as "vente_flash" | "remise_automatique" | "code_promo";
+    const debut = texte(donnees, "debut");
+    const fin = texte(donnees, "fin");
+    await fideliteDemoOps.creerPromotion(a, {
+      nom: texte(donnees, "nom"),
+      type: ["vente_flash", "remise_automatique", "code_promo"].includes(type) ? type : "vente_flash",
+      code: texte(donnees, "code").toUpperCase() || undefined,
+      remisePourcent: Number(texte(donnees, "remise").replace(",", ".")),
+      defaultCodes: texte(donnees, "references").split(/[\s,]+/).filter(Boolean),
+      debut: debut ? new Date(debut) : new Date(),
+      fin: new Date(fin),
+      annoncee: donnees.get("annoncee") === "oui",
+    });
+    invaliderDepuisAction("catalogue", "prix", "fidelite");
+  });
+}
+
+export async function terminerPromotion(donnees: FormData) {
+  const a = await auteur();
+  await executer(FIDELITE, "Promotion terminée.", async () => {
+    const { fideliteDemoOps } = await import("@/connecteurs/demonstration");
+    await fideliteDemoOps.terminerPromotion(a, entier(donnees, "id", "Promotion"));
+    invaliderDepuisAction("catalogue", "prix", "fidelite");
   });
 }

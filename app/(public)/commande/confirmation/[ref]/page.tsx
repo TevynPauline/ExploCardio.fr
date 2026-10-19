@@ -5,8 +5,10 @@ import type { Devis } from "@/connecteurs/odoo/interfaces";
 import { compteCourant } from "@/domaine/comptes/session";
 import { ribDuSite } from "@/domaine/commande/notifications";
 import { commandeDuCompte } from "@/domaine/commande/tunnel";
+import { resultatDeCommande } from "@/domaine/fidelite/gains";
 import { euros } from "@/lib/montants";
 import { Card, Kicker } from "@/ui";
+import { ResultatCommande } from "@/ui/fidelite/Gains";
 
 export const metadata: Metadata = { title: "Commande confirmée" };
 
@@ -19,6 +21,7 @@ export default async function Confirmation({ params }: { params: Promise<{ ref: 
   const devis = c.devis as Devis | null;
   const virement = c.etatAchat === "en_attente_virement";
   const rib = virement ? await ribDuSite() : null;
+  const resultat = c.odooCommandeRef && c.etatAchat !== "sans_objet" ? await resultatDeCommande(compte.id, c.odooCommandeRef) : null;
   return (
     <div className="mx-auto flex max-w-page flex-col gap-6 px-4 py-10">
       <Kicker>Commande {c.odooCommandeRef ?? c.ref}</Kicker>
@@ -38,6 +41,7 @@ export default async function Confirmation({ params }: { params: Promise<{ ref: 
           <p>BIC : {rib.bic}</p>
         </Card>
       ) : null}
+      {resultat ? <ResultatCommande resultat={resultat} enAttente={virement} /> : null}
       <p className="flex flex-wrap gap-3">
         <Link href="/mon-compte/commandes" className="ec-btn ec-btn--primary">Suivre mes commandes</Link>
         <Link href="/catalogue" className="ec-btn ec-btn--secondary">Continuer mes achats</Link>

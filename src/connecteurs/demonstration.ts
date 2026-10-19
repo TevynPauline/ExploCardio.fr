@@ -6,6 +6,7 @@ import { leverVerrou, poserVerrou } from "@/lib/demo/verrou";
 import { remplirJeuDeDepart, type BilanRemplissage } from "../../prisma/demo/seed/remplissage";
 import * as administration from "./odoo/demo/administration";
 import * as locationsAdmin from "./odoo/demo/locations-admin";
+import * as fideliteAdmin from "./odoo/demo/fidelite-admin";
 import * as emission from "./stripe/demo/emission";
 import { invaliderIndexRecherche } from "@/domaine/recherche/index";
 import { definirPanne, panneActive } from "./panne-simulee";
@@ -51,6 +52,8 @@ export async function reinitialiserDemonstration(auteur: Auteur): Promise<BilanR
       site.suiviCommande.deleteMany(),
       // F05 : suivis des locations des séances
       site.suiviLocation.deleteMany(),
+      // F06 : suivis de fidélité des séances
+      site.suiviFidelite.deleteMany(),
     ]);
     const bilan = await remplirJeuDeDepart(dbDemo(), site);
     await site.journalAction.create({
@@ -123,6 +126,7 @@ export const ecranDemonstration = {
   async modifierParametresCommerciaux(auteur: Auteur, p: administration.ParametresCommerciaux) {
     exigerOutils();
     const r = await administration.modifierParametresCommerciaux(p);
+    await fideliteAdmin.synchroniserPrixActe();
     await journaliser(auteur, "demo.parametres_commerciaux", "fidelite_et_assistance", r.avant, r.apres);
   },
 };
@@ -305,5 +309,48 @@ export const locationsDemo = {
     exigerOutils();
     const { avant, apres } = await locationsAdmin.modifierReglesLocation(r);
     await journaliser(auteur, "demo.regles_location", "rental_settings", avant, apres);
+  },
+};
+
+/** Programme de fidélité (F06) : ce que l'équipe fera dans Odoo. */
+export const fideliteDemoOps = {
+  async ajusterCagnotte(auteur: Auteur, partenaireRef: string, montantCentimes: number, motif: string) {
+    exigerOutils();
+    await fideliteAdmin.ajusterCagnotte(partenaireRef, montantCentimes, motif, auteur.libelle);
+    await journaliser(auteur, "demo.cagnotte_ajustee", partenaireRef, null, { montantCentimes, motif });
+  },
+  async ajusterDroits(auteur: Auteur, partenaireRef: string, fin: Date, motif: string) {
+    exigerOutils();
+    await fideliteAdmin.ajusterDroits(partenaireRef, fin, motif, auteur.libelle);
+    await journaliser(auteur, "demo.droits_ajustes", partenaireRef, null, { fin, motif });
+  },
+  listerInterventionsOuvertes: () => {
+    exigerOutils();
+    return fideliteAdmin.listerInterventionsOuvertes();
+  },
+  async cloreIntervention(auteur: Auteur, id: number) {
+    exigerOutils();
+    await fideliteAdmin.cloreIntervention(id, auteur.libelle);
+    await journaliser(auteur, "demo.intervention_close", String(id), null, {});
+  },
+  async expirerBons(auteur: Auteur, date: Date) {
+    exigerOutils();
+    const n = await fideliteAdmin.expirerBons(date);
+    await journaliser(auteur, "demo.bons_expires", date.toISOString(), null, { lots: n });
+    return n;
+  },
+  listerPromotions: () => {
+    exigerOutils();
+    return fideliteAdmin.listerPromotions();
+  },
+  async creerPromotion(auteur: Auteur, p: fideliteAdmin.NouvellePromotion) {
+    exigerOutils();
+    const promo = await fideliteAdmin.creerPromotion(p);
+    await journaliser(auteur, "demo.promotion_creee", String(promo.id), null, p);
+  },
+  async terminerPromotion(auteur: Auteur, id: number) {
+    exigerOutils();
+    await fideliteAdmin.terminerPromotion(id);
+    await journaliser(auteur, "demo.promotion_terminee", String(id), null, {});
   },
 };

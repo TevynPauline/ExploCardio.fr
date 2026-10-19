@@ -98,10 +98,13 @@ export async function ajouterAuPanier(identite: IdentitePanier, ligne: LigneAAjo
   }
   const panier = await panierPour(identite, true);
   if (!panier) return refus("identite");
+  // F06 (A4) : promotion en cours à l'ajout ; si elle se termine, le panier le signale.
+  const { promotionDe } = await import("../fidelite/promotions");
+  const promotionConstatee = ligne.formule === "achat" ? await promotionDe(ligne.defaultCode) : null;
   await dbSite().lignePanier.upsert({
     where: { panierId_defaultCode_formule: { panierId: panier.id, defaultCode: ligne.defaultCode, formule: ligne.formule } },
-    create: { panierId: panier.id, defaultCode: ligne.defaultCode, formule: ligne.formule, quantite: ligne.quantite, prixHtConstate: prixHt },
-    update: { quantite: { increment: ligne.quantite }, prixHtConstate: prixHt },
+    create: { panierId: panier.id, defaultCode: ligne.defaultCode, formule: ligne.formule, quantite: ligne.quantite, prixHtConstate: prixHt, promotionConstatee },
+    update: { quantite: { increment: ligne.quantite }, prixHtConstate: prixHt, promotionConstatee },
   });
   await dbSite().panier.update({ where: { id: panier.id }, data: { modifieLe: new Date() } });
   // F05 (D4) : le kit d'accessoires requis rejoint le panier d'office s'il manque.
@@ -168,9 +171,23 @@ export async function appliquerCodePromo(identite: IdentitePanier, code: string)
   await dbSite().panier.update({ where: { id: panier.id }, data: { codePromo: propre || null } });
 }
 
-export async function utiliserBons(identite: IdentitePanier, utiliser: boolean): Promise<void> {
+/** Plafond « tout le solde » : Odoo limite ensuite aux bons disponibles et au montant des achats. */
+export const BONS_MAXIMUM = 1_000_000_000;
+
+/**
+ * Bons d'achat à utiliser (F06, D1) : en tout (montant null = maximum utilisable) ou en partie.
+ * Le montant est plafonné par le devis d'Odoo (solde utilisable, montant des achats).
+ */
+export async function utiliserBons(identite: IdentitePanier, utiliser: boolean, montantHt: number | null = null): Promise<void> {
   const panier = await panierPour(identite, false);
-  if (panier) await dbSite().panier.update({ where: { id: panier.id }, data: { utiliserBons: utiliser } });
+  if (!panier) return;
+  const montant = montantHt === null ? null : Math.max(0, Math.min(Math.round(montantHt), BONS_MAXIMUM));
+  await dbSite().panier.update({ where: { id: panier.id }, data: { utiliserBons: utiliser && montant !== 0, bonsDemandesHt: montant } });
+}
+
+/** Montant de bons demandé au devis pour un panier. */
+export function bonsDemandes(panier: { utiliserBons: boolean; bonsDemandesHt: number | null }): number {
+  return panier.utiliserBons ? (panier.bonsDemandesHt ?? BONS_MAXIMUM) : 0;
 }
 
 /**

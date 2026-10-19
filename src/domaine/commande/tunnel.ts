@@ -1,4 +1,5 @@
 import { randomInt } from "node:crypto";
+import { ARTICLE_ASSISTANCE_ACTE } from "../fidelite/droits";
 import { registre } from "@/connecteurs/registre";
 import type { Devis, LigneNouvelleCommande } from "@/connecteurs/odoo/interfaces";
 import { estErreurConnecteur } from "@/connecteurs/erreurs";
@@ -98,6 +99,10 @@ export async function ouvrirCommande(compteId: string): Promise<CommandeSite> {
     }
     await dbSite().commandeSite.update({ where: { id: enCours.id }, data: { etatAchat: "a_payer", reservationRef: null } });
   }
+  // F06 (D1) : bons d'achat choisis au panier (le devis d'Odoo les plafonne).
+  const { bonsDemandes } = await import("../catalogue/panier");
+  const { bonsAuPanierActifs } = await import("./devis");
+  const bons = panier && compte.statut === "valide" && (await bonsAuPanierActifs()) ? bonsDemandes(panier) : 0;
   const aAchat = copie.some((l) => l.formule === "achat");
   const aAbonnement = copie.some((l) => l.formule === "mise_a_disposition");
   const etats = { etatAchat: aAchat ? ("a_payer" as const) : ("sans_objet" as const), etatAbonnement: aAbonnement ? ("a_payer" as const) : ("sans_objet" as const) };
@@ -105,7 +110,7 @@ export async function ouvrirCommande(compteId: string): Promise<CommandeSite> {
     const actuel = await dbSite().commandeSite.findUniqueOrThrow({ where: { id: enCours.id } });
     // Paiement en cours et panier inchangé : on garde l'état (même session, jamais deux débits).
     if (actuel.etatAchat === "paiement_en_cours") return actuel;
-    return dbSite().commandeSite.update({ where: { id: enCours.id }, data: { lignes: copie, codePromo: panier?.codePromo ?? null, ...etats } });
+    return dbSite().commandeSite.update({ where: { id: enCours.id }, data: { lignes: copie, codePromo: panier?.codePromo ?? null, bonsHt: bons, ...etats } });
   }
   const livraison = adresseDuCompte(compte, "livraison") ?? adresseDuCompte(compte, "cabinet");
   const facturation = adresseDuCompte(compte, "facturation") ?? adresseDuCompte(compte, "cabinet");
@@ -115,6 +120,7 @@ export async function ouvrirCommande(compteId: string): Promise<CommandeSite> {
       compteId,
       lignes: copie,
       codePromo: panier?.codePromo ?? null,
+      bonsHt: bons,
       adresses: livraison && facturation ? { livraison, facturation } : {},
       ...etats,
     },
@@ -249,11 +255,17 @@ export async function virementDisponible(): Promise<boolean> {
 }
 
 /** Étape 3 (FR-015 à FR-019) : virement pour les achats seulement ; carte ou SEPA pour l'abonnement. */
+/** F06 (D5) : l'assistance à l'acte se règle par carte seulement (intervention rapide). */
+export function avecAssistanceActe(lignes: { defaultCode: string; formule: string }[]): boolean {
+  return lignes.some((l) => l.defaultCode === ARTICLE_ASSISTANCE_ACTE && l.formule === "achat");
+}
+
 export async function choisirPaiement(commande: CommandeSite, achat: MoyenPaiementCommande | null, abonnement: MoyenPaiementCommande | null): Promise<CommandeSite> {
   const lignes = lignesDe(commande);
   const e: Record<string, string> = {};
   if (lignes.some((l) => l.formule === "achat") && (!achat || achat === "sepa")) e.achat = "Choisissez la carte bancaire ou le virement.";
   if (achat === "virement" && !(await virementDisponible())) e.achat = "Le virement n'est pas proposé pour le moment : choisissez la carte bancaire.";
+  if (achat === "virement" && avecAssistanceActe(lignes)) e.achat = "L'assistance à l'acte se règle par carte bancaire.";
   if (lignes.some((l) => l.formule === "mise_a_disposition") && (!abonnement || abonnement === "virement")) e.abonnement = "Choisissez la carte bancaire ou le prélèvement SEPA.";
   if (Object.keys(e).length) throw new SaisieInvalide(e);
   return dbSite().commandeSite.update({

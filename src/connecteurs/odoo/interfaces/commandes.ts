@@ -119,6 +119,8 @@ export type RemboursementAExecuter = {
   modePaiement: string;
   montantTtc: Centimes;
   motif: string;
+  /** F06 (D4) : bons d'achat déjà dépensés, déduits de ce remboursement (HT). */
+  bonsDeduitsHt: Centimes;
 };
 
 export type EnregistrementRemboursement = {

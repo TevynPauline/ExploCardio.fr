@@ -80,6 +80,9 @@ async function traiterChangement(ch: ChangementCommande, maintenant: Date) {
   return true;
 }
 
+const bonsDeduits = (r: { bonsDeduitsHt: number }) =>
+  `le remboursement est réduit de ${(r.bonsDeduitsHt / 100).toFixed(2)} € HT, les bons d'achat crédités par la commande ayant déjà été utilisés.`;
+
 /** Remboursements décidés dans Odoo : exécutés par Stripe (clé = remboursement), puis enregistrés. */
 async function executerRemboursements() {
   let executes = 0;
@@ -87,7 +90,7 @@ async function executerRemboursements() {
     if (!r.paiementRef) {
       await alerterEquipe(
         "Remboursement sans paiement par carte",
-        `Le remboursement de ${(r.montantTtc / 100).toFixed(2)} € de la commande ${r.commandeRef} ne peut pas passer par Stripe (paiement ${r.modePaiement}) : à faire par virement.`,
+        `Le remboursement de ${(r.montantTtc / 100).toFixed(2)} € de la commande ${r.commandeRef} ne peut pas passer par Stripe (paiement ${r.modePaiement}) : à faire par virement.${r.bonsDeduitsHt ? ` ${bonsDeduits(r)}` : ""}`,
         `remboursement-manuel:${r.id}`,
       );
       continue;
@@ -99,6 +102,8 @@ async function executerRemboursements() {
         `odoo:${r.id}`,
       );
       await journal("commande.remboursement", r.commandeRef, { source: "odoo", montantTtc: r.montantTtc, avoir, remboursement: remboursementRef });
+      // F06 (D4) : bons crédités par la commande déjà dépensés, déduits du remboursement.
+      if (r.bonsDeduitsHt) await alerterEquipe("Remboursement réduit : bons d'achat déjà dépensés", `Commande ${r.commandeRef} : ${bonsDeduits(r)}`, `remboursement-bons:${r.id}`);
       executes++;
     } catch (e) {
       if (!estErreurConnecteur(e)) throw e; // réessayé au prochain passage

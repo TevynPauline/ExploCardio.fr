@@ -18,6 +18,7 @@ type Props = {
   remiseHt: number;
   promotion: string | null;
   prixAChange: boolean;
+  promotionTerminee?: string | null;
   ancienPrixHt: number;
   delaiJours: number | null;
   indisponible: boolean;
@@ -57,6 +58,9 @@ export function LignePanier(p: Props) {
             {euros(p.prixUnitaireHt)} HT {p.formule === "mise_a_disposition" ? "le premier mois" : "l’unité"}
             {p.promotion ? ` · ${p.promotion}` : ""}
           </p>
+        ) : null}
+        {p.promotionTerminee ? (
+          <p className="text-small font-medium text-ink">La promotion « {p.promotionTerminee} » est terminée : le prix en vigueur s’applique.</p>
         ) : null}
         {p.prixAChange && p.prixUnitaireHt !== null ? (
           <p className="text-small font-medium text-ink">

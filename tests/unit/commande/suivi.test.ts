@@ -61,6 +61,7 @@ describe("suivi des commandes", () => {
   });
 
   it("remboursement décidé dans Odoo : exécuté par Stripe une fois, avoir émis, email ; partiel puis total", async () => {
+    const debut = new Date();
     const { compte, ref } = await commandePayee();
     const total = (await odoo().commandes.lireCommande(ref)).montantTtc;
     await administration.deciderRemboursement(ref, 500, "Geste commercial");
@@ -75,7 +76,7 @@ describe("suivi des commandes", () => {
     expect(await emails(compte.email, `Remboursement de la commande ${ref}`)).toBe(2);
     const avoirs = (await odoo().factures.listerFactures(compte.partenaireRef)).filter((f) => f.type === "avoir");
     expect(avoirs).toHaveLength(2);
-    expect(await dbSite().journalAction.count({ where: { action: "commande.remboursement", objet: ref } })).toBe(2);
+    expect(await dbSite().journalAction.count({ where: { action: "commande.remboursement", objet: ref, date: { gte: debut } } })).toBe(2);
   });
 
   it("remboursement fait dans Stripe : enregistré dans Odoo une seule fois, client prévenu", async () => {

@@ -25,7 +25,7 @@ const PAGES_PUBLIQUES = [
   "/panier",
   "/mise-a-disposition",
 ];
-const PAGES_MON_COMPTE = ["/mon-compte", "/mon-compte/informations", "/mon-compte/adresses", "/mon-compte/preferences", "/mon-compte/securite", "/mon-compte/donnees", "/mon-compte/commandes", "/mon-compte/factures", "/mon-compte/locations", "/mon-compte/financements", "/financement/demande?article=EC-DMS-3004L"];
+const PAGES_MON_COMPTE = ["/mon-compte", "/mon-compte/informations", "/mon-compte/adresses", "/mon-compte/preferences", "/mon-compte/securite", "/mon-compte/donnees", "/mon-compte/commandes", "/mon-compte/factures", "/mon-compte/locations", "/mon-compte/financements", "/mon-compte/bons-achat", "/mon-compte/assistance", "/financement/demande?article=EC-DMS-3004L"];
 const PAGES_BACK_OFFICE = [
   "/admin",
   "/admin/demonstration",
@@ -48,6 +48,8 @@ const PAGES_BACK_OFFICE = [
   "/admin/commandes",
   "/admin/financements",
   "/admin/locations",
+  "/admin/assistance?q=demo",
+  "/admin/demonstration/fidelite",
   "/admin/demonstration/locations",
 ];
 

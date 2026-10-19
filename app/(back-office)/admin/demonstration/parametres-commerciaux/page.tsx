@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { ecranDemonstration } from "@/connecteurs/demonstration";
 import { saisieDepuisCentimes } from "@/lib/montants";
 import { Button, Card, Champ, Kicker, Retour } from "@/ui";
-import { modifierParametresCommerciaux, modifierRemisePromotion } from "../actions";
+import { modifierParametresCommerciaux, modifierReglesLocation, modifierRemisePromotion } from "../actions";
+import { registre } from "@/connecteurs/registre";
 
 export const metadata: Metadata = { title: "Paramètres commerciaux de démonstration" };
 
@@ -17,6 +18,7 @@ export default async function ParametresCommerciaux({
   const p = await ecranDemonstration.lireParametresCommerciaux();
   const { promotions } = await ecranDemonstration.apercu();
   const lignes = [...p.paliers, { plancherCentimes: NaN, inclusif: true, tauxPourcent: NaN }];
+  const location = await registre.odoo().location.lireRegles();
   return (
     <div className="flex max-w-3xl flex-col gap-6">
       <Kicker>Démonstration</Kicker>
@@ -91,6 +93,19 @@ export default async function ParametresCommerciaux({
           <Button type="submit">Enregistrer les paramètres</Button>
         </div>
       </form>
+
+      <Card>
+        <h2 className="text-h3 font-semibold">Règles de location (F05)</h2>
+        <form action={modifierReglesLocation} className="mt-3 grid gap-3 sm:grid-cols-2">
+          <Champ id="loc-tentatives" name="tentatives" libelle="Nouvelles tentatives de prélèvement" inputMode="numeric" defaultValue={String(location.tentativesPrelevement)} />
+          <Champ id="loc-espacement" name="espacement" libelle="Espacement des tentatives (jours)" inputMode="numeric" defaultValue={String(location.espacementTentativesJours)} />
+          <Champ id="loc-regularisation" name="regularisation" libelle="Délai de régularisation (jours)" inputMode="numeric" defaultValue={String(location.delaiRegularisationJours)} />
+          <Champ id="loc-retour" name="retour" libelle="Délai de retour (jours ouvrés)" inputMode="numeric" defaultValue={String(location.delaiRetourJoursOuvres)} />
+          <Champ id="loc-tolerance" name="tolerance" libelle="Tolérance avant le mois suivant (jours)" inputMode="numeric" defaultValue={String(location.toleranceRetardJours)} />
+          <Champ id="loc-non-retour" name="nonRetour" libelle="Délai avant la valeur de remplacement (jours)" inputMode="numeric" defaultValue={String(location.delaiNonRetourJours)} />
+          <div><Button type="submit" variante="secondaire">Enregistrer les règles de location</Button></div>
+        </form>
+      </Card>
 
       <Card>
         <h2 className="text-h3 font-semibold">Promotions</h2>

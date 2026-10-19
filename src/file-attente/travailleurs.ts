@@ -55,6 +55,19 @@ export async function demarrerTravailleurs() {
     const { envoyerRappelsLocations } = await import("@/domaine/location/rappels");
     await envoyerRappelsLocations();
   });
+  // F06 : suivi de la fidélité toutes les 5 minutes ; rappels (fin des droits, expiration) chaque matin.
+  await boss.createQueue("suivi-fidelite").catch(() => undefined);
+  await boss.schedule("suivi-fidelite", "*/5 * * * *");
+  await boss.work("suivi-fidelite", async () => {
+    const { suivreFidelite } = await import("@/domaine/fidelite/suivi");
+    await suivreFidelite();
+  });
+  await boss.createQueue("rappels-fidelite").catch(() => undefined);
+  await boss.schedule("rappels-fidelite", "0 8 * * *");
+  await boss.work("rappels-fidelite", async () => {
+    const { envoyerRappelsFidelite } = await import("@/domaine/fidelite/rappels");
+    await envoyerRappelsFidelite();
+  });
   // F04 : virements (rappel, réception, annulation à l'échéance), chaque matin.
   await boss.createQueue("virements").catch(() => undefined);
   await boss.schedule("virements", "0 7 * * *");

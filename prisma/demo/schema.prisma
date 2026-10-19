@@ -41,6 +41,8 @@ model Partenaire {
   factures     Facture[]
   mouvements   MouvementCagnotte[]
   kits         KitPossede[]
+  lotsBons     LotBons[]
+  interventions InterventionPayee[]
   droits       DroitAssistance?
   listesPrix   ListePrix[]
   opportunites Opportunite[]
@@ -289,6 +291,14 @@ model CommandeVente {
   modifieLe            DateTime        @default(now()) @updatedAt
   remboursements       Remboursement[]
   locations            Abonnement[]
+  /// F06 : règles du programme figées au paiement (taux, palier, validité, seuil et durée des droits).
+  reglesFidelite       Json?
+  /// F06 : bons déjà dépensés à retirer, déduits d'un remboursement (D4).
+  bonsManquantsCentimes Int            @default(0)
+  /// F06 : code promo appliqué (limites d'usage par client).
+  codePromo            String?
+  lotsBons             LotBons[]
+  intervention         InterventionPayee?
   estFictif            Boolean         @default(true)
 
   lignes     LigneCommande[]
@@ -371,6 +381,9 @@ model Remboursement {
   commandeId         Int
   commande           CommandeVente     @relation(fields: [commandeId], references: [id])
   montantTtcCentimes Int
+  /// F06 (D4) : bons d'achat déjà dépensés déduits de ce remboursement, en HT et TTC.
+  bonsDeduitsHtCentimes  Int @default(0)
+  deductionTtcCentimes   Int @default(0)
   motif              String
   /// odoo (décidé par l'équipe) ou stripe (fait directement dans Stripe)
   source             String
@@ -526,9 +539,58 @@ model MouvementCagnotte {
   cle             String         @unique
   date            DateTime       @default(now())
   validiteFin     DateTime?
+  /// F06 : lot de bons crédité, consommé ou rendu ; règles appliquées ; motif et auteur d'un ajustement.
+  lotId           Int?
+  lot             LotBons?       @relation(fields: [lotId], references: [id])
+  regles          Json?
+  motif           String?
+  auteur          String?
   estFictif       Boolean        @default(true)
 
   @@map("loyalty_history")
+}
+
+/// Lot de bons d'achat (F06, R3) : un crédit, une restitution ou un ajustement positif, avec sa
+/// date de fin de validité ; consommé dans l'ordre des fins de validité.
+model LotBons {
+  id                     Int                 @id @default(autoincrement())
+  partenaireId           Int
+  partenaire             Partenaire          @relation(fields: [partenaireId], references: [id])
+  /// credit, restitution, ajustement
+  origine                String
+  montantInitialCentimes Int
+  resteCentimes          Int
+  validiteFin            DateTime
+  commandeId             Int?
+  commande               CommandeVente?      @relation(fields: [commandeId], references: [id])
+  creeLe                 DateTime            @default(now())
+  mouvements             MouvementCagnotte[]
+  estFictif              Boolean             @default(true)
+
+  @@index([partenaireId, validiteFin])
+  @@map("loyalty_lot")
+}
+
+enum EtatIntervention {
+  disponible
+  consommee
+}
+
+/// Intervention d'assistance payée à l'acte (F06, FR-038).
+model InterventionPayee {
+  id           Int              @id @default(autoincrement())
+  partenaireId Int
+  partenaire   Partenaire       @relation(fields: [partenaireId], references: [id])
+  commandeId   Int              @unique
+  commande     CommandeVente    @relation(fields: [commandeId], references: [id])
+  etat         EtatIntervention @default(disponible)
+  acheteeLe    DateTime         @default(now())
+  consommeeLe  DateTime?
+  auteur       String?
+  modifieLe    DateTime         @default(now()) @updatedAt
+  estFictif    Boolean          @default(true)
+
+  @@map("assistance_ticket")
 }
 
 /// Droits d'assistance d'un partenaire (spécifique ; à reproduire dans Odoo en phase 2).
@@ -541,6 +603,9 @@ model DroitAssistance {
   origine      String
   /// Jours apportés par chaque commande : { "FICT-SO-00001": 30 } — retirés si elle est annulée (F06, FR-015).
   apports      Json       @default("{}")
+  /// F06 : ouvertures, prolongations, retraits et ajustements [{ date, type, commande?, fin, motif?, auteur? }].
+  historique   Json       @default("[]")
+  modifieLe    DateTime   @default(now()) @updatedAt
   estFictif    Boolean    @default(true)
 
   @@map("assistance_right")
@@ -559,6 +624,11 @@ model Promotion {
   debut          DateTime?
   fin            DateTime?
   conditions     Json      @default("{}")
+  /// F06 : limites d'usage { usagesMax?, parClient?, montantMinimumCentimes?, nouveauxClients? }.
+  limites        Json      @default("{}")
+  /// F06 (D6) : code promo annoncé dans le bandeau et sur les fiches.
+  annoncee       Boolean   @default(false)
+  usages         Int       @default(0)
   cumulable      Boolean   @default(false)
   estFictif      Boolean   @default(true)
 

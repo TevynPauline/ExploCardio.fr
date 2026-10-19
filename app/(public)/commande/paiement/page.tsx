@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { actionPaiement } from "@/actions/commande";
-import { lignesDe, virementDisponible } from "@/domaine/commande/tunnel";
+import { avecAssistanceActe, lignesDe, virementDisponible } from "@/domaine/commande/tunnel";
 import { Kicker, Retour } from "@/ui";
 import { Etapes } from "@/ui/commande/Etapes";
 import { RefusTunnel } from "@/ui/commande/RefusTunnel";
@@ -35,7 +35,7 @@ export default async function Paiement({ searchParams }: { searchParams: Promise
   const lignes = lignesDe(commande);
   const achat = lignes.some((l) => l.formule === "achat");
   const abonnement = lignes.some((l) => l.formule === "mise_a_disposition");
-  const virement = achat && (await virementDisponible());
+  const virement = achat && !avecAssistanceActe(lignes) && (await virementDisponible());
   // Mode de livraison des achats et date de chaque mise à disposition choisis à l'étape précédente.
   const dates = (commande.datesLivraisonMad ?? {}) as Record<string, string>;
   const dateManquante = lignes.some((l) => l.formule === "mise_a_disposition" && !dates[l.defaultCode]);
@@ -52,6 +52,7 @@ export default async function Paiement({ searchParams }: { searchParams: Promise
           <fieldset className="flex flex-col gap-3">
             <legend className="mb-2 font-semibold text-ink">Paiement de vos achats</legend>
             <Choix nom="achat" valeur="carte" titre="Carte bancaire" texte="Visa, Mastercard ou American Express, avec authentification sécurisée." coche={commande.moyenPaiement !== "virement"} />
+            {achat && !virement && avecAssistanceActe(lignes) ? <p className="text-small text-muted">L’assistance à l’acte se règle par carte bancaire.</p> : null}
             {virement ? <Choix nom="achat" valeur="virement" titre="Virement bancaire" texte="Votre commande est réservée jusqu’à l’échéance indiquée ; vous recevez le RIB et la référence à rappeler." coche={commande.moyenPaiement === "virement"} /> : null}
           </fieldset>
         ) : null}

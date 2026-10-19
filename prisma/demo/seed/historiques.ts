@@ -221,6 +221,23 @@ export async function remplirHistoriques(db: PrismaClient, p: Partenaires) {
     },
   });
 
+  // F06 : remise automatique en cours et code promo « à annoncer » (D6).
+  await db.promotion.create({
+    data: { nom: "Pochettes DMS : −10 %", type: "remise_automatique", cible: { defaultCodes: ["EC-DMS-POCHETTE-4L"] }, remisePourcent: 10, debut: ilYa(3), fin: dans(20) },
+  });
+  await db.promotion.create({
+    data: {
+      code: "FIDELITE5",
+      nom: "Code FIDELITE5 : −5 % sur votre commande",
+      type: "code_promo",
+      remisePourcent: 5,
+      debut: ilYa(2),
+      fin: dans(30),
+      annoncee: true,
+      limites: { parClient: 1, montantMinimumCentimes: 10_000 },
+    },
+  });
+
   // Programme « cadeau de bienvenue » (F02) : l'article offert est défini dans Odoo.
   await db.promotion.create({
     data: { nom: "Cadeau de bienvenue : tensiomètre électronique", type: "bienvenue", cible: { defaultCode: "EC-BIENVENUE-TENSIOMETRE" } },

@@ -160,6 +160,46 @@ Dans le back-office, rubrique **Démonstration** :
   lecture seule. **Contenus → Coordonnées et textes** : heure limite, jours non livrés, zones
   éloignées, rappels, conditions de location.
 
+## Bons d'achat, droits d'assistance et promotions (F06)
+
+Le parcours « consommables → bons d'achat → assistance offerte » : tout est calculé par Odoo
+(ici la base fictive), le site l'affiche.
+
+- **Ce qu'un achat rapporte** : les fiches de consommables et d'accessoires, le panier (même
+  pour un visiteur) et la page de confirmation annoncent les bons d'achat gagnés, le montant
+  qui manque pour le palier suivant, et l'ouverture ou la prolongation des droits
+  d'assistance (ou ce qui manquait pour les ouvrir). Paramètres par défaut : 0 % sous 500 € HT,
+  5 % de 500 € à 1 000 € HT, 10 % au-delà, sur tout le montant éligible ; une commande de
+  1 200 € HT de consommables rapporte 120 €.
+- **Utiliser ses bons** : au panier, « Bons d'achat » : solde, prochaine expiration, montant à
+  utiliser (vide = le maximum). Odoo plafonne au montant des achats ; les bons ne sont débités
+  qu'au paiement, en commençant par ceux qui expirent le plus tôt.
+- **Annulation et remboursement** : les bons et la période de droits apportés par la commande
+  sont retirés ; les bons qu'elle avait utilisés sont rendus avec leur date de validité
+  d'origine (30 jours de plus s'ils ont expiré entre-temps). Si les bons crédités ont déjà été
+  dépensés, le remboursement est réduit d'autant et l'équipe est prévenue
+  (**Démonstration → Paiements** affiche la réduction).
+- **Mon compte → Bons d'achat** : solde, prochaine expiration, historique relié aux commandes,
+  règles du programme. **Mon compte → Droits d'assistance** : statut, date de fin, commande
+  d'origine, comment prolonger ; sans droits, le montant qui les ouvrirait et l'**assistance à
+  l'acte** (150 € HT l'intervention, réglée par carte seulement), avec ses interventions.
+- **Emails** (boîte de démonstration, relevés toutes les 5 minutes, une seule fois) : bons
+  crédités, retirés, rendus, ajustés ; droits ouverts, prolongés ou retirés ; intervention
+  close ; rappels avant la fin des droits et avant l'expiration de bons.
+- **Promotions** : les remises automatiques, ventes flash et codes « à annoncer » en cours
+  s'affichent dans le bandeau et sur les fiches (prix d'origine, prix remisé HT, date de fin),
+  et s'arrêtent à la minute de leur fin. Un article encore au panier à la fin d'une promotion
+  passe au prix en vigueur, avec un message.
+- **Back-office → Assistance** (toute l'équipe, lecture seule) : recherche par nom, cabinet,
+  email, téléphone, RPPS ou SIRET ; statut et fin des droits, ajustements, interventions,
+  règles en vigueur.
+- **Démonstration → Fidélité** (ce que l'équipe fera dans Odoo) : ajuster une cagnotte ou des
+  droits (motif obligatoire), clore une intervention payée, exécuter l'expiration des bons
+  échus et les rappels à une date simulée, créer ou terminer une promotion. Les paliers, la
+  validité, le seuil, la durée et le plafond des droits et le prix de l'assistance à l'acte se
+  règlent dans **Démonstration → Paramètres commerciaux** ; une modification ne touche que les
+  commandes suivantes.
+
 ## Demander un financement (F04)
 
 - Sur une fiche, formule « Financement longue durée » → **Demander mon financement** ; ou

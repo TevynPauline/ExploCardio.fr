@@ -385,6 +385,8 @@ model Panier {
   /// Code promo saisi (F04) ; sa validité est vérifiée par le devis d'Odoo.
   codePromo      String?
   /// Utiliser le solde de bons d'achat (F06).
+  /// F06 (D1) : montant de bons choisi au panier ; null = le maximum utilisable.
+  bonsDemandesHt Int?
   utiliserBons   Boolean       @default(false)
   lignes         LignePanier[]
   creeLe         DateTime      @default(now())
@@ -394,16 +396,18 @@ model Panier {
 }
 
 model LignePanier {
-  id             String        @id @default(cuid())
-  panierId       String
-  panier         Panier        @relation(fields: [panierId], references: [id], onDelete: Cascade)
+  id                 String        @id @default(cuid())
+  panierId           String
+  panier             Panier        @relation(fields: [panierId], references: [id], onDelete: Cascade)
   /// Variante d'Odoo (default_code).
-  defaultCode    String
-  formule        FormulePanier
-  quantite       Int
+  defaultCode        String
+  formule            FormulePanier
+  quantite           Int
   /// Prix HT lu à l'ajout, pour signaler un changement (jamais un prix de référence).
-  prixHtConstate Int
-  ajouteLe       DateTime      @default(now())
+  prixHtConstate     Int
+  /// F06 (A4) : promotion en cours lors de l'ajout ; si elle se termine, le client en est informé.
+  promotionConstatee String?
+  ajouteLe           DateTime      @default(now())
 
   @@unique([panierId, defaultCode, formule])
   @@map("ligne_panier")
@@ -437,50 +441,50 @@ enum EtatPartieCommande {
 /// Les commandes, factures et stocks sont dans Odoo ; ce modèle garantit une seule commande
 /// par paiement et la reprise du tunnel sans ressaisie.
 model CommandeSite {
-  id                   String                 @id @default(cuid())
+  id                            String                 @id @default(cuid())
   /// EC-AAAA-NNNNNN, rappelée au client (virement)
-  ref                  String                 @unique
-  compteId             String
-  compte               CompteClient           @relation(fields: [compteId], references: [id], onDelete: Cascade)
-  etape                EtapeCommande          @default(adresses)
-  adresses             Json                   @default("{}")
-  modeLivraison        String?
-  moyenPaiement        MoyenPaiementCommande?
+  ref                           String                 @unique
+  compteId                      String
+  compte                        CompteClient           @relation(fields: [compteId], references: [id], onDelete: Cascade)
+  etape                         EtapeCommande          @default(adresses)
+  adresses                      Json                   @default("{}")
+  modeLivraison                 String?
+  moyenPaiement                 MoyenPaiementCommande?
   /// Moyen des échéances mensuelles (carte ou SEPA)
-  moyenAbonnement      MoyenPaiementCommande?
-  cgvAccepteesLe       DateTime?
+  moyenAbonnement               MoyenPaiementCommande?
+  cgvAccepteesLe                DateTime?
   /// F05 : acceptation des conditions de location (FR-011).
   conditionsLocationAccepteesLe DateTime?
   /// F05 : date de livraison choisie par ligne de mise à disposition { defaultCode: "AAAA-MM-JJ" }.
-  datesLivraisonMad    Json                   @default("{}")
+  datesLivraisonMad             Json                   @default("{}")
   /// F05 : réservations d'appareils avant paiement [{ defaultCode, n, cle }].
-  reservationsAppareils Json                  @default("[]")
+  reservationsAppareils         Json                   @default("[]")
   /// F05 : éléments de l'abonnement de paiement { element: référence de location d'Odoo }.
-  elementsAbonnement   Json                   @default("{}")
+  elementsAbonnement            Json                   @default("{}")
   /// F05 : paiement du premier mois (remboursement intégral si le compte est refusé).
-  paiementAbonnementRef String?
+  paiementAbonnementRef         String?
   /// Dernier devis d'Odoo affiché, pour signaler un écart
-  devis                Json?
-  lignes               Json                   @default("[]")
-  codePromo            String?
-  bonsHt               Int                    @default(0)
-  etatAchat            EtatPartieCommande     @default(sans_objet)
-  etatAbonnement       EtatPartieCommande     @default(sans_objet)
-  sessionAchat         String?
-  sessionAbonnement    String?
-  tentative            Int                    @default(0)
-  reservationRef       String?
+  devis                         Json?
+  lignes                        Json                   @default("[]")
+  codePromo                     String?
+  bonsHt                        Int                    @default(0)
+  etatAchat                     EtatPartieCommande     @default(sans_objet)
+  etatAbonnement                EtatPartieCommande     @default(sans_objet)
+  sessionAchat                  String?
+  sessionAbonnement             String?
+  tentative                     Int                    @default(0)
+  reservationRef                String?
   /// Paiement accepté (référence Stripe) et moyen utilisé, pour enregistrer ou rattraper la commande
-  paiementRef          String?
-  moyenEffectif        String?
-  odooCommandeRef      String?
-  odooAbonnementRefs   String[]               @default([])
-  echeanceVirement     DateTime?
-  rappelVirementLe     DateTime?
-  motifRefus           String?
-  echecsEnregistrement Int                    @default(0)
-  creeLe               DateTime               @default(now())
-  modifieLe            DateTime               @updatedAt
+  paiementRef                   String?
+  moyenEffectif                 String?
+  odooCommandeRef               String?
+  odooAbonnementRefs            String[]               @default([])
+  echeanceVirement              DateTime?
+  rappelVirementLe              DateTime?
+  motifRefus                    String?
+  echecsEnregistrement          Int                    @default(0)
+  creeLe                        DateTime               @default(now())
+  modifieLe                     DateTime               @updatedAt
 
   @@index([compteId, etape])
   @@index([etatAchat])
@@ -488,25 +492,35 @@ model CommandeSite {
 }
 
 /// Dernier statut notifié au client pour une commande d'Odoo (F04, FR-032).
+/// Suivi de la fidélité (F06) : chaque changement ou rappel notifié une seule fois (clé).
+model SuiviFidelite {
+  cle           String   @id
+  partenaireRef String
+  notifieLe     DateTime @default(now())
+
+  @@index([partenaireRef])
+  @@map("suivi_fidelite")
+}
+
 /// Suivi des locations (F05) : un seul email ou une seule action par changement relevé dans Odoo.
 model SuiviLocation {
-  abonnementRef          String    @id
-  partenaireRef          String
-  dernierEtat            String
-  expedieNotifie         Boolean   @default(false)
-  colisNonLivreNotifie   Boolean   @default(false)
-  attenteChoixNotifie    Boolean   @default(false)
-  impayeNotifie          Boolean   @default(false)
-  retourNotifie          Boolean   @default(false)
+  abonnementRef        String    @id
+  partenaireRef        String
+  dernierEtat          String
+  expedieNotifie       Boolean   @default(false)
+  colisNonLivreNotifie Boolean   @default(false)
+  attenteChoixNotifie  Boolean   @default(false)
+  impayeNotifie        Boolean   @default(false)
+  retourNotifie        Boolean   @default(false)
   /// Dernière échéance rappelée au client (FR-025).
-  echeanceRappelee       DateTime?
+  echeanceRappelee     DateTime?
   /// Nombre de rappels de retour envoyés et date du dernier (FR-028, SC-010).
-  rappelsRetour          Int       @default(0)
-  dernierRappelRetour    DateTime?
+  rappelsRetour        Int       @default(0)
+  dernierRappelRetour  DateTime?
   /// Accès Cloud ouvert par le connecteur PCA (F12 reprendra leur gestion).
-  droitCloudRef          String?
-  droitCloudEtat         String?
-  notifieLe              DateTime  @default(now())
+  droitCloudRef        String?
+  droitCloudEtat       String?
+  notifieLe            DateTime  @default(now())
 
   @@map("suivi_location")
 }

@@ -71,8 +71,10 @@ export const PARAMETRES_INITIAUX: Record<string, string> = {
   "location.rappel_retour_jours": "2",
   "location.conditions":
     "Location mensuelle sans engagement, renouvelée chaque mois. Résiliable à tout moment depuis votre compte : la location prend fin au terme du mois payé. L'appareil est à retourner dans le délai indiqué, avec l'étiquette fournie. En cas de perte ou de non-retour, la valeur de remplacement indiquée est facturée ; une dégradation constatée au retour est facturée selon son coût. Texte provisoire de démonstration.",
-  // Bons d'achat au panier : activés quand F06 est livré (D7).
-  "fidelite.bons_au_panier": "false",
+  // F06 : bons d'achat au panier (D1) ; rappels avant la fin des droits et l'expiration des bons (D2).
+  "fidelite.bons_au_panier": "true",
+  "fidelite.rappel_droits_jours": "7",
+  "fidelite.rappel_expiration_jours": "30",
 };
 
 export async function remplirContenusInitiaux(db: PrismaClient) {

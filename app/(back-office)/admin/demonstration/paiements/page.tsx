@@ -96,11 +96,15 @@ export default async function Paiements({
           {commandes.map((c) => {
             const id = c.ref.replace(/[^A-Za-z0-9]/g, "");
             const rembourse = c.remboursements.reduce((s, r) => s + r.montantTtcCentimes, 0);
+            // F06 (D4) : bons crédités déjà dépensés, déduits du remboursement versé.
+            const deduit = c.remboursements.reduce((s, r) => s + r.deductionTtcCentimes, 0);
+            const bonsDeduits = c.remboursements.reduce((s, r) => s + r.bonsDeduitsHtCentimes, 0);
             return (
               <li key={c.ref} className="flex flex-col gap-2 border-b border-line pb-4" aria-label={`Commande ${c.ref}`}>
                 <p>
                   <strong>{c.ref}</strong> · {c.partenaire.nom} · {euros(c.montantTtcCentimes)} TTC · {c.modePaiement} · statut : <strong>{c.statut}</strong>
                   {rembourse ? ` · remboursé ${euros(rembourse)}` : ""}
+                  {deduit ? ` · réduit de ${euros(deduit)} TTC (${euros(bonsDeduits)} HT de bons déjà dépensés)` : ""}
                 </p>
                 {c.statut === "en_attente_paiement" ? (
                   <form action={virementRecu} className="flex flex-wrap items-end gap-2">
@@ -126,7 +130,7 @@ export default async function Paiements({
                 {["payee", "confirmee", "en_preparation", "expediee", "livree", "remboursee_partiellement"].includes(c.statut) && !c.financee ? (
                   <form action={deciderRemboursement} className="flex flex-wrap items-end gap-2">
                     <input type="hidden" name="commande" value={c.ref} />
-                    <Champ id={`rembourser-${id}`} name="montant" libelle={`Montant à rembourser (${c.ref}, € TTC)`} defaultValue={((c.montantTtcCentimes - rembourse) / 100).toFixed(2).replace(".", ",")} />
+                    <Champ id={`rembourser-${id}`} name="montant" libelle={`Montant à rembourser (${c.ref}, € TTC)`} defaultValue={((c.montantTtcCentimes - rembourse - deduit) / 100).toFixed(2).replace(".", ",")} />
                     <Champ id={`motif-${id}`} name="motif" libelle={`Motif (${c.ref})`} defaultValue="Retour accepté" />
                     <Button type="submit" variante="secondaire">Décider un remboursement</Button>
                   </form>

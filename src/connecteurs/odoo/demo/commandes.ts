@@ -12,6 +12,7 @@ import type {
 } from "../interfaces";
 import { calculerDevis } from "./devis";
 import { ajouterJours, db, prochaineReference, prochainNumeroFacture, type Tx } from "./outils";
+import { appliquerReglesTx, ARTICLE_ASSISTANCE_ACTE, utiliserBons } from "./fidelite";
 import { decompterStock } from "./stock";
 
 // Domaine « Commandes » en démonstration (contracts/odoo.md §4, complété par F04).
@@ -109,6 +110,7 @@ export async function creerCommande(tx: Tx, c: NouvelleCommande, cle: string, da
       montantTtcCentimes: achat.totalTtc,
       fraisPortCentimes: achat.fraisPortHt + achat.fraisSpecifiquesHt,
       bonsUtilisesCentimes: achat.bonsHt,
+      codePromo: devis.codePromo?.applique ? devis.codePromo.code : null,
       modePaiement: c.paiement.mode,
       referencePaiement: c.paiement.reference,
       statut: creation.statut,
@@ -126,15 +128,18 @@ export async function creerCommande(tx: Tx, c: NouvelleCommande, cle: string, da
     },
   });
 
-  if (achat.bonsHt > 0) {
-    await tx.mouvementCagnotte.create({
-      data: { partenaireId: partenaire.id, type: "utilisation", montantCentimes: -achat.bonsHt, commandeId: commande.id, cle: `utilisation:${ref}`, date },
-    });
+  // F06 : bons utilisés, consommés dans l'ordre de leur expiration (FR-012).
+  if (achat.bonsHt > 0) await utiliserBons(tx, partenaire.id, commande.id, ref, achat.bonsHt);
+  // F06 (FR-038) : l'assistance à l'acte payée ouvre une intervention.
+  if (creation.statut === "payee" && c.lignes.some((l) => l.defaultCode === ARTICLE_ASSISTANCE_ACTE)) {
+    await tx.interventionPayee.create({ data: { partenaireId: partenaire.id, commandeId: commande.id } });
   }
   if (devis.lignes.some((l) => l.offerte)) {
     await tx.partenaire.update({ where: { id: partenaire.id }, data: { bienvenueRecue: true } });
   }
   if (creation.statut === "payee" && !financee) await creerFacture(tx, commande.id, date);
+  // F06 : Odoo applique lui-même les règles du programme à la commande payée.
+  if (creation.statut === "payee") await appliquerReglesTx(tx, ref, date);
 
   return { ref, id: commande.id, creee: true, echeance: creation.echeance };
 }
@@ -160,7 +165,7 @@ async function creerAvoir(tx: Tx, commandeId: number, montantTtc: number, motif:
 }
 
 /** Enregistre un remboursement (idempotent par clé) : avoir, statut de la commande. */
-export async function enregistrerRemboursementTx(tx: Tx, r: EnregistrementRemboursement, cle: string, date = new Date()) {
+export async function enregistrerRemboursementTx(tx: Tx, r: EnregistrementRemboursement & { deduction?: { bonsDeduitsHt: number; deductionTtc: number } }, cle: string, date = new Date()) {
   const deja = await tx.remboursement.findUnique({ where: { cle } });
   if (deja?.avoirNumero) return { avoir: deja.avoirNumero };
   // Même remboursement Stripe déjà enregistré (décidé dans Odoo, puis notifié par Stripe).
@@ -175,13 +180,18 @@ export async function enregistrerRemboursementTx(tx: Tx, r: EnregistrementRembou
   if (r.remboursementId) {
     await tx.remboursement.update({ where: { id: Number(r.remboursementId) }, data: donnees });
   } else {
-    await tx.remboursement.create({ data: { commandeId: commande.id, montantTtcCentimes: r.montantTtc, motif: r.motif, source: r.source, ...donnees } });
+    await tx.remboursement.create({
+      data: { commandeId: commande.id, montantTtcCentimes: r.montantTtc, motif: r.motif, source: r.source, bonsDeduitsHtCentimes: r.deduction?.bonsDeduitsHt ?? 0, deductionTtcCentimes: r.deduction?.deductionTtc ?? 0, ...donnees },
+    });
   }
   const executes = await tx.remboursement.findMany({ where: { commandeId: commande.id, etat: "execute" } });
-  const total = executes.reduce((s, x) => s + x.montantTtcCentimes, 0);
+  // Les bons déjà dépensés déduits (F06, D4) comptent dans le remboursement intégral.
+  const total = executes.reduce((s, x) => s + x.montantTtcCentimes + x.deductionTtcCentimes, 0);
   const complet = total >= commande.montantTtcCentimes;
   await tx.commandeVente.update({ where: { id: commande.id }, data: { statut: complet ? "remboursee" : "remboursee_partiellement" } });
   if (complet) await tx.facture.updateMany({ where: { commandeId: commande.id, type: "facture" }, data: { etatPaiement: "rembourse" } });
+  // F06 : Odoo recalcule aussitôt bons et droits de la commande remboursée.
+  await appliquerReglesTx(tx, commande.ref);
   return { avoir: avoir.numero };
 }
 
@@ -215,11 +225,9 @@ export const commandesDemo: CommandesOdoo = {
       for (const l of c.lignes) {
         if (l.variante.stock) await tx.stock.update({ where: { id: l.variante.stock.id }, data: { quantite: { increment: l.quantite } } });
       }
-      if (c.bonsUtilisesCentimes > 0) {
-        await tx.mouvementCagnotte.create({
-          data: { partenaireId: c.partenaireId, type: "restitution", montantCentimes: c.bonsUtilisesCentimes, commandeId: c.id, cle: `restitution:${ref}`, date: new Date() },
-        });
-      }
+      await tx.commandeVente.update({ where: { id: c.id }, data: { statut: "annulee" } });
+      // F06 (A1) : bons utilisés rendus à leur validité d'origine, par la règle commune.
+      await appliquerReglesTx(tx, ref);
       if (c.lignes.some((l) => l.prixUnitaireHtCentimes === 0)) {
         await tx.partenaire.update({ where: { id: c.partenaireId }, data: { bienvenueRecue: false } });
       }
@@ -302,6 +310,7 @@ export const commandesDemo: CommandesOdoo = {
       modePaiement: r.commande.modePaiement,
       montantTtc: r.montantTtcCentimes,
       motif: r.motif,
+      bonsDeduitsHt: r.bonsDeduitsHtCentimes,
     }));
   },
 

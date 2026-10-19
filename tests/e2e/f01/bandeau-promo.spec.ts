@@ -21,7 +21,14 @@ async function bandeau(page: Page) {
 
 test("sans message actif, aucun bandeau ni espace vide", async ({ page }) => {
   const actifs = await requete<{ n: number }>("site", `SELECT count(*)::int n FROM contenu WHERE type = 'bandeau' AND etat = 'publie'`);
-  test.skip(actifs[0]!.n > 0, "Un message réel est actif sur ce site.");
+  // F06 : les promotions en cours d'Odoo sont aussi annoncées dans le bandeau.
+  const promotions = await requete<{ n: number }>(
+    "demo",
+    `SELECT count(*)::int n FROM loyalty_promotion
+     WHERE (type IN ('remise_automatique', 'vente_flash') OR (type = 'code_promo' AND annoncee))
+       AND (debut IS NULL OR debut <= now()) AND (fin IS NULL OR fin > now())`,
+  );
+  test.skip(actifs[0]!.n + promotions[0]!.n > 0, "Un message ou une promotion est actif sur ce site.");
   await expect(await bandeau(page)).toHaveCount(0);
 });
 

@@ -12,6 +12,10 @@ export const PARAMETRES_PAR_DEFAUT = {
   "livraison.delai_zones_jours": "2",
   "location.rappel_echeance_jours": "3",
   "location.rappel_retour_jours": "2",
+  /** F06 : bons au panier (D1) et rappels de fidélité (D2). */
+  "fidelite.bons_au_panier": "true",
+  "fidelite.rappel_droits_jours": "7",
+  "fidelite.rappel_expiration_jours": "30",
 } as const;
 
 export type CleParametre = keyof typeof PARAMETRES_PAR_DEFAUT | (string & {});

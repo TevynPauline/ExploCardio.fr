@@ -7,6 +7,11 @@ import { COOKIE_PANIER, panierPour } from "@/domaine/catalogue/panier";
 import { panierDetaille } from "@/domaine/commande/devis";
 import { codesFinancables } from "@/domaine/financement/demande";
 import { kitsDejaPossedes, kitsObligatoires } from "@/domaine/location/kit";
+import { cagnotteDuCompte, gainsDuPanier } from "@/domaine/fidelite/gains";
+import { bonsAuPanierActifs } from "@/domaine/commande/devis";
+import { dbSite } from "@/lib/db/site";
+import { BonsAchat } from "@/ui/fidelite/BonsAchat";
+import { GainsFidelite } from "@/ui/fidelite/Gains";
 import { lireNoms } from "@/domaine/catalogue/lecture";
 import { modeDuSite } from "@/lib/config";
 import { Card, Kicker } from "@/ui";
@@ -40,6 +45,13 @@ export default async function Panier() {
   const financables = await codesFinancables(achats.map((l) => l.defaultCode));
   const [obligatoires, possedes] = await Promise.all([kitsObligatoires(detail.panierId, compte?.id ?? null), kitsDejaPossedes(detail.panierId, compte?.id ?? null)]);
   const noms = possedes.length ? await lireNoms() : {};
+  // F06 : gains de la commande et bons d'achat utilisables (compte validé seulement).
+  const [gains, cagnotte, bonsActifs, panierSite] = await Promise.all([
+    achats.length ? gainsDuPanier(detail.panierId, compte?.id ?? null) : null,
+    compte?.statut === "valide" ? cagnotteDuCompte(compte.id) : null,
+    bonsAuPanierActifs(),
+    dbSite().panier.findUnique({ where: { id: detail.panierId } }),
+  ]);
   const devis = detail.devis;
   const ligne = (l: (typeof detail.lignes)[number]) => (
     <LignePanier
@@ -55,6 +67,7 @@ export default async function Panier() {
       remiseHt={l.remiseHt}
       promotion={l.promotion}
       prixAChange={l.prixAChange}
+      promotionTerminee={l.promotionTerminee}
       ancienPrixHt={l.ancienPrixHt}
       delaiJours={l.delaiJours}
       indisponible={l.indisponible}
@@ -80,7 +93,19 @@ export default async function Panier() {
           <h2 id="titre-paiement-unique" className="text-h2 font-light">Paiement unique</h2>
           <ul className="flex list-none flex-col gap-3 p-0">{achats.map(ligne)}</ul>
           <div className="grid gap-6 lg:grid-cols-2">
-            <CodePromo code={detail.codePromo} statut={devis?.codePromo ? { applique: devis.codePromo.applique, motif: devis.codePromo.motif } : null} />
+            <div className="flex flex-col gap-6">
+              <CodePromo code={detail.codePromo} statut={devis?.codePromo ? { applique: devis.codePromo.applique, motif: devis.codePromo.motif } : null} />
+              {bonsActifs && cagnotte && panierSite ? (
+                <BonsAchat
+                  soldeHt={cagnotte.lots.reduce((s, l) => s + l.resteHt, 0)}
+                  prochaineExpiration={cagnotte.prochaineExpiration ? { date: cagnotte.prochaineExpiration.date.toISOString(), montantHt: cagnotte.prochaineExpiration.montantHt } : null}
+                  utilises={panierSite.utiliserBons}
+                  montantDemandeHt={panierSite.bonsDemandesHt}
+                  appliquesHt={devis?.achat?.bonsHt ?? 0}
+                />
+              ) : null}
+              {gains ? <GainsFidelite gains={gains} /> : null}
+            </div>
             {devis?.achat ? (
               <Card>
                 <TotauxAchat achat={devis.achat} regleCumul={devis.regleCumul} />

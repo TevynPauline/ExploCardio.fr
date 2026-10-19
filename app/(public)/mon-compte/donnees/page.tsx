@@ -1,5 +1,8 @@
 import { redirect } from "next/navigation";
 import { estErreurConnecteur } from "@/connecteurs/erreurs";
+import { cagnotteDetaillee } from "@/domaine/fidelite/cagnotte";
+import { assistanceDuCompte } from "@/domaine/fidelite/droits";
+import { euros } from "@/lib/montants";
 import { compteCourant } from "@/domaine/comptes/session";
 import { supprimer, verifierMotDePasse } from "@/domaine/comptes/rgpd";
 import { Button, Card, Champ, Kicker } from "@/ui";
@@ -26,8 +29,14 @@ async function supprimerCompte(d: FormData) {
 
 // Droits sur les données (US6) : export en libre-service, suppression du compte.
 export default async function MesDonnees({ searchParams }: { searchParams: Promise<{ erreur?: string; refus?: string }> }) {
-  await compteCourant("/mon-compte/donnees");
+  const { compte } = await compteCourant("/mon-compte/donnees");
   const { erreur, refus } = await searchParams;
+  // F06 : la cagnotte et les droits d'assistance sont perdus avec le compte.
+  const [{ cagnotte }, { droits }] = await Promise.all([cagnotteDetaillee(compte.id), assistanceDuCompte(compte.id)]);
+  const pertes = [
+    cagnotte?.soldeHt ? `vos ${euros(cagnotte.soldeHt)} HT de bons d’achat` : null,
+    droits?.statut === "actif" ? `vos droits d’assistance (valables jusqu’au ${droits.fin.toLocaleDateString("fr-FR", { timeZone: "Europe/Paris" })})` : null,
+  ].filter(Boolean);
   return (
     <>
       <Kicker>Mon compte</Kicker>
@@ -50,6 +59,13 @@ export default async function MesDonnees({ searchParams }: { searchParams: Promi
           pendant la durée imposée par la loi (10 ans). Une location en cours ou une facture impayée doit être soldée
           d’abord.
         </p>
+        {pertes.length ? (
+          <p role="note" className="ec-box--promo p-4 font-medium">
+            En supprimant votre compte, vous perdez {pertes.join(" et ")}.
+          </p>
+        ) : (
+          <p className="text-small">Votre cagnotte de bons d’achat et vos droits d’assistance seraient perdus avec votre compte.</p>
+        )}
         <form action={supprimerCompte} className="flex max-w-md flex-col gap-3">
           <Champ id="mdp-suppression" name="motDePasse" type="password" libelle="Votre mot de passe" autoComplete="current-password" required erreur={erreur === "mot-de-passe-suppression" ? "Mot de passe incorrect." : null} />
           <label className="flex min-h-11 items-start gap-3">

@@ -72,7 +72,8 @@ test("SC-008 : aucune donnée de carte dans les tables et le journal du site", a
   for (const t of ["commande_site", "journal_action", "panier", "ligne_panier", "demande_financement", "message_demonstration"]) {
     const lignes = await requete<{ texte: string }>("site", `SELECT row_to_json(x)::text AS texte FROM ${t} x`);
     const fautes = lignes.flatMap(({ texte }) => [
-      ...(texte.match(/\b(?:\d[ -]?){12,18}\d\b/g) ?? []).filter(ressembleACarte),
+      // Les identifiants UUID (événements, sessions) peuvent finir par des chiffres : on les retire d'abord.
+      ...(texte.replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, "uuid").match(/\b(?:\d[ -]?){12,18}\d\b/g) ?? []).filter(ressembleACarte),
       ...(/"(cvc|cvv|card_number|numeroCarte|pan)"/.test(texte) ? ["champ de carte"] : []),
     ]);
     expect(fautes, t).toEqual([]);

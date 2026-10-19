@@ -10,6 +10,7 @@ const OUTILS = [
   { href: "/admin/demonstration/stocks", titre: "Stocks", texte: "Quantités, délais et ruptures." },
   { href: "/admin/demonstration/parametres-commerciaux", titre: "Paramètres commerciaux", texte: "Bons d'achat, droits d'assistance, promotions." },
   { href: "/admin/demonstration/paiements", titre: "Paiements", texte: "Échéances mensuelles et remboursements simulés." },
+  { href: "/admin/demonstration/fidelite", titre: "Fidélité", texte: "Ajustements de cagnottes et de droits, interventions à clore, expiration des bons, promotions." },
   { href: "/admin/demonstration/locations", titre: "Locations", texte: "Expédier, livrer, retours, impayés et actions planifiées des mises à disposition." },
   { href: "/admin/demonstration/pannes", titre: "Pannes simulées", texte: "Rendre un connecteur indisponible pour montrer les cas d'erreur." },
   { href: "/admin/demonstration/boite", titre: "Boîte de démonstration", texte: "Emails et notifications qui auraient été envoyés." },

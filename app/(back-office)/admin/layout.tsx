@@ -22,6 +22,7 @@ export default async function MiseEnPageBackOffice({ children }: { children: Rea
     ...(role === "admin" || role === "commercial" ? [{ href: "/admin/catalogue", libelle: "Catalogue" }] : []),
     { href: "/admin/commandes", libelle: "Commandes" },
     { href: "/admin/locations", libelle: "Locations" },
+    { href: "/admin/assistance", libelle: "Assistance" },
     ...(role === "admin" || role === "commercial" ? [{ href: "/admin/financements", libelle: "Financements" }] : []),
     ...(role === "admin" ? [{ href: "/admin/contenus", libelle: "Contenus" }] : []),
     ...(outilsDemo

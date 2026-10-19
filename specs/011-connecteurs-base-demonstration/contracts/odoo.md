@@ -88,14 +88,20 @@ réservation » (clé), utilisée quand un paiement est refusé ou abandonné.
 
 | Opération | Entrée | Sortie | Erreurs | Utilisée par |
 |---|---|---|---|---|
-| Lire la cagnotte | partenaire | solde, mouvements, prochaine expiration | — | F06 |
-| Lire les droits d'assistance | partenaire | statut, date de fin, origine | — | F06, F09, F13 |
-| Estimer les gains d'un panier | partenaire, lignes | bons d'achat et droits que la commande rapporterait | — | F03, F04 |
-| Appliquer les règles à une commande payée | commande | mouvements créés | — | F04, F06 |
+| Lire la cagnotte | partenaire | solde, lots ouverts, mouvements (avec motif), prochaine expiration | — | F06 |
+| Lire les droits d'assistance | partenaire | statut, date de fin, origine, historique | — | F06, F09, F13 |
+| Estimer les gains d'un panier | partenaire ou visiteur, lignes | bons, droits, seuil des droits, manque pour le palier suivant | — | F03, F04, F06 |
+| Appliquer les règles à une commande | commande | mouvements créés (règles figées au paiement, lots, retraits, restitutions) ; idempotent | `NotFound` | F04, F06 |
+| Lister les changements depuis | date | mouvements, événements de droits, interventions | — | F06 |
+| Lire les règles du programme | — | paliers, validité, seuil, durée, prolongation, plafond, prix de l'assistance à l'acte | — | F06 |
+| Lister les interventions payées | partenaire | état, dates, commande | — | F06 |
+| Promotions en cours | date | promotions annonçables, prix d'origine et remisé HT | — | F01, F03, F06 |
 | Lire l'offre de bienvenue | — | article offert (référence) et disponibilité, ou « aucune offre » | `ServiceUnavailable` | F02, F04 |
 
 En mode démonstration, ce domaine **applique les mêmes règles qu'Odoo** à partir des
-paramètres de la base (principe III) ; en mode réel, c'est Odoo qui calcule.
+paramètres de la base (principe III) ; en mode réel, c'est Odoo qui calcule. Le **jeu de
+commandes de référence** de F06 (`tests/contract/odoo/fidelite-reference.ts`) vérifie que les
+deux modes donnent les mêmes bons et les mêmes droits (FR-039).
 
 ## 8. Opportunités commerciales
 

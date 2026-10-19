@@ -199,6 +199,8 @@ export async function virementRecu(ref: string, montantTtc: number): Promise<{ e
     const ecart = montantTtc - c.montantTtcCentimes;
     if (ecart !== 0) return { ecart };
     await tx.commandeVente.update({ where: { id: c.id }, data: { statut: "payee", echeancePaiement: null } });
+    // F06 : Odoo applique les règles du programme au virement reçu (FR-010).
+    const { appliquerReglesTx } = await import("./fidelite");
     const { prochainNumeroFacture } = await import("./outils");
     const lignes = await tx.ligneCommande.findMany({ where: { commandeId: c.id }, include: { variante: { include: { modele: true } } } });
     await tx.facture.create({
@@ -221,6 +223,7 @@ export async function virementRecu(ref: string, montantTtc: number): Promise<{ e
         })),
       },
     });
+    await appliquerReglesTx(tx, c.ref);
     return { ecart: 0 };
   });
 }
@@ -249,14 +252,28 @@ export async function deciderRemboursement(ref: string, montantTtc: number, moti
   if (!motif.trim()) throw new ValeurRefusee("Indiquez le motif du remboursement.");
   const c = await db().commandeVente.findUnique({ where: { ref }, include: { remboursements: true } });
   if (!c) throw new NotFound("Commande", ref);
-  const deja = c.remboursements.reduce((s, r) => s + r.montantTtcCentimes, 0);
+  const deja = c.remboursements.reduce((s, r) => s + r.montantTtcCentimes + r.deductionTtcCentimes, 0);
   if (deja + montantTtc > c.montantTtcCentimes) throw new ValeurRefusee("Le remboursement dépasse le montant de la commande.");
+  // F06 (D4) : remboursement intégral d'une commande dont les bons crédités ont déjà été dépensés :
+  // le montant manquant est déduit du remboursement versé au client.
+  let bonsDeduitsHt = 0;
+  let deductionTtc = 0;
+  if (deja + montantTtc === c.montantTtcCentimes) {
+    const { soldeCagnotte } = await import("./fidelite");
+    const mouvements = await db().mouvementCagnotte.findMany({ where: { commandeId: c.id } });
+    const netCredite = mouvements.filter((m) => m.type === "credit" || m.type === "retrait").reduce((s, m) => s + m.montantCentimes, 0) - c.bonsManquantsCentimes;
+    const disponible = (await soldeCagnotte(db(), c.partenaireId)) + c.bonsUtilisesCentimes;
+    bonsDeduitsHt = Math.max(0, netCredite - disponible);
+    deductionTtc = c.montantHtCentimes ? Math.min(montantTtc, Math.round((bonsDeduitsHt * c.montantTtcCentimes) / c.montantHtCentimes)) : 0;
+    montantTtc -= deductionTtc;
+    if (bonsDeduitsHt) motif = `${motif.trim()} — bons d'achat déjà dépensés déduits : ${(bonsDeduitsHt / 100).toFixed(2).replace(".", ",")} € HT`;
+  }
   if (c.modePaiement === "virement") {
     const { enregistrerRemboursementTx } = await import("./commandes");
     await db().$transaction((tx) =>
-      enregistrerRemboursementTx(tx, { commandeRef: ref, montantTtc, motif: motif.trim(), source: "odoo", referenceStripe: null }, `virement:${ref}:${deja + montantTtc}`),
+      enregistrerRemboursementTx(tx, { commandeRef: ref, montantTtc, motif: motif.trim(), source: "odoo", referenceStripe: null, deduction: { bonsDeduitsHt, deductionTtc } }, `virement:${ref}:${deja + montantTtc}`),
     );
     return;
   }
-  await db().remboursement.create({ data: { commandeId: c.id, montantTtcCentimes: montantTtc, motif: motif.trim(), source: "odoo" } });
+  await db().remboursement.create({ data: { commandeId: c.id, montantTtcCentimes: montantTtc, motif: motif.trim(), source: "odoo", bonsDeduitsHtCentimes: bonsDeduitsHt, deductionTtcCentimes: deductionTtc } });
 }

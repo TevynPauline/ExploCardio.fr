@@ -2,6 +2,7 @@
 
 import { randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { compteConnecte } from "@/domaine/comptes/session";
 import {
   ajouterAuPanier,
@@ -73,8 +74,9 @@ export async function actionCodePromo(code: string): Promise<void> {
   await appliquerCodePromo(await identiteCourante(), String(code ?? ""));
 }
 
-export async function actionUtiliserBons(utiliser: boolean): Promise<void> {
-  await utiliserBons(await identiteCourante(), Boolean(utiliser));
+export async function actionUtiliserBons(utiliser: boolean, montantHt: number | null = null): Promise<void> {
+  const montant = typeof montantHt === "number" && Number.isFinite(montantHt) ? Math.round(montantHt) : null;
+  await utiliserBons(await identiteCourante(), Boolean(utiliser), montant);
 }
 
 /** Nombre d'articles du panier, pour la pastille de l'en-tête (lu après l'affichage). */
@@ -82,4 +84,13 @@ export async function actionNombreArticles(): Promise<number> {
   const panier = await panierPour(await identiteCourante(), false);
   if (!panier) return 0;
   return (await lignesPanier(panier.id)).reduce((s, l) => s + l.quantite, 0);
+}
+
+/** Assistance à l'acte (F06, US9, D5) : une intervention au panier, pour un client sans droits actifs. */
+export async function actionAcheterAssistance(): Promise<void> {
+  const { ARTICLE_ASSISTANCE_ACTE, peutAcheterAssistance } = await import("@/domaine/fidelite/droits");
+  const compte = await compteConnecte();
+  if (!compte) redirect("/connexion?retour=/mon-compte/assistance");
+  if (await peutAcheterAssistance(compte.id)) await ajouterAuPanier({ compteId: compte.id }, { defaultCode: ARTICLE_ASSISTANCE_ACTE, formule: "achat", quantite: 1 });
+  redirect("/panier");
 }

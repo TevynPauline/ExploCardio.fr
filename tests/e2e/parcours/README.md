@@ -13,7 +13,7 @@ SC-001 est atteint quand tous les parcours ci-dessous existent et passent.
 | Catalogue : catégories et filtres, fiches et formules, consommables, disponibilité, back-office du catalogue, devis, services | F03 | `../f03/*.spec.ts` | ✅ |
 | Achat : panier, paiement American Express (accepté, refusé, authentification forte), virement, facture FICTIVE, suivi et remboursement | F04 | `../f04/*.spec.ts` | ✅ |
 | Mise à disposition : dépannage express, sans compte, kit, suivi, résiliation, retour, échéances, impayés, retards, parc | F05 | `../f05/*.spec.ts` | ✅ |
-| Fidélité : bons d'achat crédités, utilisés dans le panier, droits d'assistance | F06 | `fidelite.spec.ts` | à écrire |
+| Fidélité : gains annoncés, bons d'achat crédités et utilisés, remboursement, Mon compte, droits d'assistance, assistance à l'acte, promotions, page Assistance de l'équipe | F06 | `../f06/*.spec.ts` | ✅ |
 | Demande de financement (F04) ou de devis (F03), copie en opportunité | F04 / F03 | `../f04/financement.spec.ts`, `../f04/back-office-financement.spec.ts`, `../f03/*.spec.ts` | ✅ |
 
 ## Règles communes
