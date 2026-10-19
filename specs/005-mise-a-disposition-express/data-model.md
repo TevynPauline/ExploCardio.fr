@@ -31,6 +31,17 @@ non rendu) → `terminee` (retour enregistré). `en_cours` → `suspendue_impaye
 → `en_cours` (régularisation) ou `en_retard_retour`. `commandee` → `annulee` (refus du compte,
 annulation avant expédition).
 
+### Offre de mise à disposition (`rental_offer`)
+
+**Ajouts** : `logiciel` (code du logiciel Cloud à ouvrir à l'expédition, FR-012) et
+`contenuPack` (liste affichée : enregistreur, accès au logiciel Cloud, formation, et la mention
+« frais d'envoi et de retour inclus dans le premier mois », FR-001, FR-003).
+
+### Réservation d'appareil (`stock_lot_reservation`) — **nouveau**
+
+Clé unique (`commande du site:tentative:article`), appareil, date de livraison, état
+(`active`, `consommee`, `liberee`), créée le. Un appareil réservé n'est plus « disponible ».
+
 ### Appareil du parc (`stock_lot`)
 
 Inchangé (`disponible`, `loue`, `en_retour`, `en_maintenance`) ; **ajout** `historique`

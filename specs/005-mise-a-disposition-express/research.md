@@ -46,10 +46,13 @@ emailing en démonstration). **Aucune nouvelle technologie.**
 
 ## R4. Réservation de l'appareil et concurrence (SC-005)
 
-- **Decision** : l'appareil est réservé dans Odoo **au paiement** (comme le stock dans F04),
-  dans une transaction qui ne prend qu'un appareil encore « disponible » (mise à jour
-  conditionnelle) : deux commandes simultanées ne peuvent pas obtenir le même appareil ; la
-  seconde reçoit `OutOfStock` et voit la date suivante avant de payer. Le **numéro de série**
+- **Decision** : l'appareil est réservé dans Odoo **avant d'ouvrir le paiement** (comme le
+  stock des achats dans F04), dans une transaction qui ne prend qu'un appareil encore
+  « disponible » (mise à jour conditionnelle) : deux commandes simultanées ne peuvent pas
+  obtenir le même appareil ; la seconde reçoit `OutOfStock` **avant de payer** et revient au
+  choix de la date, avec la date suivante. La réservation est **libérée** en cas de paiement
+  refusé ou abandonné (30 minutes, rattrapage de F04) et **consommée** par la création de
+  l'abonnement après paiement (même clé). Le **numéro de série**
   n'est montré au client qu'à l'expédition (l'équipe peut changer d'appareil à la
   préparation, cas de l'appareil défectueux).
 - **Alternatives** : réserver dès l'ajout au panier (rejeté : bloquerait le parc pour des
@@ -82,8 +85,19 @@ emailing en démonstration). **Aucune nouvelle technologie.**
 - **Prélèvement de plusieurs locations** : F04 crée un seul abonnement Stripe par commande.
   Chaque location y devient un **élément** ; résilier une location retire son élément à la
   date de fin, et l'abonnement s'arrête quand il n'en reste plus. Nouvelle opération du
-  connecteur Stripe : retirer un élément d'abonnement. L'autorisation de prélèvement reste
-  valable jusqu'à l'enregistrement du retour (FR-030).
+  connecteur Stripe : retirer un élément d'abonnement. Pour que chaque location soit un
+  élément, l'abonnement de paiement est **ouvert avec un élément par location** (complément
+  du tunnel de F04).
+- **Autorisation de prélèvement (FR-030)** : retirer l'élément arrête les prélèvements
+  **mensuels** mais ne révoque pas l'autorisation (carte enregistrée ou mandat SEPA). Elle
+  reste valable jusqu'à l'enregistrement du retour ; les montants facturés par Odoo après la
+  fin (mois de retard, dégradation, valeur de remplacement) sont prélevés par une nouvelle
+  opération Stripe **« prélever un montant ponctuel »** sur cette autorisation (clé = facture
+  d'Odoo). L'autorisation n'est libérée qu'après le retour et le règlement des sommes dues.
+- **Cas de préparation et de transport** : un appareil défectueux à la préparation est
+  remplacé par un autre appareil disponible ; sinon le client est prévenu et choisit de
+  reporter (nouvelle date) ou d'annuler sans frais (remboursement intégral). Un colis non
+  livré ou refusé laisse la location « commandée » et alerte l'équipe.
 - **Retour** : l'équipe enregistre la réception dans Odoo (état : disponible ou en
   maintenance, dégradation éventuelle avec son montant) ; la location passe « terminée », le
   client est prévenu (et de la dégradation facturée par Odoo, FR-047).
@@ -110,7 +124,9 @@ emailing en démonstration). **Aucune nouvelle technologie.**
 
 ## R9. Accès au logiciel Cloud (F12 pas encore livré)
 
-- **Decision** : F05 appelle directement le **connecteur PCA** (F11) : ouverture du droit à
+- **Decision** : le logiciel à ouvrir est porté par l'offre de mise à disposition (`logiciel`,
+  avec le contenu du pack affiché au client). F05 appelle directement le **connecteur PCA**
+  (F11) : ouverture du droit à
   l'expédition, fermeture programmée à la date de fin, suspension à l'impayé, rétablissement
   à la régularisation. Chaque action alerte l'équipe tant que la plateforme ne permet pas
   l'automatisation (sous-mode manuel du connecteur). Un échec du connecteur **ne bloque pas
