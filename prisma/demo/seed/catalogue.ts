@@ -17,7 +17,7 @@ type Variante = {
   /** Variantes qui composent un pack (F03). */
   composants?: string[];
   stock?: { quantite: number; horsStock?: "delai" | "indisponible"; delaiJours?: number };
-  mad?: { premierMois: number; moisSuivants: number; kitRequis?: string; valeurRemplacement: number };
+  mad?: { premierMois: number; moisSuivants: number; kitRequis?: string; valeurRemplacement: number; logiciel?: string };
   parc?: { numero: string; statut: "disponible" | "loue" | "en_retour" | "en_maintenance"; retourDansJours?: number }[];
 };
 
@@ -57,7 +57,7 @@ export const MODELES: Modele[] = [
     variantes: [
       { defaultCode: "EC-DMS-3002E", configuration: ENREGISTREUR, prixHt: 1290, stock: { quantite: 6 } },
       { defaultCode: "EC-DMS-3002E-CLOUD", configuration: AVEC_CLOUD, prixHt: 1790, stock: { quantite: 6 },
-        mad: { premierMois: 49, moisSuivants: 89, kitRequis: "EC-KIT-HOLTER-MAD", valeurRemplacement: 1290 },
+        mad: { premierMois: 49, moisSuivants: 89, kitRequis: "EC-KIT-HOLTER-MAD", valeurRemplacement: 1290, logiciel: "EC-DMS-CS-HOLTER-CLOUD" },
         parc: [
           { numero: "FICT-SN-3002E-001", statut: "disponible" },
           { numero: "FICT-SN-3002E-002", statut: "loue" },
@@ -75,7 +75,7 @@ export const MODELES: Modele[] = [
     variantes: [
       { defaultCode: "EC-DMS-3003A", configuration: ENREGISTREUR, prixHt: 1490, stock: { quantite: 4 } },
       { defaultCode: "EC-DMS-3003A-CLOUD", configuration: AVEC_CLOUD, prixHt: 1990, stock: { quantite: 4 },
-        mad: { premierMois: 59, moisSuivants: 99, kitRequis: "EC-KIT-HOLTER-MAD", valeurRemplacement: 1490 },
+        mad: { premierMois: 59, moisSuivants: 99, kitRequis: "EC-KIT-HOLTER-MAD", valeurRemplacement: 1490, logiciel: "EC-DMS-CS-HOLTER-CLOUD" },
         parc: [
           { numero: "FICT-SN-3003A-001", statut: "loue" },
           { numero: "FICT-SN-3003A-002", statut: "en_retour", retourDansJours: 6 },
@@ -93,7 +93,7 @@ export const MODELES: Modele[] = [
     variantes: [
       { defaultCode: "EC-DMS-3004L", configuration: ENREGISTREUR, prixHt: 1690, stock: { quantite: 5 } },
       { defaultCode: "EC-DMS-3004L-CLOUD", configuration: AVEC_CLOUD, prixHt: 2190, stock: { quantite: 5 },
-        mad: { premierMois: 59, moisSuivants: 109, kitRequis: "EC-KIT-HOLTER-MAD", valeurRemplacement: 1690 },
+        mad: { premierMois: 59, moisSuivants: 109, kitRequis: "EC-KIT-HOLTER-MAD", valeurRemplacement: 1690, logiciel: "EC-DMS-CS-HOLTER-CLOUD" },
         parc: [
           { numero: "FICT-SN-3004L-001", statut: "disponible" },
           { numero: "FICT-SN-3004L-002", statut: "loue" },
@@ -613,6 +613,14 @@ export async function remplirCatalogue(db: PrismaClient): Promise<{ modeles: num
             moisSuivantsCentimes: euros(v.mad.moisSuivants),
             kitRequis: v.mad.kitRequis ?? null,
             valeurRemplacementCentimes: euros(v.mad.valeurRemplacement),
+            // F05 : contenu du pack (FR-001, FR-003) et logiciel Cloud ouvert à l'expédition (FR-012).
+            logiciel: v.mad.logiciel ?? null,
+            contenuPack: [
+              "L'enregistreur, prêt à l'emploi",
+              ...(v.mad.logiciel ? ["L'accès au logiciel Cloud d'analyse"] : []),
+              "La formation à la prise en main, organisée avec notre équipe",
+              "Les frais d'envoi et de retour, inclus dans le premier mois",
+            ],
           },
         };
       }
@@ -639,6 +647,8 @@ export async function remplirCatalogue(db: PrismaClient): Promise<{ modeles: num
     ],
   });
   await db.parametresVente.create({ data: { seuilFrancoCentimes: euros(300), delaiVirementJours: 7 } });
+  // F05 : règles de location (D7, valeurs fictives réglables dans Démonstration → Paramètres commerciaux).
+  await db.reglesLocation.create({ data: {} });
   for (const defaultCode of ["EC-KOCH-ULTRA", "EC-KOCH-KORELE8000", "EC-KOCH-KORELE7000", "EC-KOCH-PURE", "EC-ERGOLINE-ERGO", "EC-RAM-EFFORT"]) {
     await db.variante.update({ where: { defaultCode }, data: { fraisLivraisonCentimes: euros(180), fraisInstallationCentimes: euros(250) } });
   }

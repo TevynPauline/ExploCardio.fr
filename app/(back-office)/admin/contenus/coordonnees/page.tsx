@@ -6,9 +6,18 @@ import { enregistrerCoordonnees } from "../actions";
 
 export const metadata: Metadata = { title: "Coordonnées et textes" };
 
+function listeJson(valeur: string): string[] {
+  try {
+    const l = JSON.parse(valeur || "[]") as unknown;
+    return Array.isArray(l) ? l.map(String) : [];
+  } catch {
+    return [];
+  }
+}
+
 export default async function Coordonnees({ searchParams }: { searchParams: Promise<{ ok?: string; erreur?: string }> }) {
   const r = await searchParams;
-  const lignes = await dbSite().parametre.findMany({ where: { OR: [{ cle: { startsWith: "contact." } }, { cle: { startsWith: "accueil." } }, { cle: { startsWith: "virement." } }, { cle: "commande.heure_limite_express" }] } });
+  const lignes = await dbSite().parametre.findMany({ where: { OR: [{ cle: { startsWith: "contact." } }, { cle: { startsWith: "accueil." } }, { cle: { startsWith: "virement." } }, { cle: "commande.heure_limite_express" }, { cle: { startsWith: "livraison." } }, { cle: { startsWith: "location." } }] } });
   const v = (cle: string) => lignes.find((l) => l.cle === cle)?.valeur ?? "";
   let motifs: string[] = [];
   try {
@@ -66,6 +75,35 @@ export default async function Coordonnees({ searchParams }: { searchParams: Prom
           <ChampAdmin id="heureExpress" libelle="Heure limite de la livraison express" aide="Après cette heure, l’express part le jour ouvré suivant.">
             <input id="heureExpress" name="heureExpress" type="time" defaultValue={v("commande.heure_limite_express") || "14:00"} className={classeChamp} />
           </ChampAdmin>
+        </Card>
+        <Card className="grid gap-3 sm:grid-cols-2">
+          <h2 className="text-h3 font-semibold sm:col-span-2">Livraison et mise à disposition</h2>
+          <p className="text-muted sm:col-span-2">
+            L’heure limite ci-dessus vaut aussi pour la livraison au lendemain d’une mise à disposition. Les tarifs, délais de retour et règles d’impayé se
+            règlent dans Odoo.
+          </p>
+          <div className="sm:col-span-2">
+            <ChampAdmin id="joursNonLivres" libelle="Jours non livrés (un par ligne, AAAA-MM-JJ)" aide="En plus des week-ends et des jours fériés, calculés automatiquement.">
+              <textarea id="joursNonLivres" name="joursNonLivres" rows={3} defaultValue={listeJson(v("livraison.jours_non_livres")).join("\n")} className={`${classeChamp} py-2`} />
+            </ChampAdmin>
+          </div>
+          <ChampAdmin id="zones" libelle="Zones sans livraison au lendemain (débuts de codes postaux)" aide="Séparés par des virgules ; 20 = Corse.">
+            <input id="zones" name="zones" defaultValue={listeJson(v("livraison.zones_sans_lendemain")).join(", ")} className={classeChamp} />
+          </ChampAdmin>
+          <ChampAdmin id="delaiZones" libelle="Délai supplémentaire de ces zones (jours ouvrés)">
+            <input id="delaiZones" name="delaiZones" type="number" min={0} max={10} defaultValue={v("livraison.delai_zones_jours") || "2"} className={classeChamp} />
+          </ChampAdmin>
+          <ChampAdmin id="rappelEcheance" libelle="Rappel avant une échéance de location (jours)">
+            <input id="rappelEcheance" name="rappelEcheance" type="number" min={1} max={15} defaultValue={v("location.rappel_echeance_jours") || "3"} className={classeChamp} />
+          </ChampAdmin>
+          <ChampAdmin id="rappelRetour" libelle="Rappel de retour en retard, tous les (jours)">
+            <input id="rappelRetour" name="rappelRetour" type="number" min={1} max={15} defaultValue={v("location.rappel_retour_jours") || "2"} className={classeChamp} />
+          </ChampAdmin>
+          <div className="sm:col-span-2">
+            <ChampAdmin id="conditionsLocation" libelle="Conditions de location (texte accepté au récapitulatif)" aide="Texte provisoire : à faire valider par votre conseil juridique.">
+              <textarea id="conditionsLocation" name="conditionsLocation" rows={4} defaultValue={v("location.conditions")} className={`${classeChamp} py-2`} />
+            </ChampAdmin>
+          </div>
         </Card>
         <Card className="grid gap-3 sm:grid-cols-2">
           <h2 className="text-h3 font-semibold sm:col-span-2">Textes de l’accueil</h2>

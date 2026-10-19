@@ -42,6 +42,20 @@ async function traiterChangement(ch: ChangementCommande, maintenant: Date) {
       await envoyer(email, await emailsCommandes.expedition({ ref: ch.ref, transporteur: ch.transporteur, suivi: ch.suivi }), "commande expédiée", `expedition:${ch.ref}`);
       await journal("commande.expediee", ch.ref, { transporteur: ch.transporteur, suivi: ch.suivi });
     }
+    // F05 (FR-033) : appareil acheté livré alors qu'une location du même appareil est en cours.
+    if (ch.statut === "livree" && email) {
+      try {
+        const commande = await registre.odoo().commandes.lireCommande(ch.ref);
+        const codes = new Set(commande.lignes.map((x) => x.defaultCode));
+        const locations = (await registre.odoo().location.listerLocations(ch.partenaireRef)).filter((l) => l.etat === "en_cours" && codes.has(l.defaultCode));
+        for (const l of locations) {
+          const { emailsLocations } = await import("@/emails/modeles-locations");
+          await envoyer(email, await emailsLocations.inviterResiliation({ appareil: l.libelle }), "inviter à résilier", `inviter-resiliation:${ch.ref}:${l.ref}`);
+        }
+      } catch (e) {
+        if (!estErreurConnecteur(e)) throw e;
+      }
+    }
     if (ch.statut === "annulee" && statutAvant !== null) {
       await retablirCadeau(ch.ref);
       if (email) await envoyer(email, await emailsCommandes.annulation({ ref: ch.ref, motif: "elle a été annulée par notre équipe" }), "commande annulée", `annulation:${ch.ref}`);

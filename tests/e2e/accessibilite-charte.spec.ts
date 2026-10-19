@@ -23,6 +23,7 @@ const PAGES_PUBLIQUES = [
   "/holter-ecg/ecg-de-repos",
   "/services/installation-formation",
   "/panier",
+  "/mise-a-disposition",
 ];
 const PAGES_MON_COMPTE = ["/mon-compte", "/mon-compte/informations", "/mon-compte/adresses", "/mon-compte/preferences", "/mon-compte/securite", "/mon-compte/donnees", "/mon-compte/commandes", "/mon-compte/factures", "/mon-compte/locations", "/mon-compte/financements", "/financement/demande?article=EC-DMS-3004L"];
 const PAGES_BACK_OFFICE = [
@@ -46,6 +47,8 @@ const PAGES_BACK_OFFICE = [
   "/admin/catalogue/services",
   "/admin/commandes",
   "/admin/financements",
+  "/admin/locations",
+  "/admin/demonstration/locations",
 ];
 
 async function ciblesTropPetites(page: Page): Promise<string[]> {
@@ -108,6 +111,7 @@ async function verifierPage(page: Page, chemin: string) {
 test.use({ colorScheme: "light", reducedMotion: "reduce" });
 
 test("pages publiques : cibles, focus et animations", async ({ page }) => {
+  test.setTimeout(120_000);
   for (const chemin of PAGES_PUBLIQUES) await verifierPage(page, chemin);
 });
 

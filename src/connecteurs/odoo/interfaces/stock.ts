@@ -26,5 +26,10 @@ export interface StockOdoo {
   reserver(lignes: LigneReservation[], cle: Cle): Promise<{ reference: string }>;
   /** Libère une réservation non consommée (paiement refusé ou abandonné, F04) ; sans effet sinon. */
   liberer(cle: Cle): Promise<void>;
+  /** Première date où un appareil du parc peut être livré (retours prévus compris, F05). */
   lireDisponibiliteParc(reference: string, dateSouhaitee: Date): Promise<{ premiereDate: Date }>;
+  /** Réserve un appareil du parc avant le paiement (F05, R4) ; idempotent ; OutOfStock sinon. */
+  reserverAppareil(reference: string, dateLivraison: Date, cle: Cle): Promise<{ numeroSerie: string }>;
+  /** Libère une réservation d'appareil non consommée ; sans effet sinon. */
+  libererAppareil(cle: Cle): Promise<void>;
 }

@@ -44,6 +44,41 @@ suiteDeContrat("stripe", "paiements et abonnements (contracts/stripe.md)", ({ re
     expect(r.url).toBeTruthy();
   });
 
+  it("abonnement à éléments (F05) : un élément s'arrête, l'autorisation reste, prélèvement ponctuel idempotent", async () => {
+    const abonnementRef = `FICT-TEST-${cleDeTest("elements")}`;
+    await stripe().ouvrirSessionAbonnement(
+      {
+        client,
+        objet: "mise_a_disposition",
+        abonnementRef,
+        premierMontantTtc: 11_880,
+        montantMensuelTtc: 23_760,
+        elements: [
+          { element: "loc-1", premierMontantTtc: 5_940, montantMensuelTtc: 11_880 },
+          { element: "loc-2", premierMontantTtc: 5_940, montantMensuelTtc: 11_880 },
+        ],
+        moyens: ["sepa"],
+        urlRetour: "/merci",
+        urlAnnulation: "/panier",
+      },
+      cleDeTest("abonnement"),
+    );
+    const fin = new Date(Date.now() + 20 * 86_400_000);
+    const cleRetrait = cleDeTest("retrait");
+    await stripe().retirerElementAbonnement(abonnementRef, "loc-1", fin, cleRetrait);
+    await stripe().retirerElementAbonnement(abonnementRef, "loc-1", fin, cleRetrait);
+    await stripe().retablirElementAbonnement(abonnementRef, "loc-1");
+    await expect(stripe().retirerElementAbonnement(abonnementRef, "loc-inconnu", fin, cleDeTest("retrait"))).rejects.toMatchObject({ code: "NOT_FOUND" });
+
+    const cle = cleDeTest("ponctuel");
+    const a = await stripe().preleverPonctuel({ abonnementRef, montantTtc: 13_080, libelle: "Retard de retour" }, cle);
+    const b = await stripe().preleverPonctuel({ abonnementRef, montantTtc: 13_080, libelle: "Retard de retour" }, cle);
+    expect(a.etat).toBe("payee");
+    expect(b.paiementRef).toBe(a.paiementRef);
+    await stripe().libererAutorisation(abonnementRef);
+    await expect(stripe().preleverPonctuel({ abonnementRef, montantTtc: 100, libelle: "Après libération" }, cleDeTest("ponctuel"))).rejects.toMatchObject({ code: "OPERATION_REFUSED" });
+  });
+
   it("lève NotFound pour le remboursement d'un paiement inconnu", async () => {
     await expect(
       stripe().rembourser({ paiementRef: "pi_inconnu", montantTtc: 100, motif: "test" }, cleDeTest("remb")),

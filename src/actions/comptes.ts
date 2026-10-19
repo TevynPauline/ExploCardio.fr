@@ -1,5 +1,6 @@
 "use server";
 
+import { cheminDeRetour } from "@/lib/retour";
 import { randomUUID } from "node:crypto";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -54,7 +55,7 @@ export async function actionInscription(_precedent: EtatInscription, d: FormData
     cguCgv: d.get("cguCgv") === "oui",
     newsletter: d.get("newsletter") === "oui",
   };
-  const r = await inscrire(s);
+  const r = await inscrire(s, cheminDeRetour(t(d, "retour")));
   if (!r.ok) return { erreurs: r.erreurs, message: r.message, saisie };
   redirect("/inscription/verifier-email");
 }

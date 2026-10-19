@@ -19,13 +19,18 @@ test("deux blocs avec leurs totaux ; quantité et suppression mettent à jour le
   await expect(page.getByRole("link", { name: /Panier, \d+ article/ })).toBeVisible();
 
   const totalAvant = await unique.getByText("Total TTC").locator("..").innerText();
-  await unique.getByLabel("Quantité").fill("3");
-  await unique.getByLabel("Quantité").press("Enter");
+  // Le kit de la mise à disposition (F05) est aussi au paiement unique : on agit sur les électrodes.
+  const electrodes = unique.getByRole("listitem").filter({ hasText: "Électrodes" });
+  await electrodes.getByLabel("Quantité").fill("3");
+  await electrodes.getByLabel("Quantité").press("Enter");
   await expect(unique.getByText("Total TTC").locator("..")).not.toHaveText(totalAvant);
 
   await mensuel.getByRole("button", { name: /Retirer .* du panier/ }).click();
   await expect(page.getByRole("heading", { name: "Abonnement mensuel" })).toHaveCount(0);
-  await unique.getByRole("button", { name: /Retirer .* du panier/ }).click();
+  for (let i = 0; i < 2; i++) {
+    await unique.getByRole("button", { name: /Retirer .* du panier/ }).first().click();
+    await page.waitForTimeout(500);
+  }
   await expect(page.getByRole("heading", { name: "Votre panier est vide" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Découvrir le catalogue" })).toBeVisible();
 });

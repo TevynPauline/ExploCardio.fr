@@ -132,6 +132,8 @@ export const catalogueDemo: CatalogueOdoo = {
               moisSuivantsHt: v.offreMad.moisSuivantsCentimes,
               kitRequis: v.offreMad.kitRequis,
               valeurRemplacementHt: v.offreMad.valeurRemplacementCentimes,
+              logiciel: v.offreMad.logiciel,
+              contenuPack: v.offreMad.contenuPack,
             }
           : null,
         quantiteParLot: v.quantiteParLot,

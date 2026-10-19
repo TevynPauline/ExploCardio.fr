@@ -4,6 +4,7 @@ import { enregistrerEffetsCommande, rattraperCommandes } from "@/domaine/command
 import { lancerPaiement } from "@/domaine/commande/paiement";
 import { choisirLivraison, choisirPaiement, enregistrerAdresses, ouvrirCommande } from "@/domaine/commande/tunnel";
 import { traiterEvenementPaiement } from "@/domaine/paiements";
+import { premiereDatePour } from "@/domaine/location/offre";
 import { lignesPanier, panierPour } from "@/domaine/catalogue/panier";
 import { dbSite } from "@/lib/db/site";
 import { dbDemo } from "@/lib/db/demo";
@@ -25,7 +26,10 @@ async function commandePrete(lignes: Parameters<typeof remplirPanier>[1], moyens
   const compte = await compteValide();
   await remplirPanier(compte.compteId, lignes);
   let c = await enregistrerAdresses(await ouvrirCommande(compte.compteId), adresses);
-  if (lignes.some((l) => l.formule === "achat")) c = await choisirLivraison(c, "standard");
+  // F05 : date de livraison de chaque mise à disposition (au plus tôt).
+  const dates: Record<string, string> = {};
+  for (const l of lignes.filter((x) => x.formule === "mise_a_disposition")) dates[l.defaultCode] = await premiereDatePour(l.defaultCode, "69003");
+  c = await choisirLivraison(c, lignes.some((l) => l.formule === "achat") ? "standard" : null, dates);
   c = await choisirPaiement(c, moyens.achat ?? null, moyens.abonnement ?? null);
   return { compte, commande: c };
 }

@@ -35,7 +35,12 @@ describe("panierDetaille", () => {
     expect(d.indisponible).toBe(false);
     expect(d.devis!.achat!.totalTtc).toBeGreaterThan(d.devis!.achat!.totalHt);
     expect(d.devis!.abonnement!.premierMoisHt).toBeGreaterThan(0);
-    expect(d.lignes.map((l) => l.formule).sort()).toEqual(["achat", "mise_a_disposition"]);
+    // F05 (D4) : le kit d'accessoires de la mise à disposition rejoint le panier d'office.
+    expect(d.lignes.map((l) => `${l.formule}:${l.defaultCode}`).sort()).toEqual([
+      "achat:EC-ELEC-HOLTER-50",
+      "achat:EC-KIT-HOLTER-MAD",
+      "mise_a_disposition:EC-DMS-3004L-CLOUD",
+    ]);
     expect(d.bloquant).toBe(false);
   });
 

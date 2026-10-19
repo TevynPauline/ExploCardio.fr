@@ -449,6 +449,16 @@ model CommandeSite {
   /// Moyen des échéances mensuelles (carte ou SEPA)
   moyenAbonnement      MoyenPaiementCommande?
   cgvAccepteesLe       DateTime?
+  /// F05 : acceptation des conditions de location (FR-011).
+  conditionsLocationAccepteesLe DateTime?
+  /// F05 : date de livraison choisie par ligne de mise à disposition { defaultCode: "AAAA-MM-JJ" }.
+  datesLivraisonMad    Json                   @default("{}")
+  /// F05 : réservations d'appareils avant paiement [{ defaultCode, n, cle }].
+  reservationsAppareils Json                  @default("[]")
+  /// F05 : éléments de l'abonnement de paiement { element: référence de location d'Odoo }.
+  elementsAbonnement   Json                   @default("{}")
+  /// F05 : paiement du premier mois (remboursement intégral si le compte est refusé).
+  paiementAbonnementRef String?
   /// Dernier devis d'Odoo affiché, pour signaler un écart
   devis                Json?
   lignes               Json                   @default("[]")
@@ -478,6 +488,29 @@ model CommandeSite {
 }
 
 /// Dernier statut notifié au client pour une commande d'Odoo (F04, FR-032).
+/// Suivi des locations (F05) : un seul email ou une seule action par changement relevé dans Odoo.
+model SuiviLocation {
+  abonnementRef          String    @id
+  partenaireRef          String
+  dernierEtat            String
+  expedieNotifie         Boolean   @default(false)
+  colisNonLivreNotifie   Boolean   @default(false)
+  attenteChoixNotifie    Boolean   @default(false)
+  impayeNotifie          Boolean   @default(false)
+  retourNotifie          Boolean   @default(false)
+  /// Dernière échéance rappelée au client (FR-025).
+  echeanceRappelee       DateTime?
+  /// Nombre de rappels de retour envoyés et date du dernier (FR-028, SC-010).
+  rappelsRetour          Int       @default(0)
+  dernierRappelRetour    DateTime?
+  /// Accès Cloud ouvert par le connecteur PCA (F12 reprendra leur gestion).
+  droitCloudRef          String?
+  droitCloudEtat         String?
+  notifieLe              DateTime  @default(now())
+
+  @@map("suivi_location")
+}
+
 model SuiviCommande {
   odooCommandeRef   String   @id
   dernierStatut     String

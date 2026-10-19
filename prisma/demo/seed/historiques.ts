@@ -100,14 +100,14 @@ export async function remplirHistoriques(db: PrismaClient, p: Partenaires) {
   // Locations et abonnements : chaque appareil « loué » du parc a son abonnement
   const variante = async (code: string) => db.variante.findUniqueOrThrow({ where: { defaultCode: code }, include: { offreMad: true } });
   const serie = async (numero: string) => db.numeroSerie.findUniqueOrThrow({ where: { numero } });
-  const locations: { partenaire: string; code: string; numero: string; debut: number; etat?: "en_cours" | "termine" | "en_retard_retour"; finIlYa?: number }[] = [
+  const locations: { partenaire: string; code: string; numero: string; debut: number; etat?: "en_cours" | "terminee" | "en_retard_retour" | "resiliation_prevue"; finIlYa?: number }[] = [
     { partenaire: "valdrin", code: "EC-DMS-3004L-CLOUD", numero: "FICT-SN-3004L-002", debut: 95 }, // location en cours
     { partenaire: "parc", code: "EC-SUN-OSCAR2", numero: "FICT-SN-OSC2-003", debut: 70, etat: "en_retard_retour", finIlYa: 10 }, // retard de retour
-    { partenaire: "morvelle", code: "EC-DMS-3002E-CLOUD", numero: "FICT-SN-3002E-002", debut: 40 },
+    { partenaire: "morvelle", code: "EC-DMS-3002E-CLOUD", numero: "FICT-SN-3002E-002", debut: 40, etat: "resiliation_prevue" }, // résiliation programmée
     { partenaire: "perignac", code: "EC-DMS-3003A-CLOUD", numero: "FICT-SN-3003A-001", debut: 150 },
     { partenaire: "delvaux", code: "EC-DMS-3004L-CLOUD", numero: "FICT-SN-3004L-003", debut: 18 },
     { partenaire: "brissac", code: "EC-DMS-ABP-KIT", numero: "FICT-SN-ABP-002", debut: 55 },
-    { partenaire: "tessier", code: "EC-DMS-3003A-CLOUD", numero: "FICT-SN-3003A-002", debut: 200, etat: "termine", finIlYa: 3 },
+    { partenaire: "tessier", code: "EC-DMS-3003A-CLOUD", numero: "FICT-SN-3003A-002", debut: 200, etat: "terminee", finIlYa: 3 },
   ];
   let n = 0;
   for (const l of locations) {
@@ -126,8 +126,14 @@ export async function remplirHistoriques(db: PrismaClient, p: Partenaires) {
         numeroSerieId: s.id,
         montantMensuelCentimes: v.offreMad!.moisSuivantsCentimes,
         debut,
-        fin: l.finIlYa !== undefined ? ilYa(l.finIlYa) : null,
-        prochaineEcheance: l.etat ? null : prochaine,
+        fin: l.finIlYa !== undefined ? ilYa(l.finIlYa) : l.etat === "resiliation_prevue" ? prochaine : null,
+        prochaineEcheance: !l.etat || l.etat === "resiliation_prevue" ? prochaine : null,
+        dateLivraison: debut,
+        expedieLe: debut,
+        transporteur: "Colissimo",
+        suivi: `FICT-COLIS-${String(n).padStart(4, "0")}`,
+        dateLimiteRetour: l.finIlYa !== undefined ? ilYa(l.finIlYa - 7) : null,
+        etatRetour: l.etat === "terminee" ? "complet" : null,
         etat: l.etat ?? "en_cours",
       },
     });

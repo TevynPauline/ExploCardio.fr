@@ -5,6 +5,7 @@ import { verifierModeDemonstration } from "@/lib/demo/garde";
 import { leverVerrou, poserVerrou } from "@/lib/demo/verrou";
 import { remplirJeuDeDepart, type BilanRemplissage } from "../../prisma/demo/seed/remplissage";
 import * as administration from "./odoo/demo/administration";
+import * as locationsAdmin from "./odoo/demo/locations-admin";
 import * as emission from "./stripe/demo/emission";
 import { invaliderIndexRecherche } from "@/domaine/recherche/index";
 import { definirPanne, panneActive } from "./panne-simulee";
@@ -48,6 +49,8 @@ export async function reinitialiserDemonstration(auteur: Auteur): Promise<BilanR
       // F04 : commandes du site et suivis des séances (les demandes de financement sont supprimées plus haut)
       site.commandeSite.deleteMany(),
       site.suiviCommande.deleteMany(),
+      // F05 : suivis des locations des séances
+      site.suiviLocation.deleteMany(),
     ]);
     const bilan = await remplirJeuDeDepart(dbDemo(), site);
     await site.journalAction.create({
@@ -234,5 +237,73 @@ export const commandesDemo = {
     exigerOutils();
     await administration.deciderRemboursement(ref, montantTtc, motif);
     await journaliser(auteur, "demo.remboursement_decide", ref, null, { montantTtc, motif });
+  },
+};
+
+/** Cycle des locations (F05) : ce que l'équipe fait dans Odoo, et ses actions planifiées. */
+export const locationsDemo = {
+  lister: () => {
+    exigerOutils();
+    return locationsAdmin.listerLocationsRecentes();
+  },
+  appareilsDisponibles: (defaultCode: string) => {
+    exigerOutils();
+    return locationsAdmin.appareilsDisponibles(defaultCode);
+  },
+  async preparerExpedition(auteur: Auteur, ref: string, transporteur: string, suivi: string, numeroSerie?: string) {
+    exigerOutils();
+    await locationsAdmin.preparerExpedition(ref, transporteur, suivi, numeroSerie);
+    await journaliser(auteur, "demo.location_expediee", ref, null, { transporteur, suivi, numeroSerie: numeroSerie ?? null });
+  },
+  async signalerAppareilDefectueux(auteur: Auteur, ref: string) {
+    exigerOutils();
+    const r = await locationsAdmin.signalerAppareilDefectueux(ref);
+    await journaliser(auteur, "demo.location_appareil_defectueux", ref, null, r);
+    return r;
+  },
+  async colisNonLivre(auteur: Auteur, ref: string) {
+    exigerOutils();
+    await locationsAdmin.colisNonLivre(ref);
+    await journaliser(auteur, "demo.location_colis_non_livre", ref, null, {});
+  },
+  async marquerLivree(auteur: Auteur, ref: string) {
+    exigerOutils();
+    await locationsAdmin.marquerLivree(ref);
+    await journaliser(auteur, "demo.location_livree", ref, null, {});
+  },
+  async enregistrerRetour(auteur: Auteur, ref: string, etat: "complet" | "degrade" | "perdu", appareil: "disponible" | "en_maintenance", degradationHt: number) {
+    exigerOutils();
+    await locationsAdmin.enregistrerRetour(ref, etat, appareil, degradationHt);
+    await journaliser(auteur, "demo.location_retour", ref, null, { etat, appareil, degradationHt });
+  },
+  async enregistrerKit(auteur: Auteur, partenaireRef: string, kit: string) {
+    exigerOutils();
+    await locationsAdmin.enregistrerKit(partenaireRef, kit, auteur.libelle);
+    await journaliser(auteur, "demo.kit_enregistre", partenaireRef, null, { kit });
+  },
+  async echouerPrelevement(auteur: Auteur, ref: string) {
+    exigerOutils();
+    await locationsAdmin.echouerPrelevement(ref);
+    await journaliser(auteur, "demo.location_prelevement_echoue", ref, null, {});
+  },
+  async regulariser(auteur: Auteur, ref: string) {
+    exigerOutils();
+    await locationsAdmin.regulariser(ref);
+    await journaliser(auteur, "demo.location_regularisee", ref, null, {});
+  },
+  /** Actions planifiées d'Odoo à une date ; les échéances dues sont prélevées par Stripe (démonstration). */
+  async avancerJusquA(auteur: Auteur, date: Date) {
+    exigerOutils();
+    const { echeancesDues } = await locationsAdmin.executerActionsPlanifiees(date);
+    for (const e of echeancesDues) {
+      await emission.simulerEcheance(e.ref, Math.round((e.montantMensuelHt * (100 + e.tauxTva)) / 100), true);
+    }
+    await journaliser(auteur, "demo.actions_planifiees", date.toISOString(), null, { echeances: echeancesDues.map((e) => e.ref) });
+    return { echeances: echeancesDues.length };
+  },
+  async modifierRegles(auteur: Auteur, r: Parameters<typeof locationsAdmin.modifierReglesLocation>[0]) {
+    exigerOutils();
+    const { avant, apres } = await locationsAdmin.modifierReglesLocation(r);
+    await journaliser(auteur, "demo.regles_location", "rental_settings", avant, apres);
   },
 };

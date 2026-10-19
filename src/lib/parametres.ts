@@ -6,6 +6,12 @@ import { dbSite } from "@/lib/db/site";
 export const PARAMETRES_PAR_DEFAUT = {
   /** Nombre d'échecs successifs d'une tâche avant alerte à l'administrateur (T018). */
   "file_attente.seuil_alerte": "5",
+  /** F05 : calendrier de livraison et rappels des locations (D3, D6). */
+  "livraison.jours_non_livres": "[]",
+  "livraison.zones_sans_lendemain": '["20"]',
+  "livraison.delai_zones_jours": "2",
+  "location.rappel_echeance_jours": "3",
+  "location.rappel_retour_jours": "2",
 } as const;
 
 export type CleParametre = keyof typeof PARAMETRES_PAR_DEFAUT | (string & {});

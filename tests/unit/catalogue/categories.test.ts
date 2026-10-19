@@ -42,7 +42,7 @@ function entree(o: {
       tauxTva: 20,
       prixInvente: true,
       estFictif: true,
-      offreMiseADisposition: o.mad ? { premierMoisHt: 4900, moisSuivantsHt: o.mad, kitRequis: null, valeurRemplacementHt: 100000 } : null,
+      offreMiseADisposition: o.mad ? { premierMoisHt: 4900, moisSuivantsHt: o.mad, kitRequis: null, valeurRemplacementHt: 100000, logiciel: null, contenuPack: [] } : null,
       quantiteParLot: 1,
       paliers: [],
       mensualitesForcees: [],

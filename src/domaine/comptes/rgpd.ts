@@ -77,7 +77,7 @@ async function obstacles(odooPartnerRef: string | null): Promise<string[]> {
   if (!odooPartnerRef) return [];
   const s = await registre.odoo().clients.lireSituation(odooPartnerRef);
   const raisons: string[] = [];
-  if (s.locations.some((l) => l.etat !== "termine")) raisons.push("Une location est en cours : elle doit être terminée et le matériel restitué.");
+  if (s.locations.some((l) => l.etat !== "terminee" && l.etat !== "annulee")) raisons.push("Une location est en cours : elle doit être terminée et le matériel restitué.");
   if (s.factures.some((f) => f.etatPaiement === "en_attente")) raisons.push("Une facture reste à régler.");
   return raisons;
 }

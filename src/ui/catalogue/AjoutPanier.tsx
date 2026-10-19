@@ -33,6 +33,8 @@ export function AjoutPanier({ defaultCode, formule = "achat", quantite = 1, prix
       const morceaux = [`Ajouté au panier${quantite > 1 ? ` (${quantite})` : ""}.`];
       if (r.prixAChange) morceaux.push(`Le prix a changé : ${euros(r.prixHt)} HT.`);
       if (r.delaiJours) morceaux.push(`Délai : ${r.delaiJours} jours.`);
+      if (r.kit?.ajoute) morceaux.push(`Le kit d’accessoires « ${r.kit.nom} », obligatoire à la première location, a été ajouté : vous le conservez.`);
+      if (r.kit?.possede) morceaux.push(`Vous possédez déjà le kit d’accessoires « ${r.kit.nom} » : il ne vous est pas facturé.`);
       setMessage({ ok: true, texte: morceaux.join(" ") });
     });
   }

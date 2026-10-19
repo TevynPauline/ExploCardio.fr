@@ -39,11 +39,10 @@ export async function jusquAuRecapitulatif(page: Page, options: { livraison?: st
   await page.getByRole("link", { name: "Commander" }).click();
   await page.waitForURL(/\/commande\/adresses/);
   await page.getByRole("button", { name: "Continuer" }).click();
-  if (options.livraison !== "aucune") {
-    await page.waitForURL(/\/commande\/livraison/);
-    await page.getByRole("radio", { name: new RegExp(options.livraison ?? "Livraison standard") }).check();
-    await page.getByRole("button", { name: "Continuer" }).click();
-  }
+  // Étape « Livraison » : mode des achats ; date de chaque mise à disposition (F05, au plus tôt par défaut).
+  await page.waitForURL(/\/commande\/livraison/);
+  if (options.livraison !== "aucune") await page.getByRole("radio", { name: new RegExp(options.livraison ?? "Livraison standard") }).check();
+  await page.getByRole("button", { name: "Continuer" }).click();
   await page.waitForURL(/\/commande\/paiement/);
   if (options.achat === "virement") await page.getByRole("radio", { name: /Virement bancaire/ }).check();
   if (options.abonnement === "sepa") await page.getByRole("radio", { name: /Prélèvement SEPA/ }).check();
@@ -74,10 +73,25 @@ export async function rendreParcDesTests() {
   await requete(
     "demo",
     `WITH fin AS (
-       UPDATE sale_subscription SET etat = 'termine', fin = now()
-       WHERE etat <> 'termine' AND "numeroSerieId" IS NOT NULL
-         AND "partenaireId" IN (SELECT id FROM res_partner WHERE ref LIKE 'FICT-P-E2E-%')
+       UPDATE sale_subscription SET etat = 'terminee', fin = now()
+       WHERE etat NOT IN ('terminee', 'annulee') AND "numeroSerieId" IS NOT NULL
+         AND "partenaireId" IN (SELECT id FROM res_partner WHERE ref LIKE 'FICT-P-E2E-%' OR email LIKE 'compte-%@demo.explocardio.test' OR email LIKE 'commande-%@demo.explocardio.test')
        RETURNING "numeroSerieId")
      UPDATE stock_lot SET statut = 'disponible' WHERE id IN (SELECT "numeroSerieId" FROM fin)`,
   );
+  // Appareils mis « en maintenance » par les tests de retour (sans date de retour prévue).
+  await requete("demo", `UPDATE stock_lot SET statut = 'disponible' WHERE statut = 'en_maintenance' AND "retourPrevu" IS NULL`);
+  // Réservations d'appareils restées actives (paiements de test abandonnés, F05).
+  await requete(
+    "demo",
+    `WITH r AS (UPDATE stock_lot_reservation SET etat = 'liberee' WHERE etat = 'active' RETURNING "numeroSerieId", "statutAvant")
+     UPDATE stock_lot l SET statut = r."statutAvant" FROM r WHERE l.id = r."numeroSerieId" AND l.statut = 'loue'`,
+  );
+}
+
+/** Récapitulatif : CGV acceptées, et conditions de location s'il y a une mise à disposition (F05). */
+export async function accepterConditions(page: Page) {
+  await page.getByLabel(/J’accepte les conditions générales de vente/).check();
+  const conditions = page.getByLabel(/J’accepte les conditions de location/);
+  if (await conditions.count()) await conditions.check();
 }

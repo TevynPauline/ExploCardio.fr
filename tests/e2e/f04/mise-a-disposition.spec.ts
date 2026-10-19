@@ -1,7 +1,8 @@
 import { expect, test } from "@playwright/test";
 import { verifierAccessibilite } from "../axe";
 import { COMPTES, connecterNavigateur } from "../session";
-import { ELECTRODES, HOLTER, ajouterDepuisFiche, clientConnecte, jusquAuRecapitulatif, payerSurPageDemo, rendreParcDesTests, requete } from "./outils";
+import { expedierEtLivrer } from "../f05/outils";
+import { accepterConditions, ELECTRODES, HOLTER, ajouterDepuisFiche, clientConnecte, jusquAuRecapitulatif, payerSurPageDemo, rendreParcDesTests, requete } from "./outils";
 
 // T026 (US5, FR-018, FR-019, FR-029, D1) : mise à disposition mensuelle payée par SEPA ;
 // panier mixte (achat puis abonnement, reprise depuis « Mon compte ») ; échéance mensuelle.
@@ -23,7 +24,8 @@ async function facturesDe(partenaireRef: string) {
 
 test("mise à disposition par SEPA : récapitulatif mensuel, abonnement et matériel réservé, location et facture du 1er mois", async ({ page, browser, baseURL }) => {
   const c = await clientConnecte(browser, baseURL, page);
-  await ajouterDepuisFiche(page, HOLTER, "mise_a_disposition");
+  // Appareil sans kit d'accessoires (F05) : seule la mise à disposition est au panier.
+  await ajouterDepuisFiche(page, "/holter-tensionnel/suntech-oscar-2", "mise_a_disposition");
   await jusquAuRecapitulatif(page, { livraison: "aucune", abonnement: "sepa" });
   await verifierAccessibilite(page);
   const main = page.locator("main");
@@ -31,7 +33,7 @@ test("mise à disposition par SEPA : récapitulatif mensuel, abonnement et maté
   await expect(main).toContainText("Mois suivants TTC");
   await expect(main).toContainText(/prélèvement le \d+ de chaque mois/);
   await expect(main).toContainText("Sans engagement");
-  await page.getByLabel(/J’accepte les conditions générales de vente/).check();
+  await accepterConditions(page);
   await page.getByRole("button", { name: "Autoriser le prélèvement mensuel" }).click();
   await payerSurPageDemo(page, { moyen: "Prélèvement SEPA" });
   await page.waitForURL(/\/commande\/confirmation\//);
@@ -44,13 +46,14 @@ test("mise à disposition par SEPA : récapitulatif mensuel, abonnement et maté
 
   await page.goto("/mon-compte/locations");
   await verifierAccessibilite(page);
-  await expect(page.getByRole("listitem", { name: `Location ${abonnements[0]!.ref}` })).toContainText("En cours");
+  await expect(page.getByRole("listitem", { name: `Location ${abonnements[0]!.ref}` })).toContainText("Commandée"); // en cours à la livraison (F05)
   await page.goto("/mon-compte/factures");
   await expect(main.getByRole("link", { name: /FICT\/\d{4}\/\d+/ })).toHaveCount(1);
   await page.goto("/panier");
   await expect(main).toContainText(/panier est vide/i);
 
-  // Échéance du mois suivant (simulée) : facture et email.
+  // Échéance du mois suivant (simulée) : la location commence à la livraison (F05).
+  await expedierEtLivrer(browser, baseURL, abonnements[0]!.ref);
   const admin = await browser.newContext({ baseURL, storageState: "playwright/.auth/acces-demo.json" });
   await connecterNavigateur(admin, COMPTES.admin);
   const pageAdmin = await admin.newPage();
@@ -68,7 +71,7 @@ test("panier mixte : achat payé puis abonnement refusé, repris depuis « Mon c
   await ajouterDepuisFiche(page, ELECTRODES);
   await ajouterDepuisFiche(page, HOLTER, "mise_a_disposition");
   await jusquAuRecapitulatif(page);
-  await page.getByLabel(/J’accepte les conditions générales de vente/).check();
+  await accepterConditions(page);
   await page.getByRole("button", { name: /^Payer/ }).click();
   await payerSurPageDemo(page);
   // Achat payé : le client autorise ensuite le prélèvement de l'abonnement (D1).
@@ -100,7 +103,7 @@ test("panier mixte avec achat par virement : commande en attente puis abonnement
   await ajouterDepuisFiche(page, ELECTRODES);
   await ajouterDepuisFiche(page, HOLTER, "mise_a_disposition");
   await jusquAuRecapitulatif(page, { achat: "virement" });
-  await page.getByLabel(/J’accepte les conditions générales de vente/).check();
+  await accepterConditions(page);
   await page.getByRole("button", { name: "Valider la commande" }).click();
   await payerSurPageDemo(page, { moyen: "Carte Visa" });
   await page.waitForURL(/\/commande\/confirmation\//);

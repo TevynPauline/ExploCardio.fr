@@ -24,6 +24,8 @@ Détail des champs ajoutés par F03 : [../../003-catalogue-fiches-produit/contra
 | Lire la disponibilité | références | état (`disponible`, `delai` avec jours, `indisponible`) par formule | `ServiceUnavailable` | F03, F04 |
 | Réserver | références, quantités, clé | réservation | `OutOfStock` | F04 |
 | Lire la disponibilité du parc | article, date souhaitée | première date de livraison possible | `ServiceUnavailable` | F05 |
+| Réserver un appareil | article, date de livraison, clé | numéro de série réservé (idempotent) | `OutOfStock` | F05 |
+| Libérer un appareil | clé | — (sans effet si consommé ou déjà libéré) | — | F05 |
 
 ## 3. Clients
 
@@ -68,9 +70,19 @@ réservation » (clé), utilisée quand un paiement est refusé ou abandonné.
 
 | Opération | Entrée | Sortie | Erreurs | Utilisée par |
 |---|---|---|---|---|
-| Créer un abonnement | partenaire, objet (`mise_a_disposition` ou `logiciel`), article, date de début, clé | référence | `OutOfStock` | F04, F05, F12 |
-| Résilier / annuler la résiliation | abonnement, date | date de fin | `NotFound` | F05, F12 |
-| Lister les locations d'un client | partenaire | locations, numéros de série, échéances | — | F05, F13 |
+| Créer un abonnement | partenaire, objet (`mise_a_disposition` ou `logiciel`), article, date de début, date de livraison, commande, expédition bloquée, réservation, clé | référence ; réservation consommée | `OutOfStock` | F04, F05, F12 |
+| Résilier | abonnement, date de la demande | date de fin (terme du mois payé), date limite de retour | `NotFound`, `OperationRefusee` | F05, F12 |
+| Annuler la résiliation (« Prolonger ») | abonnement | — | `OperationRefusee` après la fin | F05, F12 |
+| Lister les locations d'un client | partenaire | locations (état, livraison, échéances, n° de série après expédition, retour, impayé) | — | F05, F13 |
+| Lister les changements de locations | date | locations modifiées | — | F05 |
+| Étiquette de retour | abonnement | PDF | `OperationRefusee` sans résiliation | F05 |
+| Débloquer l'expédition | partenaire | locations débloquées | — | F05 |
+| Reporter la livraison | abonnement, date | — | `OperationRefusee` si expédiée | F05 |
+| Annuler une location non expédiée | abonnement, motif, clé | montant TTC à rembourser, avoir | `OperationRefusee` si expédiée | F05 |
+| Kits possédés | partenaire | codes des kits | — | F05 |
+| Lire les règles de location | — | tentatives, délais de régularisation, de retour, de tolérance, de non-retour | — | F05 |
+| Factures à prélever / enregistrer un prélèvement | — / facture, paiement, clé | factures émises après la fin d'une location | — | F05 |
+| Facturer une échéance | abonnements, montant, paiement, libellé, premier mois ou suivant, clé | facture ; une échéance « suivante » avance la prochaine | `NotFound` | F04, F05 |
 
 ## 7. Fidélité
 
@@ -97,3 +109,9 @@ Ces opérations n'existent que sur l'implémentation `demo` et ne font pas parti
 commun : remplir la base, la réinitialiser, modifier un prix, un stock ou un paramètre
 commercial fictif (FR-019, FR-024). Elles sont appelées par l'écran de démonstration du
 back-office et par la commande de remplissage.
+
+F05 y ajoute le cycle des locations, que l'équipe fera dans Odoo en mode réel : préparer et
+expédier, signaler un appareil défectueux ou un colis non livré, marquer livrée, enregistrer
+un retour (état, dégradation), enregistrer un kit, simuler un prélèvement échoué, régulariser,
+modifier les règles de location, et exécuter à une date les actions planifiées d'Odoo
+(fins atteintes, impayés, retards, facturations).

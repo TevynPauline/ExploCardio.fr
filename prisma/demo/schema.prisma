@@ -40,6 +40,7 @@ model Partenaire {
   abonnements  Abonnement[]
   factures     Facture[]
   mouvements   MouvementCagnotte[]
+  kits         KitPossede[]
   droits       DroitAssistance?
   listesPrix   ListePrix[]
   opportunites Opportunite[]
@@ -175,10 +176,34 @@ model NumeroSerie {
   statut      StatutParc   @default(disponible)
   /// Date prévue de retour au parc (pour la première date de livraison possible).
   retourPrevu DateTime?
+  /// Affectations, retours et interventions (F05).
+  historique  Json         @default("[]")
   estFictif   Boolean      @default(true)
   abonnements Abonnement[]
+  reservations ReservationAppareil[]
 
   @@map("stock_lot")
+}
+
+enum EtatReservationAppareil {
+  active
+  consommee
+  liberee
+}
+
+/// Réservation d'un appareil du parc avant le paiement d'une mise à disposition (F05, R4).
+model ReservationAppareil {
+  id             Int                     @id @default(autoincrement())
+  cle            String                  @unique
+  numeroSerieId  Int
+  numeroSerie    NumeroSerie             @relation(fields: [numeroSerieId], references: [id], onDelete: Cascade)
+  dateLivraison  DateTime
+  /// Statut de l'appareil avant la réservation (rétabli si elle est libérée).
+  statutAvant    StatutParc              @default(disponible)
+  etat           EtatReservationAppareil @default(active)
+  creeLe         DateTime                @default(now())
+
+  @@map("stock_lot_reservation")
 }
 
 /// Liste de prix (product.pricelist) : prix par client, mensualités forcées (F03).
@@ -216,6 +241,9 @@ model OffreMiseADisposition {
   /// default_code du kit de consommables requis à la première commande, s'il existe.
   kitRequis                  String?
   valeurRemplacementCentimes Int
+  /// Logiciel Cloud ouvert à l'expédition (F05, FR-012) et contenu du pack affiché (FR-001).
+  logiciel                   String?
+  contenuPack                String[]  @default([])
   estFictif                  Boolean  @default(true)
 
   @@map("rental_offer")
@@ -260,6 +288,7 @@ model CommandeVente {
   echeancePaiement     DateTime?
   modifieLe            DateTime        @default(now()) @updatedAt
   remboursements       Remboursement[]
+  locations            Abonnement[]
   estFictif            Boolean         @default(true)
 
   lignes     LigneCommande[]
@@ -295,6 +324,40 @@ model ParametresVente {
   estFictif           Boolean @default(true)
 
   @@map("sale_settings")
+}
+
+/// Règles de location (F05, principe VI) : impayés, retours, tolérance, non-retour (D7).
+model ReglesLocation {
+  id                        Int     @id @default(autoincrement())
+  tentativesPrelevement     Int     @default(3)
+  espacementTentativesJours Int     @default(3)
+  delaiRegularisationJours  Int     @default(10)
+  delaiRetourJoursOuvres    Int     @default(5)
+  toleranceRetardJours      Int     @default(5)
+  delaiNonRetourJours       Int     @default(30)
+  estFictif                 Boolean @default(true)
+
+  @@map("rental_settings")
+}
+
+enum OrigineKit {
+  achat
+  enregistrement
+}
+
+/// Kit d'accessoires possédé par un client (F05, FR-016).
+model KitPossede {
+  id             Int          @id @default(autoincrement())
+  partenaireId   Int
+  partenaire     Partenaire   @relation(fields: [partenaireId], references: [id], onDelete: Cascade)
+  kitDefaultCode String
+  origine        OrigineKit
+  commandeId     Int?
+  auteur         String?
+  creeLe         DateTime     @default(now())
+
+  @@unique([partenaireId, kitDefaultCode])
+  @@map("res_partner_kit")
 }
 
 enum EtatRemboursement {
@@ -342,10 +405,19 @@ enum ObjetAbonnement {
 }
 
 enum EtatAbonnement {
+  commandee
   en_cours
   resiliation_prevue
-  termine
   en_retard_retour
+  suspendue_impaye
+  terminee
+  annulee
+}
+
+enum EtatRetour {
+  complet
+  degrade
+  perdu
 }
 
 /// Abonnement (sale.order récurrente) : location ou abonnement logiciel (F05, F12).
@@ -365,6 +437,23 @@ model Abonnement {
   fin                    DateTime?
   prochaineEcheance      DateTime?
   etat                   EtatAbonnement  @default(en_cours)
+  /// F05 : date de livraison annoncée, retour, expédition, impayé, retour constaté.
+  dateLivraison              DateTime?
+  dateLimiteRetour           DateTime?
+  commandeId                 Int?
+  commande                   CommandeVente? @relation(fields: [commandeId], references: [id])
+  expeditionBloquee          Boolean        @default(false)
+  transporteur               String?
+  suivi                      String?
+  expedieLe                  DateTime?
+  attenteChoixClient         Boolean        @default(false)
+  colisNonLivre              Boolean        @default(false)
+  impayeDepuis               DateTime?
+  tentativesPrelevement      Int            @default(0)
+  rappelsRetour              Int            @default(0)
+  etatRetour                 EtatRetour?
+  montantDegradationCentimes Int?
+  modifieLe                  DateTime       @default(now()) @updatedAt
   estFictif              Boolean         @default(true)
 
   @@map("sale_subscription")
@@ -550,6 +639,9 @@ model SessionPaiementDemo {
   /// ouverte, payee, refusee, authentification
   etat                      String   @default("ouverte")
   paiementRef               String?
+  /// F05 : un élément par location [{ element, premierTtc, mensuelTtc, finLe? }] ; autorisation conservée jusqu'au retour.
+  elements                  Json     @default("[]")
+  autorisationLiberee       Boolean  @default(false)
   creeLe                    DateTime @default(now())
   estFictif                 Boolean  @default(true)
 

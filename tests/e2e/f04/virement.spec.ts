@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { verifierAccessibilite } from "../axe";
 import { COMPTES, connecterNavigateur } from "../session";
-import { ELECTRODES, ajouterDepuisFiche, clientConnecte, jusquAuRecapitulatif, requete, stockDe } from "./outils";
+import { accepterConditions, ELECTRODES, ajouterDepuisFiche, clientConnecte, jusquAuRecapitulatif, requete, stockDe } from "./outils";
 
 // T024 (US4, FR-016, FR-017, R6) : commande par virement, réservée, RIB et référence ;
 // virement reçu par l'équipe → commande payée, facturée, client prévenu.
@@ -14,7 +14,7 @@ test("virement : commande en attente avec RIB, puis virement reçu → payée et
   await ajouterDepuisFiche(page, ELECTRODES);
   await jusquAuRecapitulatif(page, { achat: "virement" });
   await expect(page.locator("main")).toContainText("Virement bancaire");
-  await page.getByLabel(/J’accepte les conditions générales de vente/).check();
+  await accepterConditions(page);
   await page.getByRole("button", { name: /^(Payer|Commander|Valider)/ }).click();
 
   await page.waitForURL(/\/commande\/confirmation\//);

@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { verifierAccessibilite } from "../axe";
-import { ELECTRODES, ajouterDepuisFiche, clientConnecte, jusquAuRecapitulatif, payerSurPageDemo, requete, stockDe } from "./outils";
+import { accepterConditions, ELECTRODES, ajouterDepuisFiche, clientConnecte, jusquAuRecapitulatif, payerSurPageDemo, requete, stockDe } from "./outils";
 
 // T016 (US2, FR-008 à FR-015, SC-004, SC-012, SC-013, SC-014).
 
@@ -33,7 +33,7 @@ test("commande payée par American Express : confirmation, email, commande et fa
   // CGV obligatoires.
   await page.getByRole("button", { name: /^Payer/ }).click();
   await expect(page.getByRole("alert").filter({ hasText: "conditions générales de vente" })).toBeVisible();
-  await page.getByLabel(/J’accepte les conditions générales de vente/).check();
+  await accepterConditions(page);
   await page.getByRole("button", { name: /^Payer/ }).click();
   await payerSurPageDemo(page);
 

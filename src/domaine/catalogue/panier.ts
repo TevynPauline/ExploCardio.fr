@@ -21,7 +21,7 @@ export type LigneAAjouter = {
 };
 
 export type ResultatAjout =
-  | { ok: true; prixHt: number; prixAChange: boolean; delaiJours: number | null }
+  | { ok: true; prixHt: number; prixAChange: boolean; delaiJours: number | null; kit?: { nom: string; ajoute: boolean; possede: boolean } | null }
   | { ok: false; motif: "quantite" | "introuvable" | "formule" | "indisponible" | "service" | "identite"; message: string };
 
 export const QUANTITE_MAX = 999;
@@ -104,7 +104,18 @@ export async function ajouterAuPanier(identite: IdentitePanier, ligne: LigneAAjo
     update: { quantite: { increment: ligne.quantite }, prixHtConstate: prixHt },
   });
   await dbSite().panier.update({ where: { id: panier.id }, data: { modifieLe: new Date() } });
-  return { ok: true, prixHt, prixAChange: ligne.prixAffiche !== undefined && ligne.prixAffiche !== prixHt, delaiJours };
+  // F05 (D4) : le kit d'accessoires requis rejoint le panier d'office s'il manque.
+  let kit: { nom: string; ajoute: boolean; possede: boolean } | null = null;
+  if (ligne.formule === "mise_a_disposition") {
+    const { ajouterKitSiNecessaire } = await import("../location/kit");
+    try {
+      const info = await ajouterKitSiNecessaire(panier.id, identite.compteId, ligne.defaultCode);
+      kit = info ? { nom: info.nom, ajoute: info.ajoute, possede: info.possede } : null;
+    } catch (e) {
+      if (!estErreurConnecteur(e)) throw e;
+    }
+  }
+  return { ok: true, prixHt, prixAChange: ligne.prixAffiche !== undefined && ligne.prixAffiche !== prixHt, delaiJours, kit };
 }
 
 export async function lignesPanier(panierId: string): Promise<LignePanier[]> {
@@ -139,6 +150,11 @@ export async function modifierLigne(identite: IdentitePanier, ligneId: string, q
 export async function supprimerLigne(identite: IdentitePanier, ligneId: string): Promise<boolean> {
   const ligne = await ligneDe(identite, ligneId);
   if (!ligne) return false;
+  // F05 (D4) : le kit obligatoire reste tant que la mise à disposition est au panier.
+  if (ligne.formule === "achat") {
+    const { kitsObligatoires } = await import("../location/kit");
+    if ((await kitsObligatoires(ligne.panierId, identite.compteId)).has(ligne.defaultCode)) return false;
+  }
   await dbSite().lignePanier.delete({ where: { id: ligne.id } });
   await dbSite().panier.update({ where: { id: ligne.panierId }, data: { modifieLe: new Date() } });
   return true;

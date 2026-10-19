@@ -5,7 +5,7 @@ import { startTransition, useActionState, type FormEvent } from "react";
 import { actionPayer, type EtatEtape } from "@/actions/commande";
 
 /** Validation du récapitulatif (FR-012) : CGV acceptées explicitement ; un seul envoi. */
-export function FormulairePayer({ refCommande, libelle }: { refCommande: string; libelle: string }) {
+export function FormulairePayer({ refCommande, libelle, conditionsLocation = null }: { refCommande: string; libelle: string; conditionsLocation?: string | null }) {
   const [etat, action, enCours] = useActionState(actionPayer, { erreurs: {} } as EtatEtape);
   function envoyer(ev: FormEvent<HTMLFormElement>) {
     ev.preventDefault();
@@ -23,6 +23,19 @@ export function FormulairePayer({ refCommande, libelle }: { refCommande: string;
         </span>
       </label>
       {etat.erreurs.cgv ? <p id="erreur-cgv" role="alert" className="text-small font-medium text-ink">{etat.erreurs.cgv}</p> : null}
+      {conditionsLocation !== null ? (
+        <>
+          <details className="ec-box--info p-3 text-small">
+            <summary className="min-h-11 cursor-pointer content-center font-medium text-ink">Lire les conditions de location</summary>
+            <p className="mt-2">{conditionsLocation}</p>
+          </details>
+          <label className="flex min-h-11 items-start gap-3">
+            <input type="checkbox" name="conditions" value="oui" aria-describedby={etat.erreurs.conditions ? "erreur-conditions" : undefined} aria-invalid={etat.erreurs.conditions ? true : undefined} className="mt-1 size-5 shrink-0" />
+            <span>J’accepte les conditions de location (résiliation, retour de l’appareil, valeur de remplacement).</span>
+          </label>
+          {etat.erreurs.conditions ? <p id="erreur-conditions" role="alert" className="text-small font-medium text-ink">{etat.erreurs.conditions}</p> : null}
+        </>
+      ) : null}
       <div>
         <button type="submit" disabled={enCours} className="ec-btn ec-btn--primary">{enCours ? "Redirection vers le paiement…" : libelle}</button>
       </div>

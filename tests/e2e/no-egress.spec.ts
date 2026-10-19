@@ -27,9 +27,10 @@ const PAGES_PUBLIQUES = [
   "/holter-ecg/ecg-de-repos",
   "/services/installation-formation",
   "/panier",
+  "/mise-a-disposition",
 ];
 const PAGES_MON_COMPTE = ["/mon-compte", "/mon-compte/informations", "/mon-compte/adresses", "/mon-compte/preferences", "/mon-compte/securite", "/mon-compte/donnees", "/mon-compte/commandes", "/mon-compte/factures", "/mon-compte/locations", "/mon-compte/financements", "/financement/demande?article=EC-DMS-3004L"];
-const PAGES_BACK_OFFICE = ["/admin", "/admin/contenus", "/admin/contenus/tuiles", "/admin/comptes", "/admin/comptes/demandes", "/admin/comptes/reglages", "/admin/comptes/rgpd", "/admin/catalogue", "/admin/catalogue/EC-SUN-OSCAR2", "/admin/catalogue/services", "/admin/commandes", "/admin/financements", "/admin/demonstration/paiements"];
+const PAGES_BACK_OFFICE = ["/admin", "/admin/contenus", "/admin/contenus/tuiles", "/admin/comptes", "/admin/comptes/demandes", "/admin/comptes/reglages", "/admin/comptes/rgpd", "/admin/catalogue", "/admin/catalogue/EC-SUN-OSCAR2", "/admin/catalogue/services", "/admin/commandes", "/admin/financements", "/admin/demonstration/paiements", "/admin/locations", "/admin/demonstration/locations"];
 
 const demo = { CONNECTOR_ODOO: "demo", CONNECTOR_STRIPE: "demo", CONNECTOR_PCA: "demo", CONNECTOR_EMAILING: "demo" };
 

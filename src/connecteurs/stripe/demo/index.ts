@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { dbDemo } from "@/lib/db/demo";
-import { InvalidSignature, NotFound } from "../../erreurs";
+import { InvalidSignature, NotFound, OperationRefusee } from "../../erreurs";
 import { PREFIXE_REFERENCE_FICTIVE } from "../../garde-donnees-fictives";
 import type { ConnecteurStripe, EvenementPaiement, SessionAbonnement, SessionPaiement } from "../interfaces";
 import { signatureValide } from "./signature";
@@ -15,6 +15,18 @@ const db = () => dbDemo();
 
 function nouvelId(prefixe: string): string {
   return `${PREFIXE_REFERENCE_FICTIVE}${prefixe}-${randomUUID()}`;
+}
+
+type ElementDemo = { element: string; premierTtc: number; mensuelTtc: number; finLe: string | null };
+
+function elementsDe(brut: unknown): ElementDemo[] {
+  return Array.isArray(brut) ? (brut as ElementDemo[]) : [];
+}
+
+async function sessionAbonnement(abonnementRef: string) {
+  const session = await db().sessionPaiementDemo.findFirst({ where: { abonnementRef, nature: "abonnement" }, orderBy: { creeLe: "desc" } });
+  if (!session) throw new NotFound("Abonnement de paiement", abonnementRef);
+  return session;
 }
 
 export function creerStripeDemo(): ConnecteurStripe {
@@ -52,6 +64,7 @@ export function creerStripeDemo(): ConnecteurStripe {
             partenaireRef: s.client.partenaireRef,
             montantTtcCentimes: s.premierMontantTtc,
             montantMensuelTtcCentimes: s.montantMensuelTtc,
+            elements: (s.elements ?? []).map((e) => ({ element: e.element, premierTtc: e.premierMontantTtc, mensuelTtc: e.montantMensuelTtc, finLe: null })),
             moyens: s.moyens,
             urlRetour: s.urlRetour,
             urlAnnulation: s.urlAnnulation,
@@ -74,6 +87,53 @@ export function creerStripeDemo(): ConnecteurStripe {
     async resilierAbonnement(abonnementRef: string) {
       const session = await db().sessionPaiementDemo.findFirst({ where: { abonnementRef } });
       if (!session) throw new NotFound("Abonnement de paiement", abonnementRef);
+    },
+
+    async retirerElementAbonnement(abonnementRef: string, element: string, dateEffet: Date) {
+      const session = await sessionAbonnement(abonnementRef);
+      const elements = elementsDe(session.elements);
+      const e = elements.find((x) => x.element === element);
+      if (!e) throw new NotFound("Élément d'abonnement", element);
+      if (e.finLe) return;
+      e.finLe = dateEffet.toISOString();
+      await db().sessionPaiementDemo.update({ where: { id: session.id }, data: { elements } });
+    },
+
+    async retablirElementAbonnement(abonnementRef: string, element: string) {
+      const session = await sessionAbonnement(abonnementRef);
+      const elements = elementsDe(session.elements);
+      const e = elements.find((x) => x.element === element);
+      if (!e) throw new NotFound("Élément d'abonnement", element);
+      e.finLe = null;
+      await db().sessionPaiementDemo.update({ where: { id: session.id }, data: { elements } });
+    },
+
+    async preleverPonctuel(d: { abonnementRef: string; montantTtc: number; libelle: string }, cle: string) {
+      const deja = await db().sessionPaiementDemo.findUnique({ where: { cle } });
+      if (deja) return { paiementRef: deja.paiementRef!, etat: deja.etat === "payee" ? ("payee" as const) : ("refusee" as const) };
+      const session = await sessionAbonnement(d.abonnementRef);
+      if (session.autorisationLiberee) throw new OperationRefusee("Autorisation de prélèvement libérée.", { abonnementRef: d.abonnementRef });
+      const p = await db().sessionPaiementDemo.create({
+        data: {
+          id: nouvelId("cs"),
+          cle,
+          nature: "ponctuel",
+          abonnementRef: d.abonnementRef,
+          partenaireRef: session.partenaireRef,
+          montantTtcCentimes: d.montantTtc,
+          moyens: session.moyens,
+          urlRetour: "",
+          urlAnnulation: "",
+          etat: "payee",
+          paiementRef: nouvelId("pi"),
+        },
+      });
+      return { paiementRef: p.paiementRef!, etat: "payee" as const };
+    },
+
+    async libererAutorisation(abonnementRef: string) {
+      const session = await sessionAbonnement(abonnementRef);
+      await db().sessionPaiementDemo.update({ where: { id: session.id }, data: { autorisationLiberee: true } });
     },
 
     async verifierEvenement(contenu: string, signature: string): Promise<EvenementPaiement> {

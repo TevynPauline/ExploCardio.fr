@@ -58,6 +58,9 @@ export async function valider(compteId: string, auteur: Auteur): Promise<void> {
   await ouvrirDroitSiEligible(compteId);
   await notifier(c.utilisateur.email, await emailsComptes.compteValide(), "compte validé");
   await journal(auteur, "comptes.valide", compteId, { de: c.statut });
+  // F05 : locations payées avant la validation, expédition débloquée.
+  const { surCompteValide } = await import("../location/validation");
+  await surCompteValide(compteId);
 }
 
 export async function refuser(compteId: string, auteur: Exclude<Auteur, null>, motif: string): Promise<void> {
@@ -66,6 +69,9 @@ export async function refuser(compteId: string, auteur: Exclude<Auteur, null>, m
   await dbSite().decisionCompte.create({ data: { compteId, decision: "refus", motif: motif.trim(), auteurId: auteur.id } });
   await notifier(c.utilisateur.email, await emailsComptes.compteRefuse(), "compte refusé");
   await journal(auteur, "comptes.refuse", compteId, { motif });
+  // F05 (FR-045) : locations payées avant le refus, annulées et intégralement remboursées.
+  const { surCompteRefuse } = await import("../location/validation");
+  await surCompteRefuse(compteId, motif.trim());
 }
 
 export async function suspendre(compteId: string, auteur: Exclude<Auteur, null>, motif: string): Promise<void> {

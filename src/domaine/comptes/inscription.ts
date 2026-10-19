@@ -90,7 +90,7 @@ async function signalerEquipe(objet: string, texte: string) {
 }
 
 /** Crée l'utilisateur, le compte (email à confirmer), les adresses et les consentements. */
-export async function inscrire(s: SaisieInscription): Promise<ResultatInscription> {
+export async function inscrire(s: SaisieInscription, retour: string | null = null): Promise<ResultatInscription> {
   const erreurs = await validerInscription(s);
   if (Object.keys(erreurs).length) return { ok: false, erreurs };
 
@@ -116,7 +116,7 @@ export async function inscrire(s: SaisieInscription): Promise<ResultatInscriptio
 
   const reponse = await auth.api.signUpEmail({
     body: {
-      callbackURL: "/inscription/email-confirme",
+      callbackURL: retour ? `/inscription/email-confirme?retour=${encodeURIComponent(retour)}` : "/inscription/email-confirme",
       email,
       password: s.motDePasse,
       name: `${s.prenom.trim()} ${s.nom.trim()}`,

@@ -130,10 +130,21 @@ export function SelecteurFormule({ nom, formules, variantes, contenuPackMad, men
             ) : null}
             {variante.kitRequis ? (
               <p>
-                Kit d’accessoires requis à la première commande : {variante.kitRequis.nom} ({euros(variante.kitRequis.prixHt)} HT).
+                {variante.kitRequis.possede
+                  ? `Vous possédez déjà le kit d’accessoires ${variante.kitRequis.nom} : il ne vous sera pas facturé.`
+                  : `Kit d’accessoires requis à la première location de ce type d’appareil : ${variante.kitRequis.nom} (${euros(variante.kitRequis.prixHt)} HT), ajouté à votre panier ; vous le conservez.`}
               </p>
             ) : null}
-            <Disponibilite etat={dispo} />
+            {variante.livraisonMad ? (
+              <p className={variante.livraisonMad.lendemain ? "font-semibold text-ink" : ""}>
+                {variante.livraisonMad.lendemain ? `Livraison possible dès demain, ${variante.livraisonMad.libelle}` : `Première livraison possible : ${variante.livraisonMad.libelle}`}
+              </p>
+            ) : (
+              <Disponibilite etat={dispo} />
+            )}
+            <p className="text-small text-muted">
+              Aucun dépôt de garantie. Valeur de remplacement : {euros(variante.offreMad.valeurRemplacementHt)} HT, facturée seulement en cas de perte ou de non-retour.
+            </p>
             {dispo && dispo.etat !== "indisponible" ? (
               <AjoutPanier
                 key={`mad-${variante.defaultCode}`}

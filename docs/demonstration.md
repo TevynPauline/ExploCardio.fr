@@ -109,12 +109,9 @@ Dans le back-office, rubrique **Démonstration** :
   prévenu. Un montant différent laisse la commande en attente et alerte l'équipe. Sans
   virement, un rappel part 2 jours avant l'échéance et la commande est annulée à l'échéance.
   Le RIB et ces délais se règlent dans **Contenus → Coordonnées et textes**.
-- **Mise à disposition** : sur une fiche, « Mise à disposition mensuelle » puis « Ajouter la
-  mise à disposition au panier ». Le récapitulatif donne le premier mois, les mois suivants et
-  la date de prélèvement (carte ou SEPA). La location apparaît dans **Mon compte → Locations
-  en cours**. Panier mixte : l'achat se paie d'abord, puis l'abonnement ; si l'abonnement
-  échoue, il se reprend depuis **Mon compte → Commandes**. Pour montrer une échéance :
-  **Démonstration → Paiements → Simuler une échéance**.
+- **Mise à disposition** : voir la section F05 ci-dessous. Panier mixte : l'achat se paie
+  d'abord, puis le client autorise le prélèvement mensuel ; si cette autorisation échoue, elle
+  se reprend depuis **Mon compte → Commandes** sans repayer l'achat.
 - **Expédier, livrer, rembourser** : dans **Démonstration → Paiements**, carte « Commandes »
   (ce que l'équipe fera dans Odoo) : **Marquer expédiée** (transporteur et suivi),
   **Marquer livrée**, **Décider un remboursement** (partiel ou total). Le client voit le
@@ -123,6 +120,45 @@ Dans le back-office, rubrique **Démonstration** :
 - **Commandes du site** (toute l'équipe) : **Back-office → Commandes**, en lecture seule ; les
   commandes payées mais pas encore enregistrées dans Odoo y sont signalées (le site réessaie
   seul toutes les 5 minutes).
+
+## Mise à disposition et dépannage express (F05)
+
+- **Dépannage express** : `/mise-a-disposition` (menu Services). Chaque équipement proposé
+  affiche le premier mois et les mois suivants (HT puis TTC) et la date de livraison la plus
+  proche : « Livraison demain » un jour ouvré avant l'heure limite, sinon la première date
+  possible (week-ends, jours fériés, jours non livrés et Corse pris en compte). « Choisir »
+  ouvre la fiche sur la formule de mise à disposition.
+- **Commander** : l'étape « Livraison » propose les jours ouvrés possibles ; la location
+  commence le jour de la livraison. Le récapitulatif détaille le pack, la prochaine échéance,
+  la valeur de remplacement (aucun dépôt de garantie) et les **conditions de location** à
+  accepter. Un appareil est réservé avant le paiement : si le dernier vient d'être pris, rien
+  n'est débité et le médecin choisit la date suivante.
+- **Kit d'accessoires** (Holter DMS) : ajouté d'office au panier à la première location,
+  marqué « obligatoire, vous le conservez », jamais facturé deux fois. Un kit possédé est
+  signalé sur la fiche et au panier. **Démonstration → Locations → Enregistrer un kit**
+  simule un kit acquis autrement.
+- **Sans compte** : le visiteur commande, crée son compte depuis la page de connexion, confirme
+  son email et clique « Reprendre ma commande » : appareil, date et kit sont conservés. Il peut
+  payer avant la validation ; l'équipe reçoit une alerte « Validation prioritaire » et rien ne
+  part avant la validation (**Comptes**). Validé : expédition débloquée (date recalculée si
+  besoin). Refusé : location annulée, premier mois et kit intégralement remboursés.
+- **Démonstration → Locations** (ce que l'équipe fera dans Odoo) : préparer et expédier
+  (appareil, suivi), signaler un appareil défectueux ou un colis non livré, marquer livrée,
+  enregistrer un retour (complet, dégradé avec son montant, perdu), simuler un prélèvement
+  échoué, régulariser, et **avancer la date** pour exécuter les actions planifiées (échéances,
+  rappels, suspension pour impayé, retard de retour, facturation du mois suivant ou de la valeur
+  de remplacement). Les règles d'impayé et de retour se règlent dans **Démonstration →
+  Paramètres commerciaux**.
+- **Mon compte → Locations** : appareil, numéro de série (après l'expédition), dates,
+  prochaine échéance ; boutons Résilier, Prolonger (avant la fin), Étiquette de retour (PDF
+  « FICTIVE »), Passer à l'achat, Passer au financement, Annuler sans frais (avant
+  l'expédition) ou Reporter (appareil défectueux) ; historique et factures.
+- **Résilier** : fin au terme du mois payé, prélèvements de cette location arrêtés, accès Cloud
+  fermé à la date de fin, instructions et date limite de retour. L'autorisation de
+  prélèvement reste valable jusqu'au retour, pour un éventuel retard ou une dégradation.
+- **Back-office → Locations** (toute l'équipe) : commandées, en cours, impayés, retards, en
+  lecture seule. **Contenus → Coordonnées et textes** : heure limite, jours non livrés, zones
+  éloignées, rappels, conditions de location.
 
 ## Demander un financement (F04)
 

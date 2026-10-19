@@ -46,13 +46,14 @@ export async function actionAdresses(_e: EtatEtape, d: FormData): Promise<EtatEt
     }
     throw e;
   }
-  redirect(commande.etatAchat === "sans_objet" ? `/commande/paiement?ref=${commande.ref}` : `/commande/livraison?ref=${commande.ref}`);
+  redirect(`/commande/livraison?ref=${commande.ref}`);
 }
 
 export async function actionLivraison(d: FormData) {
   const commande = await commandeCourante(t(d, "ref"));
   try {
-    await choisirLivraison(commande, t(d, "mode"));
+    const dates = Object.fromEntries([...d.entries()].filter(([k]) => k.startsWith("date.")).map(([k, v]) => [k.slice(5), String(v)]));
+    await choisirLivraison(commande, t(d, "mode") || null, dates);
   } catch (e) {
     if (e instanceof SaisieInvalide) redirect(`/commande/livraison?ref=${commande.ref}&erreur=${encodeURIComponent(Object.values(e.erreurs).join(" "))}`);
     throw e;
@@ -76,7 +77,7 @@ export async function actionPayer(_e: EtatEtape, d: FormData): Promise<EtatEtape
   const commande = await commandeCourante(t(d, "ref"));
   let lancement;
   try {
-    lancement = await lancerPaiement(commande, d.get("cgv") === "oui");
+    lancement = await lancerPaiement(commande, d.get("cgv") === "oui", d.get("conditions") === "oui");
   } catch (e) {
     if (e instanceof SaisieInvalide) return { erreurs: e.erreurs, message: Object.values(e.erreurs).join(" ") };
     throw e;

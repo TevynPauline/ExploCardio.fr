@@ -31,8 +31,11 @@ export type VarianteFiche = {
   quantiteDisponible: number | null;
   delaiReassortJours: number | null;
   offreMad: OffreMiseADisposition | null;
-  kitRequis: { defaultCode: string; nom: string; prixHt: number } | null;
+  /** `possede` : le client connecté a déjà ce kit (F05, FR-014) ; il ne lui est pas facturé. */
+  kitRequis: { defaultCode: string; nom: string; prixHt: number; possede?: boolean } | null;
   mensualites: Mensualite[];
+  /** F05 : première date de livraison d'une mise à disposition (parc lu en direct). */
+  livraisonMad: { premiere: string; libelle: string; lendemain: boolean } | null;
 };
 
 export type Fiche = {
@@ -126,8 +129,35 @@ function variantesDe(
       mensualites: e.article.formules.includes("financement")
         ? mensualites({ prixHt, mensualitesForcees: v.mensualitesForcees }, e.article.baremeFinancement, c?.mensualitesForcees ?? [])
         : [],
+      livraisonMad: null,
     };
   });
+}
+
+/** F05 (FR-014) : kit requis déjà possédé par le client connecté. */
+async function avecKitPossede(variantes: VarianteFiche[], compteId: string | null | undefined): Promise<VarianteFiche[]> {
+  if (!compteId || !variantes.some((v) => v.kitRequis)) return variantes;
+  const { kitsPossedes } = await import("../location/kit");
+  const possedes = await kitsPossedes(compteId);
+  return variantes.map((v) => (v.kitRequis ? { ...v, kitRequis: { ...v.kitRequis, possede: possedes.includes(v.kitRequis.defaultCode) } } : v));
+}
+
+/** F05 : première date de livraison de chaque variante proposée en mise à disposition. */
+async function avecLivraisonMad(variantes: VarianteFiche[]): Promise<VarianteFiche[]> {
+  const { premiereDatePour } = await import("../location/offre");
+  const { estLendemain, libelleJour } = await import("../location/calendrier");
+  return Promise.all(
+    variantes.map(async (v) => {
+      if (!v.offreMad || !v.miseADisposition || v.miseADisposition.etat === "indisponible") return v;
+      try {
+        const premiere = await premiereDatePour(v.defaultCode);
+        return { ...v, livraisonMad: { premiere, libelle: libelleJour(premiere), lendemain: estLendemain(new Date(), premiere) } };
+      } catch (e) {
+        if (estErreurConnecteur(e)) return v;
+        throw e;
+      }
+    }),
+  );
 }
 
 /** Contenu correspondant à l'adresse (slug actuel ou ancien). */
@@ -202,7 +232,7 @@ export async function lireFiche(cle: CleFamille, slug: string, compteId?: string
       photos: photosDe(contenu),
       documents: documentsDe(contenu),
       formules: type === "consommable" ? ["achat"] : entree.article.formules,
-      variantes: variantesDe(entree, client, parCode),
+      variantes: await avecKitPossede(await avecLivraisonMad(variantesDe(entree, client, parCode)), compteId),
       compatibles: compatiblesEntrees.map((e) => ({ ...carteDe(e), variantes: variantesDe(e, client, parCode) })),
       associes,
       mentionFinancement:

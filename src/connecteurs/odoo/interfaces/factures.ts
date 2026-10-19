@@ -10,6 +10,8 @@ export type ResumeFacture = MarqueFictive & {
   montantHt: Centimes;
   montantTtc: Centimes;
   etatPaiement: "paye" | "en_attente" | "rembourse";
+  /** Références portées par les lignes (commande, location) : rattachement d'une facture à sa location (F05). */
+  references: string[];
 };
 
 export interface FacturesOdoo {

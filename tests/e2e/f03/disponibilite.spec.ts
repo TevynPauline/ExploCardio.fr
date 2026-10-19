@@ -82,7 +82,8 @@ test("disponibilité indiquée par formule quand le parc de location diffère du
   const panneau = page.getByTestId("panneau-formule");
   await expect(panneau).toContainText("Disponible");
   await page.locator("main").getByText("Mise à disposition mensuelle (sans engagement)").click();
-  await expect(panneau).toContainText(/Délai \d+ jours|Indisponible/);
+  // F05 : la mise à disposition annonce sa première date de livraison.
+  await expect(panneau).toContainText(/Première livraison possible|Délai \d+ jours|Indisponible/);
 });
 
 test("un pack suit la disponibilité de ses composants", async ({ page, browser, baseURL }) => {

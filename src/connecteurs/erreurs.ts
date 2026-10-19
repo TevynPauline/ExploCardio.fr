@@ -11,7 +11,8 @@ export type CodeErreurConnecteur =
   | "NOT_FOUND"
   | "CONFIGURATION_INCOMPLETE"
   | "DEMO_DATA_REJECTED"
-  | "INVALID_SIGNATURE";
+  | "INVALID_SIGNATURE"
+  | "OPERATION_REFUSED";
 
 export abstract class ErreurConnecteur extends Error {
   abstract readonly code: CodeErreurConnecteur;
@@ -95,4 +96,12 @@ export class InvalidSignature extends ErreurConnecteur {
 
 export function estErreurConnecteur(e: unknown): e is ErreurConnecteur {
   return e instanceof ErreurConnecteur;
+}
+
+/** Opération refusée par une règle de gestion (ex. prolonger une location terminée, F05). */
+export class OperationRefusee extends ErreurConnecteur {
+  readonly code = "OPERATION_REFUSED";
+  constructor(motif: string, details?: Record<string, unknown>) {
+    super(motif, details);
+  }
 }

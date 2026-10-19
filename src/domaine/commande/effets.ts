@@ -8,7 +8,7 @@ import { ajouterEffet } from "../paiements";
 import { confirmerCadeauRemis } from "../comptes/bienvenue";
 import { alerterEquipe, emailDuCompte, envoyer, envoyerConfirmation } from "./notifications";
 import { retirerDuPanier } from "./panier-commande";
-import { libererReservation } from "./paiement";
+import { libererAppareils, libererReservation, reservationsDe } from "./paiement";
 import { adressesDe, lignesAchatPourOdoo, lignesDe } from "./tunnel";
 
 // Effets des événements de paiement (F04, R4, R5) : chaque événement est traité une seule fois
@@ -93,22 +93,41 @@ export async function enregistrerAchat(commande: CommandeSite): Promise<boolean>
 export async function enregistrerAbonnement(commande: CommandeSite, montantTtc: number, paiementRef: string | null): Promise<boolean> {
   if (commande.etatAbonnement === "payee") return true;
   const compte = await dbSite().compteClient.findUniqueOrThrow({ where: { id: commande.compteId } });
+  // F05 : date de livraison choisie, appareil réservé avant le paiement, expédition bloquée
+  // tant que le compte n'est pas validé (FR-009).
+  const dates = (commande.datesLivraisonMad ?? {}) as Record<string, string>;
+  const reservations = reservationsDe(commande);
   try {
     const refs: string[] = [];
+    const elements: Record<string, string> = {};
     for (const l of lignesDe(commande).filter((x) => x.formule === "mise_a_disposition")) {
       for (let n = 1; n <= l.quantite; n++) {
+        const date = dates[l.defaultCode];
         const { ref } = await registre.odoo().location.creerAbonnement(
-          { partenaireRef: compte.odooPartnerRef!, objet: "mise_a_disposition", defaultCode: l.defaultCode, debut: new Date() },
+          {
+            partenaireRef: compte.odooPartnerRef!,
+            objet: "mise_a_disposition",
+            defaultCode: l.defaultCode,
+            debut: new Date(),
+            dateLivraison: date ? new Date(`${date}T12:00:00Z`) : undefined,
+            commandeRef: commande.odooCommandeRef ?? undefined,
+            expeditionBloquee: compte.statut !== "valide",
+            reservationCle: reservations.find((r) => r.defaultCode === l.defaultCode && r.n === n)?.cle,
+          },
           `${commande.ref}:abonnement:${l.defaultCode}:${n}`,
         );
         refs.push(ref);
+        elements[`${l.defaultCode}:${n}`] = ref;
       }
     }
     await registre.odoo().location.facturerEcheance(
-      { abonnementRefs: refs, montantTtc, paiementRef, libelle: "Mise à disposition — premier mois" },
+      { abonnementRefs: refs, montantTtc, paiementRef, libelle: "Mise à disposition — premier mois", mois: "premier" },
       `${commande.ref}:echeance:1`,
     );
-    const c = await dbSite().commandeSite.update({ where: { id: commande.id }, data: { etatAbonnement: "payee", odooAbonnementRefs: refs, echecsEnregistrement: 0 } });
+    const c = await dbSite().commandeSite.update({
+      where: { id: commande.id },
+      data: { etatAbonnement: "payee", odooAbonnementRefs: refs, elementsAbonnement: elements, reservationsAppareils: [], paiementAbonnementRef: paiementRef, echecsEnregistrement: 0 },
+    });
     const devis = await registre.odoo().commandes.calculerDevis({ partenaireRef: compte.odooPartnerRef, lignes: lignesDe(c).filter((x) => x.formule === "mise_a_disposition") });
     await envoyer(
       await emailDuCompte(c.compteId),
@@ -118,6 +137,10 @@ export async function enregistrerAbonnement(commande: CommandeSite, montantTtc: 
     );
     await retirerDuPanier(c, "mise_a_disposition");
     await journal("abonnement.enregistre", c.ref, { abonnements: refs });
+    if (compte.statut !== "valide") {
+      const { alerterValidationPrioritaire } = await import("../location/validation");
+      await alerterValidationPrioritaire(compte.id, c.ref);
+    }
     await terminerSiComplete(c.id);
     return true;
   } catch (e) {
@@ -164,6 +187,7 @@ export async function surPaiementRefuse(evt: EvenementPaiement) {
     data: { [champ]: "refusee", motifRefus: "Le paiement a été refusé par votre banque ou n'a pas été authentifié." },
   });
   if (partie === "achat") await libererReservation(commande);
+  else await libererAppareils(commande);
 }
 
 export async function surEcheancePayee(evt: EvenementPaiement) {
@@ -171,9 +195,21 @@ export async function surEcheancePayee(evt: EvenementPaiement) {
   const c =
     (await dbSite().commandeSite.findUnique({ where: { ref: evt.abonnementRef } })) ??
     (await dbSite().commandeSite.findFirst({ where: { odooAbonnementRefs: { has: evt.abonnementRef } } }));
-  const refs = c?.odooAbonnementRefs.length ? c.odooAbonnementRefs : [evt.abonnementRef];
-  await registre.odoo().location.facturerEcheance({ abonnementRefs: refs, montantTtc: evt.montantTtc, paiementRef: evt.paiementRef, libelle: "Mise à disposition — échéance mensuelle" }, `echeance:${evt.id}`);
+  // Échéance de tout l'abonnement de paiement d'une commande, ou d'une seule location (F05).
+  const refs = c && c.ref === evt.abonnementRef && c.odooAbonnementRefs.length ? c.odooAbonnementRefs : [evt.abonnementRef];
+  await registre.odoo().location.facturerEcheance({ abonnementRefs: refs, montantTtc: evt.montantTtc, paiementRef: evt.paiementRef, libelle: "Mise à disposition — échéance mensuelle", mois: "suivant" }, `echeance:${evt.id}`);
   if (c) await envoyer(await emailDuCompte(c.compteId), await emailsCommandes.echeance({ montantTtc: evt.montantTtc }), "échéance payée", `echeance:${evt.id}`);
+}
+
+/** F05 (FR-026) : prélèvement mensuel refusé → Odoo applique ses règles de relance et d'impayé. */
+export async function surEcheanceRefusee(evt: EvenementPaiement) {
+  if (!evt.abonnementRef) return;
+  const c =
+    (await dbSite().commandeSite.findUnique({ where: { ref: evt.abonnementRef } })) ??
+    (await dbSite().commandeSite.findFirst({ where: { odooAbonnementRefs: { has: evt.abonnementRef } } }));
+  const refs = c && c.ref === evt.abonnementRef ? c.odooAbonnementRefs : [evt.abonnementRef];
+  for (const ref of refs) await registre.odoo().location.signalerImpaye(ref, evt.date);
+  await journal("location.echeance_refusee", evt.abonnementRef, { locations: refs });
 }
 
 /** Remboursement fait directement dans Stripe : reporté dans Odoo (FR-031), une seule fois. */
@@ -197,6 +233,7 @@ export function enregistrerEffetsCommande() {
   ajouterEffet("paiement_reussi", surPaiementReussi);
   ajouterEffet("paiement_refuse", surPaiementRefuse);
   ajouterEffet("echeance_payee", surEcheancePayee);
+  ajouterEffet("echeance_refusee", surEcheanceRefusee);
   ajouterEffet("remboursement", surRemboursement);
 }
 
@@ -210,5 +247,10 @@ export async function rattraperCommandes(maintenant = new Date()) {
   for (const c of await dbSite().commandeSite.findMany({ where: { etatAchat: "paiement_en_cours", modifieLe: { lt: limite } } })) {
     await libererReservation(c);
     await dbSite().commandeSite.update({ where: { id: c.id }, data: { etatAchat: "a_payer" } });
+  }
+  // F05 : autorisation de prélèvement abandonnée → appareils rendus au parc.
+  for (const c of await dbSite().commandeSite.findMany({ where: { etatAbonnement: "paiement_en_cours", modifieLe: { lt: limite } } })) {
+    await libererAppareils(c);
+    await dbSite().commandeSite.update({ where: { id: c.id }, data: { etatAbonnement: "a_payer" } });
   }
 }

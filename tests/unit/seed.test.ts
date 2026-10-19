@@ -13,6 +13,14 @@ import { remplirJeuDeDepart } from "../../prisma/demo/seed/remplissage";
 describe("jeu de données de départ", () => {
   beforeAll(async () => {
     await remplirJeuDeDepart(dbDemo(), dbSite());
+    // Comme la réinitialisation : les références fictives repartent de zéro, donc les traces
+    // du site qui les citent (emails, suivis) sont effacées avec elles.
+    await dbSite().$transaction([
+      dbSite().messageDemonstration.deleteMany(),
+      dbSite().suiviCommande.deleteMany(),
+      dbSite().suiviLocation.deleteMany(),
+      dbSite().commandeSite.deleteMany(),
+    ]);
   }, 60_000);
 
   it("contient tout le catalogue de la brochure, sans lampe MedLED", async () => {

@@ -19,7 +19,8 @@ export const facturesDemo: FacturesOdoo = {
       commandeRef: f.commande?.ref ?? null,
       montantHt: f.montantHtCentimes,
       montantTtc: f.montantTtcCentimes,
-      etatPaiement: f.etatPaiement as ResumeFacture["etatPaiement"],
+      etatPaiement: (f.etatPaiement === "a_prelever" ? "en_attente" : f.etatPaiement) as ResumeFacture["etatPaiement"],
+      references: [...new Set(((f.lignes as { reference?: string }[]) ?? []).map((l) => l.reference).filter((r): r is string => Boolean(r)))],
       estFictif: f.estFictif,
     }));
   },

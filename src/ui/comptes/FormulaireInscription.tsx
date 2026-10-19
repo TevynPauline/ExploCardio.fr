@@ -8,12 +8,12 @@ import { Champ } from "../Champ";
 import { ChampsAdresse } from "./ChampsAdresse";
 import { ReglesMotDePasse } from "./ReglesMotDePasse";
 
-type Props = { specialites: string[]; offreBienvenue: string | null; jeton: string };
+type Props = { specialites: string[]; offreBienvenue: string | null; jeton: string; retour?: string | null };
 
 const classeSelect = "min-h-11 rounded-sm border border-muted bg-surface px-3 text-ink";
 
 /** Formulaire d'inscription (US1, FR-001 à FR-009) : erreurs sur les champs, saisie conservée. */
-export function FormulaireInscription({ specialites, offreBienvenue, jeton }: Props) {
+export function FormulaireInscription({ specialites, offreBienvenue, jeton, retour = null }: Props) {
   const [etat, action, enCours] = useActionState<EtatInscription, FormData>(actionInscription, { erreurs: {}, saisie: {} });
   const s = etat.saisie;
   const e = etat.erreurs;
@@ -31,6 +31,7 @@ export function FormulaireInscription({ specialites, offreBienvenue, jeton }: Pr
   return (
     <form action={action} noValidate className="flex flex-col gap-8">
       <input type="hidden" name="jeton" value={jeton} />
+      {retour ? <input type="hidden" name="retour" value={retour} /> : null}
       <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
         <label>
           Site web (laissez vide)

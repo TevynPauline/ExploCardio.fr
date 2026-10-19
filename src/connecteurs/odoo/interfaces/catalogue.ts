@@ -38,6 +38,9 @@ export type OffreMiseADisposition = {
   moisSuivantsHt: Centimes;
   kitRequis: string | null;
   valeurRemplacementHt: Centimes;
+  /** Logiciel Cloud ouvert à l'expédition (F05, FR-012) ; contenu du pack affiché (FR-001). */
+  logiciel: string | null;
+  contenuPack: string[];
 };
 
 /** Prix HT d'une variante à partir d'une quantité (liste de prix publique, `min_quantity`). */

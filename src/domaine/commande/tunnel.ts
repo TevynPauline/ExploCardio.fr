@@ -8,6 +8,8 @@ import type { CommandeSite, CompteClient, LignePanier, MoyenPaiementCommande } f
 import { MESSAGE_HORS_METROPOLE, codePostalMetropole } from "../comptes/adresses";
 import { cadeauPourCommande } from "../comptes/bienvenue";
 import { peutCommander, type Statut } from "../comptes/statuts";
+import { datesProposees, estLendemain, libelleJour } from "../location/calendrier";
+import { lireReglesLivraison, premiereDatePour } from "../location/offre";
 import { panierPour, lignesPanier } from "../catalogue/panier";
 import { partenaireDuCompte } from "./devis";
 
@@ -180,14 +182,64 @@ export async function devisCommande(commande: CommandeSite, options: { cadeau?: 
   return devis;
 }
 
-/** Étape 2 (FR-010, FR-011) : mode de livraison disponible. */
-export async function choisirLivraison(commande: CommandeSite, mode: string): Promise<CommandeSite> {
-  const devis = await devisCommande(commande);
-  const choisi = devis.modesLivraison.find((m) => m.code === mode);
-  if (!choisi || !choisi.disponible) throw new SaisieInvalide({ mode: choisi?.motif ?? "Choisissez un mode de livraison." });
+export type DatesMiseADisposition = {
+  defaultCode: string;
+  libelle: string;
+  premiere: string;
+  lendemain: boolean;
+  dates: { valeur: string; libelle: string }[];
+  choisie: string | null;
+};
+
+/** Dates de livraison proposées pour chaque mise à disposition de la commande (F05, FR-007). */
+export async function datesMiseADisposition(commande: CommandeSite, maintenant = new Date()): Promise<DatesMiseADisposition[]> {
+  const codes = [...new Set(lignesDe(commande).filter((l) => l.formule === "mise_a_disposition").map((l) => l.defaultCode))];
+  if (!codes.length) return [];
+  const regles = await lireReglesLivraison();
+  const cp = adressesDe(commande).livraison?.codePostal ?? null;
+  const choisies = (commande.datesLivraisonMad ?? {}) as Record<string, string>;
+  const resultat: DatesMiseADisposition[] = [];
+  for (const code of codes) {
+    const premiere = await premiereDatePour(code, cp, maintenant, regles);
+    const article = await registre.odoo().catalogue.lireArticle(code);
+    const v = article.variantes.find((x) => x.defaultCode === code);
+    const dates = datesProposees(premiere, regles);
+    resultat.push({
+      defaultCode: code,
+      libelle: v?.configuration ? `${article.nom} (${v.configuration})` : article.nom,
+      premiere,
+      lendemain: estLendemain(maintenant, premiere),
+      dates: dates.map((d) => ({ valeur: d, libelle: libelleJour(d) })),
+      choisie: choisies[code] && dates.includes(choisies[code]) ? choisies[code] : null,
+    });
+  }
+  return resultat;
+}
+
+/**
+ * Étape 2 (FR-010, FR-011 ; F05 FR-007) : mode de livraison des achats, et date de livraison
+ * de chaque mise à disposition parmi les jours ouvrés proposés.
+ */
+export async function choisirLivraison(commande: CommandeSite, mode: string | null, dates: Record<string, string> = {}): Promise<CommandeSite> {
+  const e: Record<string, string> = {};
+  let modeLivraison = commande.modeLivraison;
+  if (lignesDe(commande).some((l) => l.formule === "achat")) {
+    const devis = await devisCommande(commande);
+    const choisi = devis.modesLivraison.find((m) => m.code === mode);
+    if (!choisi || !choisi.disponible) e.mode = choisi?.motif ?? "Choisissez un mode de livraison.";
+    else modeLivraison = choisi.code;
+  }
+  const retenues: Record<string, string> = {};
+  for (const d of await datesMiseADisposition(commande)) {
+    const voulue = dates[d.defaultCode];
+    if (!voulue || !d.dates.some((x) => x.valeur === voulue)) {
+      e[`date.${d.defaultCode}`] = `Choisissez une date de livraison pour ${d.libelle} (à partir du ${libelleJour(d.premiere)}).`;
+    } else retenues[d.defaultCode] = voulue;
+  }
+  if (Object.keys(e).length) throw new SaisieInvalide(e);
   return dbSite().commandeSite.update({
     where: { id: commande.id },
-    data: { modeLivraison: mode, etape: commande.etape === "livraison" ? "paiement" : commande.etape },
+    data: { modeLivraison, datesLivraisonMad: retenues, etape: commande.etape === "livraison" ? "paiement" : commande.etape },
   });
 }
 
@@ -228,23 +280,34 @@ export async function verifierAvantPaiement(commande: CommandeSite): Promise<Ver
     const dispos = await registre.odoo().stock.lireDisponibilite([...new Set(lignes.map((l) => l.defaultCode))]);
     const manque = lignes.find((l) => {
       const d = dispos.find((x) => x.defaultCode === l.defaultCode);
-      const etat = l.formule === "achat" ? d?.achat : d?.miseADisposition;
+      if (l.formule === "mise_a_disposition") return false; // date revérifiée ci-dessous (F05)
+      const etat = d?.achat;
       if (!etat || etat.etat === "indisponible") return true;
-      // Mise à disposition : un appareil du parc doit être disponible tout de suite (les délais
-      // de livraison d'un appareil en retour relèvent de F05).
-      if (l.formule === "mise_a_disposition" && etat.etat !== "disponible") return true;
       // Quantité insuffisante pour un article qui devient indisponible une fois épuisé.
       return l.formule === "achat" && d!.quantiteDisponible !== null && d!.quantiteDisponible < l.quantite && d!.delaiReassortJours === null;
     });
-    if (manque) {
-      return {
-        ok: false,
-        message:
-          manque.formule === "mise_a_disposition"
-            ? "Aucun appareil n'est disponible tout de suite pour cette mise à disposition : contactez-nous pour convenir d'une date, ou retirez-la du panier."
-            : "Un article de votre panier n'est plus disponible : ajustez votre panier avant de payer.",
-        redirection: "/panier",
-      };
+    if (manque) return { ok: false, message: "Un article de votre panier n'est plus disponible : ajustez votre panier avant de payer.", redirection: "/panier" };
+    // F05 (SC-003) : le kit requis et non possédé doit être commandé avec la location.
+    if (lignes.some((l) => l.formule === "mise_a_disposition") && panier) {
+      const { ajouterKitSiNecessaire, kitsObligatoires } = await import("../location/kit");
+      const obligatoires = await kitsObligatoires(panier.id, commande.compteId);
+      const manquant = [...obligatoires].find((k) => !lignes.some((l) => l.formule === "achat" && l.defaultCode === k));
+      if (manquant) {
+        const madCode = lignes.find((l) => l.formule === "mise_a_disposition")!.defaultCode;
+        await ajouterKitSiNecessaire(panier.id, commande.compteId, madCode);
+        return { ok: false, message: "Le kit d'accessoires obligatoire à votre première location a été ajouté à votre panier : vérifiez votre commande.", redirection: "/panier" };
+      }
+    }
+    // F05 : chaque date de livraison choisie doit être encore possible (heure limite, parc).
+    const choisies = (commande.datesLivraisonMad ?? {}) as Record<string, string>;
+    for (const d of await datesMiseADisposition(commande)) {
+      if (!choisies[d.defaultCode] || choisies[d.defaultCode]! < d.premiere) {
+        return {
+          ok: false,
+          message: `La date de livraison choisie pour ${d.libelle} n'est plus possible : la première date est désormais le ${libelleJour(d.premiere)}. Choisissez une nouvelle date.`,
+          redirection: `/commande/livraison?ref=${commande.ref}`,
+        };
+      }
     }
     if (!devis.modeLivraison && lignes.some((l) => l.formule === "achat")) {
       return { ok: false, message: "Aucun mode de livraison n'est disponible : choisissez-en un autre.", redirection: "/commande/livraison" };

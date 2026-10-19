@@ -71,21 +71,11 @@ export async function abonnementsARegler(compteId: string) {
 }
 
 export const LIBELLES_LOCATION: Record<Location["etat"], string> = {
+  commandee: "Commandée",
   en_cours: "En cours",
   resiliation_prevue: "Résiliation prévue",
-  termine: "Terminée",
   en_retard_retour: "Retour du matériel attendu",
+  suspendue_impaye: "Suspendue (paiement en attente)",
+  terminee: "Terminée",
+  annulee: "Annulée",
 };
-
-/** Mises à disposition souscrites (F04, US5), lues dans Odoo ; complétées par F05. */
-export async function locationsDuCompte(compteId: string): Promise<{ locations: Location[]; indisponible: boolean }> {
-  const compte = await dbSite().compteClient.findUniqueOrThrow({ where: { id: compteId } });
-  if (!compte.odooPartnerRef) return { locations: [], indisponible: false };
-  try {
-    const toutes = await registre.odoo().location.listerLocations(compte.odooPartnerRef);
-    return { locations: toutes.filter((l) => l.objet === "mise_a_disposition"), indisponible: false };
-  } catch (e) {
-    if (!estErreurConnecteur(e)) throw e;
-    return { locations: [], indisponible: true };
-  }
-}

@@ -36,12 +36,15 @@ export default async function Paiement({ searchParams }: { searchParams: Promise
   const achat = lignes.some((l) => l.formule === "achat");
   const abonnement = lignes.some((l) => l.formule === "mise_a_disposition");
   const virement = achat && (await virementDisponible());
-  if (achat && !commande.modeLivraison) redirect(`/commande/livraison?ref=${commande.ref}`);
+  // Mode de livraison des achats et date de chaque mise à disposition choisis à l'étape précédente.
+  const dates = (commande.datesLivraisonMad ?? {}) as Record<string, string>;
+  const dateManquante = lignes.some((l) => l.formule === "mise_a_disposition" && !dates[l.defaultCode]);
+  if ((achat && !commande.modeLivraison) || dateManquante) redirect(`/commande/livraison?ref=${commande.ref}`);
   return (
     <div className="mx-auto flex max-w-page flex-col gap-6 px-4 py-10">
       <Kicker>Commande {commande.ref}</Kicker>
       <h1 className="text-display font-light">Paiement</h1>
-      <Etapes courante="paiement" atteinte={commande.etape === "terminee" ? "recapitulatif" : commande.etape} refCommande={commande.ref} sansLivraison={!achat} />
+      <Etapes courante="paiement" atteinte={commande.etape === "terminee" ? "recapitulatif" : commande.etape} refCommande={commande.ref} />
       <Retour erreur={erreur} />
       <form action={actionPaiement} className="flex max-w-2xl flex-col gap-6">
         <input type="hidden" name="ref" value={commande.ref} />

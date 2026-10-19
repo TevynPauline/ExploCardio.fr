@@ -8,7 +8,11 @@ import type { EvenementPaiement, TypeEvenementPaiement } from "@/connecteurs/str
 
 export const comptesCrees: string[] = [];
 
-export async function compteValide(options: { statut?: "valide" | "en_attente" | "suspendu"; adresse?: string } = {}) {
+/**
+ * Compte validé de test. `kitHolter` (vrai par défaut) : le client possède déjà le kit
+ * d'accessoires Holter (F05), pour que les tests étrangers au kit gardent leur panier tel quel.
+ */
+export async function compteValide(options: { statut?: "valide" | "en_attente" | "suspendu"; adresse?: string; kitHolter?: boolean } = {}) {
   const rpps = `99${String(randomInt(0, 1e9)).padStart(9, "0")}`;
   const id = `test-${randomBytes(6).toString("hex")}`;
   const email = `commande-${rpps}@demo.explocardio.test`;
@@ -32,6 +36,10 @@ export async function compteValide(options: { statut?: "valide" | "en_attente" |
       },
     },
   });
+  if (options.kitHolter !== false) {
+    const { enregistrerKit } = await import("@/connecteurs/odoo/demo/locations-admin");
+    await enregistrerKit(ref, "EC-KIT-HOLTER-MAD", "tests");
+  }
   return { compteId: c.id, email, partenaireRef: ref, utilisateurId: u.id };
 }
 

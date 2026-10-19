@@ -2,13 +2,13 @@
 
 Chaque opération ajoutée l'est aux deux modes (démonstration et réel) avec des **tests de
 contrat communs** (`tests/contract/`). Erreurs normalisées de F11 (`NotFound`, `OutOfStock`,
-`ServiceUnavailable`, `ValeurRefusee`). Toute écriture prend une **clé d'idempotence**.
+`ServiceUnavailable`) et nouvelle erreur commune `OperationRefusee` (règle de gestion). Toute écriture prend une **clé d'idempotence**.
 
 ## Odoo — stock et parc (§2)
 
 | Opération | Entrée | Sortie | Erreurs |
 |---|---|---|---|
-| `stock.premiereDateParc` | article, date souhaitée | première date où un appareil est disponible (retours prévus compris), ou `null` | `ServiceUnavailable` |
+| `stock.lireDisponibiliteParc` (existante) | article, date souhaitée | première date où un appareil est disponible (retours prévus compris), ou `null` | `ServiceUnavailable` |
 | `stock.reserverAppareil` | article, date de livraison, clé | réservation (appareil retiré du « disponible ») ; idempotent | `OutOfStock` |
 | `stock.libererAppareil` | clé | — (sans effet si consommée ou déjà libérée) | — |
 
@@ -17,14 +17,17 @@ contrat communs** (`tests/contract/`). Erreurs normalisées de F11 (`NotFound`, 
 | Opération | Entrée | Sortie | Erreurs |
 |---|---|---|---|
 | `location.creerAbonnement` (complétée) | + `dateLivraison`, `commandeRef`, `expeditionBloquee`, `reservationCle` | référence ; la réservation est consommée (appareil `loue`) | `OutOfStock` si aucune réservation ni appareil disponible |
-| `location.resilier` (complétée) | abonnement, date de la demande | date de fin, date limite de retour | `NotFound`, `ValeurRefusee` (déjà terminée) |
-| `location.annulerResiliation` | abonnement | — | `ValeurRefusee` si la fin est atteinte |
+| `location.resilier` (complétée) | abonnement, date de la demande | date de fin, date limite de retour | `NotFound`, `OperationRefusee` (déjà terminée) |
+| `location.annulerResiliation` | abonnement | — | `OperationRefusee` si la fin est atteinte |
 | `location.listerLocations` (complétée) | partenaire | + état étendu, date de livraison, date limite de retour, suivi, numéro de série (après expédition) | — |
 | `location.listerChangements` | depuis | locations modifiées (état, appareil, suivi, impayé, rappels, retour) | — |
-| `location.etiquetteRetour` | abonnement | PDF (« FICTIF » en démonstration) | `ValeurRefusee` si pas de résiliation |
+| `location.etiquetteRetour` | abonnement | PDF (« FICTIF » en démonstration) | `OperationRefusee` si pas de résiliation |
 | `location.debloquerExpedition` | partenaire | locations débloquées | — |
-| `location.annulerCommande` | abonnement, motif, clé | montants à rembourser (premier mois, kit) | `ValeurRefusee` si expédiée |
+| `location.annulerCommande` | abonnement, motif, clé | montants à rembourser (premier mois, kit) | `OperationRefusee` si expédiée |
 | `location.kitsPossedes` | partenaire | codes des kits possédés | — |
+| `location.reporterLivraison` | abonnement, date | — | `OperationRefusee` si expédiée |
+| `location.lireRegles` | — | règles de location | — |
+| `location.listerFacturesAPrelever`, `location.enregistrerPrelevement` | — / facture, paiement, clé | factures émises après la fin | — |
 
 ## Odoo — opérations réservées au mode démonstration
 
@@ -44,7 +47,8 @@ d'Odoo).
 |---|---|---|---|
 | `ouvrirSessionAbonnement` (complétée) | + un **élément par location** (référence, montant du premier mois, montant mensuel) | — | — |
 | `retirerElementAbonnement` | abonnement de paiement, élément (location), date d'effet, clé | — ; les prélèvements mensuels de l'élément s'arrêtent ; **l'autorisation reste valable** | `NotFound` |
-| `preleverPonctuel` | abonnement de paiement, montant TTC, libellé, clé (facture d'Odoo) | référence du paiement ; résultat par événement (`paiement_reussi` / `paiement_refuse`) | `NotFound`, `ValeurRefusee` (autorisation révoquée) |
+| `retablirElementAbonnement` | abonnement de paiement, élément | — (« Prolonger ») | `NotFound` |
+| `preleverPonctuel` | abonnement de paiement, montant TTC, libellé, clé (facture d'Odoo) | référence et état du paiement (`payee` / `refusee`) | `NotFound`, `OperationRefusee` (autorisation libérée) |
 | `libererAutorisation` | abonnement de paiement | — (après retour et règlement des sommes dues) | — |
 | `rembourser` | (existant, F04) | | |
 

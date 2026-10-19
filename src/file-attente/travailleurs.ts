@@ -41,6 +41,20 @@ export async function demarrerTravailleurs() {
     const { suivreCommandes } = await import("@/domaine/commande/suivi");
     await suivreCommandes();
   });
+  // F05 : suivi des locations (expédition, accès Cloud, impayés, retours), toutes les 5 minutes.
+  await boss.createQueue("suivi-locations").catch(() => undefined);
+  await boss.schedule("suivi-locations", "*/5 * * * *");
+  await boss.work("suivi-locations", async () => {
+    const { suivreLocations } = await import("@/domaine/location/suivi");
+    await suivreLocations();
+  });
+  // F05 : rappels des locations (échéances, retours en retard), fermetures d'accès, chaque matin.
+  await boss.createQueue("rappels-locations").catch(() => undefined);
+  await boss.schedule("rappels-locations", "30 7 * * *");
+  await boss.work("rappels-locations", async () => {
+    const { envoyerRappelsLocations } = await import("@/domaine/location/rappels");
+    await envoyerRappelsLocations();
+  });
   // F04 : virements (rappel, réception, annulation à l'échéance), chaque matin.
   await boss.createQueue("virements").catch(() => undefined);
   await boss.schedule("virements", "0 7 * * *");

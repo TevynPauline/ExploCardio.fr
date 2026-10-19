@@ -21,6 +21,8 @@ type Props = {
   ancienPrixHt: number;
   delaiJours: number | null;
   indisponible: boolean;
+  /** F05 (D4) : kit d'accessoires obligatoire pour une mise à disposition du panier. */
+  obligatoire?: boolean;
 };
 
 /** Ligne du panier (F04, US1) : quantité et suppression sans rechargement, changements signalés. */
@@ -49,6 +51,7 @@ export function LignePanier(p: Props) {
       <div className="min-w-0 flex-1">
         <p className="font-semibold">{p.chemin ? <Link href={p.chemin}>{p.libelle}</Link> : p.libelle}</p>
         <p className="text-small text-muted">Réf. {p.defaultCode}</p>
+        {p.obligatoire ? <p className="text-small font-medium text-ink">Kit obligatoire pour votre première mise à disposition de ce type d’appareil : vous le conservez.</p> : null}
         {p.prixUnitaireHt !== null ? (
           <p className="text-small text-muted">
             {euros(p.prixUnitaireHt)} HT {p.formule === "mise_a_disposition" ? "le premier mois" : "l’unité"}
@@ -88,15 +91,17 @@ export function LignePanier(p: Props) {
             className="min-h-11 w-24 rounded-sm border border-muted bg-surface px-3 text-ink"
           />
         </div>
-        <button
-          type="button"
-          className="ec-btn ec-btn--secondary"
-          disabled={enCours}
-          aria-label={`Retirer ${p.libelle} du panier`}
-          onClick={() => demarrer(async () => apres(await actionSupprimerLigne(p.id), "Cette ligne n'a pas pu être retirée."))}
-        >
-          Retirer
-        </button>
+        {p.obligatoire ? null : (
+          <button
+            type="button"
+            className="ec-btn ec-btn--secondary"
+            disabled={enCours}
+            aria-label={`Retirer ${p.libelle} du panier`}
+            onClick={() => demarrer(async () => apres(await actionSupprimerLigne(p.id), "Cette ligne n'a pas pu être retirée."))}
+          >
+            Retirer
+          </button>
+        )}
         {p.totalHt !== null ? (
           <p className="min-w-28 text-right font-semibold text-ink">
             {euros(p.totalHt)} HT{p.formule === "mise_a_disposition" ? " / 1er mois" : ""}

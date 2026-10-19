@@ -48,7 +48,7 @@ test("envoi valide : confirmation et notification dans la boîte de démonstrati
 
 test("motif présélectionné depuis la mise à disposition ; motif Assistance : boutons WhatsApp", async ({ page }) => {
   await page.goto("/mise-a-disposition");
-  await page.getByRole("link", { name: "Demander une mise à disposition" }).last().click();
+  await page.getByRole("link", { name: "Une question ? Nous contacter" }).last().click();
   await expect(page.getByLabel("Motif", { exact: true })).toHaveValue("Mise à disposition");
   await page.getByLabel("Motif", { exact: true }).selectOption("Assistance");
   await expect(page.getByRole("link", { name: "Écrire sur WhatsApp" }).first()).toBeVisible();

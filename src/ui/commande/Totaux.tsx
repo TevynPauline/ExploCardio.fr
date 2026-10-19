@@ -63,13 +63,12 @@ export function TotauxAchat({
 }
 
 /** Bloc « Abonnement mensuel » (FR-003) : premier mois et mois suivants, HT et TTC. */
-function prochainPrelevement() {
-  const d = new Date();
-  const jour = Math.min(d.getDate(), 28);
-  return new Date(d.getFullYear(), d.getMonth() + 1, jour);
-}
-
-export function TotauxAbonnement({ abonnement }: { abonnement: NonNullable<Devis["abonnement"]> }) {
+/**
+ * Montants de l'abonnement mensuel. `prochaineEcheance` (AAAA-MM-JJ) : première échéance après
+ * la livraison, connue au récapitulatif (F05 : la location commence à la livraison).
+ */
+export function TotauxAbonnement({ abonnement, prochaineEcheance = null }: { abonnement: NonNullable<Devis["abonnement"]>; prochaineEcheance?: string | null }) {
+  const echeance = prochaineEcheance ? new Date(`${prochaineEcheance}T12:00:00Z`) : null;
   return (
     <div>
       <dl className="flex flex-col">
@@ -79,9 +78,10 @@ export function TotauxAbonnement({ abonnement }: { abonnement: NonNullable<Devis
         <Ligne libelle="Mois suivants TTC" montant={abonnement.moisSuivantsTtc} fort />
       </dl>
       <p className="mt-2 text-small text-muted">
-        Premier mois réglé aujourd’hui, puis prélèvement le {prochainPrelevement().getDate()} de chaque mois (prochain : le{" "}
-        {prochainPrelevement().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}). Sans engagement de
-        durée : arrêtable à tout moment.
+        {echeance
+          ? `Premier mois réglé aujourd’hui ; la location commence à la livraison, puis prélèvement le ${echeance.getUTCDate()} de chaque mois (prochaine échéance : le ${echeance.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })}).`
+          : "Premier mois réglé à la commande, puis prélèvement chaque mois à la date anniversaire de la livraison."}{" "}
+        Sans engagement de durée : arrêtable à tout moment.
       </p>
     </div>
   );

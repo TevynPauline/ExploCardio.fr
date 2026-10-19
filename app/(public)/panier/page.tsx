@@ -6,6 +6,8 @@ import { cheminsDesFiches } from "@/domaine/catalogue/lecture";
 import { COOKIE_PANIER, panierPour } from "@/domaine/catalogue/panier";
 import { panierDetaille } from "@/domaine/commande/devis";
 import { codesFinancables } from "@/domaine/financement/demande";
+import { kitsDejaPossedes, kitsObligatoires } from "@/domaine/location/kit";
+import { lireNoms } from "@/domaine/catalogue/lecture";
 import { modeDuSite } from "@/lib/config";
 import { Card, Kicker } from "@/ui";
 import { CodePromo } from "@/ui/commande/CodePromo";
@@ -36,6 +38,8 @@ export default async function Panier() {
   const achats = detail.lignes.filter((l) => l.formule === "achat");
   const locations = detail.lignes.filter((l) => l.formule === "mise_a_disposition");
   const financables = await codesFinancables(achats.map((l) => l.defaultCode));
+  const [obligatoires, possedes] = await Promise.all([kitsObligatoires(detail.panierId, compte?.id ?? null), kitsDejaPossedes(detail.panierId, compte?.id ?? null)]);
+  const noms = possedes.length ? await lireNoms() : {};
   const devis = detail.devis;
   const ligne = (l: (typeof detail.lignes)[number]) => (
     <LignePanier
@@ -54,6 +58,7 @@ export default async function Panier() {
       ancienPrixHt={l.ancienPrixHt}
       delaiJours={l.delaiJours}
       indisponible={l.indisponible}
+      obligatoire={l.formule === "achat" && obligatoires.has(l.defaultCode)}
     />
   );
 
@@ -92,6 +97,11 @@ export default async function Panier() {
         <section aria-labelledby="titre-abonnement" className="flex flex-col gap-4">
           <h2 id="titre-abonnement" className="text-h2 font-light">Abonnement mensuel</h2>
           <ul className="flex list-none flex-col gap-3 p-0">{locations.map(ligne)}</ul>
+          {possedes.map((k) => (
+            <p key={k} role="status" className="ec-box--info p-3 text-small">
+              Vous possédez déjà le kit d’accessoires « {noms[k]?.nom ?? k} » : il n’est pas ajouté à votre commande. Vous pouvez en racheter un depuis sa fiche si besoin.
+            </p>
+          ))}
           {devis?.abonnement ? (
             <Card className="lg:ml-auto lg:w-1/2">
               <TotauxAbonnement abonnement={devis.abonnement} />

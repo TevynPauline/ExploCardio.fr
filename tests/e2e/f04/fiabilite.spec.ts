@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { COMPTES, connecterNavigateur } from "../session";
-import { ELECTRODES, ajouterDepuisFiche, clientConnecte, jusquAuRecapitulatif, payerSurPageDemo, requete, stockDe } from "./outils";
+import { accepterConditions, ELECTRODES, ajouterDepuisFiche, clientConnecte, jusquAuRecapitulatif, payerSurPageDemo, requete, stockDe } from "./outils";
 
 // T021 (US3, FR-021 à FR-025, SC-002, SC-007). Pannes et stocks rétablis en attendant la confirmation.
 
@@ -11,7 +11,7 @@ async function commandesDuPartenaire(ref: string) {
 }
 
 async function payer(page: import("@playwright/test").Page) {
-  await page.getByLabel(/J’accepte les conditions générales de vente/).check();
+  await accepterConditions(page);
   await page.getByRole("button", { name: /^Payer/ }).click();
 }
 
@@ -50,7 +50,7 @@ test("confirmation répétée : une seule commande ; double clic sur « Payer »
   const c = await clientConnecte(browser, baseURL, page);
   await ajouterDepuisFiche(page, ELECTRODES);
   await jusquAuRecapitulatif(page);
-  await page.getByLabel(/J’accepte les conditions générales de vente/).check();
+  await accepterConditions(page);
   await page.getByRole("button", { name: /^Payer/ }).dblclick();
   await page.waitForURL(/\/demo\/paiement/);
   const ref = (await requete<{ ref: string }>("site", `SELECT c.ref FROM commande_site c JOIN compte_client cc ON cc.id = c."compteId" WHERE cc.id = $1`, [c.id]))[0]!.ref;

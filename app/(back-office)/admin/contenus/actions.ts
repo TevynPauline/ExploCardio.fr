@@ -165,7 +165,24 @@ export async function enregistrerCoordonnees(d: FormData) {
     if (!/^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(heureExpress)) throw new SaisieRefusee("Heure limite express : format HH:MM attendu.");
     const rappel = Number(t(d, "rappelJours"));
     if (!Number.isInteger(rappel) || rappel < 1 || rappel > 15) throw new SaisieRefusee("Rappel de virement : entre 1 et 15 jours.");
+    // F05 : calendrier de livraison et rappels des locations (FR-007, FR-040).
+    const jours = t(d, "joursNonLivres").split(/\s+/).map((x) => x.trim()).filter(Boolean);
+    const joursInvalide = jours.find((x) => !/^\d{4}-\d{2}-\d{2}$/.test(x) || Number.isNaN(new Date(`${x}T12:00:00Z`).getTime()));
+    if (joursInvalide) throw new SaisieRefusee(`Jours non livrés : « ${joursInvalide} » n'est pas une date AAAA-MM-JJ.`);
+    const zones = t(d, "zones").split(",").map((x) => x.trim()).filter(Boolean);
+    if (zones.some((z) => !/^\d{2,5}$/.test(z))) throw new SaisieRefusee("Zones : début de code postal attendu (exemple : 20).");
+    const entier = (nom: string, libelle: string, min: number, max: number) => {
+      const n = Number(t(d, nom));
+      if (!Number.isInteger(n) || n < min || n > max) throw new SaisieRefusee(`${libelle} : nombre entier entre ${min} et ${max}.`);
+      return String(n);
+    };
     const valeurs: Record<string, string> = {
+      "livraison.jours_non_livres": JSON.stringify([...new Set(jours)].sort()),
+      "livraison.zones_sans_lendemain": JSON.stringify(zones),
+      "livraison.delai_zones_jours": entier("delaiZones", "Délai des zones éloignées", 0, 10),
+      "location.rappel_echeance_jours": entier("rappelEcheance", "Rappel avant échéance", 1, 15),
+      "location.rappel_retour_jours": entier("rappelRetour", "Rappel de retour", 1, 15),
+      "location.conditions": exigerTexte(t(d, "conditionsLocation"), "Conditions de location", 20, 4000),
       "virement.titulaire": exigerTexte(t(d, "titulaire"), "Titulaire du compte", 0, 100),
       "virement.iban": iban,
       "virement.bic": bic,

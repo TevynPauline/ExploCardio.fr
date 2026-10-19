@@ -80,6 +80,43 @@ export const stockDemo: StockOdoo = {
     });
   },
 
+  async reserverAppareil(reference: string, dateLivraison: Date, cle: string): Promise<{ numeroSerie: string }> {
+    return db().$transaction(async (tx) => {
+      const deja = await tx.reservationAppareil.findUnique({ where: { cle }, include: { numeroSerie: true } });
+      if (deja && deja.etat !== "liberee") return { numeroSerie: deja.numeroSerie.numero };
+      const v = await tx.variante.findUnique({ where: { defaultCode: reference }, include: { offreMad: true } });
+      if (!v) throw new NotFound("Article", reference);
+      if (!v.offreMad) throw new NotFound("Offre de mise à disposition", reference);
+      // Appareils disponibles, puis appareils qui seront revenus au parc (retour, maintenance) à
+      // la date de livraison. Mise à jour conditionnelle : un appareil n'est pris qu'une fois (SC-005).
+      const candidats = [
+        ...(await tx.numeroSerie.findMany({ where: { varianteId: v.id, statut: "disponible" }, orderBy: { numero: "asc" } })),
+        ...(await tx.numeroSerie.findMany({
+          where: { varianteId: v.id, statut: { in: ["en_retour", "en_maintenance"] }, retourPrevu: { lte: dateLivraison } },
+          orderBy: { retourPrevu: "asc" },
+        })),
+      ];
+      for (const candidat of candidats) {
+        const pris = await tx.numeroSerie.updateMany({ where: { id: candidat.id, statut: candidat.statut }, data: { statut: "loue" } });
+        if (pris.count !== 1) continue;
+        const data = { numeroSerieId: candidat.id, dateLivraison, statutAvant: candidat.statut, etat: "active" as const };
+        if (deja) await tx.reservationAppareil.update({ where: { cle }, data });
+        else await tx.reservationAppareil.create({ data: { cle, ...data } });
+        return { numeroSerie: candidat.numero };
+      }
+      throw new OutOfStock([reference]);
+    });
+  },
+
+  async libererAppareil(cle: string): Promise<void> {
+    await db().$transaction(async (tx) => {
+      const r = await tx.reservationAppareil.findUnique({ where: { cle } });
+      if (!r || r.etat !== "active") return;
+      await tx.reservationAppareil.update({ where: { cle }, data: { etat: "liberee" } });
+      await tx.numeroSerie.updateMany({ where: { id: r.numeroSerieId, statut: "loue" }, data: { statut: r.statutAvant } });
+    });
+  },
+
   async lireDisponibiliteParc(reference: string, dateSouhaitee: Date): Promise<{ premiereDate: Date }> {
     const v = await db().variante.findUnique({
       where: { defaultCode: reference },

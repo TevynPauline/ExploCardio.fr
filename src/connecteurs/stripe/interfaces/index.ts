@@ -22,10 +22,14 @@ export type SessionAbonnement = {
   abonnementRef: string;
   premierMontantTtc: Centimes;
   montantMensuelTtc: Centimes;
+  /** F05 : un élément par location, pour arrêter l'une sans les autres. */
+  elements?: ElementAbonnement[];
   moyens: MoyenPaiement[];
   urlRetour: string;
   urlAnnulation: string;
 };
+
+export type ElementAbonnement = { element: string; premierMontantTtc: Centimes; montantMensuelTtc: Centimes };
 
 export type TypeEvenementPaiement =
   | "paiement_reussi"
@@ -57,6 +61,23 @@ export interface ConnecteurStripe {
     cle: Cle,
   ): Promise<{ remboursementRef: string }>;
   resilierAbonnement(abonnementRef: string, dateFin: Date): Promise<void>;
+  /**
+   * F05 : arrête les prélèvements mensuels d'un élément à une date ; l'autorisation de
+   * prélèvement (carte, mandat SEPA) reste valable (FR-030). Idempotent.
+   */
+  retirerElementAbonnement(abonnementRef: string, element: string, dateEffet: Date, cle: Cle): Promise<void>;
+  /** F05 : remet un élément retiré (résiliation annulée par « Prolonger »). */
+  retablirElementAbonnement(abonnementRef: string, element: string): Promise<void>;
+  /**
+   * F05 : prélève un montant ponctuel sur l'autorisation conservée (retard, dégradation, valeur
+   * de remplacement) ; idempotent par clé. Refusé (OperationRefusee) si l'autorisation est libérée.
+   */
+  preleverPonctuel(
+    demande: { abonnementRef: string; montantTtc: Centimes; libelle: string },
+    cle: Cle,
+  ): Promise<{ paiementRef: string; etat: "payee" | "refusee" }>;
+  /** F05 : libère l'autorisation après le retour et le règlement des sommes dues. */
+  libererAutorisation(abonnementRef: string): Promise<void>;
   /** Lève InvalidSignature si la signature ne correspond pas. */
   verifierEvenement(contenu: string, signature: string): Promise<EvenementPaiement>;
 }

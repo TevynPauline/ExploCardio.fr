@@ -1,7 +1,7 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
 import { verifierAccessibilite } from "../axe";
 import { COMPTES, connecterNavigateur } from "../session";
-import { ELECTRODES, ajouterDepuisFiche, clientConnecte, jusquAuRecapitulatif, payerSurPageDemo, requete } from "./outils";
+import { accepterConditions, ELECTRODES, ajouterDepuisFiche, clientConnecte, jusquAuRecapitulatif, payerSurPageDemo, requete } from "./outils";
 
 // T033 (US7, FR-029 à FR-032) : expédition (transporteur, suivi) et livraison visibles et
 // notifiées ; remboursements partiel (décidé dans Odoo) puis total (fait dans Stripe) → statut,
@@ -26,7 +26,7 @@ test("expédiée, livrée, remboursée en partie puis en totalité : statuts, av
   const c = await clientConnecte(browser, baseURL, page);
   await ajouterDepuisFiche(page, ELECTRODES);
   await jusquAuRecapitulatif(page);
-  await page.getByLabel(/J’accepte les conditions générales de vente/).check();
+  await accepterConditions(page);
   await page.getByRole("button", { name: /^Payer/ }).click();
   await payerSurPageDemo(page);
   await page.waitForURL(/\/commande\/confirmation\//);

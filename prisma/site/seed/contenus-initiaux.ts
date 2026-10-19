@@ -61,6 +61,16 @@ export const PARAMETRES_INITIAUX: Record<string, string> = {
   "virement.iban": "FR76 0000 0000 0000 0000 0000 000",
   "virement.bic": "DEMOFRPPXXX",
   "virement.rappel_jours": "2",
+  // F05 : jours non livrés (dates AAAA-MM-JJ, en plus des week-ends et jours fériés), zones
+  // sans livraison au lendemain (préfixes de codes postaux) et leur délai (D3), rappels (D6),
+  // conditions de location provisoires (D9).
+  "livraison.jours_non_livres": "[]",
+  "livraison.zones_sans_lendemain": '["20"]',
+  "livraison.delai_zones_jours": "2",
+  "location.rappel_echeance_jours": "3",
+  "location.rappel_retour_jours": "2",
+  "location.conditions":
+    "Location mensuelle sans engagement, renouvelée chaque mois. Résiliable à tout moment depuis votre compte : la location prend fin au terme du mois payé. L'appareil est à retourner dans le délai indiqué, avec l'étiquette fournie. En cas de perte ou de non-retour, la valeur de remplacement indiquée est facturée ; une dégradation constatée au retour est facturée selon son coût. Texte provisoire de démonstration.",
   // Bons d'achat au panier : activés quand F06 est livré (D7).
   "fidelite.bons_au_panier": "false",
 };

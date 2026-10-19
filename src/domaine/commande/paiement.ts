@@ -40,17 +40,84 @@ export async function libererReservation(commande: CommandeSite) {
 
 const INDISPONIBLE = "Le service de paiement est momentanément indisponible. Rien n'a été débité et votre panier est conservé : réessayez dans quelques instants.";
 
+export type ReservationAppareilSite = { defaultCode: string; n: number; cle: string };
+
+export function reservationsDe(c: CommandeSite): ReservationAppareilSite[] {
+  return Array.isArray(c.reservationsAppareils) ? (c.reservationsAppareils as ReservationAppareilSite[]) : [];
+}
+
+/** Libère les appareils réservés pour une tentative non aboutie (F05, R4). */
+export async function libererAppareils(commande: CommandeSite) {
+  for (const r of reservationsDe(commande)) {
+    try {
+      await registre.odoo().stock.libererAppareil(r.cle);
+    } catch (e) {
+      if (!estErreurConnecteur(e)) throw e;
+    }
+  }
+  await dbSite().commandeSite.update({ where: { id: commande.id }, data: { reservationsAppareils: [] } });
+}
+
+/**
+ * F05 (R4) : un appareil du parc réservé par location AVANT d'ouvrir le paiement. Si le dernier
+ * appareil vient d'être pris, rien n'est débité : retour au choix de la date.
+ */
+async function reserverAppareils(commande: CommandeSite, tentative: number): Promise<{ ok: true; reservations: ReservationAppareilSite[] } | { ok: false; message: string }> {
+  const dates = (commande.datesLivraisonMad ?? {}) as Record<string, string>;
+  const reservations: ReservationAppareilSite[] = [];
+  for (const l of lignesDe(commande).filter((x) => x.formule === "mise_a_disposition")) {
+    for (let n = 1; n <= l.quantite; n++) {
+      const cle = `${commande.ref}:${tentative}:${l.defaultCode}:${n}`;
+      try {
+        await registre.odoo().stock.reserverAppareil(l.defaultCode, new Date(`${dates[l.defaultCode]}T12:00:00Z`), cle);
+        reservations.push({ defaultCode: l.defaultCode, n, cle });
+      } catch (e) {
+        for (const r of reservations) await registre.odoo().stock.libererAppareil(r.cle).catch(() => undefined);
+        if (estErreurConnecteur(e) && (e as { code?: string }).code === "OUT_OF_STOCK") {
+          return { ok: false, message: "Le dernier appareil disponible à cette date vient d'être réservé. Rien n'a été débité : choisissez la date de livraison suivante." };
+        }
+        if (estErreurConnecteur(e)) return { ok: false, message: INDISPONIBLE };
+        throw e;
+      }
+    }
+  }
+  return { ok: true, reservations };
+}
+
 /** Session d'abonnement (premier mois + prélèvement mensuel), après l'achat d'un panier mixte. */
 async function lancerAbonnement(commande: CommandeSite): Promise<Lancement> {
   const verification = await verifierAvantPaiement(commande);
   if (!verification.ok) return { type: "redirection", url: verification.redirection, message: verification.message };
-  const { partenaireRef, email } = await client(commande);
-  const devis = await registre.odoo().commandes.calculerDevis({
-    partenaireRef,
-    lignes: lignesDe(commande).filter((l) => l.formule === "mise_a_disposition"),
-  });
+  const { compte, email, partenaireRef: partenaireConnu } = await client(commande);
+  let partenaireRef = partenaireConnu;
+  // F05 (FR-009) : un compte pas encore validé peut louer en dépannage ; sa fiche client est
+  // créée dans Odoo dès la commande pour enregistrer la location (expédition bloquée).
+  if (!partenaireRef) {
+    const { creerFicheClient } = await import("../comptes/validation");
+    try {
+      partenaireRef = await creerFicheClient(compte.id);
+    } catch (e) {
+      if (!estErreurConnecteur(e)) throw e;
+      return { type: "redirection", url: "/commande/recapitulatif", message: INDISPONIBLE };
+    }
+  }
+  const lignesMad = lignesDe(commande).filter((l) => l.formule === "mise_a_disposition");
+  const devis = await registre.odoo().commandes.calculerDevis({ partenaireRef, lignes: lignesMad });
   const reprise = commande.etatAbonnement === "paiement_en_cours";
   const tentative = reprise ? commande.tentative : commande.tentative + 1;
+  if (!reprise) {
+    const r = await reserverAppareils(commande, tentative);
+    if (!r.ok) return { type: "redirection", url: `/commande/livraison?ref=${commande.ref}`, message: r.message };
+    commande = await dbSite().commandeSite.update({ where: { id: commande.id }, data: { reservationsAppareils: r.reservations } });
+  }
+  // Un élément de prélèvement par location, pour pouvoir arrêter l'une sans les autres (F05, R6).
+  const elements = [];
+  for (const l of lignesMad) {
+    const unitaire = (await registre.odoo().commandes.calculerDevis({ partenaireRef, lignes: [{ ...l, quantite: 1 }] })).abonnement!;
+    for (let n = 1; n <= l.quantite; n++) {
+      elements.push({ element: `${l.defaultCode}:${n}`, premierMontantTtc: unitaire.premierMoisTtc, montantMensuelTtc: unitaire.moisSuivantsTtc });
+    }
+  }
   try {
     const session = await registre.stripe().ouvrirSessionAbonnement(
       {
@@ -59,6 +126,7 @@ async function lancerAbonnement(commande: CommandeSite): Promise<Lancement> {
         abonnementRef: commande.ref,
         premierMontantTtc: devis.abonnement!.premierMoisTtc,
         montantMensuelTtc: devis.abonnement!.moisSuivantsTtc,
+        elements,
         moyens: [commande.moyenAbonnement === "sepa" ? "sepa" : "carte"],
         ...urls(commande.ref),
       },
@@ -71,13 +139,24 @@ async function lancerAbonnement(commande: CommandeSite): Promise<Lancement> {
     return { type: "paiement", url: session.url };
   } catch (e) {
     if (!estErreurConnecteur(e)) throw e;
+    await libererAppareils(commande);
     return { type: "redirection", url: "/commande/recapitulatif", message: INDISPONIBLE };
   }
 }
 
-export async function lancerPaiement(commande: CommandeSite, cgvAcceptees: boolean): Promise<Lancement> {
+export async function lancerPaiement(commande: CommandeSite, cgvAcceptees: boolean, conditionsLocation = cgvAcceptees): Promise<Lancement> {
   if (!cgvAcceptees && !commande.cgvAccepteesLe) throw new SaisieInvalide({ cgv: "Acceptez les conditions générales de vente pour commander." });
-  if (!commande.cgvAccepteesLe) commande = await dbSite().commandeSite.update({ where: { id: commande.id }, data: { cgvAccepteesLe: new Date() } });
+  // F05 (FR-011) : conditions de location acceptées avec les CGV, pour toute mise à disposition.
+  const avecLocation = lignesDe(commande).some((l) => l.formule === "mise_a_disposition");
+  if (avecLocation && !conditionsLocation && !commande.conditionsLocationAccepteesLe) {
+    throw new SaisieInvalide({ conditions: "Acceptez les conditions de location pour commander une mise à disposition." });
+  }
+  if (!commande.cgvAccepteesLe || (avecLocation && !commande.conditionsLocationAccepteesLe)) {
+    commande = await dbSite().commandeSite.update({
+      where: { id: commande.id },
+      data: { cgvAccepteesLe: commande.cgvAccepteesLe ?? new Date(), ...(avecLocation ? { conditionsLocationAccepteesLe: commande.conditionsLocationAccepteesLe ?? new Date() } : {}) },
+    });
+  }
 
   // Achat déjà réglé (ou en attente de virement) : il reste l'abonnement d'un panier mixte.
   if (PAS_DE_REPRISE.includes(commande.etatAchat)) {
