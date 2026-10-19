@@ -32,3 +32,5 @@ blob-report/
 .lighthouseci/
 playwright/.auth/
 stockage/
+# Rapports du test de connexion à Odoo (données réelles de l'entreprise)
+rapports-odoo/

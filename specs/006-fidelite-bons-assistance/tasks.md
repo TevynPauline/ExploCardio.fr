@@ -124,7 +124,7 @@ le client ; pages nouvelles ajoutées aux contrôles transverses (`no-egress`,
 - [X] T032 [P] Ajouter les pages de F06 aux contrôles transverses (`no-egress`, `accessibilite-charte`, largeurs) ; mettre à jour les tests de F01 à F05 touchés (bons au panier activés, bandeau, rubriques de « Mon compte »)
 - [X] T033 [P] Mettre à jour `docs/demonstration.md` (bons, droits, assistance à l'acte, promotions, écran de démonstration) et `tests/e2e/parcours/README.md` (fidélité ✅)
 - [X] T034 Dérouler [quickstart.md](quickstart.md) et corriger les écarts
-- [ ] T035 Vérifier la conformité finale : `npm run typecheck`, `npm run lint`, `npm run check:contrast`, `npm test`, `npm run test:e2e` (ordinateur et mobile), `npm run test:lighthouse`, puis en intégration continue
+- [X] T035 Vérifier la conformité finale : `npm run typecheck`, `npm run lint`, `npm run check:contrast`, `npm test`, `npm run test:e2e` (ordinateur et mobile), `npm run test:lighthouse`, puis en intégration continue
 
 ---
 
