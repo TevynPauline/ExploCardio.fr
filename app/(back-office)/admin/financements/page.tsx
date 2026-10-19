@@ -27,7 +27,7 @@ export default async function Financements({ searchParams }: { searchParams: Pro
       {demandes.length === 0 ? (
         <p className="text-muted">Aucune demande dans cette liste.</p>
       ) : (
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Demandes de financement (tableau défilant)">
           <table className="w-full border-collapse text-left">
             <caption className="sr-only">Demandes au statut « {LIBELLES_STATUT_FINANCEMENT[statut]} »</caption>
             <thead>

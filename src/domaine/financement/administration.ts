@@ -70,7 +70,15 @@ export async function creerCommandeFinancee(id: string, a: Auteur): Promise<stri
   if (!d.compte.odooPartnerRef) throw new ActionRefusee("Le compte du client n'a pas encore de fiche dans Odoo : validez-le d'abord.");
   const adresse = d.compte.adresses.find((x) => x.type === "livraison") ?? d.compte.adresses.find((x) => x.type === "cabinet") ?? d.compte.adresses[0];
   if (!adresse) throw new ActionRefusee("Le client n'a aucune adresse : complétez son compte avant de créer la commande.");
-  const equipements = d.equipements as { defaultCode: string; quantite: number }[];
+  const equipements = d.equipements as { defaultCode: string; nom?: string; quantite: number }[];
+  // Refusée tant qu'un équipement n'est pas en stock en quantité suffisante (décision du 2026-10-18).
+  const dispos = await registre.odoo().stock.lireDisponibilite(equipements.map((e) => e.defaultCode));
+  const manquants = equipements.filter((e) => (dispos.find((x) => x.defaultCode === e.defaultCode)?.quantiteDisponible ?? 0) < e.quantite);
+  if (manquants.length) {
+    throw new ActionRefusee(
+      `Stock insuffisant pour ${manquants.map((e) => e.nom ?? e.defaultCode).join(", ")} : la commande financée pourra être créée quand l'article sera de nouveau en stock.`,
+    );
+  }
   const { ref } = await registre.odoo().commandes.creerCommandePayee(
     {
       partenaireRef: d.compte.odooPartnerRef,

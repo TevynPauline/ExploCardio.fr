@@ -49,6 +49,12 @@ test("demande traitée : en étude, accordée, note interne invisible du client,
   const journal = await requete<{ action: string }>("site", `SELECT action FROM journal_action WHERE objet = $1`, [id]);
   expect(journal.map((j) => j.action)).toEqual(expect.arrayContaining(["financement.demande", "financement.note", "financement.statut"]));
 
+  // Article épuisé : la commande financée est refusée.
+  const stock = (q: number) => requete("demo", `UPDATE stock_quant SET quantite = $1 WHERE "varianteId" = (SELECT id FROM product_product WHERE "defaultCode" = 'EC-DMS-3004L')`, [q]);
+  await stock(0);
+  await bo.getByRole("button", { name: "Créer la commande financée" }).click();
+  await expect(bo.getByRole("alert").filter({ hasText: "Stock insuffisant" })).toBeVisible();
+  await stock(50);
   const stockAvant = await stockDe("EC-DMS-3004L");
   await bo.getByRole("button", { name: "Créer la commande financée" }).click();
   await expect(bo.getByRole("status").filter({ hasText: "Commande financée créée" })).toBeVisible();

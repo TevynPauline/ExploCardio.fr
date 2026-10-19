@@ -49,7 +49,7 @@ export default async function Commandes({ searchParams }: { searchParams: Promis
       {commandes.length === 0 ? (
         <p className="text-muted">Aucune commande dans cette liste.</p>
       ) : (
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Commandes du site (tableau défilant)">
           <table className="w-full border-collapse text-left">
             <caption className="sr-only">Commandes du site</caption>
             <thead>

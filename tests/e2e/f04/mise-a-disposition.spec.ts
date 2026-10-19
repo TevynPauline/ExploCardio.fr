@@ -71,7 +71,11 @@ test("panier mixte : achat payé puis abonnement refusé, repris depuis « Mon c
   await page.getByLabel(/J’accepte les conditions générales de vente/).check();
   await page.getByRole("button", { name: /^Payer/ }).click();
   await payerSurPageDemo(page);
-  // Achat payé : la session d'abonnement suit.
+  // Achat payé : le client autorise ensuite le prélèvement de l'abonnement (D1).
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Vos achats sont réglés");
+  await page.locator("main").getByRole("link", { name: "Autoriser le prélèvement mensuel" }).click();
+  await page.waitForURL(/\/commande\/recapitulatif/);
+  await page.getByRole("button", { name: "Autoriser le prélèvement mensuel" }).click();
   await payerSurPageDemo(page, { moyen: "Carte Visa", issue: "Paiement refusé" });
   await page.waitForURL(/\/commande\/(recapitulatif|retour)/);
 

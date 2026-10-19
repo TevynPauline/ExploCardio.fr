@@ -46,7 +46,14 @@ export async function creerCompteEnAttente(page: Page, options: { newsletter?: b
   await page.waitForTimeout(3_200);
   await page.locator("main").getByRole("button", { name: "Créer mon compte" }).click();
   await page.waitForURL(/\/inscription\/verifier-email$/);
-  await page.goto(await lienDeConfirmation(email));
+  // Limite de requêtes par adresse IP (Better Auth) : les parcours créent beaucoup de comptes
+  // depuis la même machine ; en cas de refus 429, on patiente et on recommence.
+  const lien = await lienDeConfirmation(email);
+  for (let essai = 0; essai < 8; essai++) {
+    const r = await page.goto(lien);
+    if (r?.status() !== 429) break;
+    await page.waitForTimeout((Number(r.headers()["x-retry-after"] ?? 10) + 1) * 1000);
+  }
   await page.waitForURL(/\/inscription\/email-confirme/);
   const [c] = await requete<{ id: string }>("site", `SELECT c.id FROM compte_client c JOIN utilisateur u ON u.id = c."utilisateurId" WHERE u.email = $1`, [email]);
   return { rpps, email, id: c!.id };

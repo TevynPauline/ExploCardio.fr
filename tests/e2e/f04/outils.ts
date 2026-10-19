@@ -52,13 +52,16 @@ export async function jusquAuRecapitulatif(page: Page, options: { livraison?: st
 }
 
 /** Sur la page de paiement de démonstration : moyen, issue, options. */
-export async function payerSurPageDemo(page: Page, options: { moyen?: string; issue?: string; tardif?: boolean; repete?: boolean } = {}) {
-  await page.waitForURL(/\/demo\/paiement/);
+export async function payerSurPageDemo(page: Page, options: { moyen?: string; issue?: string; tardif?: boolean; repete?: boolean; apres?: string } = {}) {
+  // `apres` : adresse de la page de paiement précédente, à quitter d'abord (panier mixte).
+  await page.waitForURL((u) => /\/demo\/paiement/.test(u.pathname) && u.href !== options.apres);
   await page.getByRole("radio", { name: options.moyen ?? "Carte American Express" }).check();
   await page.getByRole("radio", { name: options.issue ?? "Paiement accepté" }).check();
   if (options.tardif) await page.getByRole("checkbox", { name: /Confirmation tardive/ }).check();
   if (options.repete) await page.getByRole("checkbox", { name: /Confirmation répétée/ }).check();
+  const adresse = page.url();
   await page.getByRole("button", { name: "Valider" }).click();
+  return adresse;
 }
 
 export async function stockDe(defaultCode: string): Promise<number> {
