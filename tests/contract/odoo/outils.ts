@@ -41,3 +41,14 @@ export async function nouveauPartenaire(registre: Registre) {
 }
 
 export const livraison = { adresse: "1 rue du Test", codePostal: "75001", ville: "Paris", fraisPortHt: 1500 };
+
+/**
+ * En démonstration seulement : remet du stock fictif avant des commandes de test (le jeu de
+ * départ n'en a que quelques dizaines). La copie de test d'Odoo (phase 3) gère son propre stock.
+ */
+export async function reapprovisionnerDemo(codes: string[], quantite = 500) {
+  const { modeDuConnecteur } = await import("@/lib/config");
+  if (modeDuConnecteur("odoo") !== "demo") return;
+  const { dbDemo } = await import("@/lib/db/demo");
+  await dbDemo().stock.updateMany({ where: { variante: { defaultCode: { in: codes } }, quantite: { lt: quantite } }, data: { quantite } });
+}

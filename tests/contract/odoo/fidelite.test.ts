@@ -1,13 +1,14 @@
 import { expect, it } from "vitest";
 import { cleDeTest, suiteDeContrat } from "../harness";
 import { COMMANDES_REFERENCE } from "./fidelite-reference";
-import { livraison, nouveauPartenaire, REF, type Registre } from "./outils";
+import { livraison, nouveauPartenaire, reapprovisionnerDemo, REF, type Registre } from "./outils";
 
 // Règles de F06 avec les paramètres par défaut : 0 % sous 500 € HT, 5 % de 500 € à 1 000 € HT,
 // 10 % au-dessus, sur le montant éligible (consommables et accessoires seulement).
 
 async function commanderPuisAppliquer(registre: Registre, lignes: { defaultCode: string; quantite: number }[], options: { partenaireRef?: string; bonsHt?: number; mode?: "carte" | "virement" } = {}) {
   const partenaireRef = options.partenaireRef ?? (await nouveauPartenaire(registre));
+  await reapprovisionnerDemo(lignes.map((l) => l.defaultCode));
   const commande = { partenaireRef, lignes, livraison, paiement: { mode: options.mode ?? ("carte" as const), reference: "FICT-PAY-fidelite" }, bonsUtilisesHt: options.bonsHt };
   const { ref } =
     options.mode === "virement"

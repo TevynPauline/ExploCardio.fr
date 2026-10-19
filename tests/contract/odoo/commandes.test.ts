@@ -1,6 +1,6 @@
 import { expect, it } from "vitest";
 import { cleDeTest, suiteDeContrat } from "../harness";
-import { livraison, nouveauPartenaire, REF } from "./outils";
+import { livraison, nouveauPartenaire, reapprovisionnerDemo, REF } from "./outils";
 
 suiteDeContrat("odoo", "commandes (contracts/odoo.md §4)", ({ registre }) => {
   const commandes = () => registre.odoo().commandes;
@@ -137,6 +137,7 @@ suiteDeContrat("odoo", "commandes : opérations ajoutées par F04", ({ registre 
 
   it("virement : en attente, stock réservé, échéance ; annulation : stock rendu", async () => {
     const partenaireRef = await nouveauPartenaire(registre);
+    await reapprovisionnerDemo([REF.consommable]);
     const avant = (await registre.odoo().stock.lireDisponibilite([REF.consommable]))[0]!.quantiteDisponible!;
     const cle = cleDeTest("virement");
     const { ref, echeance } = await commandes().creerCommandeVirement(
