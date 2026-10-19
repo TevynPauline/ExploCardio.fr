@@ -31,7 +31,8 @@ technologie.**
   Une action planifiée d'Odoo (simulée en démonstration) crée un mouvement « expiration » pour
   le reste d'un lot échu. Le solde reste la somme des mouvements (FR-022, SC-004).
 - **Restitution** (FR-017) : les bons rendus retrouvent **leur date de validité d'origine** ;
-  s'ils sont déjà expirés, ils bénéficient de **30 jours de grâce** (hypothèse confirmée).
+  s'ils sont déjà expirés, ils bénéficient de **30 jours de grâce** (hypothèse confirmée). La
+  même règle s'applique à l'annulation d'une commande par virement non payée.
 - **Bons déjà dépensés à retirer** (hypothèse confirmée) : Odoo **déduit le montant manquant du
   remboursement** versé au client et prévient l'équipe ; en démonstration, la décision de
   remboursement est réduite d'autant, avec une note.
@@ -60,7 +61,11 @@ technologie.**
   paiement (mouvement « utilisation » à la création de la commande) ; un paiement abandonné ne
   débite rien.
 - Le panier affiche ce que la commande **rapportera** (bons, droits) et **ce qui manque pour
-  le palier suivant** ; les fiches consommables affichent ce que l'achat rapporte (FR-024).
+  le palier suivant** ; les fiches consommables affichent ce que l'achat rapporte (FR-024),
+  aussi pour un visiteur (estimation sans client). La confirmation de commande indique les
+  gains obtenus, ou ce qui manquait pour ouvrir les droits (US2).
+- **SC-011** (compréhension par des médecins) : vérifié lors d'un test avec des utilisateurs,
+  hors des tests automatiques.
 
 ## R7. Suivi et emails
 
