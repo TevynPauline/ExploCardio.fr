@@ -36,6 +36,7 @@ const FIXES: Record<string, Lien[]> = {
   services: [
     { libelle: "Hébergement des données de santé", href: "/services/hebergement-donnees-sante" },
     { libelle: "Assistance et service", href: "/services/assistance" },
+    { libelle: "Centre d’aide", href: "/aide" },
     { libelle: "Financement", href: "/financement" },
     { libelle: "Installation et formation", href: "/services/installation-formation" },
     { libelle: "Mise à disposition", href: "/mise-a-disposition" },
@@ -48,7 +49,7 @@ const FIXES: Record<string, Lien[]> = {
   qui_sommes_nous: [
     { libelle: "Qui sommes-nous", href: "/qui-sommes-nous" },
     { libelle: "Nous écrire", href: "/qui-sommes-nous#contact" },
-    { libelle: "Aide en ligne", href: "/services/assistance#aide" },
+    { libelle: "Centre d’aide", href: "/aide" },
   ],
 };
 

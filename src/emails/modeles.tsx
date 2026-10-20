@@ -1,4 +1,5 @@
 import { render } from "@react-email/render";
+import { contactEmail } from "./contact";
 import { BoutonEmail, Gabarit, Paragraphe } from "./Gabarit";
 
 // Modèles d'emails rendus par le site avant l'envoi (contracts/emailing.md).
@@ -11,7 +12,7 @@ export async function emailEssai(): Promise<EmailRendu> {
     modele: "essai",
     objet,
     rendu: await render(
-      <Gabarit apercu="Message d'essai de la boîte de démonstration" titre={objet}>
+      <Gabarit contact={await contactEmail()} apercu="Message d'essai de la boîte de démonstration" titre={objet}>
         <Paragraphe>Bonjour,</Paragraphe>
         <Paragraphe>Ce message vérifie l’affichage des emails aux couleurs d’ExploCardio.fr.</Paragraphe>
       </Gabarit>,
@@ -25,7 +26,7 @@ export async function emailReinitialisationMotDePasse(lien: string): Promise<Ema
     modele: "reinitialisation_mot_de_passe",
     objet,
     rendu: await render(
-      <Gabarit apercu="Lien pour choisir un nouveau mot de passe" titre={objet}>
+      <Gabarit contact={await contactEmail()} apercu="Lien pour choisir un nouveau mot de passe" titre={objet}>
         <Paragraphe>Bonjour,</Paragraphe>
         <Paragraphe>
           Vous avez demandé à réinitialiser votre mot de passe. Ce lien est valable une heure.
@@ -43,7 +44,7 @@ export async function emailConfirmationAdresse(lien: string): Promise<EmailRendu
     modele: "confirmation_adresse",
     objet,
     rendu: await render(
-      <Gabarit apercu="Un clic pour confirmer votre adresse" titre={objet}>
+      <Gabarit contact={await contactEmail()} apercu="Un clic pour confirmer votre adresse" titre={objet}>
         <Paragraphe>Bonjour,</Paragraphe>
         <Paragraphe>Merci de confirmer votre adresse email pour poursuivre votre inscription.</Paragraphe>
         <BoutonEmail href={lien}>Confirmer mon adresse</BoutonEmail>
@@ -59,7 +60,7 @@ export async function emailConfirmationNewsletter(lien: string): Promise<EmailRe
     modele: "confirmation_newsletter",
     objet,
     rendu: await render(
-      <Gabarit apercu="Un clic pour recevoir nos nouveautés" titre={objet}>
+      <Gabarit contact={await contactEmail()} apercu="Un clic pour recevoir nos nouveautés" titre={objet}>
         <Paragraphe>Bonjour,</Paragraphe>
         <Paragraphe>
           Pour recevoir la newsletter d’ExploCardio.fr, confirmez votre adresse. Ce lien est valable

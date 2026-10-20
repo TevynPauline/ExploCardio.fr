@@ -1,4 +1,5 @@
 import { render } from "@react-email/render";
+import { contactEmail } from "./contact";
 import { euros } from "@/lib/montants";
 import { urlDuSite } from "./charte";
 import { BoutonEmail, Gabarit, Paragraphe } from "./Gabarit";
@@ -7,7 +8,7 @@ import type { EmailRendu } from "./modeles";
 // Emails de F06 : gabarit de la charte, vouvoiement, montants HT, ton sobre.
 
 async function email(modele: string, objet: string, apercu: string, corps: React.ReactNode): Promise<EmailRendu> {
-  return { modele, objet, rendu: await render(<Gabarit apercu={apercu} titre={objet}>{corps}</Gabarit>) };
+  return { modele, objet, rendu: await render(<Gabarit contact={await contactEmail()} apercu={apercu} titre={objet}>{corps}</Gabarit>) };
 }
 
 const dateFr = (d: Date) => d.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Paris" });

@@ -3,6 +3,7 @@ import { dbSite } from "@/lib/db/site";
 import { Button, Card, Kicker, Retour } from "@/ui";
 import { ChampAdmin, classeChamp } from "@/ui/admin";
 import { enregistrerCoordonnees } from "../actions";
+import { lireFermeturesJson, lireHorairesJson } from "@/domaine/contact/horaires";
 
 export const metadata: Metadata = { title: "Coordonnées et textes" };
 
@@ -13,6 +14,17 @@ function listeJson(valeur: string): string[] {
   } catch {
     return [];
   }
+}
+
+const JOURS_SEMAINE = [["1", "lundi"], ["2", "mardi"], ["3", "mercredi"], ["4", "jeudi"], ["5", "vendredi"], ["6", "samedi"], ["7", "dimanche"]] as const;
+
+function plagesTexte(json: string, jour: string): string {
+  const h = lireHorairesJson(json || null) as Record<string, [string, string][]>;
+  return (h[jour] ?? []).map(([d, f]) => `${d}-${f}`).join(", ");
+}
+
+function fermeturesTexte(json: string): string {
+  return lireFermeturesJson(json || "[]").map((f) => `${f.du} ${f.au}${f.motif ? ` ${f.motif}` : ""}`).join("\n");
 }
 
 export default async function Coordonnees({ searchParams }: { searchParams: Promise<{ ok?: string; erreur?: string }> }) {
@@ -43,6 +55,28 @@ export default async function Coordonnees({ searchParams }: { searchParams: Prom
           <div className="sm:col-span-2">
             <ChampAdmin id="adresse" libelle="Adresse">
               <input id="adresse" name="adresse" defaultValue={v("contact.adresse")} className={classeChamp} />
+            </ChampAdmin>
+          </div>
+        </Card>
+        <Card className="grid gap-3 sm:grid-cols-2">
+          <h2 className="text-h3 font-semibold sm:col-span-2">Contact WhatsApp et horaires de réponse</h2>
+          <p className="text-muted sm:col-span-2">
+            Numéro de la ligne WhatsApp Business, affiché partout avec « Appeler » et « Écrire sur WhatsApp ». Vide : aucun bouton, le formulaire de
+            contact est proposé. Les jours fériés sont pris en compte automatiquement.
+          </p>
+          <ChampAdmin id="whatsapp" libelle="Numéro WhatsApp (format international)" aide="Exemple : +33 6 12 34 56 78.">
+            <input id="whatsapp" name="whatsapp" type="tel" defaultValue={v("contact.whatsapp")} className={classeChamp} />
+          </ChampAdmin>
+          <div className="sm:col-span-2 grid gap-2 sm:grid-cols-2">
+            {JOURS_SEMAINE.map(([j, nom]) => (
+              <ChampAdmin key={j} id={`horaires-${j}`} libelle={`Horaires du ${nom}`} aide="Ex. 09:00-12:00, 14:00-18:00 ; vide : fermé.">
+                <input id={`horaires-${j}`} name={`horaires-${j}`} defaultValue={plagesTexte(v("contact.horaires"), j)} className={classeChamp} />
+              </ChampAdmin>
+            ))}
+          </div>
+          <div className="sm:col-span-2">
+            <ChampAdmin id="fermetures" libelle="Fermetures exceptionnelles (une par ligne)" aide="AAAA-MM-JJ AAAA-MM-JJ motif ; exemple : 2026-12-24 2027-01-03 Congés.">
+              <textarea id="fermetures" name="fermetures" rows={3} defaultValue={fermeturesTexte(v("contact.fermetures"))} className={`${classeChamp} py-2`} />
             </ChampAdmin>
           </div>
         </Card>

@@ -1,6 +1,7 @@
 import { Body, Container, Head, Hr, Html, Img, Preview, Section, Text } from "@react-email/components";
 import type { ReactNode } from "react";
 import { charte, urlDuSite } from "./charte";
+import type { ContactEmail } from "./contact";
 
 // Gabarit commun des emails ExploCardio.fr : logo officiel, Inter avec police de repli,
 // couleur d'action unique, ton sobre et vouvoiement (principes VII et IX).
@@ -9,9 +10,11 @@ type GabaritProps = {
   apercu: string;
   titre: string;
   children: ReactNode;
+  /** F09 : numéro, horaires et lien WhatsApp en pied de message (null sans numéro). */
+  contact?: ContactEmail;
 };
 
-export function Gabarit({ apercu, titre, children }: GabaritProps) {
+export function Gabarit({ apercu, titre, children, contact }: GabaritProps) {
   const demonstration = process.env.SITE_MODE !== "prod";
   return (
     <Html lang="fr">
@@ -37,6 +40,14 @@ export function Gabarit({ apercu, titre, children }: GabaritProps) {
             <Text style={{ fontSize: 24, fontWeight: 300, lineHeight: 1.2, margin: "0 0 16px" }}>{titre}</Text>
             {children}
           </Section>
+          {contact ? (
+            <Section style={{ marginTop: 24 }}>
+              <Text style={{ fontSize: 14, lineHeight: 1.6, margin: 0 }}>
+                Une question ? Appelez-nous ou écrivez-nous sur WhatsApp au <strong>{contact.numero}</strong> ({contact.horaires}).{" "}
+                <a href={contact.ecrire} style={{ color: charte.action }}>Écrire sur WhatsApp</a>. Ne transmettez aucune donnée patient.
+              </Text>
+            </Section>
+          ) : null}
           <Hr style={{ borderColor: charte.trait, margin: "32px 0 16px" }} />
           <Text style={{ fontSize: 12, color: charte.secondaire, margin: 0 }}>
             ExploCardio.fr — Le spécialiste des explorations fonctionnelles cardiaques (hors imagerie).

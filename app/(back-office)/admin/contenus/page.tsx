@@ -15,9 +15,10 @@ export default function Contenus() {
           { titre: "Bandeau promotionnel", texte: "Messages, ordre, dates de début et de fin.", href: "/admin/contenus/bandeau" },
           { titre: "Tuiles d'accès rapide", texte: "Titre, phrase, lien, badge, fond des 6 tuiles.", href: "/admin/contenus/tuiles" },
           { titre: "Actualités", texte: "Actualités, nouveaux produits, nouvelles offres.", href: "/admin/contenus/actualites" },
-          { titre: "Coordonnées et textes", texte: "Contact, offre de bienvenue, engagements, badges, motifs.", href: "/admin/contenus/coordonnees" },
+          { titre: "Coordonnées et textes", texte: "Contact, WhatsApp et horaires, offre de bienvenue, badges, rappels.", href: "/admin/contenus/coordonnees" },
           { titre: "Menus", texte: "Produits phares et liens rapides des méga-menus.", href: "/admin/contenus/menus" },
           { titre: "Marques", texte: "Marques partenaires et leurs logos.", href: "/admin/contenus/marques" },
+          { titre: "Centre d'aide", texte: "Tutoriels vidéo, modes d'emploi, notices générales et FAQ.", href: "/admin/contenus/aide" },
         ]}
       />
     </div>

@@ -34,7 +34,7 @@ export default async function QuiSommesNous({ searchParams }: { searchParams: Pr
             motifs={p.motifs}
             motifInitial={motifInitial}
             jeton={jetonAffichage()}
-            liensWhatsapp={{ appeler: whatsapp.appeler, ecrire: whatsapp.ecrire }}
+            liensWhatsapp={whatsapp ? { appeler: whatsapp.appeler, ecrire: whatsapp.ecrire } : null}
           />
         </Card>
       </section>

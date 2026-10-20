@@ -33,7 +33,7 @@ test("réinitialiser la démonstration depuis le back-office", async ({ page, co
     [`equipe-${marque}`, `equipe-${marque}@explocardio.test`],
   );
   await requete("site", `INSERT INTO message_contact (id, motif, coordonnees, texte) VALUES ($1, 'test', '{}', 'séance')`, [marque]);
-  await requete("site", `INSERT INTO contenu (id, type, titre, corps, "modifieLe") VALUES ($1, 'faq', 'Question conservée', 'Réponse', now())`, [`faq-${marque}`]);
+  await requete("site", `INSERT INTO contenu (id, type, titre, corps, "modifieLe") VALUES ($1, 'page', 'Page conservée', 'Texte', now())`, [`faq-${marque}`]);
 
   // --- Réinitialisation depuis le back-office
   await connecterNavigateur(context, COMPTES.admin);

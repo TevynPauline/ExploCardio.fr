@@ -3,12 +3,14 @@ import type { ReactNode } from "react";
 import { lireParametresPublics } from "@/domaine/contenus";
 import { Logo } from "./Logo";
 import { LienGestionCookies } from "./LienGestionCookies";
+import { ContactWhatsApp } from "./contact/ContactWhatsApp";
 
 /** Pied de page (FR-027) : fond sombre, logo blanc, liens, inscription à la newsletter. */
 export async function PiedDePage({ newsletter }: { newsletter?: ReactNode }) {
   const p = await lireParametresPublics();
   const liens = [
     { href: "/qui-sommes-nous#contact", libelle: "Contact" },
+    { href: "/aide", libelle: "Centre d’aide" },
     { href: "/qui-sommes-nous", libelle: "Qui sommes-nous" },
     { href: "/mentions-legales", libelle: "Mentions légales" },
     { href: "/cgv", libelle: "CGV" },
@@ -23,9 +25,10 @@ export async function PiedDePage({ newsletter }: { newsletter?: ReactNode }) {
           <p className="text-small text-white">
             Le spécialiste des explorations fonctionnelles cardiaques (hors imagerie).
           </p>
-          {p.telephone || p.email ? (
+          {/* F09 : contact WhatsApp partout (version compacte), horaires et état. */}
+          <ContactWhatsApp variante="compacte" />
+          {p.email ? (
             <ul className="text-small text-white">
-              {p.telephone ? <li>{p.telephone}</li> : null}
               {p.email ? (
                 <li>
                   <a href={`mailto:${p.email}`} className="text-white underline underline-offset-2">{p.email}</a>

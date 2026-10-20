@@ -3,6 +3,7 @@ import type { PrismaClient as ClientSite } from "@generated/site/client";
 import { creerComptesDemo, supprimerComptesDeSeance, type IdentifiantsDemo } from "../../site/seed/comptes-demo";
 import { remplirContenusCatalogue } from "../../site/seed/catalogue";
 import { remplirContenusInitiaux } from "../../site/seed/contenus-initiaux";
+import { remplirAideInitiale } from "../../site/seed/aide-initiale";
 import { remplirParametresDemo } from "../../site/seed/parametres-demo";
 import { remplirCatalogue } from "./catalogue";
 import { remplirHistoriques, remplirRegles } from "./historiques";
@@ -46,6 +47,7 @@ export async function remplirJeuDeDepart(demo: ClientDemo, site: ClientSite): Pr
   const identifiants = await creerComptesDemo(site);
   const { motDePasseSite } = await remplirParametresDemo(site);
   await remplirContenusInitiaux(site);
+  await remplirAideInitiale(site);
   await remplirContenusCatalogue(site);
 
   return {

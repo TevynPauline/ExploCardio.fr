@@ -176,10 +176,31 @@ export async function enregistrerCoordonnees(d: FormData) {
       if (!Number.isInteger(n) || n < min || n > max) throw new SaisieRefusee(`${libelle} : nombre entier entre ${min} et ${max}.`);
       return String(n);
     };
+    // F09 : numéro WhatsApp, horaires de réponse et fermetures exceptionnelles (FR-008).
+    const whatsapp = t(d, "whatsapp").trim();
+    if (whatsapp && !/^\+?[0-9 ().-]{6,20}$/.test(whatsapp)) throw new SaisieRefusee("Numéro WhatsApp : numéro invalide (format international, ex. +33 6 12 34 56 78).");
+    const horaires: Record<string, [string, string][]> = {};
+    for (const j of ["1", "2", "3", "4", "5", "6", "7"]) {
+      const brut = t(d, `horaires-${j}`).trim();
+      horaires[j] = [];
+      for (const plage of brut ? brut.split(/[,;]\s*/) : []) {
+        const m = /^([01]\d|2[0-3]):([0-5]\d)\s*-\s*([01]\d|2[0-3]):([0-5]\d)$/.exec(plage.trim());
+        if (!m || `${m[1]}:${m[2]}` >= `${m[3]}:${m[4]}`) throw new SaisieRefusee(`Horaires : « ${plage} » n'est pas une plage valide (exemple : 09:00-18:00).`);
+        horaires[j].push([`${m[1]}:${m[2]}`, `${m[3]}:${m[4]}`]);
+      }
+    }
+    const fermetures = t(d, "fermetures").split("\n").map((l) => l.trim()).filter(Boolean).map((l) => {
+      const m = /^(\d{4}-\d{2}-\d{2})\s+(\d{4}-\d{2}-\d{2})\s*(.*)$/.exec(l);
+      if (!m || m[1]! > m[2]!) throw new SaisieRefusee(`Fermetures : « ${l} » attendu sous la forme AAAA-MM-JJ AAAA-MM-JJ motif.`);
+      return { du: m[1]!, au: m[2]!, ...(m[3] ? { motif: m[3].slice(0, 80) } : {}) };
+    });
     // F06 et F12 : rappels et accès Cloud (principe VI).
     const urlPlateforme = t(d, "urlPlateforme").trim();
     if (!/^(https:\/\/[^\s]+|\/[A-Za-z0-9/_-]*)$/.test(urlPlateforme)) throw new SaisieRefusee("Adresse de la plateforme : https://… ou chemin du site commençant par /.");
     const valeurs: Record<string, string> = {
+      "contact.whatsapp": whatsapp,
+      "contact.horaires": JSON.stringify(horaires),
+      "contact.fermetures": JSON.stringify(fermetures),
       "fidelite.rappel_droits_jours": entier("rappelDroits", "Rappel avant la fin des droits", 1, 60),
       "fidelite.rappel_expiration_jours": entier("rappelExpiration", "Rappel avant l'expiration de bons", 1, 120),
       "cloud.delai_grace_jours": entier("delaiGrace", "Délai de grâce", 0, 180),

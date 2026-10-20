@@ -1,4 +1,5 @@
 import { render } from "@react-email/render";
+import { contactEmail } from "./contact";
 import { euros } from "@/lib/montants";
 import { urlDuSite } from "./charte";
 import { BoutonEmail, Gabarit, Paragraphe } from "./Gabarit";
@@ -8,7 +9,7 @@ import type { EmailRendu } from "./modeles";
 // TTC, aucun nom d'organisme de financement.
 
 async function email(modele: string, objet: string, apercu: string, corps: React.ReactNode): Promise<EmailRendu> {
-  return { modele, objet, rendu: await render(<Gabarit apercu={apercu} titre={objet}>{corps}</Gabarit>) };
+  return { modele, objet, rendu: await render(<Gabarit contact={await contactEmail()} apercu={apercu} titre={objet}>{corps}</Gabarit>) };
 }
 
 export type LigneEmail = { libelle: string; quantite: number; totalHt: number };

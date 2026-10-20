@@ -208,9 +208,6 @@ enum TypeContenu {
   tuile
   actualite
   page
-  faq
-  tutoriel
-  notice
 }
 
 enum EtatPublication {
@@ -884,4 +881,57 @@ model TacheAcces {
 
   @@index([etat])
   @@map("tache_acces")
+}
+
+// ---------------------------------------------------------------------------
+// F09 — Centre d'aide
+// ---------------------------------------------------------------------------
+
+enum TypeContenuAide {
+  video
+  mode_emploi
+  notice
+  faq
+}
+
+enum ThemeAide {
+  prise_en_main
+  enregistrement
+  analyse
+  materiel
+  logiciels_cloud
+  compte
+}
+
+/// Contenu du centre d'aide (F09, FR-011 à FR-016). Les notices des produits restent sur leur
+/// fiche (F03) et sont reprises par le centre d'aide ; `notice` sert aux procédures générales.
+model ContenuAide {
+  id            String          @id @default(cuid())
+  slug          String          @unique
+  type          TypeContenuAide
+  titre         String
+  resume        String
+  theme         ThemeAide
+  /// Références d'articles et de logiciels d'Odoo liées (fiches produit).
+  references    String[]        @default([])
+  /// Vidéo : chemin du fichier MP4, des sous-titres WebVTT et transcription (obligatoires pour publier).
+  video         String?
+  sousTitres    String?
+  transcription String?
+  /// Mode d'emploi : [{ texte, image, texteRemplacement }].
+  etapes        Json            @default("[]")
+  /// Notice générale : chemin du PDF.
+  document      String?
+  /// FAQ : réponse (sous-ensemble Markdown sûr).
+  reponse       String?
+  etat          EtatPublication @default(preparation)
+  ordre         Int             @default(0)
+  /// Compteur anonyme des ouvertures (FAQ les plus consultées en tête).
+  consultations Int             @default(0)
+  publieLe      DateTime?
+  creeLe        DateTime        @default(now())
+  modifieLe     DateTime        @updatedAt
+
+  @@index([type, etat])
+  @@map("contenu_aide")
 }

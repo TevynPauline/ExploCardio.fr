@@ -3,7 +3,8 @@ import { etatBienvenue } from "@/domaine/comptes/bienvenue";
 import { compteCourant } from "@/domaine/comptes/session";
 import { peutCommander, type Statut } from "@/domaine/comptes/statuts";
 import { lireParametresPublics } from "@/domaine/contenus";
-import { liensContact } from "@/lib/contact-whatsapp";
+import { ContactWhatsApp } from "@/ui/contact/ContactWhatsApp";
+import { assistanceDuCompte } from "@/domaine/fidelite/droits";
 import { Card, Kicker } from "@/ui";
 import { EncartBienvenue } from "@/ui/comptes/EncartBienvenue";
 import { LIBELLES_STATUT } from "@/ui/comptes/libelles";
@@ -24,7 +25,7 @@ const RUBRIQUES = [
 // Tableau de bord « Mon compte » (FR-036) : statut, offre de bienvenue, rubriques, contact WhatsApp.
 export default async function MonCompte() {
   const { compte } = await compteCourant("/mon-compte");
-  const [bienvenue, p, contact] = await Promise.all([etatBienvenue(compte.id), lireParametresPublics(), liensContact()]);
+  const [bienvenue, p, assistance] = await Promise.all([etatBienvenue(compte.id), lireParametresPublics(), assistanceDuCompte(compte.id)]);
   const commande = peutCommander({ statut: compte.statut as Statut });
   return (
     <>
@@ -48,13 +49,21 @@ export default async function MonCompte() {
           </li>
         ))}
       </ul>
-      <Card className="flex flex-wrap items-center justify-between gap-3">
-        <p>Une question ? Notre équipe vous répond par téléphone ou sur WhatsApp.</p>
-        <div className="flex flex-wrap gap-2">
-          <a href={contact.appeler} className="ec-btn ec-btn--primary">Appeler</a>
-          <a href={contact.ecrire} className="ec-btn ec-btn--secondary">Écrire sur WhatsApp</a>
-        </div>
-      </Card>
+      <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
+        <ContactWhatsApp titre="Une question ?" />
+        {/* F09 (FR-009) : l'état des droits d'assistance à côté du contact. */}
+        <section aria-label="Vos droits d’assistance" className="ec-card flex flex-col gap-2">
+          <p className="font-semibold text-ink">Vos droits d’assistance</p>
+          {assistance.droits?.statut === "actif" ? (
+            <p>Assistance offerte jusqu’au {assistance.droits.fin.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Paris" })}.</p>
+          ) : assistance.droits ? (
+            <p>Pas de droits en cours : une commande de consommables les ouvre, ou l’assistance à l’acte.</p>
+          ) : (
+            <p>Information momentanément indisponible.</p>
+          )}
+          <Link href="/mon-compte/assistance" className="inline-flex min-h-11 items-center">Mes droits d’assistance</Link>
+        </section>
+      </div>
     </>
   );
 }

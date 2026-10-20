@@ -1,4 +1,5 @@
 import { render } from "@react-email/render";
+import { contactEmail } from "./contact";
 import { urlDuSite } from "./charte";
 import { BoutonEmail, Gabarit, Paragraphe } from "./Gabarit";
 import type { EmailRendu } from "./modeles";
@@ -6,7 +7,7 @@ import type { EmailRendu } from "./modeles";
 // Emails de F02 (contracts/emails.md) : gabarit de la charte, vouvoiement, aucun mot de passe.
 
 async function email(modele: string, objet: string, apercu: string, corps: React.ReactNode): Promise<EmailRendu> {
-  return { modele, objet, rendu: await render(<Gabarit apercu={apercu} titre={objet}>{corps}</Gabarit>) };
+  return { modele, objet, rendu: await render(<Gabarit contact={await contactEmail()} apercu={apercu} titre={objet}>{corps}</Gabarit>) };
 }
 
 export const emailsComptes = {

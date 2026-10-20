@@ -28,7 +28,7 @@ export default async function Accueil() {
       <Heros />
       <AccesRapide tuiles={tuiles} />
       <Equipements marques={marques} />
-      <OffreDigitale badgeLogicielCloud={parametres.badgeLogicielCloud} whatsapp={contact.ecrire} />
+      <OffreDigitale badgeLogicielCloud={parametres.badgeLogicielCloud} whatsapp={contact?.ecrire ?? "/qui-sommes-nous#contact"} />
       <OffreBienvenue texte={parametres.offreBienvenue} />
       <ServiceFidelite engagements={parametres.engagementsReactivite} />
       <Actualites actualites={actualites} />

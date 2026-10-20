@@ -30,7 +30,7 @@ test("tableau de bord : statut, contact WhatsApp, rubriques sans erreur", async 
   await page.goto("/mon-compte");
   await verifierAccessibilite(page);
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Bonjour");
-  await expect(page.getByRole("link", { name: "Écrire sur WhatsApp" })).toHaveAttribute("href", "/demo/contact?moyen=whatsapp");
+  await expect(page.locator("main").getByRole("link", { name: /^Écrire sur WhatsApp/ })).toHaveAttribute("href", "/demo/contact?moyen=whatsapp");
   for (const r of RUBRIQUES) {
     const reponse = await page.goto(`/mon-compte/${r}`);
     expect(reponse?.status(), r).toBe(200);

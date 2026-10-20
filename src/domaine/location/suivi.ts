@@ -2,7 +2,7 @@ import { registre } from "@/connecteurs/registre";
 import { estErreurConnecteur } from "@/connecteurs/erreurs";
 import type { ChangementLocation } from "@/connecteurs/odoo/interfaces";
 import { dbSite } from "@/lib/db/site";
-import { liensContact } from "@/lib/contact-whatsapp";
+import { liensContact, messagePrerempli } from "@/lib/contact-whatsapp";
 import { emailsLocations } from "@/emails/modeles-locations";
 import type { SuiviLocation } from "@generated/site/client";
 import { alerterEquipe, envoyer } from "../commande/notifications";
@@ -68,13 +68,14 @@ async function traiter(l: ChangementLocation, maintenant: Date): Promise<boolean
 
   // Expédition : email avec le suivi, accès Cloud, alerte « formation à organiser » (FR-012).
   if (l.expedieLe && !suivi.expedieNotifie) {
-    const contact = await liensContact("Bonjour, j'aimerais de l'aide pour paramétrer mon appareil en location.");
+    // F09 : message pré-rempli limité au nom et au cabinet (FR-005).
+    const contact = await liensContact(compte ? messagePrerempli({ nom: compte.utilisateur.name, cabinet: compte.nomCabinet, civilite: compte.utilisateur.civilite }) : messagePrerempli(null));
     await ouvrirAccesLocation(l);
     maj.expedieNotifie = true;
     if (email) {
       await envoyer(
         email,
-        await emailsLocations.expediee({ appareil: l.libelle, numeroSerie: l.numeroSerie, transporteur: l.transporteur, suivi: l.suivi, dateLivraison: l.dateLivraison, whatsapp: contact.ecrire, logiciel: Boolean(l.logiciel) }),
+        await emailsLocations.expediee({ appareil: l.libelle, numeroSerie: l.numeroSerie, transporteur: l.transporteur, suivi: l.suivi, dateLivraison: l.dateLivraison, whatsapp: contact?.ecrire ?? "/qui-sommes-nous#contact", logiciel: Boolean(l.logiciel) }),
         "location expédiée",
         `location-expediee:${l.partenaireRef}:${l.ref}`,
       );

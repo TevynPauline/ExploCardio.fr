@@ -10,6 +10,8 @@ import { CarteProduit } from "./CarteProduit";
 import { FicheConsommable } from "./FicheConsommable";
 import { gainsDe } from "@/domaine/fidelite/gains";
 import { GainsFidelite } from "../fidelite/Gains";
+import { ContactWhatsApp } from "../contact/ContactWhatsApp";
+import { AideDuModele } from "../aide/AideDuModele";
 import { PromotionsFiche } from "../fidelite/PromotionsFiche";
 import { Galerie } from "./Galerie";
 import { OngletsFiche } from "./OngletsFiche";
@@ -113,6 +115,9 @@ export async function Fiche({ cle, slug, parametres }: Props) {
         </div>
       </div>
       <OngletsFiche fiche={f} />
+      {/* F09 : aide de ce modèle (US3-5) et contact WhatsApp sur chaque fiche (FR-003). */}
+      <AideDuModele references={f.variantes.map((v) => v.defaultCode)} />
+      <ContactWhatsApp titre="Une question sur ce produit ?" />
       {f.associes.length ? (
         <section aria-labelledby="titre-associes" className="flex flex-col gap-4">
           <h2 id="titre-associes" className="text-h2 font-light">{f.type === "equipement" ? "Produits associés" : "Vous aimerez aussi"}</h2>

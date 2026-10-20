@@ -24,6 +24,12 @@ export async function rechercherAssistance(recherche: string): Promise<{ fiches:
   const q = recherche.trim();
   if (q.length < 2) return { fiches: [], indisponible: false };
   const chiffres = q.replace(/\s+/g, "");
+  // Téléphones comparés sur leurs seuls chiffres (saisis avec ou sans espaces, points, tirets).
+  const numero = q.replace(/[^\d]/g, "");
+  const parTelephone =
+    numero.length >= 4
+      ? (await dbSite().$queryRaw<{ id: string }[]>`SELECT id FROM utilisateur WHERE regexp_replace(coalesce(telephone, ''), '[^0-9]', '', 'g') LIKE ${`%${numero}%`}`).map((u) => u.id)
+      : [];
   const comptes = await dbSite().compteClient.findMany({
     where: {
       odooPartnerRef: { not: null },
@@ -31,7 +37,7 @@ export async function rechercherAssistance(recherche: string): Promise<{ fiches:
       OR: [
         { utilisateur: { name: { contains: q, mode: "insensitive" } } },
         { utilisateur: { email: { contains: q, mode: "insensitive" } } },
-        { utilisateur: { telephone: { contains: chiffres } } },
+        { utilisateurId: { in: parTelephone } },
         { nomCabinet: { contains: q, mode: "insensitive" } },
         { rpps: { contains: chiffres } },
         { siret: { contains: chiffres } },

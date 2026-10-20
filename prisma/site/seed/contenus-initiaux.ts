@@ -75,6 +75,10 @@ export const PARAMETRES_INITIAUX: Record<string, string> = {
   "fidelite.bons_au_panier": "true",
   "fidelite.rappel_droits_jours": "7",
   "fidelite.rappel_expiration_jours": "30",
+  // F09 : horaires de réponse de la ligne WhatsApp (jours 1 = lundi à 7 = dimanche) et
+  // fermetures exceptionnelles [{ du, au, motif }] ; jours fériés calculés (D1).
+  "contact.horaires": '{"1":[["09:00","18:00"]],"2":[["09:00","18:00"]],"3":[["09:00","18:00"]],"4":[["09:00","18:00"]],"5":[["09:00","18:00"]],"6":[],"7":[]}',
+  "contact.fermetures": "[]",
   // F12 : adresse de la plateforme (page simulée en démonstration, D6), délai de grâce et
   // rappels (D1), aide à la première connexion en attendant le centre d'aide de F09.
   "cloud.url_plateforme": "/demo/plateforme-cloud",

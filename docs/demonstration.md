@@ -236,6 +236,27 @@ n'est créé, et « Accéder à la plateforme » mène à une page de démonstra
   connexion dans **Contenus → Coordonnées et textes → Rappels et accès Cloud** (avec les délais
   des rappels de fidélité de F06).
 
+## Contact WhatsApp et centre d'aide (F09)
+
+- **Contact** : le numéro de la ligne WhatsApp Business, les horaires de réponse (« Nous vous
+  répondons maintenant » ou « Nous vous répondrons lundi à 9 h ») et les boutons « Appeler » et
+  « Écrire sur WhatsApp » figurent dans le pied de page, sur la page Assistance, dans « Mon
+  compte », sur les fiches produit, les pages d'aide et dans les emails. En démonstration, les
+  boutons ouvrent une page qui explique que personne n'est contacté et montre le message qui
+  aurait été pré-rempli (« Bonjour, je suis le Dr [nom], cabinet [cabinet]. » ; rien d'autre).
+- **Réglages** : numéro, horaires par jour et fermetures exceptionnelles dans **Contenus →
+  Coordonnées et textes** ; jours fériés automatiques. Numéro vidé : plus aucun bouton, le
+  formulaire de contact est proposé.
+- **Centre d'aide** (`/aide`, menu Services et pied de page) : modes d'emploi pas à pas,
+  tutoriels vidéo (sous-titres et transcription obligatoires), notices des produits reprises de
+  leur fiche, FAQ (les plus consultées en tête), classés par thème et par appareil, avec une
+  recherche ; « Aide pour ce modèle » sur les fiches ; résultats dans la recherche du site.
+  Contenus d'exemple fictifs à remplacer.
+- **Contenus → Centre d'aide** (administrateur) : créer, téléverser (vidéo MP4 de 50 Mo au plus,
+  sous-titres WebVTT, PDF, images des étapes), relier aux produits, publier ou retirer.
+- **Mon compte** : l'état des droits d'assistance à côté du contact ; **Back-office →
+  Assistance** retrouve un client par son téléphone, avec ou sans espaces.
+
 ## Demander un financement (F04)
 
 - Sur une fiche, formule « Financement longue durée » → **Demander mon financement** ; ou

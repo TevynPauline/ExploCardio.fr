@@ -8,7 +8,7 @@ import { abonnementsLogicielsDuCompte } from "@/domaine/cloud/abonnement";
 import { cheminsDesFiches } from "@/domaine/catalogue/lecture";
 import { prixTtc } from "@/domaine/catalogue/prix";
 import { compteCourant } from "@/domaine/comptes/session";
-import { liensContact } from "@/lib/contact-whatsapp";
+import { ContactWhatsApp } from "@/ui/contact/ContactWhatsApp";
 import { euros } from "@/lib/montants";
 import { lireParametre } from "@/lib/parametres";
 import { Card, Kicker, Retour } from "@/ui";
@@ -42,13 +42,12 @@ async function offresLogiciels() {
 export default async function Logiciels({ searchParams }: { searchParams: Promise<{ ok?: string; erreur?: string }> }) {
   const { compte } = await compteCourant("/mon-compte/logiciels");
   const r = await searchParams;
-  const [acces, abonnements, offres, url, aide, contact, chemins] = await Promise.all([
+  const [acces, abonnements, offres, url, aide, chemins] = await Promise.all([
     accesDuCompte(compte.id),
     abonnementsLogicielsDuCompte(compte.id).catch(() => []),
     offresLogiciels(),
     lireParametre("cloud.url_plateforme"),
     lireParametre("cloud.aide_premiere_connexion"),
-    liensContact("Bonjour, j'aimerais de l'aide pour paramétrer mon logiciel Cloud."),
     cheminsDesFiches(),
   ]);
   const ouverts = acces.filter((a) => a.etat !== "ferme");
@@ -119,11 +118,9 @@ export default async function Logiciels({ searchParams }: { searchParams: Promis
       <Card className="flex flex-col gap-3">
         <h2 className="text-h3 font-semibold">Première connexion et paramétrage</h2>
         {aide ? <p>{aide}</p> : null}
-        <p className="text-small text-muted">Ne mentionnez jamais de patient dans vos messages : les données de santé restent sur la plateforme.</p>
-        <p>
-          <a href={contact.ecrire} className="ec-btn ec-btn--secondary">Écrire sur WhatsApp</a>
-        </p>
+        <p><Link href="/aide?theme=logiciels_cloud" className="inline-flex min-h-11 items-center">Guides des logiciels Cloud dans le centre d’aide</Link></p>
       </Card>
+      <ContactWhatsApp titre="Besoin d’aide pour le paramétrage ?" />
 
       {sansAcces.length ? (
         <section aria-labelledby="offre-logiciels" className="flex flex-col gap-3">

@@ -15,6 +15,7 @@ SC-001 est atteint quand tous les parcours ci-dessous existent et passent.
 | Mise à disposition : dépannage express, sans compte, kit, suivi, résiliation, retour, échéances, impayés, retards, parc | F05 | `../f05/*.spec.ts` | ✅ |
 | Fidélité : gains annoncés, bons d'achat crédités et utilisés, remboursement, Mon compte, droits d'assistance, assistance à l'acte, promotions, page Assistance de l'équipe | F06 | `../f06/*.spec.ts` | ✅ |
 | Logiciels Cloud : ouverture (location, achat), Mon compte, abonnement (poursuite, souscription, résiliation), fin des droits et délai de grâce, back-office, plateforme non automatisée, offre hébergement en préparation | F12 | `../f12/*.spec.ts` | ✅ |
+| Contact WhatsApp partout (horaires, message pré-rempli), centre d'aide (FAQ, modes d'emploi, vidéos sous-titrées, notices), réglages au back-office, droits à côté du contact | F09 | `../f09/*.spec.ts` | ✅ |
 | Demande de financement (F04) ou de devis (F03), copie en opportunité | F04 / F03 | `../f04/financement.spec.ts`, `../f04/back-office-financement.spec.ts`, `../f03/*.spec.ts` | ✅ |
 
 ## Règles communes

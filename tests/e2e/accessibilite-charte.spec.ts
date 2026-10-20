@@ -23,6 +23,9 @@ const PAGES_PUBLIQUES = [
   "/holter-ecg/ecg-de-repos",
   "/services/installation-formation",
   "/services/hebergement-donnees-sante",
+  "/aide",
+  "/aide/poser-un-holter-dms-300-4l",
+  "/demo/contact?moyen=whatsapp",
   "/panier",
   "/mise-a-disposition",
 ];
@@ -53,6 +56,8 @@ const PAGES_BACK_OFFICE = [
   "/admin/demonstration/fidelite",
   "/admin/logiciels-cloud?q=demo",
   "/admin/devis",
+  "/admin/contenus/aide",
+  "/admin/contenus/aide/nouveau",
   "/admin/demonstration/locations",
 ];
 

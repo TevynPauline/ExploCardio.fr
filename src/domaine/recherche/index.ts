@@ -46,7 +46,9 @@ const PAGES: { titre: string; sousTitre: string; destination: string; motsCles: 
  * Éléments de l'index : seules les variantes d'un article publié (F03, US6-3), qui mènent à sa
  * fiche (`chemins` : référence de variante → adresse de la fiche).
  */
-export function construireElements(references: ReferenceArticle[], chemins: Map<string, string>): ElementIndex[] {
+export type ElementAide = { slug: string; type: "video" | "mode_emploi" | "notice" | "faq"; titre: string; resume: string; texte: string; references: string[] };
+
+export function construireElements(references: ReferenceArticle[], chemins: Map<string, string>, aide: ElementAide[] = []): ElementIndex[] {
   const articles: ElementIndex[] = references.filter((r) => chemins.has(r.defaultCode)).map((r) => {
     const titre = r.configuration ? `${r.nom} — ${r.configuration}` : r.nom;
     return {
@@ -75,7 +77,32 @@ export function construireElements(references: ReferenceArticle[], chemins: Map<
     destination: p.destination,
     prixHt: null,
   }));
-  return [...articles, ...pages];
+  // F09 : contenus publiés du centre d'aide (groupes Tutoriels et Questions fréquentes).
+  const contenusAide: ElementIndex[] = aide.map((a) => ({
+    code: `aide:${a.slug}`,
+    article: `aide:${a.slug}`,
+    groupe: a.type === "faq" ? "faq" : "tutoriels",
+    titre: a.titre,
+    titreNormalise: normaliserTexte(a.titre),
+    sousTitre: a.type === "faq" ? "Question fréquente" : a.type === "video" ? "Tutoriel vidéo" : a.type === "notice" ? "Notice" : "Mode d’emploi",
+    texte: normaliserTexte(`${a.titre} ${a.resume} ${a.texte}`),
+    references: a.references.map(normaliserReference),
+    destination: a.type === "faq" ? `/aide?q=${encodeURIComponent(a.titre)}` : `/aide/${a.slug}`,
+    prixHt: null,
+  }));
+  return [...articles, ...pages, ...contenusAide];
+}
+
+async function contenusAideIndexes(): Promise<ElementAide[]> {
+  const { contenusPublies, etapesDe } = await import("../aide/lecture");
+  return (await contenusPublies()).map((c) => ({
+    slug: c.slug,
+    type: c.type,
+    titre: c.titre,
+    resume: c.resume,
+    texte: [c.reponse, c.transcription, ...etapesDe(c).map((e) => e.texte)].filter(Boolean).join(" "),
+    references: c.references,
+  }));
 }
 
 const DUREE_MS = 5 * 60_000;
@@ -90,10 +117,10 @@ async function index(): Promise<ElementIndex[] | null> {
   const actuel = globale.__indexRecherche;
   if (actuel && Date.now() - actuel.construitLe < DUREE_MS) return actuel.elements;
   try {
-    const [references, chemins] = await Promise.all([registre.odoo().catalogue.listerReferences(), cheminsDesFiches()]);
+    const [references, chemins, aide] = await Promise.all([registre.odoo().catalogue.listerReferences(), cheminsDesFiches(), contenusAideIndexes().catch(() => [])]);
     // Catalogue illisible (connecteur injoignable) : on garde l'ancien index s'il existe.
     if (chemins.size === 0 && actuel) return actuel.elements;
-    const elements = construireElements(references, chemins);
+    const elements = construireElements(references, chemins, aide);
     globale.__indexRecherche = { elements, construitLe: Date.now() };
     return elements;
   } catch {

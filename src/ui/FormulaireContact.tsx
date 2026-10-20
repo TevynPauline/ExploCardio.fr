@@ -6,7 +6,7 @@ import { envoyerContact, type EtatContact } from "@/actions/formulaires";
 import { Button } from "./Button";
 import { Champ } from "./Champ";
 
-type Props = { motifs: string[]; motifInitial: string | null; jeton: string; liensWhatsapp: { appeler: string; ecrire: string } };
+type Props = { motifs: string[]; motifInitial: string | null; jeton: string; liensWhatsapp: { appeler: string; ecrire: string } | null };
 
 const champsVides = { motif: "", nom: "", email: "", telephone: "", cabinet: "", message: "" };
 
@@ -64,13 +64,14 @@ export function FormulaireContact({ motifs, motifInitial, jeton, liensWhatsapp }
         {e.motif ? <p id="motif-erreur" className="text-small font-medium text-ink">{e.motif}</p> : null}
       </div>
 
-      {motif === "Assistance" ? (
+      {motif === "Assistance" && liensWhatsapp ? (
         <div className="ec-box--info flex flex-col gap-3 p-4">
           <p>Pour une assistance rapide, appelez-nous ou écrivez-nous sur WhatsApp.</p>
           <div className="flex flex-wrap gap-2">
-            <a href={liensWhatsapp.appeler} className="ec-btn ec-btn--primary">Appeler</a>
-            <a href={liensWhatsapp.ecrire} className="ec-btn ec-btn--secondary">Écrire sur WhatsApp</a>
+            <a href={liensWhatsapp.appeler} aria-label="Appeler (ouvre votre téléphone)" className="ec-btn ec-btn--primary">Appeler</a>
+            <a href={liensWhatsapp.ecrire} aria-label="Écrire sur WhatsApp (ouvre WhatsApp)" className="ec-btn ec-btn--secondary">Écrire sur WhatsApp</a>
           </div>
+          <p className="text-small">Ne transmettez aucune donnée patient.</p>
         </div>
       ) : null}
 
