@@ -89,7 +89,7 @@ rétablit ; pages nouvelles ajoutées aux contrôles transverses (`no-egress`,
 - [X] T020 [P] Ajouter les pages de F09 aux contrôles transverses (`no-egress` : aucun `tel:` ni `wa.me` réel en démonstration ; `accessibilite-charte` ; largeurs de 320 à 1 920 px) ; mettre à jour les tests de F01 à F12 touchés (pied de page, boutons de contact, types de contenus retirés)
 - [X] T021 [P] Mettre à jour `docs/demonstration.md` (contact, horaires, centre d'aide, réglages) et `tests/e2e/parcours/README.md` (contact et aide ✅)
 - [X] T022 Dérouler [quickstart.md](quickstart.md) et corriger les écarts
-- [ ] T023 Vérifier la conformité finale : `npm run typecheck`, `npm run lint`, `npm run check:contrast`, `npm test`, `npm run test:e2e` (ordinateur et mobile), `npm run test:lighthouse`, puis en intégration continue
+- [X] T023 Vérifier la conformité finale : `npm run typecheck`, `npm run lint`, `npm run check:contrast`, `npm test`, `npm run test:e2e` (ordinateur et mobile), `npm run test:lighthouse`, puis en intégration continue
 
 ---
 
