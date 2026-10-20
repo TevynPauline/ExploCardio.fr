@@ -103,7 +103,7 @@ largeurs).
 - [X] T027 [P] Ajouter les pages de F12 aux contrôles transverses (`no-egress`, `accessibilite-charte`, largeurs de 320 à 1 920 px) ; mettre à jour les tests de F02 (« Mes logiciels Cloud » n'est plus « bientôt disponible »), F04 et F05 touchés
 - [X] T028 [P] Mettre à jour `docs/demonstration.md` (accès Cloud, sous-modes, page simulée, back-office Logiciels Cloud, offre en préparation) et `tests/e2e/parcours/README.md` (accès Cloud ✅) ; noter dans `specs/011-connecteurs-base-demonstration/contracts/pca.md` ce que Nelson doit fournir (D7)
 - [X] T029 Dérouler [quickstart.md](quickstart.md) et corriger les écarts
-- [ ] T030 Vérifier la conformité finale : `npm run typecheck`, `npm run lint`, `npm run check:contrast`, `npm test`, `npm run test:e2e` (ordinateur et mobile), `npm run test:lighthouse`, puis en intégration continue
+- [X] T030 Vérifier la conformité finale : `npm run typecheck`, `npm run lint`, `npm run check:contrast`, `npm test`, `npm run test:e2e` (ordinateur et mobile), `npm run test:lighthouse`, puis en intégration continue
 
 ---
 
