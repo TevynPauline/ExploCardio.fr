@@ -20,8 +20,9 @@ Sous-mode : `PCA_DEMO_SUBMODE` en démonstration ; `PCA_SUBMODE=auto|manual` en 
 
 | Domaine | Changement |
 |---|---|
-| Catalogue | Variante : `logicielInclus: { logiciel, moisInclus } | null` ; article logiciel : offre d'abonnement mensuel (`offreAbonnementLogiciel: { mensuelHt }`) |
-| Location et abonnements | `creerAbonnement` accepte `objet = logiciel` sans appareil, avec `priseEffet` (début différé, aucun prélèvement avant) ; `listerLocations` renvoie aussi les abonnements logiciels |
+| Catalogue | Variante : `logicielInclus: { logiciel, moisInclus } | null` ; pour un article **logiciel**, l'offre de mise à disposition est l'abonnement mensuel (aucun appareil, `logiciel` = sa propre référence) |
+| Devis | Ligne mensuelle : `priseEffet` facultative (abonnement différé à la fin d'une période incluse : premier mois à 0 maintenant) |
+| Location et abonnements | `creerAbonnement` accepte `objet = logiciel` sans appareil ; `debut` dans le futur = prise d'effet différée, première échéance à cette date ; `listerLocations` renvoie aussi les abonnements logiciels ; à la fin d'une résiliation, un abonnement logiciel est terminé (aucun retour d'appareil) |
 
 ## Stripe (`stripe.md`)
 

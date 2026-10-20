@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+import { logicielsDes, priseEffetPour } from "@/domaine/cloud/abonnement";
+
+const dateLongue = (d: Date) => d.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Paris" });
 import { redirect } from "next/navigation";
 import { registre } from "@/connecteurs/registre";
 import { adressesDe, devisCommande, lignesDe } from "@/domaine/commande/tunnel";
@@ -44,7 +47,19 @@ export default async function Recapitulatif({ searchParams }: { searchParams: Pr
   const achat = lignes.some((l) => l.formule === "achat");
   if (commande.etape === "adresses") redirect(`/commande/adresses?ref=${commande.ref}`);
   const dates = (commande.datesLivraisonMad ?? {}) as Record<string, string>;
-  const codesMad = [...new Set(lignes.filter((l) => l.formule === "mise_a_disposition").map((l) => l.defaultCode))];
+  // F12 : les abonnements logiciels n'ont ni livraison, ni valeur de remplacement.
+  const logiciels = await logicielsDes(lignes);
+  const codesMad = [...new Set(lignes.filter((l) => l.formule === "mise_a_disposition" && !logiciels.has(l.defaultCode)).map((l) => l.defaultCode))];
+  const abonnementsLogiciels = await Promise.all(
+    [...logiciels].map(async (code) => {
+      const article = await registre.odoo().catalogue.lireArticle(code);
+      const v = article.variantes.find((x) => x.defaultCode === code)!;
+      const priseEffet = await priseEffetPour(commande.compteId, code);
+      const premier = priseEffet ?? new Date();
+      if (!priseEffet) premier.setMonth(premier.getMonth() + 1);
+      return { code, libelle: article.nom, pack: v.offreMiseADisposition?.contenuPack ?? [], priseEffet, premierPrelevement: priseEffet ?? null, echeance: premier.toISOString().slice(0, 10) };
+    }),
+  );
   if ((achat && !commande.modeLivraison) || codesMad.some((c) => !dates[c])) redirect(`/commande/livraison?ref=${commande.ref}`);
   if (!commande.moyenPaiement && !commande.moyenAbonnement) redirect(`/commande/paiement?ref=${commande.ref}`);
   const devis = await devisCommande(commande);
@@ -71,7 +86,7 @@ export default async function Recapitulatif({ searchParams }: { searchParams: Pr
   );
   const compte = await dbSite().compteClient.findUniqueOrThrow({ where: { id: commande.compteId } });
   const conditions = codesMad.length ? ((await lireParametre("location.conditions")) ?? "") : null;
-  const premiereEcheance = locations.map((l) => l.echeance).sort()[0] ?? null;
+  const premiereEcheance = [...locations.map((l) => l.echeance), ...abonnementsLogiciels.map((a) => a.echeance)].sort()[0] ?? null;
   const libelle = aPayerAchat
     ? commande.moyenPaiement === "virement"
       ? "Valider la commande"
@@ -151,6 +166,24 @@ export default async function Recapitulatif({ searchParams }: { searchParams: Pr
             <dd>Aucun : résiliable à tout moment depuis votre compte, fin au terme du mois payé</dd>
             <dt className="text-muted">Valeur de remplacement</dt>
             <dd>{euros(l.valeurRemplacementHt)} HT, facturée seulement en cas de perte ou de non-retour (aucun dépôt de garantie)</dd>
+          </dl>
+        </section>
+      ))}
+      {abonnementsLogiciels.map((a) => (
+        <section key={a.code} aria-labelledby={`titre-logiciel-${a.code}`} className="ec-card flex flex-col gap-3">
+          <h2 id={`titre-logiciel-${a.code}`} className="text-h3 font-semibold">Abonnement — {a.libelle}</h2>
+          <ul className="list-disc pl-5">
+            {a.pack.map((p) => (
+              <li key={p}>{p}</li>
+            ))}
+          </ul>
+          <dl className="grid gap-x-6 gap-y-1 sm:grid-cols-[auto_1fr]">
+            <dt className="text-muted">Prise d’effet</dt>
+            <dd>{a.priseEffet ? `${dateLongue(a.priseEffet)}, à la fin de votre période incluse : votre accès continue sans interruption` : "Dès le paiement"}</dd>
+            <dt className="text-muted">{a.priseEffet ? "Premier prélèvement" : "Prochaine échéance"}</dt>
+            <dd>{a.priseEffet ? `${dateLongue(a.priseEffet)} — rien n’est prélevé avant` : libelleJour(a.echeance)}</dd>
+            <dt className="text-muted">Engagement</dt>
+            <dd>Aucun : résiliable à tout moment depuis votre compte, fin au terme du mois payé</dd>
           </dl>
         </section>
       ))}

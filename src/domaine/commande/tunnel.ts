@@ -1,4 +1,5 @@
 import { randomInt } from "node:crypto";
+import { avecPrisesEffet } from "../cloud/abonnement";
 import { ARTICLE_ASSISTANCE_ACTE } from "../fidelite/droits";
 import { registre } from "@/connecteurs/registre";
 import type { Devis, LigneNouvelleCommande } from "@/connecteurs/odoo/interfaces";
@@ -171,7 +172,8 @@ export async function devisCommande(commande: CommandeSite, options: { cadeau?: 
   const cadeau = options.cadeau !== false && lignes.some((l) => l.formule === "achat") ? await cadeauPourCommande(compte) : null;
   const devis = await registre.odoo().commandes.calculerDevis({
     partenaireRef: await partenaireDuCompte(commande.compteId),
-    lignes: [...lignes, ...(cadeau ? [{ ...cadeau, formule: "achat" as const }] : [])],
+    // F12 : abonnement logiciel différé à la fin d'une période incluse (rien n'est dû avant).
+    lignes: [...(await avecPrisesEffet(commande.compteId, lignes)), ...(cadeau ? [{ ...cadeau, formule: "achat" as const }] : [])],
     codePromo: commande.codePromo,
     bonsDemandesHt: commande.bonsHt,
     modeLivraison: commande.modeLivraison,
@@ -206,8 +208,9 @@ export async function datesMiseADisposition(commande: CommandeSite, maintenant =
   const choisies = (commande.datesLivraisonMad ?? {}) as Record<string, string>;
   const resultat: DatesMiseADisposition[] = [];
   for (const code of codes) {
-    const premiere = await premiereDatePour(code, cp, maintenant, regles);
     const article = await registre.odoo().catalogue.lireArticle(code);
+    if (article.type === "logiciel") continue; // F12 : abonnement logiciel, rien n'est livré
+    const premiere = await premiereDatePour(code, cp, maintenant, regles);
     const v = article.variantes.find((x) => x.defaultCode === code);
     const dates = datesProposees(premiere, regles);
     resultat.push({

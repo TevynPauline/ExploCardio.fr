@@ -38,6 +38,15 @@ async function traiterChangement(ch: ChangementCommande, maintenant: Date) {
       if (email) await envoyer(email, await emailsCommandes.paiementRecu({ ref: ch.ref }), "virement reçu", `virement-recu:${ch.ref}`);
       await journal("commande.virement_recu", ch.ref, { commande: site.ref });
     }
+    // F12 : achat payé (y compris par virement) → périodes incluses des logiciels Cloud ; idempotent.
+    if (["payee", "en_preparation", "expediee", "livree"].includes(ch.statut)) {
+      const { ouvrirPeriodesIncluses } = await import("../cloud/declencheurs");
+      await ouvrirPeriodesIncluses(ch.ref);
+    }
+    if (ch.statut === "remboursee" && statutAvant !== null) {
+      const { apresRemboursementTotal } = await import("../cloud/declencheurs");
+      await apresRemboursementTotal(ch.ref, statutAvant === "livree");
+    }
     if (ch.statut === "expediee" && email) {
       await envoyer(email, await emailsCommandes.expedition({ ref: ch.ref, transporteur: ch.transporteur, suivi: ch.suivi }), "commande expédiée", `expedition:${ch.ref}`);
       await journal("commande.expediee", ch.ref, { transporteur: ch.transporteur, suivi: ch.suivi });

@@ -6,6 +6,7 @@ import { liensContact } from "@/lib/contact-whatsapp";
 import { emailsLocations } from "@/emails/modeles-locations";
 import type { SuiviLocation } from "@generated/site/client";
 import { alerterEquipe, envoyer } from "../commande/notifications";
+import * as cloud from "../cloud/acces";
 
 // Suivi des locations (F05, R5), toutes les 5 minutes : les changements faits dans Odoo
 // (expédition, livraison, appareil défectueux, colis non livré, impayé, suspension, retour)
@@ -25,57 +26,12 @@ async function compteDu(partenaireRef: string) {
   return dbSite().compteClient.findFirst({ where: { odooPartnerRef: partenaireRef }, include: { utilisateur: true } });
 }
 
-/** Ouvre l'accès au logiciel du pack (FR-012). Un échec n'empêche rien : alerte, nouvel essai au passage suivant. */
-async function ouvrirAcces(l: ChangementLocation, suivi: SuiviLocation): Promise<Partial<SuiviLocation>> {
-  if (!l.logiciel || suivi.droitCloudRef) return {};
+/** Ouvre l'accès au logiciel du pack (FR-012), par le module des accès Cloud (F12). */
+async function ouvrirAccesLocation(l: ChangementLocation): Promise<void> {
+  if (!l.logiciel) return;
   const compte = await compteDu(l.partenaireRef);
-  if (!compte) return {};
-  try {
-    const { ref, etat } = await registre.pca().ouvrirDroit(
-      {
-        medecin: {
-          partenaireRef: l.partenaireRef,
-          nom: compte.utilisateur.name,
-          email: compte.utilisateur.email,
-          rpps: compte.rpps ?? undefined,
-          siret: compte.siret ?? undefined,
-          cabinet: compte.nomCabinet ?? undefined,
-        },
-        logiciel: l.logiciel,
-        debut: l.dateLivraison ?? new Date(),
-        finPrevue: null,
-      },
-      `location:${l.ref}`,
-    );
-    if (etat === "a_ouvrir") {
-      await alerterEquipe("Accès Cloud à ouvrir", `Ouvrir sur la plateforme l'accès au logiciel ${l.logiciel} pour ${compte.utilisateur.email} (location ${l.ref}), puis confirmer la tâche.`, `pca-ouvrir:${l.partenaireRef}:${l.ref}`);
-    }
-    await journal("location.acces_cloud_ouvert", l.ref, { droit: ref, etat });
-    return { droitCloudRef: ref, droitCloudEtat: etat };
-  } catch (e) {
-    if (!estErreurConnecteur(e)) throw e;
-    await alerterEquipe("Accès Cloud non ouvert", `L'ouverture de l'accès au logiciel ${l.logiciel} pour la location ${l.ref} a échoué (${e.message}). Le site réessaie ; l'expédition n'est pas bloquée.`, `pca-echec:${l.partenaireRef}:${l.ref}`);
-    return {};
-  }
-}
-
-async function changerAcces(suivi: SuiviLocation, action: "suspendre" | "retablir" | "fermer", ref: string, date = new Date()): Promise<Partial<SuiviLocation>> {
-  if (!suivi.droitCloudRef) return {};
-  try {
-    const { etat } =
-      action === "suspendre"
-        ? await registre.pca().suspendre(suivi.droitCloudRef, "Location suspendue pour impayé")
-        : action === "retablir"
-          ? await registre.pca().retablir(suivi.droitCloudRef)
-          : await registre.pca().fermer(suivi.droitCloudRef, date);
-    if (etat === "a_fermer") await alerterEquipe("Accès Cloud à fermer", `Fermer sur la plateforme l'accès de la location ${ref}, puis confirmer la tâche.`, `pca-fermer:${suivi.partenaireRef}:${ref}`);
-    await journal(`location.acces_cloud_${action}`, ref, { droit: suivi.droitCloudRef, etat });
-    return { droitCloudEtat: etat };
-  } catch (e) {
-    if (!estErreurConnecteur(e)) throw e;
-    await alerterEquipe("Accès Cloud non modifié", `Action « ${action} » sur l'accès de la location ${ref} en échec (${e.message}) : à faire sur la plateforme.`, `pca-${action}:${ref}`);
-    return {};
-  }
+  if (!compte) return;
+  await cloud.ouvrirAcces({ compteId: compte.id, logiciel: l.logiciel, origine: "location", sourceRef: l.ref, debut: l.dateLivraison ?? new Date(), finPrevue: null, livraison: l.dateLivraison });
 }
 
 /**
@@ -92,7 +48,18 @@ export async function suiviPour(l: ChangementLocation): Promise<SuiviLocation> {
   });
 }
 
+/** F12 : abonnement logiciel : impayé → accès suspendu, régularisation → rétabli (FR-016). */
+async function traiterAbonnementLogiciel(l: ChangementLocation, maintenant: Date): Promise<boolean> {
+  const suivi = await suiviPour(l);
+  if (l.etat === suivi.dernierEtat) return false;
+  if (l.etat === "suspendue_impaye") await cloud.suspendreSource(l.ref, "abonnement impayé");
+  if (suivi.dernierEtat === "suspendue_impaye" && l.etat === "en_cours") await cloud.retablirSource(l.ref, "abonnement régularisé");
+  await dbSite().suiviLocation.update({ where: { abonnementRef: l.ref }, data: { dernierEtat: l.etat, notifieLe: maintenant } });
+  return true;
+}
+
 async function traiter(l: ChangementLocation, maintenant: Date): Promise<boolean> {
+  if (l.objet === "logiciel") return traiterAbonnementLogiciel(l, maintenant);
   if (l.objet !== "mise_a_disposition") return false;
   const suivi = await suiviPour(l);
   const compte = await compteDu(l.partenaireRef);
@@ -102,7 +69,8 @@ async function traiter(l: ChangementLocation, maintenant: Date): Promise<boolean
   // Expédition : email avec le suivi, accès Cloud, alerte « formation à organiser » (FR-012).
   if (l.expedieLe && !suivi.expedieNotifie) {
     const contact = await liensContact("Bonjour, j'aimerais de l'aide pour paramétrer mon appareil en location.");
-    Object.assign(maj, await ouvrirAcces(l, suivi), { expedieNotifie: true });
+    await ouvrirAccesLocation(l);
+    maj.expedieNotifie = true;
     if (email) {
       await envoyer(
         email,
@@ -113,8 +81,8 @@ async function traiter(l: ChangementLocation, maintenant: Date): Promise<boolean
     }
     await alerterEquipe("Formation à organiser", `La location ${l.ref} (${l.libelle}) est expédiée à ${email ?? l.partenaireRef} : contacter le médecin pour organiser sa formation.`, `formation:${l.partenaireRef}:${l.ref}`);
     await journal("location.expediee", l.ref, { suivi: l.suivi, numeroSerie: l.numeroSerie });
-  } else if (l.expedieLe && suivi.expedieNotifie && !suivi.droitCloudRef && l.logiciel && l.etat !== "terminee") {
-    Object.assign(maj, await ouvrirAcces(l, suivi)); // rattrapage d'une ouverture en échec
+  } else if (l.expedieLe && l.logiciel && !["terminee", "annulee"].includes(l.etat)) {
+    await ouvrirAccesLocation(l); // rattrapage (location déjà expédiée au premier relevé) ; idempotent
   }
 
   if (l.colisNonLivre && !suivi.colisNonLivreNotifie) {
@@ -139,18 +107,20 @@ async function traiter(l: ChangementLocation, maintenant: Date): Promise<boolean
 
   if (l.etat !== suivi.dernierEtat) {
     if (l.etat === "suspendue_impaye") {
-      Object.assign(maj, await changerAcces({ ...suivi, ...maj } as SuiviLocation, "suspendre", l.ref));
+      await cloud.suspendreSource(l.ref, "location suspendue pour impayé");
       if (email) await envoyer(email, await emailsLocations.suspendue({ appareil: l.libelle }), "location suspendue", `location-suspendue:${l.partenaireRef}:${l.ref}:${maintenant.toISOString().slice(0, 10)}`);
       await alerterEquipe("Location suspendue pour impayé", `La location ${l.ref} (${email ?? l.partenaireRef}) est suspendue : accès Cloud suspendu, retour de l'appareil à demander.`, `suspendue:${l.partenaireRef}:${l.ref}`);
       await journal("location.suspendue", l.ref, {});
     }
     if (suivi.dernierEtat === "suspendue_impaye" && l.etat === "en_cours") {
-      Object.assign(maj, await changerAcces({ ...suivi, ...maj } as SuiviLocation, "retablir", l.ref));
+      await cloud.retablirSource(l.ref, "location régularisée");
       await journal("location.regularisee", l.ref, {});
     }
     if (l.etat === "terminee" && !suivi.retourNotifie) {
       if (email) await envoyer(email, await emailsLocations.retourRecu({ appareil: l.libelle, degradationHt: l.montantDegradationHt }), "retour reçu", `location-retour:${l.partenaireRef}:${l.ref}`);
-      Object.assign(maj, await changerAcces({ ...suivi, ...maj } as SuiviLocation, "fermer", l.ref, l.fin ?? maintenant), { retourNotifie: true });
+      // Accès Cloud : délai de grâce à la date de fin, puis fermeture (F12, tâche horaire).
+      await cloud.programmerFin(l.ref, l.fin ?? maintenant);
+      maj.retourNotifie = true;
       await journal("location.terminee", l.ref, { etatRetour: l.etatRetour, degradationHt: l.montantDegradationHt });
     }
     maj.dernierEtat = l.etat;

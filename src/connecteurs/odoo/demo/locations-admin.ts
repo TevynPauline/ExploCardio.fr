@@ -181,14 +181,15 @@ export async function executerActionsPlanifiees(date: Date): Promise<{ echeances
   const regles = await lireReglesLocation();
   const echeancesDues: { ref: string; montantMensuelHt: number; tauxTva: number }[] = [];
   const locations = await db().abonnement.findMany({
-    where: { objet: "mise_a_disposition", etat: { in: ["en_cours", "resiliation_prevue", "en_retard_retour", "suspendue_impaye"] } },
+    // F12 : les abonnements logiciels suivent les mêmes échéances et impayés, sans appareil à rendre.
+    where: { objet: { in: ["mise_a_disposition", "logiciel"] }, etat: { in: ["en_cours", "resiliation_prevue", "en_retard_retour", "suspendue_impaye"] } },
     include: { variante: { include: { offreMad: true, modele: true } }, partenaire: true },
   });
   for (const a of locations) {
     await db().$transaction(async (tx) => {
-      // Fin atteinte sans retour enregistré : retard de retour.
+      // Fin atteinte sans retour enregistré : retard de retour (abonnement logiciel : terminé).
       if (a.etat === "resiliation_prevue" && a.fin && a.fin <= date) {
-        await tx.abonnement.update({ where: { id: a.id }, data: { etat: "en_retard_retour" } });
+        await tx.abonnement.update({ where: { id: a.id }, data: { etat: a.objet === "logiciel" ? "terminee" : "en_retard_retour" } });
         return;
       }
       // Impayé : nouvelles tentatives espacées, puis suspension au terme du délai de régularisation.

@@ -1,4 +1,5 @@
 import { registre } from "@/connecteurs/registre";
+import { avecPrisesEffet, logicielsDes as logicielsDesLignes } from "../cloud/abonnement";
 import { estErreurConnecteur } from "@/connecteurs/erreurs";
 import { dbSite } from "@/lib/db/site";
 import type { CommandeSite } from "@generated/site/client";
@@ -65,7 +66,9 @@ export async function libererAppareils(commande: CommandeSite) {
 async function reserverAppareils(commande: CommandeSite, tentative: number): Promise<{ ok: true; reservations: ReservationAppareilSite[] } | { ok: false; message: string }> {
   const dates = (commande.datesLivraisonMad ?? {}) as Record<string, string>;
   const reservations: ReservationAppareilSite[] = [];
-  for (const l of lignesDe(commande).filter((x) => x.formule === "mise_a_disposition")) {
+  const { logicielsDes } = await import("../cloud/abonnement");
+  const logiciels = await logicielsDes(lignesDe(commande));
+  for (const l of lignesDe(commande).filter((x) => x.formule === "mise_a_disposition" && !logiciels.has(x.defaultCode))) {
     for (let n = 1; n <= l.quantite; n++) {
       const cle = `${commande.ref}:${tentative}:${l.defaultCode}:${n}`;
       try {
@@ -101,8 +104,10 @@ async function lancerAbonnement(commande: CommandeSite): Promise<Lancement> {
       return { type: "redirection", url: "/commande/recapitulatif", message: INDISPONIBLE };
     }
   }
-  const lignesMad = lignesDe(commande).filter((l) => l.formule === "mise_a_disposition");
+  // F12 : abonnements logiciels (sans appareil), éventuellement différés à la fin d'une période incluse.
+  const lignesMad = await avecPrisesEffet(commande.compteId, lignesDe(commande).filter((l) => l.formule === "mise_a_disposition"));
   const devis = await registre.odoo().commandes.calculerDevis({ partenaireRef, lignes: lignesMad });
+  const debutPrelevements = lignesMad.every((l) => l.priseEffet) ? lignesMad.map((l) => l.priseEffet!).sort((a, b) => a.getTime() - b.getTime())[0] : undefined;
   const reprise = commande.etatAbonnement === "paiement_en_cours";
   const tentative = reprise ? commande.tentative : commande.tentative + 1;
   if (!reprise) {
@@ -122,10 +127,11 @@ async function lancerAbonnement(commande: CommandeSite): Promise<Lancement> {
     const session = await registre.stripe().ouvrirSessionAbonnement(
       {
         client: { partenaireRef: partenaireRef!, email },
-        objet: "mise_a_disposition",
+        objet: (await logicielsDesLignes(lignesMad)).size === lignesMad.length ? "logiciel" : "mise_a_disposition",
         abonnementRef: commande.ref,
         premierMontantTtc: devis.abonnement!.premierMoisTtc,
         montantMensuelTtc: devis.abonnement!.moisSuivantsTtc,
+        ...(debutPrelevements ? { debutPrelevements } : {}),
         elements,
         moyens: [commande.moyenAbonnement === "sepa" ? "sepa" : "carte"],
         ...urls(commande.ref),
@@ -146,8 +152,10 @@ async function lancerAbonnement(commande: CommandeSite): Promise<Lancement> {
 
 export async function lancerPaiement(commande: CommandeSite, cgvAcceptees: boolean, conditionsLocation = cgvAcceptees): Promise<Lancement> {
   if (!cgvAcceptees && !commande.cgvAccepteesLe) throw new SaisieInvalide({ cgv: "Acceptez les conditions générales de vente pour commander." });
-  // F05 (FR-011) : conditions de location acceptées avec les CGV, pour toute mise à disposition.
-  const avecLocation = lignesDe(commande).some((l) => l.formule === "mise_a_disposition");
+  // F05 (FR-011) : conditions de location acceptées avec les CGV, pour toute mise à disposition
+  // d'appareil (F12 : pas pour un abonnement logiciel, sans appareil).
+  const logicielsCommande = await logicielsDesLignes(lignesDe(commande));
+  const avecLocation = lignesDe(commande).some((l) => l.formule === "mise_a_disposition" && !logicielsCommande.has(l.defaultCode));
   if (avecLocation && !conditionsLocation && !commande.conditionsLocationAccepteesLe) {
     throw new SaisieInvalide({ conditions: "Acceptez les conditions de location pour commander une mise à disposition." });
   }

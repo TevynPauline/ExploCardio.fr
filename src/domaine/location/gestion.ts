@@ -97,6 +97,9 @@ export async function resilier(compteId: string, ref: string, maintenant = new D
   const compte = await compteDe(compteId);
   await envoyer(compte.utilisateur.email, await emailsLocations.resiliee({ appareil: l.libelle, fin, dateLimiteRetour, logiciel: Boolean(l.logiciel) }), "location résiliée", `location-resiliee:${compteId}:${ref}:${fin.toISOString().slice(0, 10)}`);
   await journal(compteId, "location.resiliee", ref, { fin, dateLimiteRetour });
+  // F12 : accès au logiciel Cloud jusqu'à la fin, puis délai de grâce et fermeture.
+  const { programmerFin } = await import("../cloud/acces");
+  await programmerFin(ref, fin, { id: null, libelle: "client (résiliation)" });
   return { fin, dateLimiteRetour };
 }
 
@@ -110,6 +113,8 @@ export async function prolonger(compteId: string, ref: string, maintenant = new 
   const compte = await compteDe(compteId);
   await envoyer(compte.utilisateur.email, await emailsLocations.prolongee({ appareil: l.libelle }), "location prolongée", `location-prolongee:${compteId}:${ref}:${maintenant.toISOString()}`);
   await journal(compteId, "location.prolongee", ref, {});
+  const { annulerFin } = await import("../cloud/acces");
+  await annulerFin(ref, { id: null, libelle: "client (prolongation)" });
 }
 
 export async function etiquette(compteId: string, ref: string): Promise<Uint8Array> {

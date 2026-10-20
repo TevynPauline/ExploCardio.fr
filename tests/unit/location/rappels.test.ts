@@ -10,6 +10,7 @@ import { suivreLocations } from "@/domaine/location/suivi";
 import { traiterEvenementPaiement } from "@/domaine/paiements";
 import { dbDemo } from "@/lib/db/demo";
 import { dbSite } from "@/lib/db/site";
+import { traiterEcheancesCloud } from "@/domaine/cloud/echeances";
 import { commandeMad, evenement, nettoyer, rendreParcDesTests } from "./outils";
 
 // T030 — échéances, impayés, retards de retour (F05, US6, FR-025 à FR-030, SC-009, SC-010).
@@ -68,15 +69,15 @@ describe("échéances et rappels", () => {
     await suivreLocations();
     expect((await odoo().location.listerLocations(compte.partenaireRef)).find((x) => x.ref === ref)!.etat).toBe("suspendue_impaye");
     expect(await emails(compte.email, "Votre location est suspendue")).toBe(1);
-    const suivi = await dbSite().suiviLocation.findUniqueOrThrow({ where: { abonnementRef: ref } });
-    expect(suivi.droitCloudEtat).toBe("suspendu");
+    const acces = () => dbSite().accesLogiciel.findFirstOrThrow({ where: { sourceRef: ref } });
+    expect((await acces()).etat).toBe("suspendu"); // F12 : accès Cloud suspendu
     await admin.regulariser(ref);
     await suivreLocations();
-    expect((await dbSite().suiviLocation.findUniqueOrThrow({ where: { abonnementRef: ref } })).droitCloudEtat).toBe("actif");
+    expect((await acces()).etat).toBe("actif");
     void l;
   });
 
-  it("retour en retard : rappels avant toute facturation, puis mois suivant facturé et prélevé ; accès fermé à la fin", async () => {
+  it("retour en retard : rappels avant toute facturation, puis mois suivant facturé et prélevé ; accès en délai de grâce à la fin", async () => {
     const { compte, commande, ref } = await locationEnCours("EC-DMS-3004L-CLOUD");
     const { fin, dateLimiteRetour } = await resilier(compte.compteId, ref);
     // Fin atteinte sans retour : retard ; accès Cloud fermé à la date de fin.
@@ -84,7 +85,9 @@ describe("échéances et rappels", () => {
     await suivreLocations();
     const apresLimite = new Date(dateLimiteRetour!.getTime() + JOUR);
     await envoyerRappelsLocations(apresLimite);
-    expect((await dbSite().suiviLocation.findUniqueOrThrow({ where: { abonnementRef: ref } })).droitCloudEtat).toBe("ferme");
+    // F12 : à la date de fin, l'accès Cloud passe en délai de grâce (la fermeture suit au terme du délai).
+    await traiterEcheancesCloud(new Date(fin.getTime() + JOUR));
+    expect((await dbSite().accesLogiciel.findFirstOrThrow({ where: { sourceRef: ref } })).etat).toBe("grace");
     expect(await emails(compte.email, "Retour de votre appareil attendu")).toBe(1); // SC-010 : rappel avant facturation
     await envoyerRappelsLocations(new Date(apresLimite.getTime() + 2 * 3600_000));
     expect(await emails(compte.email, "Retour de votre appareil attendu")).toBe(1); // pas deux fois le même jour

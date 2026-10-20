@@ -40,3 +40,8 @@ export function variablesManquantes(nom: NomConnecteur, env: Env = process.env):
 export function sousModePcaDemo(env: Env = process.env): "auto" | "manual" {
   return env.PCA_DEMO_SUBMODE === "manual" ? "manual" : "auto";
 }
+
+/** Sous-mode de la plateforme réelle (F12, FR-019), choisi au branchement (F14). */
+export function sousModePcaReel(env: Env = process.env): "auto" | "manual" {
+  return env.PCA_SUBMODE === "manual" ? "manual" : "auto";
+}

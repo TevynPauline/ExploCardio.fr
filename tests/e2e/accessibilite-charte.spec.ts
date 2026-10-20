@@ -22,10 +22,11 @@ const PAGES_PUBLIQUES = [
   "/accessoires-consommables/electrodes-holter",
   "/holter-ecg/ecg-de-repos",
   "/services/installation-formation",
+  "/services/hebergement-donnees-sante",
   "/panier",
   "/mise-a-disposition",
 ];
-const PAGES_MON_COMPTE = ["/mon-compte", "/mon-compte/informations", "/mon-compte/adresses", "/mon-compte/preferences", "/mon-compte/securite", "/mon-compte/donnees", "/mon-compte/commandes", "/mon-compte/factures", "/mon-compte/locations", "/mon-compte/financements", "/mon-compte/bons-achat", "/mon-compte/assistance", "/financement/demande?article=EC-DMS-3004L"];
+const PAGES_MON_COMPTE = ["/mon-compte", "/mon-compte/informations", "/mon-compte/adresses", "/mon-compte/preferences", "/mon-compte/securite", "/mon-compte/donnees", "/mon-compte/commandes", "/mon-compte/factures", "/mon-compte/locations", "/mon-compte/financements", "/mon-compte/bons-achat", "/mon-compte/assistance", "/mon-compte/logiciels", "/financement/demande?article=EC-DMS-3004L"];
 const PAGES_BACK_OFFICE = [
   "/admin",
   "/admin/demonstration",
@@ -50,6 +51,8 @@ const PAGES_BACK_OFFICE = [
   "/admin/locations",
   "/admin/assistance?q=demo",
   "/admin/demonstration/fidelite",
+  "/admin/logiciels-cloud?q=demo",
+  "/admin/devis",
   "/admin/demonstration/locations",
 ];
 

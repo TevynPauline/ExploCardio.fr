@@ -36,17 +36,18 @@ model Partenaire {
   archive        Boolean      @default(false)
   estFictif      Boolean      @default(true)
 
-  commandes    CommandeVente[]
-  abonnements  Abonnement[]
-  factures     Facture[]
-  mouvements   MouvementCagnotte[]
-  kits         KitPossede[]
-  lotsBons     LotBons[]
+  commandes     CommandeVente[]
+  abonnements   Abonnement[]
+  factures      Facture[]
+  mouvements    MouvementCagnotte[]
+  kits          KitPossede[]
+  lotsBons      LotBons[]
   interventions InterventionPayee[]
-  droits       DroitAssistance?
-  listesPrix   ListePrix[]
-  opportunites Opportunite[]
-  accesCloud   AccesCloud[]
+  droits        DroitAssistance?
+  listesPrix    ListePrix[]
+  opportunites  Opportunite[]
+  accesCloud    AccesCloud[]
+  compteCloud   CompteCloud?
 
   @@map("res_partner")
 }
@@ -109,6 +110,10 @@ model Variante {
   configuration             String?
   attributs                 Json          @default("{}")
   prixHtCentimes            Int
+  /// F12 : logiciel Cloud inclus à l'achat de cette configuration (default_code) et durée
+  /// de la période incluse en mois (12 par défaut, FR-006).
+  logicielInclus            String?
+  moisInclus                Int?
   tauxTva                   Decimal       @default(20) @db.Decimal(5, 2)
   /// Unités par conditionnement (product.packaging) : 50 pour une boîte de 50 (F03).
   quantiteParLot            Int           @default(1)
@@ -171,17 +176,17 @@ enum StatutParc {
 
 /// Numéro de série (stock.lot) : parc de location.
 model NumeroSerie {
-  id          Int          @id @default(autoincrement())
-  varianteId  Int
-  variante    Variante     @relation(fields: [varianteId], references: [id], onDelete: Cascade)
-  numero      String       @unique
-  statut      StatutParc   @default(disponible)
+  id           Int                   @id @default(autoincrement())
+  varianteId   Int
+  variante     Variante              @relation(fields: [varianteId], references: [id], onDelete: Cascade)
+  numero       String                @unique
+  statut       StatutParc            @default(disponible)
   /// Date prévue de retour au parc (pour la première date de livraison possible).
-  retourPrevu DateTime?
+  retourPrevu  DateTime?
   /// Affectations, retours et interventions (F05).
-  historique  Json         @default("[]")
-  estFictif   Boolean      @default(true)
-  abonnements Abonnement[]
+  historique   Json                  @default("[]")
+  estFictif    Boolean               @default(true)
+  abonnements  Abonnement[]
   reservations ReservationAppareil[]
 
   @@map("stock_lot")
@@ -195,15 +200,15 @@ enum EtatReservationAppareil {
 
 /// Réservation d'un appareil du parc avant le paiement d'une mise à disposition (F05, R4).
 model ReservationAppareil {
-  id             Int                     @id @default(autoincrement())
-  cle            String                  @unique
-  numeroSerieId  Int
-  numeroSerie    NumeroSerie             @relation(fields: [numeroSerieId], references: [id], onDelete: Cascade)
-  dateLivraison  DateTime
+  id            Int                     @id @default(autoincrement())
+  cle           String                  @unique
+  numeroSerieId Int
+  numeroSerie   NumeroSerie             @relation(fields: [numeroSerieId], references: [id], onDelete: Cascade)
+  dateLivraison DateTime
   /// Statut de l'appareil avant la réservation (rétabli si elle est libérée).
-  statutAvant    StatutParc              @default(disponible)
-  etat           EtatReservationAppareil @default(active)
-  creeLe         DateTime                @default(now())
+  statutAvant   StatutParc              @default(disponible)
+  etat          EtatReservationAppareil @default(active)
+  creeLe        DateTime                @default(now())
 
   @@map("stock_lot_reservation")
 }
@@ -245,7 +250,7 @@ model OffreMiseADisposition {
   valeurRemplacementCentimes Int
   /// Logiciel Cloud ouvert à l'expédition (F05, FR-012) et contenu du pack affiché (FR-001).
   logiciel                   String?
-  contenuPack                String[]  @default([])
+  contenuPack                String[] @default([])
   estFictif                  Boolean  @default(true)
 
   @@map("rental_offer")
@@ -267,39 +272,39 @@ enum StatutCommande {
 
 /// Commande de vente (sale.order).
 model CommandeVente {
-  id                   Int             @id @default(autoincrement())
-  ref                  String          @unique
-  cle                  String?         @unique
-  partenaireId         Int
-  partenaire           Partenaire      @relation(fields: [partenaireId], references: [id])
-  date                 DateTime        @default(now())
-  montantHtCentimes    Int
-  tvaCentimes          Int
-  montantTtcCentimes   Int
-  fraisPortCentimes    Int             @default(0)
-  bonsUtilisesCentimes Int             @default(0)
-  modePaiement         String
-  referencePaiement    String?
-  statut               StatutCommande  @default(confirmee)
-  financee             Boolean         @default(false)
-  livraison            Json            @default("{}")
+  id                    Int                @id @default(autoincrement())
+  ref                   String             @unique
+  cle                   String?            @unique
+  partenaireId          Int
+  partenaire            Partenaire         @relation(fields: [partenaireId], references: [id])
+  date                  DateTime           @default(now())
+  montantHtCentimes     Int
+  tvaCentimes           Int
+  montantTtcCentimes    Int
+  fraisPortCentimes     Int                @default(0)
+  bonsUtilisesCentimes  Int                @default(0)
+  modePaiement          String
+  referencePaiement     String?
+  statut                StatutCommande     @default(confirmee)
+  financee              Boolean            @default(false)
+  livraison             Json               @default("{}")
   /// Transporteur et numéro de suivi (F04).
-  transporteur         String?
-  suivi                String?
+  transporteur          String?
+  suivi                 String?
   /// Fin de la réservation d'une commande à régler par virement (F04).
-  echeancePaiement     DateTime?
-  modifieLe            DateTime        @default(now()) @updatedAt
-  remboursements       Remboursement[]
-  locations            Abonnement[]
+  echeancePaiement      DateTime?
+  modifieLe             DateTime           @default(now()) @updatedAt
+  remboursements        Remboursement[]
+  locations             Abonnement[]
   /// F06 : règles du programme figées au paiement (taux, palier, validité, seuil et durée des droits).
-  reglesFidelite       Json?
+  reglesFidelite        Json?
   /// F06 : bons déjà dépensés à retirer, déduits d'un remboursement (D4).
-  bonsManquantsCentimes Int            @default(0)
+  bonsManquantsCentimes Int                @default(0)
   /// F06 : code promo appliqué (limites d'usage par client).
-  codePromo            String?
-  lotsBons             LotBons[]
-  intervention         InterventionPayee?
-  estFictif            Boolean         @default(true)
+  codePromo             String?
+  lotsBons              LotBons[]
+  intervention          InterventionPayee?
+  estFictif             Boolean            @default(true)
 
   lignes     LigneCommande[]
   factures   Facture[]
@@ -357,14 +362,14 @@ enum OrigineKit {
 
 /// Kit d'accessoires possédé par un client (F05, FR-016).
 model KitPossede {
-  id             Int          @id @default(autoincrement())
+  id             Int        @id @default(autoincrement())
   partenaireId   Int
-  partenaire     Partenaire   @relation(fields: [partenaireId], references: [id], onDelete: Cascade)
+  partenaire     Partenaire @relation(fields: [partenaireId], references: [id], onDelete: Cascade)
   kitDefaultCode String
   origine        OrigineKit
   commandeId     Int?
   auteur         String?
-  creeLe         DateTime     @default(now())
+  creeLe         DateTime   @default(now())
 
   @@unique([partenaireId, kitDefaultCode])
   @@map("res_partner_kit")
@@ -377,23 +382,23 @@ enum EtatRemboursement {
 
 /// Remboursement (account.payment de remboursement) : décidé dans Odoo ou fait dans Stripe (F04).
 model Remboursement {
-  id                 Int               @id @default(autoincrement())
-  commandeId         Int
-  commande           CommandeVente     @relation(fields: [commandeId], references: [id])
-  montantTtcCentimes Int
+  id                    Int               @id @default(autoincrement())
+  commandeId            Int
+  commande              CommandeVente     @relation(fields: [commandeId], references: [id])
+  montantTtcCentimes    Int
   /// F06 (D4) : bons d'achat déjà dépensés déduits de ce remboursement, en HT et TTC.
-  bonsDeduitsHtCentimes  Int @default(0)
-  deductionTtcCentimes   Int @default(0)
-  motif              String
+  bonsDeduitsHtCentimes Int               @default(0)
+  deductionTtcCentimes  Int               @default(0)
+  motif                 String
   /// odoo (décidé par l'équipe) ou stripe (fait directement dans Stripe)
-  source             String
-  etat               EtatRemboursement @default(a_executer)
-  referenceStripe    String?
+  source                String
+  etat                  EtatRemboursement @default(a_executer)
+  referenceStripe       String?
   /// Clé d'idempotence de l'enregistrement.
-  cle                String?           @unique
-  avoirNumero        String?
-  creeLe             DateTime          @default(now())
-  estFictif          Boolean           @default(true)
+  cle                   String?           @unique
+  avoirNumero           String?
+  creeLe                DateTime          @default(now())
+  estFictif             Boolean           @default(true)
 
   @@map("account_refund")
 }
@@ -435,39 +440,39 @@ enum EtatRetour {
 
 /// Abonnement (sale.order récurrente) : location ou abonnement logiciel (F05, F12).
 model Abonnement {
-  id                     Int             @id @default(autoincrement())
-  ref                    String          @unique
-  cle                    String?         @unique
-  partenaireId           Int
-  partenaire             Partenaire      @relation(fields: [partenaireId], references: [id])
-  objet                  ObjetAbonnement
-  varianteId             Int
-  variante               Variante        @relation(fields: [varianteId], references: [id])
-  numeroSerieId          Int?
-  numeroSerie            NumeroSerie?    @relation(fields: [numeroSerieId], references: [id])
-  montantMensuelCentimes Int
-  debut                  DateTime
-  fin                    DateTime?
-  prochaineEcheance      DateTime?
-  etat                   EtatAbonnement  @default(en_cours)
+  id                         Int             @id @default(autoincrement())
+  ref                        String          @unique
+  cle                        String?         @unique
+  partenaireId               Int
+  partenaire                 Partenaire      @relation(fields: [partenaireId], references: [id])
+  objet                      ObjetAbonnement
+  varianteId                 Int
+  variante                   Variante        @relation(fields: [varianteId], references: [id])
+  numeroSerieId              Int?
+  numeroSerie                NumeroSerie?    @relation(fields: [numeroSerieId], references: [id])
+  montantMensuelCentimes     Int
+  debut                      DateTime
+  fin                        DateTime?
+  prochaineEcheance          DateTime?
+  etat                       EtatAbonnement  @default(en_cours)
   /// F05 : date de livraison annoncée, retour, expédition, impayé, retour constaté.
   dateLivraison              DateTime?
   dateLimiteRetour           DateTime?
   commandeId                 Int?
-  commande                   CommandeVente? @relation(fields: [commandeId], references: [id])
-  expeditionBloquee          Boolean        @default(false)
+  commande                   CommandeVente?  @relation(fields: [commandeId], references: [id])
+  expeditionBloquee          Boolean         @default(false)
   transporteur               String?
   suivi                      String?
   expedieLe                  DateTime?
-  attenteChoixClient         Boolean        @default(false)
-  colisNonLivre              Boolean        @default(false)
+  attenteChoixClient         Boolean         @default(false)
+  colisNonLivre              Boolean         @default(false)
   impayeDepuis               DateTime?
-  tentativesPrelevement      Int            @default(0)
-  rappelsRetour              Int            @default(0)
+  tentativesPrelevement      Int             @default(0)
+  rappelsRetour              Int             @default(0)
   etatRetour                 EtatRetour?
   montantDegradationCentimes Int?
-  modifieLe                  DateTime       @default(now()) @updatedAt
-  estFictif              Boolean         @default(true)
+  modifieLe                  DateTime        @default(now()) @updatedAt
+  estFictif                  Boolean         @default(true)
 
   @@map("sale_subscription")
 }
@@ -667,12 +672,30 @@ enum EtatAccesCloud {
 }
 
 /// Accès Cloud simulé par le connecteur PCA de démonstration (F12).
+/// F12 : compte du médecin sur la plateforme simulée ; un seul par partenaire (FR-003).
+model CompteCloud {
+  id           Int          @id @default(autoincrement())
+  ref          String       @unique
+  partenaireId Int          @unique
+  partenaire   Partenaire   @relation(fields: [partenaireId], references: [id])
+  email        String
+  cabinet      String?
+  etat         String       @default("actif")
+  creeLe       DateTime     @default(now())
+  acces        AccesCloud[]
+  estFictif    Boolean      @default(true)
+
+  @@map("cloud_account")
+}
+
 model AccesCloud {
   id           Int            @id @default(autoincrement())
   ref          String         @unique
   cle          String?        @unique
   partenaireId Int
   partenaire   Partenaire     @relation(fields: [partenaireId], references: [id])
+  compteId     Int?
+  compte       CompteCloud?   @relation(fields: [compteId], references: [id])
   logiciel     String
   etat         EtatAccesCloud
   debut        DateTime

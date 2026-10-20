@@ -113,17 +113,30 @@ export const emailsCommandes = {
         <BoutonEmail href={urlDuSite("/mon-compte/factures")}>Mes factures et avoirs</BoutonEmail>
       </>
     )),
-  abonnement: (p: { ref: string; premierMoisTtc: number; moisSuivantsTtc: number }) =>
-    email("abonnement_souscrit", `Votre mise à disposition (${p.ref})`, "Votre abonnement mensuel est en place", (
-      <>
-        <Paragraphe>Bonjour,</Paragraphe>
-        <Paragraphe>
-          Votre mise à disposition est souscrite : {euros(p.premierMoisTtc)} TTC le premier mois, puis {euros(p.moisSuivantsTtc)} TTC par
-          mois, prélevés à la même date chaque mois. Sans engagement de durée : vous pouvez l’arrêter à tout moment.
-        </Paragraphe>
-        <BoutonEmail href={urlDuSite("/mon-compte/locations")}>Mes locations</BoutonEmail>
-      </>
-    )),
+  abonnement: (p: { ref: string; premierMoisTtc: number; moisSuivantsTtc: number; logiciel?: boolean; priseEffet?: Date | null }) =>
+    p.logiciel
+      ? email("abonnement_logiciel_souscrit", `Votre abonnement au logiciel Cloud (${p.ref})`, "Votre abonnement mensuel est en place", (
+          <>
+            <Paragraphe>Bonjour,</Paragraphe>
+            <Paragraphe>
+              {p.priseEffet
+                ? `Votre abonnement prend effet le ${p.priseEffet.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Paris" })}, à la fin de votre période incluse : votre accès continue sans interruption. Rien n'est prélevé avant cette date, puis ${euros(p.moisSuivantsTtc)} TTC par mois.`
+                : `Votre abonnement est en place : ${euros(p.premierMoisTtc)} TTC le premier mois, puis ${euros(p.moisSuivantsTtc)} TTC par mois.`}{" "}
+              Sans engagement de durée : vous pouvez le résilier à tout moment depuis votre compte.
+            </Paragraphe>
+            <BoutonEmail href={urlDuSite("/mon-compte/logiciels")}>Mes logiciels Cloud</BoutonEmail>
+          </>
+        ))
+      : email("abonnement_souscrit", `Votre mise à disposition (${p.ref})`, "Votre abonnement mensuel est en place", (
+          <>
+            <Paragraphe>Bonjour,</Paragraphe>
+            <Paragraphe>
+              Votre mise à disposition est souscrite : {euros(p.premierMoisTtc)} TTC le premier mois, puis {euros(p.moisSuivantsTtc)} TTC par
+              mois, prélevés à la même date chaque mois. Sans engagement de durée : vous pouvez l’arrêter à tout moment.
+            </Paragraphe>
+            <BoutonEmail href={urlDuSite("/mon-compte/locations")}>Mes locations</BoutonEmail>
+          </>
+        )),
   echeance: (p: { montantTtc: number }) =>
     email("echeance_payee", "Votre échéance mensuelle", "Votre facture du mois est disponible", (
       <>

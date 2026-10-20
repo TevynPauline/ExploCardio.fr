@@ -80,6 +80,8 @@ export async function suspendre(compteId: string, auteur: Exclude<Auteur, null>,
   await dbSite().decisionCompte.create({ data: { compteId, decision: "suspension", motif: motif.trim(), auteurId: auteur.id } });
   await notifier(c.utilisateur.email, await emailsComptes.compteSuspendu(), "compte suspendu");
   await journal(auteur, "comptes.suspendu", compteId, { motif });
+  const { surCompteSuspendu } = await import("../cloud/comptes");
+  await surCompteSuspendu(compteId, { id: auteur.id, libelle: "suspension du compte" });
 }
 
 export async function retablir(compteId: string, auteur: Exclude<Auteur, null>): Promise<void> {
@@ -89,5 +91,7 @@ export async function retablir(compteId: string, auteur: Exclude<Auteur, null>):
   await dbSite().decisionCompte.create({ data: { compteId, decision: "retablissement", auteurId: auteur.id } });
   await notifier(u.utilisateur.email, await emailsComptes.compteRetabli(), "compte rétabli");
   await journal(auteur, "comptes.retabli", compteId, {});
+  const { surCompteRetabli } = await import("../cloud/comptes");
+  await surCompteRetabli(compteId, { id: auteur.id, libelle: "rétablissement du compte" });
 }
 

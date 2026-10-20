@@ -78,6 +78,9 @@ export async function enregistrerAchat(commande: CommandeSite): Promise<boolean>
       if (!estErreurConnecteur(e)) throw e;
     }
     await envoyerConfirmation(c);
+    // F12 : logiciel Cloud inclus à l'achat (période incluse, FR-006).
+    const { ouvrirPeriodesIncluses } = await import("../cloud/declencheurs");
+    await ouvrirPeriodesIncluses(ref);
     await retirerDuPanier(c, "achat");
     await journal("commande.enregistree", ref, { commande: c.ref, paiement: c.paiementRef });
     await terminerSiComplete(c.id);
@@ -100,15 +103,22 @@ export async function enregistrerAbonnement(commande: CommandeSite, montantTtc: 
   try {
     const refs: string[] = [];
     const elements: Record<string, string> = {};
-    for (const l of lignesDe(commande).filter((x) => x.formule === "mise_a_disposition")) {
+    // F12 : abonnements logiciels (sans appareil), différés à la fin d'une période incluse.
+    const { avecPrisesEffet, logicielsDes } = await import("../cloud/abonnement");
+    const lignesMad = await avecPrisesEffet(commande.compteId, lignesDe(commande).filter((x) => x.formule === "mise_a_disposition"));
+    const logiciels = await logicielsDes(lignesMad);
+    const abonnementsLogiciels: { ref: string; logiciel: string; debut: Date }[] = [];
+    for (const l of lignesMad) {
       for (let n = 1; n <= l.quantite; n++) {
         const date = dates[l.defaultCode];
+        const logiciel = logiciels.has(l.defaultCode);
+        const debut = l.priseEffet ?? new Date();
         const { ref } = await registre.odoo().location.creerAbonnement(
           {
             partenaireRef: compte.odooPartnerRef!,
-            objet: "mise_a_disposition",
+            objet: logiciel ? "logiciel" : "mise_a_disposition",
             defaultCode: l.defaultCode,
-            debut: new Date(),
+            debut,
             dateLivraison: date ? new Date(`${date}T12:00:00Z`) : undefined,
             commandeRef: commande.odooCommandeRef ?? undefined,
             expeditionBloquee: compte.statut !== "valide",
@@ -118,20 +128,37 @@ export async function enregistrerAbonnement(commande: CommandeSite, montantTtc: 
         );
         refs.push(ref);
         elements[`${l.defaultCode}:${n}`] = ref;
+        if (logiciel) abonnementsLogiciels.push({ ref, logiciel: l.defaultCode, debut });
       }
     }
-    await registre.odoo().location.facturerEcheance(
-      { abonnementRefs: refs, montantTtc, paiementRef, libelle: "Mise à disposition — premier mois", mois: "premier" },
-      `${commande.ref}:echeance:1`,
-    );
+    // Abonnement différé (fin de période incluse) : rien n'est facturé avant la prise d'effet.
+    if (montantTtc > 0) {
+      await registre.odoo().location.facturerEcheance(
+        { abonnementRefs: refs, montantTtc, paiementRef, libelle: logiciels.size === lignesMad.length ? "Abonnement logiciel Cloud — premier mois" : "Mise à disposition — premier mois", mois: "premier" },
+        `${commande.ref}:echeance:1`,
+      );
+    }
+    // F12 : accès au logiciel ouvert, ou prolongé sans interruption (FR-030, SC-011).
+    if (abonnementsLogiciels.length) {
+      const { ouvrirAcces } = await import("../cloud/acces");
+      for (const a of abonnementsLogiciels) {
+        await ouvrirAcces({ compteId: commande.compteId, logiciel: a.logiciel, origine: "abonnement", sourceRef: a.ref, debut: a.debut, finPrevue: null });
+      }
+    }
     const c = await dbSite().commandeSite.update({
       where: { id: commande.id },
       data: { etatAbonnement: "payee", odooAbonnementRefs: refs, elementsAbonnement: elements, reservationsAppareils: [], paiementAbonnementRef: paiementRef, echecsEnregistrement: 0 },
     });
-    const devis = await registre.odoo().commandes.calculerDevis({ partenaireRef: compte.odooPartnerRef, lignes: lignesDe(c).filter((x) => x.formule === "mise_a_disposition") });
+    const devis = await registre.odoo().commandes.calculerDevis({ partenaireRef: compte.odooPartnerRef, lignes: lignesMad });
     await envoyer(
       await emailDuCompte(c.compteId),
-      await emailsCommandes.abonnement({ ref: c.ref, premierMoisTtc: devis.abonnement!.premierMoisTtc, moisSuivantsTtc: devis.abonnement!.moisSuivantsTtc }),
+      await emailsCommandes.abonnement({
+        ref: c.ref,
+        premierMoisTtc: devis.abonnement!.premierMoisTtc,
+        moisSuivantsTtc: devis.abonnement!.moisSuivantsTtc,
+        logiciel: logiciels.size === lignesMad.length,
+        priseEffet: lignesMad.find((l) => l.priseEffet)?.priseEffet ?? null,
+      }),
       "mise à disposition souscrite",
       `abonnement:${c.ref}`,
     );

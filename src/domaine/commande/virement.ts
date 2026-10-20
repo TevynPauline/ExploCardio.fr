@@ -39,6 +39,8 @@ export async function traiterVirements(maintenant = new Date()): Promise<BilanVi
       await dbSite().commandeSite.update({ where: { id: c.id }, data: { etatAchat: "payee" } });
       await envoyer(email, await emailsCommandes.paiementRecu({ ref: odooRef }), "virement reçu", `virement-recu:${odooRef}`);
       await journal("commande.virement_recu", odooRef, { commande: c.ref });
+      const { ouvrirPeriodesIncluses } = await import("../cloud/declencheurs");
+      await ouvrirPeriodesIncluses(odooRef);
       bilan.payes++;
       continue;
     }

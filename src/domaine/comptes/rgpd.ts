@@ -115,5 +115,8 @@ export async function supprimer(compteId: string, origine = "mon_compte"): Promi
     dbSite().demandeRgpd.create({ data: { compteId, type: "suppression", etat: "traitee", origine, traiteeLe: new Date() } }),
   ]);
   await journal(null, "rgpd.suppression", compteId);
+  // F12 : accès Cloud fermés au terme du délai de grâce (les données restent sur la plateforme).
+  const { surCompteSupprime } = await import("../cloud/comptes");
+  await surCompteSupprime(compteId);
   return { supprime: true };
 }

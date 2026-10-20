@@ -8,6 +8,14 @@ import { lireParametre } from "@/lib/parametres";
 // FR-009) : enregistrée comme demande de devis, l'équipe est prévenue. Aucun champ de patient.
 
 export const OBJET_DEVIS_ECG = "devis ECG de repos";
+/** F12 (FR-024) : intérêt pour l'offre « Hébergement des données de santé » en préparation. */
+export const OBJET_INTERET_HEBERGEMENT = "Hébergement des données de santé — intérêt";
+
+export type SujetDevis = "ecg" | "hebergement";
+const SUJETS: Record<SujetDevis, { objet: string; titre: string }> = {
+  ecg: { objet: OBJET_DEVIS_ECG, titre: "Nouvelle demande de devis : ECG de repos" },
+  hebergement: { objet: OBJET_INTERET_HEBERGEMENT, titre: "Intérêt pour l'hébergement des données de santé" },
+};
 
 export type SaisieDevis = { besoin: string; nom: string; email: string; telephone: string; cabinet: string; message: string };
 export type ErreursDevis = Partial<Record<keyof SaisieDevis, string>>;
@@ -26,7 +34,8 @@ export function validerDevis(s: SaisieDevis): ErreursDevis {
   return e;
 }
 
-export async function envoyerDemandeDevis(s: SaisieDevis): Promise<{ ok: true } | { ok: false; erreurs: ErreursDevis }> {
+export async function envoyerDemandeDevis(s: SaisieDevis, sujet: SujetDevis = "ecg"): Promise<{ ok: true } | { ok: false; erreurs: ErreursDevis }> {
+  const { objet, titre } = SUJETS[sujet];
   const erreurs = validerDevis(s);
   if (Object.keys(erreurs).length) return { ok: false, erreurs };
   const demandeur = {
@@ -37,16 +46,24 @@ export async function envoyerDemandeDevis(s: SaisieDevis): Promise<{ ok: true } 
     besoin: s.besoin.trim(),
     message: s.message.trim() || null,
   };
-  const demande = await dbSite().demandeDevis.create({ data: { objet: OBJET_DEVIS_ECG, demandeur } });
+  const demande = await dbSite().demandeDevis.create({ data: { objet, demandeur } });
+  // Copie en opportunité commerciale dans Odoo (F11, FR-024 de F12) ; en cas d'échec, la demande
+  // reste visible au back-office et la copie pourra être refaite.
+  try {
+    const { ref } = await registre.odoo().opportunites.copierDemande({ type: "devis", referenceDemande: demande.id, contenu: { objet, ...demandeur } }, `devis:${demande.id}`);
+    await dbSite().demandeDevis.update({ where: { id: demande.id }, data: { opportuniteRef: ref } });
+  } catch (e) {
+    if (!estErreurConnecteur(e)) throw e;
+  }
   const destinataire = (await lireParametre("contact.destinataire_messages"))?.trim() || "admin@demo.explocardio.test";
   try {
     await registre.emailing().envoyerNotificationEquipe(
       {
         canal: "email",
         destinataires: [destinataire],
-        objet: "Nouvelle demande de devis : ECG de repos",
-        texte: `${demandeur.nom} (${demandeur.email}${demandeur.cabinet ? `, ${demandeur.cabinet}` : ""}) cherche : ${demandeur.besoin}${demandeur.message ? `\n\n${demandeur.message}` : ""}`,
-        declencheur: "demande de devis ECG de repos",
+        objet: titre,
+        texte: `${demandeur.nom} (${demandeur.email}${demandeur.cabinet ? `, ${demandeur.cabinet}` : ""}) : ${demandeur.besoin}${demandeur.message ? `\n\n${demandeur.message}` : ""}`,
+        declencheur: objet,
       },
       `devis:${demande.id}:${randomUUID()}`,
     );

@@ -16,6 +16,12 @@ export const PARAMETRES_PAR_DEFAUT = {
   "fidelite.bons_au_panier": "true",
   "fidelite.rappel_droits_jours": "7",
   "fidelite.rappel_expiration_jours": "30",
+  /** F12 : plateforme Cloud (D6), délai de grâce et rappels (D1). */
+  "cloud.url_plateforme": "/demo/plateforme-cloud",
+  "cloud.delai_grace_jours": "30",
+  "cloud.rappel_periode_jours": "30",
+  "cloud.rappel_fin_jours": "7",
+  "cloud.aide_premiere_connexion": "Votre accès est ouvert : utilisez le lien « Accéder à la plateforme ». Lors de votre première connexion, la plateforme vous envoie une invitation par email pour créer votre mot de passe ; ExploCardio.fr ne le connaît jamais. Besoin d'aide pour le paramétrage ? Écrivez-nous sur WhatsApp.",
 } as const;
 
 export type CleParametre = keyof typeof PARAMETRES_PAR_DEFAUT | (string & {});

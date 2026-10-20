@@ -200,6 +200,42 @@ Le parcours « consommables → bons d'achat → assistance offerte » : tout es
   règlent dans **Démonstration → Paramètres commerciaux** ; une modification ne touche que les
   commandes suivantes.
 
+## Logiciels Cloud et plateforme HDS (F12)
+
+Les logiciels d'analyse sont proposés en ligne, sur la plateforme Cloud hébergée en France
+(HDS) de notre partenaire. En démonstration, la plateforme est simulée : aucun compte réel
+n'est créé, et « Accéder à la plateforme » mène à une page de démonstration.
+
+- **Ouverture** : une location d'un Holter « + logiciel Cloud » ouvre l'accès à l'expédition
+  (au plus tard à la livraison) ; l'achat d'une configuration « + logiciel Cloud » l'ouvre dès
+  le paiement, pour la période incluse fixée dans Odoo (12 mois en démonstration). Le médecin
+  reçoit un email ; il crée lui-même son mot de passe sur la plateforme, que le site ne connaît
+  jamais. Un seul compte par médecin, quel que soit le nombre de logiciels.
+- **Mon compte → Logiciels Cloud** : état de chaque logiciel (en cours d'ouverture, actif, en
+  délai de grâce, suspendu, fermé) et ses dates, lien vers la plateforme, aide à la première
+  connexion, WhatsApp. Sans logiciel : l'offre, avec « Souscrire l'abonnement ».
+- **Abonnement** : souscrit par le panier, comme une location sans appareil (carte ou SEPA,
+  sans engagement). Avant la fin d'une période incluse, « Poursuivre avec l'abonnement » le fait
+  démarrer à sa fin : l'accès continue sans interruption et rien n'est prélevé avant.
+  « Résilier l'abonnement » : fin au terme du mois payé.
+- **Fin des droits** : à la fin d'une location ou d'un abonnement, l'accès passe en **délai de
+  grâce** (consultation et récupération des données, 30 jours par défaut), puis il est fermé ;
+  les autres logiciels restent ouverts. Rappels 30 jours avant la fin d'une période incluse
+  (avec la proposition d'abonnement) et 7 jours avant toute fin. Pour le montrer :
+  **Démonstration → Locations → Avancer la date**.
+- **Back-office → Logiciels Cloud** (administrateur et support) : tâches à faire, recherche d'un
+  client, ouvrir, suspendre, rétablir ou fermer un accès avec un motif ; journal. Un compte du
+  site suspendu suspend ses accès ; un impayé suspend l'accès concerné jusqu'à la régularisation.
+- **Plateforme non automatisée** : **Démonstration → Pannes simulées → Passer en mode manuel**.
+  Chaque ouverture ou fermeture devient une tâche pour l'équipe ; le médecin voit « en cours
+  d'ouverture » jusqu'à la confirmation, puis reçoit le même email qu'en mode automatique.
+- **Hébergement des données de santé** : tant que le badge « En préparation » est affiché
+  (Contenus → Coordonnées et textes), la page propose un formulaire d'intérêt ; les demandes
+  apparaissent dans **Back-office → Devis** et sont copiées en opportunités dans Odoo.
+- **Réglages** : délai de grâce, rappels, adresse de la plateforme et aide à la première
+  connexion dans **Contenus → Coordonnées et textes → Rappels et accès Cloud** (avec les délais
+  des rappels de fidélité de F06).
+
 ## Demander un financement (F04)
 
 - Sur une fiche, formule « Financement longue durée » → **Demander mon financement** ; ou

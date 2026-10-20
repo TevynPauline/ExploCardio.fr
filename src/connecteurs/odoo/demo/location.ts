@@ -152,7 +152,8 @@ export const locationDemo: LocationOdoo = {
           numeroSerieId,
           montantMensuelCentimes: montantMensuel,
           debut,
-          prochaineEcheance: ajouterMois(debut, 1),
+          // F12 : abonnement logiciel différé (fin de période incluse) : premier prélèvement à sa prise d'effet.
+          prochaineEcheance: a.objet === "logiciel" && debut > new Date() ? debut : ajouterMois(debut, 1),
           dateLivraison: a.dateLivraison ?? null,
           commandeId: commande?.id ?? null,
           expeditionBloquee: a.expeditionBloquee ?? false,

@@ -4,6 +4,9 @@ import { pannesDemo } from "@/connecteurs/demonstration";
 import { ETIQUETTES, invaliderDepuisAction } from "@/lib/cache";
 import { CONNECTEURS, type NomConnecteur } from "@/lib/config";
 import { exigerAdministrateur } from "@/lib/roles";
+import { sousModePlateformeDemo as sousModeDemo } from "@/connecteurs/demonstration";
+import { dbSite } from "@/lib/db/site";
+import { ecrireParametre } from "@/lib/parametres";
 import { Button, Card, Kicker, Retour } from "@/ui";
 
 export const metadata: Metadata = { title: "Pannes simulées" };
@@ -27,11 +30,21 @@ async function basculer(donnees: FormData) {
   redirect(`/admin/demonstration/pannes?ok=${encodeURIComponent(`Panne ${active ? "activée" : "désactivée"} : ${NOMS[connecteur]}.`)}`);
 }
 
+async function changerSousMode(donnees: FormData) {
+  "use server";
+  const { user } = await exigerAdministrateur();
+  const mode = donnees.get("mode") === "manual" ? "manual" : "auto";
+  await ecrireParametre("demo.pca_sous_mode", mode, user.id);
+  await dbSite().journalAction.create({ data: { auteurId: user.id, auteur: `${user.name} (${user.email})`, action: "demo.pca_sous_mode", objet: mode } });
+  redirect(`/admin/demonstration/pannes?ok=${encodeURIComponent(mode === "manual" ? "Plateforme Cloud non automatisée : chaque ouverture et fermeture devient une tâche pour l'équipe." : "Plateforme Cloud automatisée.")}`);
+}
+
 // Pannes simulées (T081, FR-025) : un connecteur en panne répond « service indisponible »,
 // pour montrer et tester les messages d'erreur du site.
 export default async function Pannes({ searchParams }: { searchParams: Promise<{ ok?: string }> }) {
   const { ok } = await searchParams;
   const etats = await pannesDemo.lire();
+  const sousMode = await sousModeDemo();
   return (
     <div className="flex max-w-2xl flex-col gap-6">
       <Kicker>Démonstration</Kicker>
@@ -56,6 +69,18 @@ export default async function Pannes({ searchParams }: { searchParams: Promise<{
           </li>
         ))}
       </ul>
+      <Card className="flex flex-col gap-3">
+        <h2 className="text-h3 font-semibold">Plateforme Cloud : automatisation (F12)</h2>
+        <p>
+          {sousMode === "manual"
+            ? "Non automatisée : chaque ouverture ou fermeture d’accès crée une tâche dans Back-office → Logiciels Cloud ; le médecin voit « en cours d’ouverture » jusqu’à la confirmation."
+            : "Automatisée : les accès s’ouvrent et se ferment sans intervention de l’équipe."}
+        </p>
+        <form action={changerSousMode}>
+          <input type="hidden" name="mode" value={sousMode === "manual" ? "auto" : "manual"} />
+          <Button type="submit" variante="secondaire">{sousMode === "manual" ? "Passer en mode automatique" : "Passer en mode manuel (tâches)"}</Button>
+        </form>
+      </Card>
     </div>
   );
 }

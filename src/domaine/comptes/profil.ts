@@ -52,6 +52,8 @@ export async function mettreAJourInformations(compteId: string, i: Informations)
     data: { civilite: i.civilite, prenom: i.prenom.trim(), nom: i.nom.trim(), name, telephone: i.telephone.trim(), specialite: i.specialite },
   });
   await reporterSurFicheClient(compteId, { ...(c.type === "medecin" ? { nom: name } : {}), telephone: i.telephone.trim() });
+  const { surMedecinModifie } = await import("../cloud/comptes");
+  await surMedecinModifie(compteId);
 }
 
 export type AdresseSaisie = { ligne1: string; ligne2?: string; codePostal: string; ville: string };
@@ -122,6 +124,12 @@ export async function confirmerChangementEmail(utilisateurId: string, jeton: str
     dbSite().verification.delete({ where: { id: v.id } }),
   ]);
   await journaliserSecurite("email_modifie", utilisateurId);
+  // F12 : la plateforme Cloud est informée du nouvel email ; l'identifiant de connexion reste valable.
+  const compteModifie = await dbSite().compteClient.findUnique({ where: { utilisateurId } });
+  if (compteModifie) {
+    const { surMedecinModifie } = await import("../cloud/comptes");
+    await surMedecinModifie(compteModifie.id);
+  }
   const c = await dbSite().compteClient.findUnique({ where: { utilisateurId } });
   if (c) await reporterSurFicheClient(c.id, { email: nouvelle });
   return true;

@@ -21,6 +21,8 @@ export function disponibiliteAchat(v: VarianteAvecStock): EtatDisponibilite {
 
 export function disponibiliteParc(v: VarianteAvecStock, maintenant = new Date()): EtatDisponibilite | null {
   if (!v.offreMad) return null;
+  // F12 : abonnement à un logiciel Cloud, sans appareil, toujours disponible.
+  if (v.offreMad.logiciel === v.defaultCode) return { etat: "disponible" };
   if (v.numerosSerie.some((n) => n.statut === "disponible")) return { etat: "disponible" };
   const retours = v.numerosSerie
     .filter((n) => (n.statut === "en_retour" || n.statut === "en_maintenance") && n.retourPrevu)

@@ -37,6 +37,9 @@ export default async function Livraison({ searchParams }: { searchParams: Promis
       <Retour erreur={erreur} />
       <form action={actionLivraison} className="flex max-w-2xl flex-col gap-6">
         <input type="hidden" name="ref" value={commande.ref} />
+        {!devis && !mad.length ? (
+          <p className="ec-box--info p-4">Rien à livrer : votre logiciel Cloud est accessible en ligne, depuis votre compte.</p>
+        ) : null}
         {devis ? (
           <fieldset className="flex flex-col gap-3">
             <legend className="mb-2 font-semibold text-ink">Mode de livraison de vos achats</legend>

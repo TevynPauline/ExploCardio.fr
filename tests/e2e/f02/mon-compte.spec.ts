@@ -7,7 +7,7 @@ import { attacherFiche, connecterCompte, creerCompteValide, requete } from "./ou
 
 test.describe.configure({ mode: "serial" });
 
-const RUBRIQUES = ["logiciels"];
+const RUBRIQUES: string[] = [];
 // Rubriques remplies par F04 à F06 : elles s'affichent sans erreur, même sans commande.
 const RUBRIQUES_F04 = {
   commandes: "Vous n’avez pas encore passé de commande",
@@ -15,6 +15,7 @@ const RUBRIQUES_F04 = {
   locations: "Vous n’avez pas de mise à disposition en cours",
   "bons-achat": "Comment gagner des bons",
   assistance: "Droits d’assistance",
+  logiciels: "Nos logiciels Cloud",
 } as const;
 
 test("sans session, Mon compte renvoie vers la connexion avec retour", async ({ page }) => {

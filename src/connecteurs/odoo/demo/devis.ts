@@ -66,6 +66,9 @@ function texteCumul(code: CodePromo | null): string {
   return `${base} ; sur un article déjà en promotion, la remise la plus avantageuse est appliquée.`;
 }
 
+/** F12 : abonnement logiciel à prise d'effet différée : aucun premier mois dû maintenant. */
+const differe = (l: { priseEffet?: Date | null }) => !!l.priseEffet && l.priseEffet.getTime() > Date.now();
+
 export type OptionsDevis = {
   /** Frais de port imposés (jeu de départ de F11, sans mode de livraison). */
   fraisPortImposeHt?: number;
@@ -95,7 +98,7 @@ export async function calculerDevis(demande: DemandeDevis, tx: Tx = db(), option
     const libelle = `${v.modele.marque} ${v.modele.nom}${v.configuration ? ` — ${v.configuration}` : ""}${l.offerte ? " (offert)" : ""}`;
     const tauxTva = Number(v.tauxTva);
     if (l.formule === "mise_a_disposition") {
-      const mois = v.offreMad?.premierMoisCentimes ?? 0;
+      const mois = differe(l) ? 0 : (v.offreMad?.premierMoisCentimes ?? 0);
       return { defaultCode: v.defaultCode, formule: l.formule, libelle, quantite: l.quantite, prixUnitaireHt: mois, remiseHt: 0, totalHt: mois * l.quantite, tauxTva, offerte: false, promotion: null };
     }
     if (l.offerte) {
@@ -218,7 +221,7 @@ export async function calculerDevis(demande: DemandeDevis, tx: Tx = db(), option
     let suivantsTtc = 0;
     for (const l of locations) {
       const v = variantes.find((x) => x.defaultCode === l.defaultCode)!;
-      const p = (v.offreMad?.premierMoisCentimes ?? 0) * l.quantite;
+      const p = l.totalHt; // premier mois nul pour une prise d'effet différée (F12)
       const s = (v.offreMad?.moisSuivantsCentimes ?? 0) * l.quantite;
       premier += p;
       suivants += s;

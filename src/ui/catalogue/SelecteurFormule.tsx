@@ -67,6 +67,9 @@ export function SelecteurFormule({ nom, formules, variantes, contenuPackMad, men
   }
 
   const dispo = formule === "mise_a_disposition" ? variante.miseADisposition : variante.achat;
+  // F12 : pour un logiciel Cloud, l'offre mensuelle d'Odoo est l'abonnement, sans appareil.
+  const logicielCloud = variante.offreMad?.logiciel === variante.defaultCode;
+  const libelleFormule = (f: FormuleFiche) => (f === "mise_a_disposition" && variantes.every((v) => v.offreMad?.logiciel === v.defaultCode) ? "Abonnement mensuel (sans engagement)" : LIBELLE_FORMULE[f]);
 
   return (
     <div className="flex flex-col gap-5">
@@ -77,13 +80,13 @@ export function SelecteurFormule({ nom, formules, variantes, contenuPackMad, men
             {formules.map((f) => (
               <label key={f} className={classePilule}>
                 <input type="radio" name="formule" value={f} checked={formule === f} onChange={() => choisirFormule(f)} className="sr-only" />
-                {LIBELLE_FORMULE[f]}
+                {libelleFormule(f)}
               </label>
             ))}
           </div>
         </fieldset>
       ) : (
-        <p className="font-semibold text-ink">{LIBELLE_FORMULE[formules[0]!]}</p>
+        <p className="font-semibold text-ink">{libelleFormule(formules[0]!)}</p>
       )}
 
       {possibles.length > 1 ? (
@@ -117,7 +120,7 @@ export function SelecteurFormule({ nom, formules, variantes, contenuPackMad, men
           </>
         ) : null}
 
-        {formule === "mise_a_disposition" && variante.offreMad ? (
+        {formule === "mise_a_disposition" && variante.offreMad && !logicielCloud ? (
           <>
             <Prix ht={variante.offreMad.premierMoisHt} tauxTva={variante.tauxTva} periode="le premier mois" taille="grand" />
             <Prix ht={variante.offreMad.moisSuivantsHt} tauxTva={variante.tauxTva} periode="/ mois ensuite" />
@@ -159,12 +162,25 @@ export function SelecteurFormule({ nom, formules, variantes, contenuPackMad, men
           </>
         ) : null}
 
-        {formule === "mise_a_disposition" && !variante.offreMad ? (
+        {formule === "mise_a_disposition" && (!variante.offreMad || logicielCloud) ? (
           <>
-            <Prix ht={variante.prixHt} tauxTva={variante.tauxTva} periode="/ mois" taille="grand" />
-            <p className="text-small text-muted">Abonnement mensuel, sans engagement : vous arrêtez quand vous le souhaitez.</p>
+            <Prix ht={variante.offreMad?.moisSuivantsHt ?? variante.prixHt} tauxTva={variante.tauxTva} periode="/ mois" taille="grand" />
+            <p className="text-small text-muted">Abonnement mensuel, sans engagement : vous arrêtez quand vous le souhaitez depuis votre compte.</p>
             {contenuPackMad ? <p>{contenuPackMad}</p> : null}
-            <Link href={contact("Mise à disposition")} className="ec-btn ec-btn--primary self-start">Demander l’accès</Link>
+            {logicielCloud ? (
+              <>
+                <p className="text-small">Déjà inclus avec votre appareil ? Poursuivez depuis « Mes logiciels Cloud » : l’abonnement prend effet à la fin de la période incluse.</p>
+                <AjoutPanier
+                  key={`abonnement-${variante.defaultCode}`}
+                  defaultCode={variante.defaultCode}
+                  formule="mise_a_disposition"
+                  prixAffiche={variante.offreMad!.premierMoisHt}
+                  libelle="Ajouter l’abonnement au panier"
+                />
+              </>
+            ) : (
+              <Link href={contact("Mise à disposition")} className="ec-btn ec-btn--primary self-start">Demander l’accès</Link>
+            )}
           </>
         ) : null}
 

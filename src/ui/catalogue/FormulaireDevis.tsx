@@ -9,7 +9,8 @@ import { Champ } from "../Champ";
 type Prerempli = { nom: string; email: string; telephone: string; cabinet: string };
 
 /** « Vous cherchez un autre modèle ? » (F03, US7) : saisie conservée en cas d'erreur. */
-export function FormulaireDevis({ jeton, prerempli }: { jeton: string; prerempli: Prerempli }) {
+export function FormulaireDevis({ jeton, prerempli, sujet = "ecg" }: { jeton: string; prerempli: Prerempli; sujet?: "ecg" | "hebergement" }) {
+  const hebergement = sujet === "hebergement";
   const initial: EtatDevis = { statut: "initial", erreurs: {}, saisie: { besoin: "", message: "", ...prerempli } };
   const [etat, action, enCours] = useActionState(actionDemandeDevis, initial);
   const message = useRef<HTMLParagraphElement>(null);
@@ -28,6 +29,7 @@ export function FormulaireDevis({ jeton, prerempli }: { jeton: string; prerempli
   return (
     <form onSubmit={envoyer} noValidate className="flex flex-col gap-4">
       <input type="hidden" name="jeton" value={jeton} />
+      <input type="hidden" name="sujet" value={sujet} />
       <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
         <label>
           Site web (laissez vide)
@@ -36,13 +38,13 @@ export function FormulaireDevis({ jeton, prerempli }: { jeton: string; prerempli
       </div>
       {etat.statut !== "initial" ? (
         <p ref={message} tabIndex={-1} role={etat.statut === "envoye" ? "status" : "alert"} className={etat.statut === "envoye" ? "ec-box--info p-4" : "ec-box--promo p-4 font-medium"}>
-          {etat.statut === "envoye" && "Merci, votre demande est transmise. Nous vous envoyons un devis rapidement."}
+          {etat.statut === "envoye" && (hebergement ? "Merci, votre intérêt est enregistré. Nous vous prévenons dès l'ouverture de l'offre." : "Merci, votre demande est transmise. Nous vous envoyons un devis rapidement.")}
           {etat.statut === "erreurs" && "Votre demande n'a pas été envoyée : corrigez les champs signalés."}
           {etat.statut === "limite" && "Vous avez envoyé plusieurs demandes récemment. Réessayez dans une heure."}
           {etat.statut === "refuse" && "Votre demande n'a pas pu être envoyée. Patientez quelques secondes puis réessayez."}
         </p>
       ) : null}
-      <Champ id="besoin" name="besoin" libelle="Modèle recherché ou besoin" required defaultValue={etat.saisie.besoin} erreur={e.besoin} />
+      <Champ id="besoin" name="besoin" libelle={hebergement ? "Votre besoin (logiciels utilisés, nombre de médecins…)" : "Modèle recherché ou besoin"} required defaultValue={etat.saisie.besoin} erreur={e.besoin} />
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Champ id="devis-nom" name="nom" libelle="Nom" autoComplete="name" required defaultValue={etat.saisie.nom} erreur={e.nom} />
         <Champ id="devis-email" name="email" type="email" libelle="Email" autoComplete="email" required defaultValue={etat.saisie.email} erreur={e.email} />
@@ -67,7 +69,7 @@ export function FormulaireDevis({ jeton, prerempli }: { jeton: string; prerempli
         Vos coordonnées servent uniquement à vous répondre. Voir notre <Link href="/confidentialite">politique de confidentialité</Link>.
       </p>
       <div>
-        <Button type="submit" disabled={enCours}>{enCours ? "Envoi…" : "Demander un devis"}</Button>
+        <Button type="submit" disabled={enCours}>{enCours ? "Envoi…" : hebergement ? "Être informé de l’ouverture" : "Demander un devis"}</Button>
       </div>
     </form>
   );

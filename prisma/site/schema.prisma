@@ -156,6 +156,7 @@ model CompteClient {
   demandesRgpd        DemandeRgpd[]
   panier              Panier?
   commandes           CommandeSite[]
+  accesLogiciels      AccesLogiciel[]
 
   @@index([siret])
   @@index([statut])
@@ -517,9 +518,6 @@ model SuiviLocation {
   /// Nombre de rappels de retour envoyés et date du dernier (FR-028, SC-010).
   rappelsRetour        Int       @default(0)
   dernierRappelRetour  DateTime?
-  /// Accès Cloud ouvert par le connecteur PCA (F12 reprendra leur gestion).
-  droitCloudRef        String?
-  droitCloudEtat       String?
   notifieLe            DateTime  @default(now())
 
   @@map("suivi_location")
@@ -798,4 +796,92 @@ model DemandeRgpd {
 
   @@index([etat])
   @@map("demande_rgpd")
+}
+
+// ---------------------------------------------------------------------------
+// F12 — Accès aux logiciels Cloud (plateforme PCA)
+// ---------------------------------------------------------------------------
+
+enum OrigineAcces {
+  periode_incluse
+  location
+  abonnement
+  manuel
+}
+
+enum EtatAccesLogiciel {
+  en_ouverture
+  actif
+  grace
+  suspendu
+  ferme
+}
+
+/// Registre des accès d'un médecin à ses logiciels Cloud (F12, R1). La plateforme reste la
+/// référence de ce qui est réellement ouvert ; aucun identifiant de connexion n'est stocké.
+model AccesLogiciel {
+  id                String            @id @default(cuid())
+  compteId          String
+  compte            CompteClient      @relation(fields: [compteId], references: [id], onDelete: Cascade)
+  partenaireRef     String
+  /// Référence de l'article logiciel dans Odoo (default_code).
+  logiciel          String
+  libelle           String
+  origine           OrigineAcces
+  /// Commande (période incluse), location ou abonnement d'origine.
+  sourceRef         String?
+  /// Référence du droit sur la plateforme ; null tant que l'ouverture n'a pas abouti.
+  pcaRef            String?           @unique
+  etat              EtatAccesLogiciel @default(en_ouverture)
+  debut             DateTime
+  finPrevue         DateTime?
+  finGrace          DateTime?
+  /// Fermeture sans délai de grâce (achat remboursé avant la livraison, D2).
+  sansGrace         Boolean           @default(false)
+  ouvertureNotifiee Boolean           @default(false)
+  /// Fin prévue pour laquelle chaque rappel a été envoyé (un rappel par échéance).
+  rappelPeriodePour DateTime?
+  rappelFinPour     DateTime?
+  graceNotifiee     Boolean           @default(false)
+  fermetureNotifiee Boolean           @default(false)
+  /// Dernière alerte d'échec (ouverture non aboutie, accès non fermé à temps).
+  alerteLe          DateTime?
+  creeLe            DateTime          @default(now())
+  modifieLe         DateTime          @updatedAt
+  taches            TacheAcces[]
+
+  @@unique([partenaireRef, logiciel, origine, sourceRef])
+  @@index([etat])
+  @@index([partenaireRef])
+  @@map("acces_logiciel")
+}
+
+enum ActionTacheAcces {
+  ouvrir
+  suspendre
+  retablir
+  fermer
+}
+
+enum EtatTacheAcces {
+  a_faire
+  realisee
+}
+
+/// Tâche de l'équipe quand la plateforme n'est pas automatisée (sous-mode manuel, FR-020).
+model TacheAcces {
+  id           String           @id @default(cuid())
+  accesId      String
+  acces        AccesLogiciel    @relation(fields: [accesId], references: [id], onDelete: Cascade)
+  action       ActionTacheAcces
+  /// Date à respecter (veille de la livraison, jour ouvré suivant le paiement, date de fin).
+  echeance     DateTime
+  etat         EtatTacheAcces   @default(a_faire)
+  alerteLe     DateTime?
+  confirmeeLe  DateTime?
+  confirmeePar String?
+  creeLe       DateTime         @default(now())
+
+  @@index([etat])
+  @@map("tache_acces")
 }

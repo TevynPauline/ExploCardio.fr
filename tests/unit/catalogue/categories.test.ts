@@ -47,6 +47,7 @@ function entree(o: {
       paliers: [],
       mensualitesForcees: [],
       composants: [],
+      logicielInclus: null,
     })),
   };
   return {

@@ -4,7 +4,7 @@ import { dbSite } from "@/lib/db/site";
 import { lireParametreEntier } from "@/lib/parametres";
 import { emailsLocations } from "@/emails/modeles-locations";
 import { prixTtc } from "../catalogue/prix";
-import { alerterEquipe, envoyer } from "../commande/notifications";
+import { envoyer } from "../commande/notifications";
 import { commandeDeLocation, suiviPour } from "./suivi";
 
 // Tâche quotidienne des locations (F05, US6, D6) : rappel avant chaque échéance (FR-025),
@@ -23,8 +23,8 @@ async function emailDu(partenaireRef: string) {
   return (await dbSite().compteClient.findFirst({ where: { odooPartnerRef: partenaireRef }, include: { utilisateur: true } }))?.utilisateur.email ?? null;
 }
 
-export async function envoyerRappelsLocations(maintenant = new Date()): Promise<{ echeances: number; retours: number; fermetures: number; autorisations: number }> {
-  const bilan = { echeances: 0, retours: 0, fermetures: 0, autorisations: 0 };
+export async function envoyerRappelsLocations(maintenant = new Date()): Promise<{ echeances: number; retours: number; autorisations: number }> {
+  const bilan = { echeances: 0, retours: 0, autorisations: 0 };
   const delaiEcheance = await lireParametreEntier("location.rappel_echeance_jours", 3);
   const frequenceRetour = await lireParametreEntier("location.rappel_retour_jours", 2);
   const regles = await registre.odoo().location.lireRegles();
@@ -52,18 +52,7 @@ export async function envoyerRappelsLocations(maintenant = new Date()): Promise<
       }
     }
 
-    // Fin atteinte : fermeture de l'accès au logiciel Cloud programmée à la résiliation.
-    if (l.fin && l.fin <= maintenant && suivi.droitCloudRef && !["ferme", "a_fermer"].includes(suivi.droitCloudEtat ?? "")) {
-      try {
-        const { etat } = await registre.pca().fermer(suivi.droitCloudRef, l.fin);
-        if (etat === "a_fermer") await alerterEquipe("Accès Cloud à fermer", `Fermer sur la plateforme l'accès de la location ${l.ref} (fin le ${l.fin.toLocaleDateString("fr-FR")}).`, `pca-fermer:${l.partenaireRef}:${l.ref}`);
-        await dbSite().suiviLocation.update({ where: { abonnementRef: l.ref }, data: { droitCloudEtat: etat } });
-        await journal("location.acces_cloud_ferme", l.ref, { etat });
-        bilan.fermetures++;
-      } catch (e) {
-        if (!estErreurConnecteur(e)) throw e;
-      }
-    }
+    // F12 : la fin de l'accès au logiciel Cloud (délai de grâce, fermeture) suit la tâche horaire des accès.
 
     // Retour en retard : rappels espacés, avec la date de facturation du mois suivant (SC-010).
     if (l.etat === "en_retard_retour" && l.dateLimiteRetour && l.dateLimiteRetour < maintenant) {

@@ -34,6 +34,12 @@ export interface ConnecteurPca {
   suspendre(ref: string, motif: string): Promise<{ etat: EtatAcces }>;
   retablir(ref: string): Promise<{ etat: EtatAcces }>;
   fermer(ref: string, date: Date): Promise<{ etat: EtatAcces }>;
+  /** F12 : repousse (ou efface) la fin prévue d'un droit actif ; annule un délai de grâce. */
+  prolonger(ref: string, finPrevue: Date | null): Promise<{ etat: EtatAcces }>;
+  /** F12 : compte du médecin sur la plateforme (un seul par médecin, FR-003). */
+  lireCompte(partenaireRef: string): Promise<{ ref: string; etat: string } | null>;
+  /** F12 : email ou cabinet modifiés sur le site ; l'identifiant de connexion n'est pas cassé. */
+  mettreAJourMedecin(medecin: Medecin): Promise<void>;
   /** Sous-mode manuel : l'équipe confirme la tâche, le droit passe à son état final. */
   confirmerTache(ref: string): Promise<{ etat: EtatAcces }>;
   lireDroits(partenaireRef: string): Promise<DroitCloud[]>;

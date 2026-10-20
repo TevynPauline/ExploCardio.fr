@@ -138,6 +138,7 @@ export const catalogueDemo: CatalogueOdoo = {
           : null,
         quantiteParLot: v.quantiteParLot,
         composants: v.composants,
+        logicielInclus: v.logicielInclus ? { logiciel: v.logicielInclus, moisInclus: v.moisInclus ?? 12 } : null,
         paliers: paliersDe(publiques, v.defaultCode),
         mensualitesForcees: m.formules.includes("financement") ? mensualitesDe(publiques, v.defaultCode) : [],
       })),

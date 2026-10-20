@@ -66,6 +66,8 @@ export type VarianteArticle = MarqueFictive & {
   mensualitesForcees: MensualiteForcee[];
   /** Variantes qui composent un pack (nomenclature « kit » d'Odoo) ; vide sinon. */
   composants: string[];
+  /** F12 : logiciel Cloud inclus à l'achat et durée de la période incluse (FR-006). */
+  logicielInclus: { logiciel: string; moisInclus: number } | null;
 };
 
 export type BaremeFinancement = { dureeMois: number; coefficientPourcent: number };

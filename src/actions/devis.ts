@@ -40,7 +40,7 @@ export async function actionDemandeDevis(_e: EtatDevis, d: FormData): Promise<Et
   if (!(await autoriserEnvoi("devis", adresseVisiteur(await headers()), await identifiantSession()))) {
     return { statut: "limite", erreurs: {}, saisie };
   }
-  const r = await envoyerDemandeDevis(saisie);
+  const r = await envoyerDemandeDevis(saisie, t(d, "sujet") === "hebergement" ? "hebergement" : "ecg");
   if (!r.ok) return { statut: "erreurs", erreurs: r.erreurs, saisie };
   return { statut: "envoye", erreurs: {}, saisie: { ...saisie, besoin: "", message: "" } };
 }

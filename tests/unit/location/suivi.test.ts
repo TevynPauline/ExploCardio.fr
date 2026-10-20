@@ -8,6 +8,7 @@ import { suivreLocations } from "@/domaine/location/suivi";
 import { traiterEvenementPaiement } from "@/domaine/paiements";
 import { dbDemo } from "@/lib/db/demo";
 import { dbSite } from "@/lib/db/site";
+import { traiterEcheancesCloud } from "@/domaine/cloud/echeances";
 import { commandeMad, evenement, nettoyer, rendreParcDesTests } from "./outils";
 
 // T015 — suivi des locations : expédition, accès Cloud, formation, livraison, colis non livré,
@@ -48,9 +49,10 @@ describe("suivi des locations", () => {
     expect(message.rendu).toContain("WhatsApp");
     expect(await dbSite().messageDemonstration.count({ where: { destinataire: compte.email, objet: { contains: "est en route" } } })).toBe(1);
     expect(await alertes("Formation à organiser")).toBe(formationAvant + 1);
-    const suivi = await dbSite().suiviLocation.findUniqueOrThrow({ where: { abonnementRef: ref } });
-    expect(suivi.droitCloudRef).toBeTruthy();
-    expect(await dbDemo().accesCloud.count({ where: { cle: `location:${ref}` } })).toBe(1);
+    // F12 : un accès dans le registre, ouvert une seule fois sur la plateforme.
+    const acces = await dbSite().accesLogiciel.findFirstOrThrow({ where: { sourceRef: ref } });
+    expect(acces).toMatchObject({ etat: "actif", origine: "location", logiciel: "EC-DMS-CS-HOLTER-CLOUD" });
+    expect(await dbDemo().accesCloud.count({ where: { cle: `acces:${acces.id}` } })).toBe(1);
     const [l] = await odoo().location.listerLocations(compte.partenaireRef);
     expect(l!.numeroSerie).toBeTruthy(); // communiqué à l'expédition (D5)
 
@@ -67,14 +69,14 @@ describe("suivi des locations", () => {
     } finally {
       await dbSite().panneSimulee.update({ where: { connecteur: "pca" }, data: { active: false } });
     }
-    let suivi = await dbSite().suiviLocation.findUniqueOrThrow({ where: { abonnementRef: ref } });
+    const suivi = await dbSite().suiviLocation.findUniqueOrThrow({ where: { abonnementRef: ref } });
     expect(suivi.expedieNotifie).toBe(true);
-    expect(suivi.droitCloudRef).toBeNull();
+    const acces = () => dbSite().accesLogiciel.findFirstOrThrow({ where: { sourceRef: ref } });
+    expect(await acces()).toMatchObject({ etat: "en_ouverture", pcaRef: null });
     expect(await alertes("Accès Cloud non ouvert")).toBeGreaterThan(0);
-    await dbDemo().abonnement.update({ where: { ref }, data: { modifieLe: new Date() } });
-    await suivreLocations();
-    suivi = await dbSite().suiviLocation.findUniqueOrThrow({ where: { abonnementRef: ref } });
-    expect(suivi.droitCloudRef).toBeTruthy();
+    // F12 : la tâche horaire des accès reprend l'ouverture, sans compte en double.
+    await traiterEcheancesCloud();
+    expect(await acces()).toMatchObject({ etat: "actif", pcaRef: expect.any(String) });
   });
 
   it("colis non livré : alerte une fois ; appareil défectueux sans remplaçant : le client choisit", async () => {

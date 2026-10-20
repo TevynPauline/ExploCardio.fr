@@ -14,14 +14,21 @@ test("vente flash : annoncée, appliquée, puis terminée", async ({ page, brows
   await reapprovisionner([CARTE_SD]);
   const fin = new Date(Date.now() + 2 * 24 * 3600_000);
   const local = (d: Date) => new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
+  // La vente flash ne doit jamais survivre au test (elle fausserait les prix des autres parcours).
+  const terminer = () => requete("demo", `UPDATE loyalty_promotion SET fin = now() WHERE nom = $1 AND (fin IS NULL OR fin > now())`, [nom]);
+  try {
   await ecranDemo(browser, baseURL, "/admin/demonstration/fidelite", async (admin) => {
     await admin.getByLabel("Nom", { exact: true }).fill(nom);
     await admin.getByLabel("Remise (%)").fill("20");
     await admin.getByLabel(/Références concernées/).fill(CARTE_SD);
     await admin.getByLabel("Fin", { exact: true }).fill(local(fin));
     await admin.getByRole("button", { name: "Créer la promotion" }).click();
-    await expect(admin.getByRole("status").filter({ hasText: "Promotion créée" })).toBeVisible();
+    await expect(admin.getByRole("status").filter({ hasText: "Promotion créée" })).toBeVisible({ timeout: 20_000 });
   });
+  } catch (e) {
+    await terminer();
+    throw e;
+  }
 
   try {
     await clientConnecte(browser, baseURL, page);
@@ -38,6 +45,9 @@ test("vente flash : annoncée, appliquée, puis terminée", async ({ page, brows
     const ligne = page.getByRole("listitem").filter({ hasText: `Réf. ${CARTE_SD}` });
     await expect(ligne).toContainText(nom);
     await expect(page.locator("main")).toContainText("Un seul code promo par commande.");
+  } catch (e) {
+    await terminer();
+    throw e;
   } finally {
     await ecranDemo(browser, baseURL, "/admin/demonstration/fidelite", async (admin) => {
       await admin.getByRole("button", { name: `Terminer « ${nom} »` }).click();

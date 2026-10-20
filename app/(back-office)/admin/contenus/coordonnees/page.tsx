@@ -17,7 +17,7 @@ function listeJson(valeur: string): string[] {
 
 export default async function Coordonnees({ searchParams }: { searchParams: Promise<{ ok?: string; erreur?: string }> }) {
   const r = await searchParams;
-  const lignes = await dbSite().parametre.findMany({ where: { OR: [{ cle: { startsWith: "contact." } }, { cle: { startsWith: "accueil." } }, { cle: { startsWith: "virement." } }, { cle: "commande.heure_limite_express" }, { cle: { startsWith: "livraison." } }, { cle: { startsWith: "location." } }] } });
+  const lignes = await dbSite().parametre.findMany({ where: { OR: [{ cle: { startsWith: "contact." } }, { cle: { startsWith: "accueil." } }, { cle: { startsWith: "virement." } }, { cle: "commande.heure_limite_express" }, { cle: { startsWith: "livraison." } }, { cle: { startsWith: "location." } }, { cle: { startsWith: "fidelite.rappel_" } }, { cle: { startsWith: "cloud." } }] } });
   const v = (cle: string) => lignes.find((l) => l.cle === cle)?.valeur ?? "";
   let motifs: string[] = [];
   try {
@@ -102,6 +102,36 @@ export default async function Coordonnees({ searchParams }: { searchParams: Prom
           <div className="sm:col-span-2">
             <ChampAdmin id="conditionsLocation" libelle="Conditions de location (texte accepté au récapitulatif)" aide="Texte provisoire : à faire valider par votre conseil juridique.">
               <textarea id="conditionsLocation" name="conditionsLocation" rows={4} defaultValue={v("location.conditions")} className={`${classeChamp} py-2`} />
+            </ChampAdmin>
+          </div>
+        </Card>
+        <Card className="grid gap-3 sm:grid-cols-2">
+          <h2 className="text-h3 font-semibold sm:col-span-2">Rappels et accès Cloud</h2>
+          <p className="text-muted sm:col-span-2">
+            Délais des rappels envoyés aux clients et des accès aux logiciels Cloud. Les règles du programme de fidélité, les durées incluses et les prix se
+            règlent dans Odoo.
+          </p>
+          <ChampAdmin id="rappelDroits" libelle="Rappel avant la fin des droits d’assistance (jours)">
+            <input id="rappelDroits" name="rappelDroits" type="number" min={1} max={60} defaultValue={v("fidelite.rappel_droits_jours") || "7"} className={classeChamp} />
+          </ChampAdmin>
+          <ChampAdmin id="rappelExpiration" libelle="Rappel avant l’expiration de bons d’achat (jours)">
+            <input id="rappelExpiration" name="rappelExpiration" type="number" min={1} max={120} defaultValue={v("fidelite.rappel_expiration_jours") || "30"} className={classeChamp} />
+          </ChampAdmin>
+          <ChampAdmin id="delaiGrace" libelle="Délai de grâce après la fin d’un accès Cloud (jours)" aide="Le médecin peut seulement consulter et récupérer ses données.">
+            <input id="delaiGrace" name="delaiGrace" type="number" min={0} max={180} defaultValue={v("cloud.delai_grace_jours") || "30"} className={classeChamp} />
+          </ChampAdmin>
+          <ChampAdmin id="rappelPeriode" libelle="Rappel avant la fin d’une période incluse (jours)" aide="Avec la proposition de poursuivre par un abonnement.">
+            <input id="rappelPeriode" name="rappelPeriode" type="number" min={1} max={120} defaultValue={v("cloud.rappel_periode_jours") || "30"} className={classeChamp} />
+          </ChampAdmin>
+          <ChampAdmin id="rappelFinCloud" libelle="Rappel avant la fin d’un accès Cloud (jours)">
+            <input id="rappelFinCloud" name="rappelFinCloud" type="number" min={1} max={60} defaultValue={v("cloud.rappel_fin_jours") || "7"} className={classeChamp} />
+          </ChampAdmin>
+          <ChampAdmin id="urlPlateforme" libelle="Adresse de la plateforme Cloud" aide="Adresse https:// de la plateforme, ou chemin du site (page simulée en démonstration).">
+            <input id="urlPlateforme" name="urlPlateforme" defaultValue={v("cloud.url_plateforme")} className={classeChamp} />
+          </ChampAdmin>
+          <div className="sm:col-span-2">
+            <ChampAdmin id="aideConnexion" libelle="Aide à la première connexion (Mes logiciels Cloud)">
+              <textarea id="aideConnexion" name="aideConnexion" rows={3} defaultValue={v("cloud.aide_premiere_connexion")} className={`${classeChamp} py-2`} />
             </ChampAdmin>
           </div>
         </Card>

@@ -155,18 +155,26 @@ export async function remplirHistoriques(db: PrismaClient, p: Partenaires) {
   await db.sequence.upsert({ where: { code: "SUB" }, create: { code: "SUB", valeur: n }, update: { valeur: n } });
 
   const acces: { partenaire: string; logiciel: string; etat: "actif" | "grace" | "ferme" | "a_ouvrir"; debut: number; fin?: number }[] = [
-    { partenaire: "valdrin", logiciel: "CardioScan Holter ECG", etat: "actif", debut: 95 },
-    { partenaire: "morvelle", logiciel: "CardioScan Holter ECG", etat: "actif", debut: 40 },
-    { partenaire: "tessier", logiciel: "CardioScan Holter ECG", etat: "grace", debut: 200, fin: -3 },
-    { partenaire: "orvault", logiciel: "CardioVision / Cardiac Rehab", etat: "ferme", debut: 300, fin: -60 },
-    { partenaire: "delvaux", logiciel: "CardioScan Holter ECG", etat: "a_ouvrir", debut: 0 },
+    { partenaire: "valdrin", logiciel: "EC-DMS-CS-HOLTER-CLOUD", etat: "actif", debut: 95 },
+    { partenaire: "morvelle", logiciel: "EC-DMS-CS-HOLTER-CLOUD", etat: "actif", debut: 40 },
+    { partenaire: "tessier", logiciel: "EC-DMS-CS-HOLTER-CLOUD", etat: "grace", debut: 200, fin: -3 },
+    { partenaire: "orvault", logiciel: "EC-DMS-CARDIOVISION-CLOUD", etat: "ferme", debut: 300, fin: -60 },
+    { partenaire: "delvaux", logiciel: "EC-DMS-CS-HOLTER-CLOUD", etat: "a_ouvrir", debut: 0 },
   ];
   let a = 0;
   for (const x of acces) {
     a++;
+    // F12 : un seul compte par médecin sur la plateforme simulée (FR-003).
+    const partenaire = await db.partenaire.findUniqueOrThrow({ where: { id: p.get(x.partenaire)!.id } });
+    const compte = await db.compteCloud.upsert({
+      where: { partenaireId: partenaire.id },
+      create: { ref: `FICT-PCA-C-${String(partenaire.id).padStart(5, "0")}`, partenaireId: partenaire.id, email: partenaire.email ?? "", cabinet: null },
+      update: {},
+    });
     await db.accesCloud.create({
       data: {
         ref: `FICT-PCA-${String(a).padStart(5, "0")}`,
+        compteId: compte.id,
         partenaireId: p.get(x.partenaire)!.id,
         logiciel: x.logiciel,
         etat: x.etat,

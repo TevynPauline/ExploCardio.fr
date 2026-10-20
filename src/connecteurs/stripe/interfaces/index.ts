@@ -22,6 +22,11 @@ export type SessionAbonnement = {
   abonnementRef: string;
   premierMontantTtc: Centimes;
   montantMensuelTtc: Centimes;
+  /**
+   * F12 : prise d'effet différée (fin d'une période incluse) : `premierMontantTtc` vaut 0,
+   * l'autorisation est donnée maintenant et la première mensualité tombe à cette date.
+   */
+  debutPrelevements?: Date;
   /** F05 : un élément par location, pour arrêter l'une sans les autres. */
   elements?: ElementAbonnement[];
   moyens: MoyenPaiement[];

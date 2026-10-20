@@ -41,6 +41,9 @@ export const CATEGORIES = [
   { code: "accessoires", nom: "Accessoires & consommables", ordre: 5 },
 ] as const;
 
+/** Logiciel Cloud d'analyse Holter ECG, inclus dans les configurations « + logiciel Cloud ». */
+export const LOGICIEL_HOLTER_CLOUD = "EC-DMS-CS-HOLTER-CLOUD";
+
 const ENREGISTREUR = "Enregistreur seul";
 const AVEC_CLOUD = "Enregistreur + logiciel Cloud";
 const PACK = "Pack complet (enregistreur, logiciel Cloud, accessoires)";
@@ -122,7 +125,7 @@ export const MODELES: Modele[] = [
     type: "logiciel",
     description: "Programme d'analyse Holter ECG, en abonnement mensuel sur la plateforme Cloud HDS.",
     formules: ["mise_a_disposition"],
-    variantes: [{ defaultCode: "EC-DMS-CS-HOLTER-CLOUD", configuration: "Abonnement mensuel", prixHt: 79 }],
+    variantes: [{ defaultCode: "EC-DMS-CS-HOLTER-CLOUD", configuration: "Abonnement mensuel", prixHt: 79, mad: { premierMois: 79, moisSuivants: 79, valeurRemplacement: 0, logiciel: "EC-DMS-CS-HOLTER-CLOUD" } }],
   },
   {
     categorie: "holter-ecg",
@@ -131,7 +134,7 @@ export const MODELES: Modele[] = [
     type: "logiciel",
     description: "Programme de suivi et de réadaptation, en abonnement mensuel sur la plateforme Cloud HDS.",
     formules: ["mise_a_disposition"],
-    variantes: [{ defaultCode: "EC-DMS-CARDIOVISION-CLOUD", configuration: "Abonnement mensuel", prixHt: 59 }],
+    variantes: [{ defaultCode: "EC-DMS-CARDIOVISION-CLOUD", configuration: "Abonnement mensuel", prixHt: 59, mad: { premierMois: 59, moisSuivants: 59, valeurRemplacement: 0, logiciel: "EC-DMS-CARDIOVISION-CLOUD" } }],
   },
 
   // ---------------------------------------------------------------- Holter tensionnel / MAPA
@@ -608,6 +611,9 @@ export async function remplirCatalogue(db: PrismaClient): Promise<{ modeles: num
         quantiteParLot: v.quantiteParLot ?? 1,
         composants: v.composants ?? [],
         prixInvente: true,
+        // F12 : les configurations « + logiciel Cloud » et les packs Holter DMS incluent le
+        // logiciel CardioScan pour une période fixée dans Odoo (12 mois en démonstration).
+        ...(m.type === "equipement" && m.marque === "DMS" && /-(CLOUD|PACK)$/.test(v.defaultCode) ? { logicielInclus: LOGICIEL_HOLTER_CLOUD, moisInclus: 12 } : {}),
       };
       if (v.stock) {
         data.stock = {
@@ -627,7 +633,12 @@ export async function remplirCatalogue(db: PrismaClient): Promise<{ modeles: num
             valeurRemplacementCentimes: euros(v.mad.valeurRemplacement),
             // F05 : contenu du pack (FR-001, FR-003) et logiciel Cloud ouvert à l'expédition (FR-012).
             logiciel: v.mad.logiciel ?? null,
-            contenuPack: [
+            // F12 : pour un logiciel Cloud, l'offre mensuelle est l'abonnement, sans appareil.
+            contenuPack: v.mad.logiciel === v.defaultCode ? [
+              "L'accès au logiciel sur la plateforme Cloud hébergée en France (HDS)",
+              "Les mises à jour du logiciel",
+              "Sans engagement : résiliable chaque mois depuis votre compte",
+            ] : [
               "L'enregistreur, prêt à l'emploi",
               ...(v.mad.logiciel ? ["L'accès au logiciel Cloud d'analyse"] : []),
               "La formation à la prise en main, organisée avec notre équipe",

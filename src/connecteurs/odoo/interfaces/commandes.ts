@@ -38,7 +38,14 @@ export type NouvelleCommande = {
 
 export type FormuleLigne = "achat" | "mise_a_disposition";
 
-export type LigneDevis = { defaultCode: string; formule: FormuleLigne; quantite: number; offerte?: boolean };
+export type LigneDevis = {
+  defaultCode: string;
+  formule: FormuleLigne;
+  quantite: number;
+  offerte?: boolean;
+  /** F12 : abonnement logiciel qui ne commence qu'à cette date (fin d'une période incluse) : rien n'est dû avant. */
+  priseEffet?: Date | null;
+};
 
 export type DemandeDevis = {
   /** Client connecté (liste de prix, bons d'achat) ; null pour un visiteur. */

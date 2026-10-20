@@ -176,7 +176,17 @@ export async function enregistrerCoordonnees(d: FormData) {
       if (!Number.isInteger(n) || n < min || n > max) throw new SaisieRefusee(`${libelle} : nombre entier entre ${min} et ${max}.`);
       return String(n);
     };
+    // F06 et F12 : rappels et accès Cloud (principe VI).
+    const urlPlateforme = t(d, "urlPlateforme").trim();
+    if (!/^(https:\/\/[^\s]+|\/[A-Za-z0-9/_-]*)$/.test(urlPlateforme)) throw new SaisieRefusee("Adresse de la plateforme : https://… ou chemin du site commençant par /.");
     const valeurs: Record<string, string> = {
+      "fidelite.rappel_droits_jours": entier("rappelDroits", "Rappel avant la fin des droits", 1, 60),
+      "fidelite.rappel_expiration_jours": entier("rappelExpiration", "Rappel avant l'expiration de bons", 1, 120),
+      "cloud.delai_grace_jours": entier("delaiGrace", "Délai de grâce", 0, 180),
+      "cloud.rappel_periode_jours": entier("rappelPeriode", "Rappel avant la fin d'une période incluse", 1, 120),
+      "cloud.rappel_fin_jours": entier("rappelFinCloud", "Rappel avant la fin d'un accès Cloud", 1, 60),
+      "cloud.url_plateforme": urlPlateforme,
+      "cloud.aide_premiere_connexion": exigerTexte(t(d, "aideConnexion"), "Aide à la première connexion", 20, 1500),
       "livraison.jours_non_livres": JSON.stringify([...new Set(jours)].sort()),
       "livraison.zones_sans_lendemain": JSON.stringify(zones),
       "livraison.delai_zones_jours": entier("delaiZones", "Délai des zones éloignées", 0, 10),

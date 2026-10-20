@@ -54,8 +54,13 @@ export async function reinitialiserDemonstration(auteur: Auteur): Promise<BilanR
       site.suiviLocation.deleteMany(),
       // F06 : suivis de fidélité des séances
       site.suiviFidelite.deleteMany(),
+      // F12 : registre des accès Cloud et tâches de l'équipe (repris de la plateforme ci-dessous)
+      site.tacheAcces.deleteMany(),
+      site.accesLogiciel.deleteMany(),
     ]);
     const bilan = await remplirJeuDeDepart(dbDemo(), site);
+    const { reprendreAccesExistants } = await import("@/domaine/cloud/acces");
+    await reprendreAccesExistants();
     await site.journalAction.create({
       data: {
         auteurId: auteur.id,
@@ -354,3 +359,9 @@ export const fideliteDemoOps = {
     await journaliser(auteur, "demo.promotion_terminee", String(id), null, {});
   },
 };
+
+/** F12 : sous-mode de la plateforme Cloud simulée (réglage de l'écran de démonstration). */
+export async function sousModePlateformeDemo(): Promise<"auto" | "manual"> {
+  const { sousModeDemo } = await import("./pca/demo");
+  return sousModeDemo();
+}

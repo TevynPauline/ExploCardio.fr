@@ -113,6 +113,9 @@ export async function avancer(d: FormData) {
     // Les changements portent la date réelle d'Odoo : le suivi les relève à l'heure actuelle.
     await suivreLocations();
     await envoyerRappelsLocations(fin);
+    // F12 : échéances des accès Cloud (délai de grâce, fermeture, rappels) à la date simulée.
+    const { traiterEcheancesCloud } = await import("@/domaine/cloud/echeances");
+    await traiterEcheancesCloud(fin);
   } catch (e) {
     if (e instanceof ValeurRefusee || estErreurConnecteur(e)) retour({ erreur: e.message });
     throw e;

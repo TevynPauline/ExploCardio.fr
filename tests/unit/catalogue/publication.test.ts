@@ -33,6 +33,7 @@ const article = (modif: Partial<Article> = {}): Article => ({
       paliers: [],
       mensualitesForcees: [],
       composants: [],
+      logicielInclus: null,
     },
   ],
   ...modif,

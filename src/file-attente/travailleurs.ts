@@ -68,6 +68,13 @@ export async function demarrerTravailleurs() {
     const { envoyerRappelsFidelite } = await import("@/domaine/fidelite/rappels");
     await envoyerRappelsFidelite();
   });
+  // F12 : échéances des accès Cloud (délai de grâce, fermeture, rappels, alertes), toutes les heures.
+  await boss.createQueue("acces-cloud").catch(() => undefined);
+  await boss.schedule("acces-cloud", "7 * * * *");
+  await boss.work("acces-cloud", async () => {
+    const { traiterEcheancesCloud } = await import("@/domaine/cloud/echeances");
+    await traiterEcheancesCloud();
+  });
   // F04 : virements (rappel, réception, annulation à l'échéance), chaque matin.
   await boss.createQueue("virements").catch(() => undefined);
   await boss.schedule("virements", "0 7 * * *");

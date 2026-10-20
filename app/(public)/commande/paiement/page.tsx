@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { logicielsDes } from "@/domaine/cloud/abonnement";
 import { redirect } from "next/navigation";
 import { actionPaiement } from "@/actions/commande";
 import { avecAssistanceActe, lignesDe, virementDisponible } from "@/domaine/commande/tunnel";
@@ -38,7 +39,9 @@ export default async function Paiement({ searchParams }: { searchParams: Promise
   const virement = achat && !avecAssistanceActe(lignes) && (await virementDisponible());
   // Mode de livraison des achats et date de chaque mise à disposition choisis à l'étape précédente.
   const dates = (commande.datesLivraisonMad ?? {}) as Record<string, string>;
-  const dateManquante = lignes.some((l) => l.formule === "mise_a_disposition" && !dates[l.defaultCode]);
+  // F12 : un abonnement logiciel n'a pas de date de livraison.
+  const logiciels = await logicielsDes(lignes);
+  const dateManquante = lignes.some((l) => l.formule === "mise_a_disposition" && !logiciels.has(l.defaultCode) && !dates[l.defaultCode]);
   if ((achat && !commande.modeLivraison) || dateManquante) redirect(`/commande/livraison?ref=${commande.ref}`);
   return (
     <div className="mx-auto flex max-w-page flex-col gap-6 px-4 py-10">
