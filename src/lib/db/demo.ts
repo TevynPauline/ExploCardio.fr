@@ -1,4 +1,5 @@
 import { PrismaPg } from "@prisma/adapter-pg";
+import { tailleDuGroupe } from "./pool";
 import { PrismaClient } from "@generated/demo/client";
 
 // Base de démonstration : équivalent fictif d'Odoo (data-model.md §2).
@@ -16,7 +17,7 @@ function creerClient(): PrismaClient {
   if (!url) {
     throw new Error("DEMO_DATABASE_URL est absente : la base de démonstration n'est pas configurée.");
   }
-  return new PrismaClient({ adapter: new PrismaPg({ connectionString: url }) });
+  return new PrismaClient({ adapter: new PrismaPg({ connectionString: url, max: tailleDuGroupe() }) });
 }
 
 export function dbDemo(): PrismaClient {

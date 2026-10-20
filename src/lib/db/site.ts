@@ -1,4 +1,5 @@
 import { PrismaPg } from "@prisma/adapter-pg";
+import { tailleDuGroupe } from "./pool";
 import { PrismaClient } from "@generated/site/client";
 
 // Base du site : données propres au site, réelles dès la phase 1 (data-model.md §1).
@@ -10,7 +11,7 @@ function creerClient(): PrismaClient {
   if (!url) {
     throw new Error("DATABASE_URL est absente : la base du site n'est pas configurée.");
   }
-  return new PrismaClient({ adapter: new PrismaPg({ connectionString: url }) });
+  return new PrismaClient({ adapter: new PrismaPg({ connectionString: url, max: tailleDuGroupe() }) });
 }
 
 export function dbSite(): PrismaClient {

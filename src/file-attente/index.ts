@@ -16,7 +16,7 @@ export async function fileAttente(): Promise<PgBoss> {
   globale.__fileAttente ??= (async () => {
     const url = process.env.DATABASE_URL;
     if (!url) throw new Error("DATABASE_URL est absente : la file d'attente ne peut pas démarrer.");
-    const boss = new PgBoss({ connectionString: url, schema: "file_attente" });
+    const boss = new PgBoss({ connectionString: url, schema: "file_attente", max: 3 });
     boss.on("error", (e: unknown) => console.error("[file d'attente]", e));
     await boss.start();
     return boss;
