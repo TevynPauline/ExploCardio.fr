@@ -4,6 +4,18 @@ Base du site (données réelles dès la phase 1), sauf mention contraire. Les do
 déclenchent les scénarios (commandes, bons, droits, paiements) restent dans Odoo et sont lues
 par son connecteur.
 
+## Correspondance avec les entités de la spec
+
+| Spec | Ici |
+|---|---|
+| Envoi | `Envoi` |
+| Modèle d'email | catalogue (code) + `ModeleEmail` (textes) |
+| Scénario automatisé, règles d'envoi | paramètres `emailing.*` |
+| Préférences de communication | `PreferencesEmail` + newsletter existante |
+| Preuve de consentement | `Consentement` (existant) |
+| Rythme de commande | calculé à chaque passage à partir des commandes d'Odoo, non stocké |
+| Échéance de relance | clé unique de l'`Envoi` (ex. `reappro:<compte>:<article>:<date>`) |
+
 ## Envoi (`envoi`) — trace et file
 
 | Champ | Type | Règles |

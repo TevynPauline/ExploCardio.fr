@@ -106,6 +106,9 @@ Fonction pure `decider(envoi, contexte, maintenant)` → `envoyer` | `reporter(d
   échéance ; une nouvelle commande change la clé et recalcule la date (SC-005 par
   construction). Relance si la date prévue est dans moins de 7 jours (réglable) et n'est pas
   dépassée de plus de 7 jours. Regroupement par compte des articles dus dans la même fenêtre.
+  Article retiré du catalogue ou en rupture : pas de relance. **Écart assumé** avec le cas
+  limite de la spec (« propose son remplaçant s'il est défini ») : la base fictive ne connaît
+  pas de remplaçant ; le champ « produits alternatifs » d'Odoo pourra être lu en F14.
 - Contenu : article, prix HT du jour, quantité habituelle, gain estimé en bons et droits
   (`estimerGains` de F06), bouton « Commander de nouveau » →
   `/panier/recommander?ref=…&quantite=…` (connexion exigée, ajout au panier, arrivée sur le
@@ -135,7 +138,10 @@ Fonction pure `decider(envoi, contexte, maintenant)` → `envoyer` | `reporter(d
   niveaux de relance des factures d'Odoo ; en démonstration, table `NiveauRelance` de la base
   fictive, 3 niveaux : J-5, J-2, J-1, le dernier « avec conséquence »). Créances suivies :
   commandes par virement en attente (échéance = annulation, F04) et locations ou abonnements
-  logiciels en impayé (date de suspension, F05 et F12). La tâche quotidienne envoie le niveau
+  logiciels en impayé (date de suspension, F05 et F12). Dates de conséquence : virement → échéance de la commande ; location ou abonnement
+  logiciel → début de l'impayé + délai de régularisation des règles de location d'Odoo
+  (`delaiRegularisationJours`). L'email immédiat « prélèvement refusé » de F05 est conservé ;
+  aucun niveau ne part le même jour que lui. La tâche quotidienne envoie le niveau
   atteint le plus élevé non encore envoyé (clé `impaye:<objet>:<niveau>`) ; un niveau dépassé
   n'est pas rattrapé ; arrêt dès que le paiement est enregistré (revérifié à l'envoi).
   Famille transactionnelle. Le rappel de virement de F04 (`virement.rappel_jours`) est
