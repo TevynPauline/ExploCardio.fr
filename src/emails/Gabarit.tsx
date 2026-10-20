@@ -4,7 +4,19 @@ import { charte, urlDuSite } from "./charte";
 import type { ContactEmail } from "./contact";
 
 // Gabarit commun des emails ExploCardio.fr : logo officiel, Inter avec police de repli,
-// couleur d'action unique, ton sobre et vouvoiement (principes VII et IX).
+// couleur d'action unique, ton sobre et vouvoiement (principes VII et IX). F10 : pied selon la
+// famille (raison de l'envoi, préférences, désinscription), expéditeur et mentions légales,
+// lisible en mode sombre.
+
+export type FamilleGabarit = "transactionnel" | "service" | "commercial";
+
+export type PiedPreferences = {
+  /** « Vous recevez cet email parce que… » */
+  raison: string;
+  preferences: string;
+  /** Commercial : lien de désinscription en un clic. */
+  desinscription?: string;
+};
 
 type GabaritProps = {
   apercu: string;
@@ -12,13 +24,22 @@ type GabaritProps = {
   children: ReactNode;
   /** F09 : numéro, horaires et lien WhatsApp en pied de message (null sans numéro). */
   contact?: ContactEmail;
+  famille?: FamilleGabarit;
+  pied?: PiedPreferences;
+  expediteur?: string;
+  adresse?: string;
 };
 
-export function Gabarit({ apercu, titre, children, contact }: GabaritProps) {
+const petit = { fontSize: 12, lineHeight: 1.6, color: charte.secondaire, margin: "0 0 8px" } as const;
+
+export function Gabarit({ apercu, titre, children, contact, famille = "transactionnel", pied, expediteur = "ExploCardio.fr", adresse }: GabaritProps) {
   const demonstration = process.env.SITE_MODE !== "prod";
   return (
     <Html lang="fr">
-      <Head />
+      <Head>
+        <meta name="color-scheme" content="light dark" />
+        <meta name="supported-color-schemes" content="light dark" />
+      </Head>
       <Preview>{apercu}</Preview>
       <Body style={{ margin: 0, backgroundColor: charte.fond, fontFamily: charte.police, color: charte.encre }}>
         <Container style={{ maxWidth: 600, margin: "0 auto", padding: "32px 16px" }}>
@@ -37,7 +58,7 @@ export function Gabarit({ apercu, titre, children, contact }: GabaritProps) {
               marginTop: 24,
             }}
           >
-            <Text style={{ fontSize: 24, fontWeight: 300, lineHeight: 1.2, margin: "0 0 16px" }}>{titre}</Text>
+            <Text role="heading" aria-level={1} style={{ fontSize: 24, fontWeight: 300, lineHeight: 1.2, margin: "0 0 16px" }}>{titre}</Text>
             {children}
           </Section>
           {contact ? (
@@ -49,8 +70,28 @@ export function Gabarit({ apercu, titre, children, contact }: GabaritProps) {
             </Section>
           ) : null}
           <Hr style={{ borderColor: charte.trait, margin: "32px 0 16px" }} />
-          <Text style={{ fontSize: 12, color: charte.secondaire, margin: 0 }}>
-            ExploCardio.fr — Le spécialiste des explorations fonctionnelles cardiaques (hors imagerie).
+          {famille !== "transactionnel" && pied ? (
+            <Section>
+              <Text style={petit}>{pied.raison}</Text>
+              <Text style={petit}>
+                <a href={pied.preferences} style={{ color: charte.action }}>Gérer mes préférences d’emails</a>
+                {famille === "commercial" && pied.desinscription ? (
+                  <>
+                    {" · "}
+                    <a href={pied.desinscription} style={{ color: charte.action }}>Se désinscrire</a>
+                  </>
+                ) : null}
+              </Text>
+            </Section>
+          ) : null}
+          <Text style={petit}>
+            {expediteur} — Le spécialiste des explorations fonctionnelles cardiaques (hors imagerie).
+            {adresse ? ` ${adresse}.` : ""}
+          </Text>
+          <Text style={{ ...petit, margin: 0 }}>
+            <a href={urlDuSite("/mentions-legales")} style={{ color: charte.secondaire }}>Mentions légales</a>
+            {" · "}
+            <a href={urlDuSite("/confidentialite")} style={{ color: charte.secondaire }}>Confidentialité</a>
           </Text>
         </Container>
       </Body>

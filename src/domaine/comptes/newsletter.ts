@@ -1,4 +1,4 @@
-import { registre } from "@/connecteurs/registre";
+import { synchroniserContact } from "@/domaine/emailing/preferences";
 import { dbSite } from "@/lib/db/site";
 import { ouvrirDroitSiEligible } from "./bienvenue";
 
@@ -25,7 +25,7 @@ export async function synchroniserNewsletterDuCompte(compteId: string): Promise<
     });
   }
   const abonne = await dernierEtat(compteId);
-  await registre.emailing().mettreAJourContact({ email, consentements: { newsletter: abonne } });
+  await synchroniserContact(email, { newsletter: abonne });
   if (abonne) await ouvrirDroitSiEligible(compteId);
 }
 
@@ -43,7 +43,7 @@ export async function changerAbonnement(compteId: string, abonne: boolean): Prom
       textePresente: abonne ? TEXTE_ABONNEMENT_COMPTE : "Désabonnement de la newsletter depuis « Mon compte »",
     },
   });
-  await registre.emailing().mettreAJourContact({ email: compte.utilisateur.email, consentements: { newsletter: abonne } });
+  await synchroniserContact(compte.utilisateur.email, { newsletter: abonne });
   if (abonne) await ouvrirDroitSiEligible(compteId);
 }
 

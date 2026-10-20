@@ -23,7 +23,11 @@ export const metadata: Metadata = { title: "Panier" };
 
 // Panier (F04, US1) : deux blocs, « Paiement unique » et « Abonnement mensuel », montants du
 // devis d'Odoo, quantités modifiables, code promo, changements signalés.
-export default async function Panier() {
+export default async function Panier({ searchParams }: { searchParams: Promise<{ ajout?: string }> }) {
+  const { ajout } = await searchParams;
+  // F10 : retour de « Commander de nouveau » (relance de réapprovisionnement).
+  const avis =
+    ajout === "recommande" ? "L’article de votre relance a été ajouté à votre panier. Vérifiez la quantité avant de commander." : ajout === "impossible" ? "Cet article ne peut plus être commandé en ligne : contactez-nous pour le remplacer." : null;
   const compte = await compteConnecte();
   const jeton = (await cookies()).get(COOKIE_PANIER)?.value;
   const panier = await panierPour(compte ? { compteId: compte.id } : { jeton }, false);
@@ -34,6 +38,7 @@ export default async function Panier() {
       <div className="mx-auto flex max-w-page flex-col gap-4 px-4 py-10">
         <Kicker>Panier</Kicker>
         <h1 className="text-display font-light">Votre panier est vide</h1>
+        {avis ? <p role="status" className="ec-box--info p-4">{avis}</p> : null}
         <p><Link href="/catalogue" className="ec-btn ec-btn--primary">Découvrir le catalogue</Link></p>
       </div>
     );
@@ -82,6 +87,7 @@ export default async function Panier() {
         <h1 className="text-display font-light">Votre panier</h1>
         {modeDuSite() === "demo" ? <p className="text-small text-muted">Version de démonstration : aucun paiement réel.</p> : null}
       </div>
+      {avis ? <p role="status" className="ec-box--info p-4">{avis}</p> : null}
       {detail.indisponible ? (
         <p role="status" className="ec-box--info p-4">
           Les prix et la disponibilité sont momentanément indisponibles. Votre panier est conservé : réessayez dans quelques instants.

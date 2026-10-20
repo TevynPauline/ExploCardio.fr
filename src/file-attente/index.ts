@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { notifierEquipe } from "@/domaine/emailing/envoi";
 import { PgBoss, type Job } from "pg-boss";
 import { dbSite } from "@/lib/db/site";
 import { lireParametre, lireParametreEntier } from "@/lib/parametres";
@@ -80,8 +81,7 @@ export async function signalerEchecsRepetes(file: string, job: Pick<Job, "id" | 
     .map((d) => d.trim())
     .filter(Boolean);
   if (destinataires.length) {
-    const { registre } = await import("@/connecteurs/registre");
-    await registre.emailing().envoyerNotificationEquipe(
+    await notifierEquipe(
       {
         canal: "email",
         destinataires,

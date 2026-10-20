@@ -221,3 +221,42 @@ export async function terminerPromotion(donnees: FormData) {
     invaliderDepuisAction("catalogue", "prix", "fidelite");
   });
 }
+
+export async function modifierNiveauxRelance(donnees: FormData) {
+  const a = await auteur();
+  await executer("/admin/demonstration/parametres-commerciaux", "Niveaux de relance enregistrés.", async () => {
+    const { relancesDemo } = await import("@/connecteurs/demonstration");
+    await relancesDemo.modifierNiveaux(a, [1, 2, 3].map((niveau) => ({ niveau, joursAvantConsequence: entier(donnees, `niveau${niveau}`, `Niveau ${niveau}`) })));
+  });
+}
+
+// F10 : emails automatisés (historique de commandes régulières, scénarios à la demande).
+const EMAILS = "/admin/demonstration/emails";
+
+export async function simulerCommandesRegulieres(donnees: FormData) {
+  const a = await auteur();
+  await executer(EMAILS, "Historique de commandes créé.", async () => {
+    const { emailingDemoOps } = await import("@/connecteurs/demonstration");
+    await emailingDemoOps.simulerCommandesRegulieres(a, {
+      partenaireRef: texte(donnees, "partenaire"),
+      defaultCode: texte(donnees, "article"),
+      quantite: entier(donnees, "quantite", "Quantité"),
+      intervalleJours: entier(donnees, "intervalle", "Intervalle"),
+      nombre: entier(donnees, "nombre", "Nombre de commandes"),
+      derniereIlYaJours: entier(donnees, "derniere", "Dernière commande"),
+    });
+  });
+}
+
+export async function lancerScenariosEmails() {
+  const a = await auteur();
+  const { emailingDemoOps } = await import("@/connecteurs/demonstration");
+  let bilan: Awaited<ReturnType<typeof emailingDemoOps.lancerScenarios>>;
+  try {
+    bilan = await emailingDemoOps.lancerScenarios(a);
+  } catch (e) {
+    if (e instanceof ValeurRefusee || estErreurConnecteur(e)) retour(EMAILS, { erreur: e.message });
+    throw e;
+  }
+  retour(EMAILS, { ok: `Scénarios lancés : ${bilan.reapprovisionnement} relance(s) de réapprovisionnement, ${bilan.paniers} rappel(s) de panier, ${bilan.impayes} relance(s) de paiement.` });
+}

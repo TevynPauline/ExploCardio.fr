@@ -753,3 +753,16 @@ model RemboursementDemo {
 
   @@map("refund_demo")
 }
+
+/// Niveau de relance des factures impayées (équivalent de account_followup.followup.line
+/// d'Odoo, F10, D4) : jours avant la conséquence (annulation, suspension).
+model NiveauRelance {
+  id                    Int     @id
+  niveau                Int     @unique
+  libelle               String
+  joursAvantConsequence Int
+  annonceConsequence    Boolean @default(false)
+  estFictif             Boolean @default(true)
+
+  @@map("followup_line")
+}

@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { registre } from "@/connecteurs/registre";
+import { notifierEquipe } from "@/domaine/emailing/envoi";
 import { estErreurConnecteur } from "@/connecteurs/erreurs";
 import { dbSite } from "@/lib/db/site";
 import { lireParametre } from "@/lib/parametres";
@@ -56,7 +56,7 @@ export async function enregistrerMessage(s: SaisieContact): Promise<void> {
     },
   });
   try {
-    await registre.emailing().envoyerNotificationEquipe(
+    await notifierEquipe(
       {
         canal: "email",
         destinataires: await destinataires(),

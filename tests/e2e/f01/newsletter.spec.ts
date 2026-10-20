@@ -16,7 +16,7 @@ test("inscription depuis le pied de page, confirmation par le lien, désinscript
   const [inscription] = await requete<{ etat: string }>("site", `SELECT etat FROM inscription_newsletter WHERE email = $1`, [email]);
   expect(inscription!.etat).toBe("en_attente");
   const [message] = await requete<{ rendu: string }>("site", `SELECT rendu FROM message_demonstration WHERE destinataire = $1 ORDER BY date DESC LIMIT 1`, [email]);
-  expect(message!.rendu).toContain("se désinscrire");
+  expect(message!.rendu).toMatch(/se désinscrire/i);
   const lien = message!.rendu.match(/\/newsletter\/confirmation\?jeton=[A-Za-z0-9_-]+/)![0];
 
   await page.goto(lien);

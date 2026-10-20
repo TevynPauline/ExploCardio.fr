@@ -35,6 +35,14 @@ export async function remplirRegles(db: PrismaClient) {
       prixActeCentimes: REGLES_DEMO.prixAssistanceActeCentimes,
     },
   });
+  // F10 (D4) : niveaux de relance des impayés, en jours avant la conséquence.
+  await db.niveauRelance.createMany({
+    data: [
+      { id: 1, niveau: 1, libelle: "Premier rappel", joursAvantConsequence: 5 },
+      { id: 2, niveau: 2, libelle: "Deuxième rappel", joursAvantConsequence: 2 },
+      { id: 3, niveau: 3, libelle: "Dernier rappel", joursAvantConsequence: 1, annonceConsequence: true },
+    ],
+  });
 }
 
 function livraison(fraisPortHt = 1500): NouvelleCommande["livraison"] {

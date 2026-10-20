@@ -104,7 +104,11 @@ async function traiter(l: ChangementLocation, maintenant: Date): Promise<boolean
     if (email) await envoyer(email, await emailsLocations.prelevementEchoue({ appareil: l.libelle, delaiJours: regles.delaiRegularisationJours }), "prélèvement échoué", `location-impaye:${l.partenaireRef}:${l.ref}:${maintenant.toISOString().slice(0, 10)}`);
     await journal("location.prelevement_echoue", l.ref, {});
     maj.impayeNotifie = true;
-  } else if (!l.impaye && suivi.impayeNotifie) maj.impayeNotifie = false;
+    maj.impayeDepuis = maintenant;
+  } else if (!l.impaye && suivi.impayeNotifie) {
+    maj.impayeNotifie = false;
+    maj.impayeDepuis = null;
+  }
 
   if (l.etat !== suivi.dernierEtat) {
     if (l.etat === "suspendue_impaye") {

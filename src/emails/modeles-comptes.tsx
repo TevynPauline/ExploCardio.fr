@@ -1,118 +1,111 @@
-import { render } from "@react-email/render";
-import { contactEmail } from "./contact";
 import { urlDuSite } from "./charte";
-import { BoutonEmail, Gabarit, Paragraphe } from "./Gabarit";
-import type { EmailRendu } from "./modeles";
+import { BoutonEmail } from "./Gabarit";
+import { rendreModele, type TextesModele } from "./textes";
 
 // Emails de F02 (contracts/emails.md) : gabarit de la charte, vouvoiement, aucun mot de passe.
+// F10 (D2) : textes modifiables au back-office ; mise en page et boutons fixes.
 
-async function email(modele: string, objet: string, apercu: string, corps: React.ReactNode): Promise<EmailRendu> {
-  return { modele, objet, rendu: await render(<Gabarit contact={await contactEmail()} apercu={apercu} titre={objet}>{corps}</Gabarit>) };
+export const TEXTES_COMPTES = {
+  compte_valide: {
+    objet: "Votre compte est validé",
+    apercu: "Vous pouvez commander",
+    blocs: { corps: "Bonjour,\n\nVotre compte professionnel ExploCardio.fr est validé : vous pouvez désormais commander." },
+  },
+  compte_refuse: {
+    objet: "Votre demande de compte",
+    apercu: "Votre compte n'a pas pu être validé",
+    blocs: { corps: "Bonjour,\n\nNous n’avons pas pu valider votre compte professionnel. Contactez-nous : nous vous expliquerons ce qui manque et comment y remédier." },
+  },
+  compte_suspendu: {
+    objet: "Votre compte est suspendu",
+    apercu: "Les commandes sont suspendues",
+    blocs: { corps: "Bonjour,\n\nVotre compte est suspendu : vous ne pouvez plus commander pour le moment. Contactez-nous pour le rétablir." },
+  },
+  compte_retabli: {
+    objet: "Votre compte est rétabli",
+    apercu: "Vous pouvez à nouveau commander",
+    blocs: { corps: "Bonjour,\n\nVotre compte est rétabli : vous pouvez à nouveau commander." },
+  },
+  mot_de_passe_modifie: {
+    objet: "Votre mot de passe a été modifié",
+    apercu: "Modification de votre mot de passe",
+    blocs: {
+      corps:
+        "Bonjour,\n\nLe mot de passe de votre compte vient d’être modifié et vos autres sessions ont été fermées. Si vous n’êtes pas à l’origine de ce changement, réinitialisez votre mot de passe et contactez-nous.",
+    },
+  },
+  compte_bloque: {
+    objet: "Votre compte est temporairement bloqué",
+    apercu: "Plusieurs tentatives de connexion ont échoué",
+    blocs: {
+      corps:
+        "Bonjour,\n\nPlusieurs tentatives de connexion à votre compte ont échoué. Par sécurité, il est bloqué pendant 15 minutes. Si ce n’était pas vous, nous vous conseillons de changer votre mot de passe.",
+    },
+  },
+  confirmer_nouvel_email: {
+    objet: "Confirmez votre nouvelle adresse",
+    apercu: "Un clic pour confirmer le changement",
+    blocs: { corps: "Bonjour,\n\nConfirmez cette adresse pour qu’elle remplace l’ancienne sur votre compte ExploCardio.fr." },
+  },
+  email_change: {
+    objet: "Changement de l'adresse de votre compte",
+    apercu: "Une nouvelle adresse a été demandée",
+    blocs: {
+      corps:
+        "Bonjour,\n\nUn changement d’adresse email a été demandé pour votre compte, vers {{nouvelle_adresse}}. Si vous n’êtes pas à l’origine de cette demande, contactez-nous sans attendre.",
+    },
+  },
+  double_authentification: {
+    objet: "Double authentification {{etat}}",
+    apercu: "Sécurité de votre compte",
+    blocs: { corps: "Bonjour,\n\nLa double authentification de votre compte vient d’être {{etat}}. Si vous n’êtes pas à l’origine de ce changement, contactez-nous." },
+  },
+  cadeau_en_attente: {
+    objet: "Votre cadeau de bienvenue arrive bientôt",
+    apercu: "Votre tensiomètre sera expédié dès son retour en stock",
+    blocs: {
+      corps:
+        "Bonjour,\n\nVotre commande est partie sans attendre. Votre tensiomètre de bienvenue est momentanément en rupture : il vous sera expédié dès son retour en stock.",
+    },
+  },
+  compte_supprime: {
+    objet: "Votre compte a été supprimé",
+    apercu: "Confirmation de suppression",
+    blocs: {
+      corps:
+        "Bonjour,\n\nVotre compte ExploCardio.fr a été supprimé et vos données personnelles effacées. Les factures sont conservées pendant la durée imposée par la loi. Vous ne recevrez plus la newsletter.",
+    },
+  },
+} satisfies Record<string, TextesModele>;
+
+type Code = keyof typeof TEXTES_COMPTES;
+
+function email(modele: Code, bouton?: { href: string; libelle: string }, variables?: Record<string, string>) {
+  return rendreModele({
+    modele,
+    defaut: TEXTES_COMPTES[modele],
+    variables,
+    corps: (t) => (
+      <>
+        {t.bloc("corps")}
+        {bouton ? <BoutonEmail href={bouton.href}>{bouton.libelle}</BoutonEmail> : null}
+      </>
+    ),
+  });
 }
 
+const CONTACT = () => ({ href: urlDuSite("/qui-sommes-nous#contact"), libelle: "Nous contacter" });
+
 export const emailsComptes = {
-  compteValide: () =>
-    email("compte_valide", "Votre compte est validé", "Vous pouvez commander", (
-      <>
-        <Paragraphe>Bonjour,</Paragraphe>
-        <Paragraphe>Votre compte professionnel ExploCardio.fr est validé : vous pouvez désormais commander.</Paragraphe>
-        <BoutonEmail href={urlDuSite("/mon-compte")}>Accéder à mon compte</BoutonEmail>
-      </>
-    )),
-  compteRefuse: () =>
-    email("compte_refuse", "Votre demande de compte", "Votre compte n'a pas pu être validé", (
-      <>
-        <Paragraphe>Bonjour,</Paragraphe>
-        <Paragraphe>
-          Nous n’avons pas pu valider votre compte professionnel. Contactez-nous : nous vous expliquerons ce qui
-          manque et comment y remédier.
-        </Paragraphe>
-        <BoutonEmail href={urlDuSite("/qui-sommes-nous#contact")}>Nous contacter</BoutonEmail>
-      </>
-    )),
-  compteSuspendu: () =>
-    email("compte_suspendu", "Votre compte est suspendu", "Les commandes sont suspendues", (
-      <>
-        <Paragraphe>Bonjour,</Paragraphe>
-        <Paragraphe>Votre compte est suspendu : vous ne pouvez plus commander pour le moment. Contactez-nous pour le rétablir.</Paragraphe>
-        <BoutonEmail href={urlDuSite("/qui-sommes-nous#contact")}>Nous contacter</BoutonEmail>
-      </>
-    )),
-  compteRetabli: () =>
-    email("compte_retabli", "Votre compte est rétabli", "Vous pouvez à nouveau commander", (
-      <>
-        <Paragraphe>Bonjour,</Paragraphe>
-        <Paragraphe>Votre compte est rétabli : vous pouvez à nouveau commander.</Paragraphe>
-      </>
-    )),
-  motDePasseModifie: () =>
-    email("mot_de_passe_modifie", "Votre mot de passe a été modifié", "Modification de votre mot de passe", (
-      <>
-        <Paragraphe>Bonjour,</Paragraphe>
-        <Paragraphe>
-          Le mot de passe de votre compte vient d’être modifié et vos autres sessions ont été fermées. Si vous n’êtes pas
-          à l’origine de ce changement, réinitialisez votre mot de passe et contactez-nous.
-        </Paragraphe>
-        <BoutonEmail href={urlDuSite("/mot-de-passe-oublie")}>Réinitialiser mon mot de passe</BoutonEmail>
-      </>
-    )),
-  compteBloque: () =>
-    email("compte_bloque", "Votre compte est temporairement bloqué", "Plusieurs tentatives de connexion ont échoué", (
-      <>
-        <Paragraphe>Bonjour,</Paragraphe>
-        <Paragraphe>
-          Plusieurs tentatives de connexion à votre compte ont échoué. Par sécurité, il est bloqué pendant 15 minutes.
-          Si ce n’était pas vous, nous vous conseillons de changer votre mot de passe.
-        </Paragraphe>
-        <BoutonEmail href={urlDuSite("/mot-de-passe-oublie")}>Changer mon mot de passe</BoutonEmail>
-      </>
-    )),
-  confirmerNouvelEmail: (lien: string) =>
-    email("confirmer_nouvel_email", "Confirmez votre nouvelle adresse", "Un clic pour confirmer le changement", (
-      <>
-        <Paragraphe>Bonjour,</Paragraphe>
-        <Paragraphe>Confirmez cette adresse pour qu’elle remplace l’ancienne sur votre compte ExploCardio.fr.</Paragraphe>
-        <BoutonEmail href={lien}>Confirmer ma nouvelle adresse</BoutonEmail>
-      </>
-    )),
-  ancienEmailPrevenu: (nouvelle: string) =>
-    email("email_change", "Changement de l'adresse de votre compte", "Une nouvelle adresse a été demandée", (
-      <>
-        <Paragraphe>Bonjour,</Paragraphe>
-        <Paragraphe>
-          Un changement d’adresse email a été demandé pour votre compte, vers {nouvelle}. Si vous n’êtes pas à l’origine
-          de cette demande, contactez-nous sans attendre.
-        </Paragraphe>
-      </>
-    )),
-  doubleAuthentification: (active: boolean) =>
-    email("double_authentification", `Double authentification ${active ? "activée" : "désactivée"}`, "Sécurité de votre compte", (
-      <>
-        <Paragraphe>Bonjour,</Paragraphe>
-        <Paragraphe>
-          La double authentification de votre compte vient d’être {active ? "activée" : "désactivée"}. Si vous n’êtes pas
-          à l’origine de ce changement, contactez-nous.
-        </Paragraphe>
-      </>
-    )),
-  cadeauEnAttente: () =>
-    email("cadeau_en_attente", "Votre cadeau de bienvenue arrive bientôt", "Votre tensiomètre sera expédié dès son retour en stock", (
-      <>
-        <Paragraphe>Bonjour,</Paragraphe>
-        <Paragraphe>
-          Votre commande est partie sans attendre. Votre tensiomètre de bienvenue est momentanément en rupture : il vous
-          sera expédié dès son retour en stock.
-        </Paragraphe>
-      </>
-    )),
-  compteSupprime: () =>
-    email("compte_supprime", "Votre compte a été supprimé", "Confirmation de suppression", (
-      <>
-        <Paragraphe>Bonjour,</Paragraphe>
-        <Paragraphe>
-          Votre compte ExploCardio.fr a été supprimé et vos données personnelles effacées. Les factures sont conservées
-          pendant la durée imposée par la loi. Vous ne recevrez plus la newsletter.
-        </Paragraphe>
-      </>
-    )),
+  compteValide: () => email("compte_valide", { href: urlDuSite("/mon-compte"), libelle: "Accéder à mon compte" }),
+  compteRefuse: () => email("compte_refuse", CONTACT()),
+  compteSuspendu: () => email("compte_suspendu", CONTACT()),
+  compteRetabli: () => email("compte_retabli"),
+  motDePasseModifie: () => email("mot_de_passe_modifie", { href: urlDuSite("/mot-de-passe-oublie"), libelle: "Réinitialiser mon mot de passe" }),
+  compteBloque: () => email("compte_bloque", { href: urlDuSite("/mot-de-passe-oublie"), libelle: "Changer mon mot de passe" }),
+  confirmerNouvelEmail: (lien: string) => email("confirmer_nouvel_email", { href: lien, libelle: "Confirmer ma nouvelle adresse" }),
+  ancienEmailPrevenu: (nouvelle: string) => email("email_change", undefined, { nouvelle_adresse: nouvelle }),
+  doubleAuthentification: (active: boolean) => email("double_authentification", undefined, { etat: active ? "activée" : "désactivée" }),
+  cadeauEnAttente: () => email("cadeau_en_attente"),
+  compteSupprime: () => email("compte_supprime"),
 };

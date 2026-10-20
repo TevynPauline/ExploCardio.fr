@@ -14,8 +14,20 @@ export type ResumeFacture = MarqueFictive & {
   references: string[];
 };
 
+/** Niveau de relance des paiements en retard (relances de factures d'Odoo, F10, D4). */
+export type NiveauRelance = {
+  niveau: number;
+  libelle: string;
+  /** Jours avant la conséquence (annulation de la commande, suspension). */
+  joursAvantConsequence: number;
+  /** Dernière relance : annonce la conséquence et sa date (FR-021). */
+  annonceConsequence: boolean;
+};
+
 export interface FacturesOdoo {
   listerFactures(partenaireRef: string): Promise<ResumeFacture[]>;
+  /** Niveaux de relance, du premier au dernier (F10, FR-020). */
+  lireNiveauxRelance(): Promise<NiveauRelance[]>;
   /** PDF de la facture ; porte la mention « FICTIVE » en démonstration (FR-032). */
   obtenirPdf(numero: string): Promise<Uint8Array>;
 }

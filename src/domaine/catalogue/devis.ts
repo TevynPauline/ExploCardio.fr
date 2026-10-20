@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { notifierEquipe } from "@/domaine/emailing/envoi";
 import { registre } from "@/connecteurs/registre";
 import { estErreurConnecteur } from "@/connecteurs/erreurs";
 import { dbSite } from "@/lib/db/site";
@@ -57,7 +58,7 @@ export async function envoyerDemandeDevis(s: SaisieDevis, sujet: SujetDevis = "e
   }
   const destinataire = (await lireParametre("contact.destinataire_messages"))?.trim() || "admin@demo.explocardio.test";
   try {
-    await registre.emailing().envoyerNotificationEquipe(
+    await notifierEquipe(
       {
         canal: "email",
         destinataires: [destinataire],

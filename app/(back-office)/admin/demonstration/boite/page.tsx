@@ -36,6 +36,10 @@ export default async function Boite({ searchParams }: { searchParams: Promise<Fi
     take: 200,
   });
   const choisi = f.message ? await dbSite().messageDemonstration.findUnique({ where: { id: f.message } }) : null;
+  // F10 (D9) : la première consultation simule l'ouverture de l'email par son destinataire.
+  if (choisi && choisi.type === "email_client" && !choisi.ouvertLe) {
+    await dbSite().messageDemonstration.update({ where: { id: choisi.id }, data: { ouvertLe: new Date() } });
+  }
   const lien = (extra: Record<string, string>) => `?${new URLSearchParams({ ...f, onglet, ...extra } as Record<string, string>).toString()}`;
 
   return (
@@ -103,7 +107,7 @@ export default async function Boite({ searchParams }: { searchParams: Promise<Fi
                     <span className="block font-medium text-ink">{m.objet}</span>
                     <span className="block text-small text-muted">
                       {TYPES[m.type]} · {m.destinataire} · {m.date.toLocaleString("fr-FR")}
-                      {m.etatRemise === "rejete" ? " · rejeté (simulé)" : ""}
+                      {m.etatRemise === "rejete" ? " · rejeté (simulé)" : m.etatRemise === "rejete_temporaire" ? " · rejet temporaire (simulé)" : ""}
                     </span>
                   </Link>
                 </li>
@@ -123,7 +127,7 @@ export default async function Boite({ searchParams }: { searchParams: Promise<Fi
                 <dt className="text-muted">Déclencheur</dt>
                 <dd>{choisi.declencheur}</dd>
                 <dt className="text-muted">Remise</dt>
-                <dd>{choisi.etatRemise === "rejete" ? "rejetée (simulée)" : "remis (simulé)"}</dd>
+                <dd>{choisi.etatRemise === "rejete" ? "rejetée (simulée)" : choisi.etatRemise === "rejete_temporaire" ? "rejet temporaire (simulé)" : "remis (simulé)"}</dd>
               </dl>
               {choisi.type === "notification_equipe_sms" ? (
                 <p className="mt-4 whitespace-pre-wrap rounded-sm bg-pale p-3">{choisi.rendu}</p>
@@ -135,6 +139,12 @@ export default async function Boite({ searchParams }: { searchParams: Promise<Fi
                   className="mt-4 h-[640px] w-full rounded-sm border border-line bg-surface"
                 />
               )}
+              {choisi.texte && choisi.type !== "notification_equipe_sms" ? (
+                <details className="mt-4">
+                  <summary className="min-h-11 cursor-pointer py-2 font-medium">Version texte</summary>
+                  <pre className="whitespace-pre-wrap rounded-sm bg-pale p-3 text-small">{choisi.texte}</pre>
+                </details>
+              ) : null}
             </article>
           ) : (
             <p className="text-muted">Choisissez un message pour afficher son rendu.</p>

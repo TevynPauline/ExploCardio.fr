@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { ecranDemonstration } from "@/connecteurs/demonstration";
 import { saisieDepuisCentimes } from "@/lib/montants";
 import { Button, Card, Champ, Kicker, Retour } from "@/ui";
-import { modifierParametresCommerciaux, modifierReglesLocation, modifierRemisePromotion } from "../actions";
+import { modifierNiveauxRelance, modifierParametresCommerciaux, modifierReglesLocation, modifierRemisePromotion } from "../actions";
 import { registre } from "@/connecteurs/registre";
 
 export const metadata: Metadata = { title: "Paramètres commerciaux de démonstration" };
@@ -19,6 +19,7 @@ export default async function ParametresCommerciaux({
   const { promotions } = await ecranDemonstration.apercu();
   const lignes = [...p.paliers, { plancherCentimes: NaN, inclusif: true, tauxPourcent: NaN }];
   const location = await registre.odoo().location.lireRegles();
+  const niveaux = await registre.odoo().factures.lireNiveauxRelance();
   return (
     <div className="flex max-w-3xl flex-col gap-6">
       <Kicker>Démonstration</Kicker>
@@ -104,6 +105,17 @@ export default async function ParametresCommerciaux({
           <Champ id="loc-tolerance" name="tolerance" libelle="Tolérance avant le mois suivant (jours)" inputMode="numeric" defaultValue={String(location.toleranceRetardJours)} />
           <Champ id="loc-non-retour" name="nonRetour" libelle="Délai avant la valeur de remplacement (jours)" inputMode="numeric" defaultValue={String(location.delaiNonRetourJours)} />
           <div><Button type="submit" variante="secondaire">Enregistrer les règles de location</Button></div>
+        </form>
+      </Card>
+
+      <Card>
+        <h2 className="text-h3 font-semibold">Relances des paiements en retard (F10)</h2>
+        <p className="mt-1 text-small text-muted">En jours avant la conséquence (annulation d’une commande par virement, suspension d’une location). Le dernier niveau annonce la conséquence et sa date.</p>
+        <form action={modifierNiveauxRelance} className="mt-3 grid gap-3 sm:grid-cols-3">
+          {niveaux.map((n) => (
+            <Champ key={n.niveau} id={`relance-${n.niveau}`} name={`niveau${n.niveau}`} libelle={`${n.libelle} (jours avant)`} inputMode="numeric" defaultValue={String(n.joursAvantConsequence)} />
+          ))}
+          <div className="sm:col-span-3"><Button type="submit" variante="secondaire">Enregistrer les niveaux de relance</Button></div>
         </form>
       </Card>
 

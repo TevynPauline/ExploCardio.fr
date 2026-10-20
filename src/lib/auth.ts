@@ -1,9 +1,9 @@
 import { betterAuth } from "better-auth";
+import { demanderEnvoi } from "@/domaine/emailing/envoi";
 import { APIError, createAuthMiddleware, getSessionFromCtx } from "better-auth/api";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
 import { twoFactor } from "better-auth/plugins";
-import { registre } from "@/connecteurs/registre";
 import { dbSite } from "@/lib/db/site";
 import { emailConfirmationAdresse, emailReinitialisationMotDePasse } from "@/emails/modeles";
 import { emailsComptes } from "@/emails/modeles-comptes";
@@ -61,10 +61,7 @@ export const auth = betterAuth({
     },
     async sendResetPassword({ user, url }) {
       const email = await emailReinitialisationMotDePasse(url);
-      await registre.emailing().envoyerTransactionnel(
-        { ...email, destinataire: user.email, declencheur: "réinitialisation du mot de passe" },
-        `reinitialisation:${user.id}:${url.slice(-24)}`,
-      );
+      await demanderEnvoi({ modele: email.modele, destinataire: user.email, rendu: email, declencheur: "réinitialisation du mot de passe", cle: `reinitialisation:${user.id}:${url.slice(-24)}` });
     },
   },
   emailVerification: {
@@ -76,10 +73,7 @@ export const auth = betterAuth({
     },
     async sendVerificationEmail({ user, url }) {
       const email = await emailConfirmationAdresse(url);
-      await registre.emailing().envoyerTransactionnel(
-        { ...email, destinataire: user.email, declencheur: "confirmation de l'adresse" },
-        `confirmation:${user.id}:${url.slice(-24)}`,
-      );
+      await demanderEnvoi({ modele: email.modele, destinataire: user.email, rendu: email, declencheur: "confirmation de l'adresse", cle: `confirmation:${user.id}:${url.slice(-24)}` });
     },
   },
   rateLimit: { enabled: true, window: 60, max: 30 },

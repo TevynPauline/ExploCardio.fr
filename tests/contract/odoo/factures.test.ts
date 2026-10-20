@@ -49,6 +49,14 @@ suiteDeContrat("odoo", "factures (contracts/odoo.md §5)", ({ registre, mode }) 
     },
   );
 
+  it("fournit les niveaux de relance des paiements en retard, du premier au dernier (F10)", async () => {
+    const niveaux = await factures().lireNiveauxRelance();
+    expect(niveaux.length).toBeGreaterThan(0);
+    expect(niveaux.map((n) => n.niveau)).toEqual([...niveaux.map((n) => n.niveau)].sort((x, y) => x - y));
+    for (const n of niveaux) expect(n.joursAvantConsequence).toBeGreaterThan(0);
+    expect(niveaux.at(-1)!.annonceConsequence).toBe(true);
+  });
+
   it("lève NotFound pour une facture inconnue", async () => {
     await expect(factures().obtenirPdf("FICT/0000/99999")).rejects.toMatchObject({ code: "NOT_FOUND" });
   });

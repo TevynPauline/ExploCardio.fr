@@ -13,6 +13,7 @@ const OUTILS = [
   { href: "/admin/demonstration/fidelite", titre: "Fidélité", texte: "Ajustements de cagnottes et de droits, interventions à clore, expiration des bons, promotions." },
   { href: "/admin/demonstration/locations", titre: "Locations", texte: "Expédier, livrer, retours, impayés et actions planifiées des mises à disposition." },
   { href: "/admin/demonstration/pannes", titre: "Pannes simulées", texte: "Rendre un connecteur indisponible pour montrer les cas d'erreur." },
+  { href: "/admin/demonstration/emails", titre: "Emails automatisés", texte: "Commandes régulières d'un consommable et lancement des scénarios d'emails." },
   { href: "/admin/demonstration/boite", titre: "Boîte de démonstration", texte: "Emails et notifications qui auraient été envoyés." },
   { href: "/admin/demonstration/acces", titre: "Accès au site de démonstration", texte: "Mot de passe partagé avec les testeurs." },
   { href: "/admin/demonstration/reinitialiser", titre: "Réinitialiser", texte: "Revenir à l'état de départ, en moins d'une minute." },

@@ -5,6 +5,7 @@ import * as administration from "@/connecteurs/odoo/demo/administration";
 import { ajusterDroits } from "@/connecteurs/odoo/demo/fidelite-admin";
 import { suivreCommandes } from "@/domaine/commande/suivi";
 import { envoyerRappelsFidelite } from "@/domaine/fidelite/rappels";
+import { prochainCreneau, REGLES_PAR_DEFAUT } from "@/domaine/emailing/decision";
 import { suivreFidelite } from "@/domaine/fidelite/suivi";
 import { dbDemo } from "@/lib/db/demo";
 import { dbSite } from "@/lib/db/site";
@@ -62,7 +63,8 @@ describe("suivi de la fidélité : droits d'assistance (US2)", () => {
     const compte = await compteValide();
     await commandePayee(compte.partenaireRef, [{ defaultCode: ELECTRODES, quantite: 5 }]);
     const { fin } = await fidelite().lireDroitsAssistance(compte.partenaireRef);
-    const veille = new Date(fin!.getTime() - 3 * JOUR);
+    // F10 : alerte de service, envoyée dans les plages d'envoi (jours ouvrés, 8 h – 19 h).
+    const veille = prochainCreneau(new Date(fin!.getTime() - 3 * JOUR), REGLES_PAR_DEFAUT);
     await envoyerRappelsFidelite(veille);
     await envoyerRappelsFidelite(veille);
     expect(await emails(compte.email, "Votre assistance gratuite se termine bientôt")).toBe(1);

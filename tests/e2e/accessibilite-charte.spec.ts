@@ -59,6 +59,13 @@ const PAGES_BACK_OFFICE = [
   "/admin/contenus/aide",
   "/admin/contenus/aide/nouveau",
   "/admin/demonstration/locations",
+  // F10
+  "/admin/emails",
+  "/admin/emails/scenarios",
+  "/admin/emails/modeles",
+  "/admin/emails/modeles/commande_confirmee",
+  "/admin/emails/campagnes",
+  "/admin/demonstration/emails",
 ];
 
 async function ciblesTropPetites(page: Page): Promise<string[]> {

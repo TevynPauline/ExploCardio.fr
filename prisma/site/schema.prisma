@@ -509,6 +509,8 @@ model SuiviLocation {
   colisNonLivreNotifie Boolean   @default(false)
   attenteChoixNotifie  Boolean   @default(false)
   impayeNotifie        Boolean   @default(false)
+  /// F10 (D4) : début de l'impayé notifié ; la suspension est prévue à cette date + le délai de régularisation d'Odoo.
+  impayeDepuis         DateTime?
   retourNotifie        Boolean   @default(false)
   /// Dernière échéance rappelée au client (FR-025).
   echeanceRappelee     DateTime?
@@ -675,6 +677,9 @@ model MessageDemonstration {
   date         DateTime                 @default(now())
   declencheur  String
   etatRemise   String                   @default("remis")
+  /// F10 : version texte et première consultation dans la boîte (ouverture simulée).
+  texte        String?
+  ouvertLe     DateTime?
   /// Clé d'idempotence : rejouer le même envoi n'ajoute rien.
   cle          String                   @unique
 
@@ -934,4 +939,145 @@ model ContenuAide {
 
   @@index([type, etat])
   @@map("contenu_aide")
+}
+
+// ---------------------------------------------------------------------------
+// F10 — Emailing automatisé
+// ---------------------------------------------------------------------------
+
+enum FamilleEmail {
+  transactionnel
+  service
+  commercial
+  equipe
+}
+
+enum ScenarioEmail {
+  reapprovisionnement
+  panier_abandonne
+  alerte_bons
+  alerte_droits
+  impaye
+  campagne
+}
+
+enum EtatEnvoi {
+  programme
+  envoye
+  remis
+  rejete
+  annule
+  bloque
+}
+
+/// Envoi d'un email (F10, R1–R2) : trace et file d'envoi. Une ligne par clé (FR-007).
+model Envoi {
+  id                String         @id @default(cuid())
+  cle               String         @unique
+  famille           FamilleEmail
+  modele            String
+  scenario          ScenarioEmail?
+  compteId          String?
+  destinataire      String
+  declencheur       String
+  /// Valeurs des variables du modèle (jamais de secret ni de donnée de carte).
+  variables         Json?
+  /// Rendu conservé seulement jusqu'à l'envoi (lien secret), puis effacé.
+  rendu             String?
+  texte             String?
+  objet             String?
+  /// Articles concernés (mesure des commandes qui suivent une relance).
+  references        String[]       @default([])
+  campagneId        String?
+  etat              EtatEnvoi      @default(programme)
+  motif             String?
+  programmeLe       DateTime       @default(now())
+  essais            Int            @default(0)
+  prochainEssai     DateTime?
+  envoyeLe          DateTime?
+  remisLe           DateTime?
+  ouvertLe          DateTime?
+  connecteurEnvoiId String?
+  creeLe            DateTime       @default(now())
+
+  @@index([etat, programmeLe])
+  @@index([destinataire, creeLe])
+  @@index([compteId, creeLe])
+  @@index([scenario, creeLe])
+  @@index([campagneId])
+  @@map("envoi")
+}
+
+/// Textes modifiables d'un modèle d'email (F10, D2) ; sans ligne, les textes par défaut du code.
+model ModeleEmail {
+  code            String    @id
+  textesPublies   Json?
+  textesBrouillon Json?
+  publieLe        DateTime?
+  publiePar       String?
+  modifieLe       DateTime  @updatedAt
+  modifiePar      String?
+
+  @@map("modele_email")
+}
+
+/// Préférences des emails de service (F10, FR-009) ; sans ligne, tout est actif.
+model PreferencesEmail {
+  email               String   @id
+  compteId            String?
+  reapprovisionnement Boolean  @default(true)
+  panierAbandonne     Boolean  @default(true)
+  alerteBons          Boolean  @default(true)
+  alerteDroits        Boolean  @default(true)
+  modifieLe           DateTime @updatedAt
+
+  @@index([compteId])
+  @@map("preferences_email")
+}
+
+/// Adresse qui rejette les messages (F10, D10).
+model AdresseRejetee {
+  email             String    @id
+  rejetsTemporaires Int       @default(0)
+  suspendueLe       DateTime?
+  motif             String?
+  leveeLe           DateTime?
+  leveePar          String?
+  modifieLe         DateTime  @updatedAt
+
+  @@map("adresse_rejetee")
+}
+
+enum TypeCampagne {
+  promotion
+  vente_flash
+  nouveaute
+}
+
+enum EtatCampagne {
+  brouillon
+  programmee
+  en_cours
+  envoyee
+  annulee
+}
+
+/// Campagne commerciale, réservée aux abonnés confirmés à la newsletter (F10, D7).
+model Campagne {
+  id             String       @id @default(cuid())
+  type           TypeCampagne
+  objet          String
+  titre          String
+  texte          String
+  lien           String?
+  libelleLien    String?
+  programmeePour DateTime?
+  etat           EtatCampagne @default(brouillon)
+  testEnvoyeLe   DateTime?
+  destinataires  Int?
+  creePar        String
+  creeLe         DateTime     @default(now())
+  modifieLe      DateTime     @updatedAt
+
+  @@map("campagne")
 }

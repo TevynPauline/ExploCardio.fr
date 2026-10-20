@@ -82,6 +82,34 @@ export async function demarrerTravailleurs() {
     const { traiterVirements } = await import("@/domaine/commande/virement");
     await traiterVirements();
   });
+  // F10 : relève des envois dus et reprises après une panne de l'outil d'envoi, chaque minute.
+  await boss.createQueue("emails-envoi").catch(() => undefined);
+  await boss.schedule("emails-envoi", "* * * * *");
+  await boss.work("emails-envoi", async () => {
+    const { releverEnvois } = await import("@/domaine/emailing/envoi");
+    await releverEnvois();
+  });
+  // F10 : remise, rejets et ouvertures des envois récents, toutes les 15 minutes.
+  await boss.createQueue("emails-suivi").catch(() => undefined);
+  await boss.schedule("emails-suivi", "*/15 * * * *");
+  await boss.work("emails-suivi", async () => {
+    const { suivreEnvois } = await import("@/domaine/emailing/suivi");
+    await suivreEnvois();
+  });
+  // F10 : paniers en attente, chaque heure.
+  await boss.createQueue("emails-paniers").catch(() => undefined);
+  await boss.schedule("emails-paniers", "20 * * * *");
+  await boss.work("emails-paniers", async () => {
+    const { traiterPaniers } = await import("@/domaine/emailing/scenarios");
+    await traiterPaniers();
+  });
+  // F10 : scénarios quotidiens (réapprovisionnement, relances d'impayés).
+  await boss.createQueue("emails-scenarios").catch(() => undefined);
+  await boss.schedule("emails-scenarios", "30 8 * * *");
+  await boss.work("emails-scenarios", async () => {
+    const { traiterScenariosQuotidiens } = await import("@/domaine/emailing/scenarios");
+    await traiterScenariosQuotidiens();
+  });
   // F04 : copie des demandes de financement en opportunités, quand Odoo était injoignable.
   const { FILE_OPPORTUNITES, copierEnOpportunite } = await import("@/domaine/financement/demande");
   await traiterFile<{ demandeId: string }>(FILE_OPPORTUNITES, async ({ demandeId }) => {

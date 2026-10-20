@@ -1,11 +1,15 @@
 import { NotFound } from "../../erreurs";
-import type { AdressePartenaire, FacturesOdoo, ResumeFacture } from "../interfaces";
+import type { AdressePartenaire, FacturesOdoo, NiveauRelance, ResumeFacture } from "../interfaces";
 import { genererPdfFacture, type DonneesFacturePdf } from "./factures-pdf";
 import { db } from "./outils";
 
 // Domaine « Factures » en démonstration (contracts/odoo.md §5).
 
 export const facturesDemo: FacturesOdoo = {
+  async lireNiveauxRelance(): Promise<NiveauRelance[]> {
+    const niveaux = await db().niveauRelance.findMany({ orderBy: { niveau: "asc" } });
+    return niveaux.map((n) => ({ niveau: n.niveau, libelle: n.libelle, joursAvantConsequence: n.joursAvantConsequence, annonceConsequence: n.annonceConsequence }));
+  },
   async listerFactures(partenaireRef: string): Promise<ResumeFacture[]> {
     const factures = await db().facture.findMany({
       where: { partenaire: { ref: partenaireRef } },

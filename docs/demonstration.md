@@ -47,7 +47,11 @@ Dans le back-office, rubrique **Démonstration** :
   puis l'issue (accepté, refusé, authentification forte).
 - **Pannes simulées** : rendez un service indisponible pour montrer les messages d'erreur.
 - **Boîte de démonstration** : tous les emails et notifications qui auraient été envoyés, avec
-  leur rendu. **Aucun n'est réellement envoyé.**
+  leur rendu et leur version texte. **Aucun n'est réellement envoyé.** Ouvrir un email simule
+  son ouverture par le destinataire (visible dans le suivi des envois).
+- **Emails automatisés** : créez des commandes régulières d'un consommable pour un client, puis
+  lancez les scénarios sans attendre leur heure (relances de consommables, paniers en attente,
+  relances de paiement).
 - **Accès au site de démonstration** : changez le mot de passe partagé. Toutes les personnes
   connectées devront saisir le nouveau.
 - **Réinitialiser** : revenez à l'état de départ en moins d'une minute.
@@ -256,6 +260,40 @@ n'est créé, et « Accéder à la plateforme » mène à une page de démonstra
   sous-titres WebVTT, PDF, images des étapes), relier aux produits, publier ou retirer.
 - **Mon compte** : l'état des droits d'assistance à côté du contact ; **Back-office →
   Assistance** retrouve un client par son téléphone, avec ou sans espaces.
+
+## Emails automatisés (F10)
+
+- **Trois familles** : les emails **toujours envoyés** (commande, paiement, compte, location,
+  relances de paiement), les emails **de service**, désactivables (relance de consommables,
+  panier en attente, alertes de fin des droits et d'expiration des bons), et la **newsletter**,
+  réservée aux abonnés confirmés.
+- **Relance de consommables** : un client qui commande le même consommable à un rythme régulier
+  (au moins 3 commandes) reçoit une relance environ 7 jours avant la date prévue, avec le prix
+  HT, ce que la commande lui rapporterait, et « Commander de nouveau » (l'article arrive dans
+  son panier). Pour la montrer : **Démonstration → Emails automatisés**, « Commandes
+  régulières » (3 commandes tous les 60 jours, la dernière il y a 53 jours), puis « Lancer les
+  scénarios ».
+- **Panier en attente** : un rappel 24 h après la dernière modification d'un panier non
+  commandé, aux prix du jour.
+- **Relances de paiement** : virement attendu ou prélèvement refusé : trois relances (5 jours, 2
+  jours et la veille de l'annulation ou de la suspension), réglées comme dans Odoo dans
+  **Démonstration → Paramètres commerciaux** ; la dernière annonce la conséquence et sa date.
+- **Préférences** : **Mon compte → Préférences** (newsletter, chaque email de service, et la
+  liste des emails toujours envoyés) ; le même réglage sans connexion par le lien en bas de
+  chaque email facultatif ; désinscription en un clic.
+- **Règles d'envoi** : au plus 2 emails facultatifs ou commerciaux par semaine et par client ;
+  ces emails partent les jours ouvrés, de 8 h à 19 h. Les emails toujours envoyés partent
+  aussitôt.
+- **Back-office → Emails** (administrateur) :
+  - **Suivi des envois** : les emails d'un client, leur état (remis, ouvert, rejeté, non envoyé
+    et pourquoi) ; lever la suspension d'une adresse qui rejetait les messages ; enregistrer une
+    désinscription reçue par réponse à un email.
+  - **Scénarios et règles** : activer, régler, résultats sur 30 jours (envoyés, remis, ouverts,
+    suivis d'une commande).
+  - **Modèles** : modifier l'objet et les paragraphes de chaque email (informations insérées
+    automatiquement entre accolades), aperçu, email de test, publier, revenir au texte d'origine.
+  - **Campagnes** : promotion, vente flash ou nouveauté pour les abonnés ; email de test
+    obligatoire, puis programmation (jours ouvrés, 8 h – 19 h) ; annulable jusqu'à l'envoi.
 
 ## Demander un financement (F04)
 

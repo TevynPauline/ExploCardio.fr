@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
+import { notifierEquipe } from "@/domaine/emailing/envoi";
 import { Prisma } from "@generated/site/client";
-import { registre } from "@/connecteurs/registre";
 import { auth } from "@/lib/auth";
 import { dbSite } from "@/lib/db/site";
 import { lireParametre } from "@/lib/parametres";
@@ -83,7 +83,7 @@ export async function validerInscription(s: SaisieInscription): Promise<ErreursI
 
 async function signalerEquipe(objet: string, texte: string) {
   const destinataire = (await lireParametre("contact.destinataire_messages"))?.trim() || "admin@demo.explocardio.test";
-  await registre.emailing().envoyerNotificationEquipe(
+  await notifierEquipe(
     { canal: "email", destinataires: [destinataire], objet, texte, declencheur: "comptes" },
     `comptes:${randomUUID()}`,
   );

@@ -1,28 +1,24 @@
 import { registre } from "@/connecteurs/registre";
 import { estErreurConnecteur } from "@/connecteurs/erreurs";
 import { dbSite } from "@/lib/db/site";
-import { lireParametreEntier } from "@/lib/parametres";
 import { emailsCommandes } from "@/emails/modeles-commandes";
-import type { Devis } from "@/connecteurs/odoo/interfaces";
 import { retablirCadeau } from "../comptes/bienvenue";
-import { emailDuCompte, envoyer, ribDuSite } from "./notifications";
+import { emailDuCompte, envoyer } from "./notifications";
 
 // Commandes réglées par virement (F04, US4, R6, D5) : tâche quotidienne. Virement reçu dans
-// Odoo → commande payée, client prévenu ; rappel quelques jours avant l'échéance ; à
-// l'échéance, la commande est annulée par l'opération du contrat (stock libéré), le droit au
-// cadeau de bienvenue rétabli et le client prévenu. Chaque action est journalisée (FR-041).
-
-const JOUR = 24 * 3600_000;
+// Odoo → commande payée, client prévenu ; à l'échéance, la commande est annulée par l'opération
+// du contrat (stock libéré), le droit au cadeau de bienvenue rétabli et le client prévenu. Chaque action est journalisée (FR-041).
 
 async function journal(action: string, objet: string, detail: object) {
   await dbSite().journalAction.create({ data: { auteur: "suivi des virements", action, objet, detail: JSON.parse(JSON.stringify(detail)) } });
 }
 
-export type BilanVirements = { payes: number; rappels: number; annules: number };
+// Les relances avant l'échéance sont celles de F10 (niveaux d'Odoo, D4).
+
+export type BilanVirements = { payes: number; annules: number };
 
 export async function traiterVirements(maintenant = new Date()): Promise<BilanVirements> {
-  const bilan: BilanVirements = { payes: 0, rappels: 0, annules: 0 };
-  const rappelJours = await lireParametreEntier("virement.rappel_jours", 2);
+  const bilan: BilanVirements = { payes: 0, annules: 0 };
   const enAttente = await dbSite().commandeSite.findMany({ where: { etatAchat: "en_attente_virement", odooCommandeRef: { not: null } } });
   for (const c of enAttente) {
     const odooRef = c.odooCommandeRef!;
@@ -59,18 +55,6 @@ export async function traiterVirements(maintenant = new Date()): Promise<BilanVi
       await journal("commande.annulee", odooRef, { motif: "virement non reçu", commande: c.ref });
       bilan.annules++;
       continue;
-    }
-    if (!c.rappelVirementLe && echeance.getTime() - maintenant.getTime() <= rappelJours * JOUR) {
-      const devis = c.devis as Devis | null;
-      await envoyer(
-        email,
-        await emailsCommandes.rappelVirement({ ref: odooRef, totalTtc: devis?.achat?.totalTtc ?? 0, echeance, rib: await ribDuSite() }),
-        "rappel de virement",
-        `rappel-virement:${odooRef}`,
-      );
-      await dbSite().commandeSite.update({ where: { id: c.id }, data: { rappelVirementLe: maintenant } });
-      await journal("commande.rappel_virement", odooRef, { echeance });
-      bilan.rappels++;
     }
   }
   return bilan;

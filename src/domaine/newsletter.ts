@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
-import { registre } from "@/connecteurs/registre";
+import { demanderEnvoi } from "@/domaine/emailing/envoi";
+import { synchroniserContact } from "@/domaine/emailing/preferences";
 import { dbSite } from "@/lib/db/site";
 import { emailConfirmationNewsletter } from "@/emails/modeles";
 import { urlDuSite } from "@/emails/charte";
@@ -31,10 +32,7 @@ export async function demanderInscription(emailSaisi: string, maintenant = new D
   });
   const lien = urlDuSite(`/newsletter/confirmation?jeton=${jeton}`);
   const contenu = await emailConfirmationNewsletter(lien);
-  await registre.emailing().envoyerTransactionnel(
-    { ...contenu, destinataire: email, declencheur: "inscription à la newsletter" },
-    `newsletter:${email}:${empreinteJeton(jeton).slice(0, 16)}`,
-  );
+  await demanderEnvoi({ modele: contenu.modele, destinataire: email, rendu: contenu, declencheur: "inscription à la newsletter", cle: `newsletter:${email}:${empreinteJeton(jeton).slice(0, 16)}` });
 }
 
 export type ResultatConfirmation = "confirmee" | "expiree" | "inconnue";
@@ -55,7 +53,7 @@ export async function confirmerInscription(jeton: string, maintenant = new Date(
       data: { email: inscription.email, objet: "newsletter", etat: true, origine: "pied de page (double consentement)", textePresente: inscription.textePresente },
     }),
   ]);
-  await registre.emailing().mettreAJourContact({ email: inscription.email, consentements: { newsletter: true } });
+  await synchroniserContact(inscription.email, { newsletter: true });
   return "confirmee";
 }
 
@@ -68,6 +66,6 @@ export async function desinscrire(jeton: string, maintenant = new Date()): Promi
       data: { email: inscription.email, objet: "newsletter", etat: false, origine: "lien de désinscription", textePresente: "Désinscription de la newsletter" },
     }),
   ]);
-  await registre.emailing().mettreAJourContact({ email: inscription.email, consentements: { newsletter: false } });
+  await synchroniserContact(inscription.email, { newsletter: false });
   return true;
 }

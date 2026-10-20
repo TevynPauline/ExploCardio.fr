@@ -33,3 +33,24 @@ describe("imports des pages et composants", () => {
     expect(resultat!.messages.filter((m) => m.ruleId === "no-restricted-imports")).toEqual([]);
   });
 });
+
+// F10 (FR-002, R1) : seul le point d'envoi unique appelle le connecteur emailing.
+describe("connecteur emailing", () => {
+  it("registre.emailing() n'est appelé que dans src/domaine/emailing/", async () => {
+    const { readdir, readFile } = await import("node:fs/promises");
+    const { join } = await import("node:path");
+    const fautes: string[] = [];
+    async function parcourir(dossier: string) {
+      for (const e of await readdir(dossier, { withFileTypes: true })) {
+        const chemin = join(dossier, e.name);
+        if (e.isDirectory()) await parcourir(chemin);
+        else if (/\.tsx?$/.test(e.name) && !chemin.startsWith(join("src", "domaine", "emailing")) && !chemin.startsWith(join("src", "connecteurs"))) {
+          if ((await readFile(chemin, "utf8")).includes("registre.emailing()")) fautes.push(chemin);
+        }
+      }
+    }
+    await parcourir("src");
+    await parcourir("app");
+    expect(fautes).toEqual([]);
+  });
+});

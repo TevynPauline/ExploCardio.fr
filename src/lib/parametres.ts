@@ -26,6 +26,22 @@ export const PARAMETRES_PAR_DEFAUT = {
   "cloud.rappel_periode_jours": "30",
   "cloud.rappel_fin_jours": "7",
   "cloud.aide_premiere_connexion": "Votre accès est ouvert : utilisez le lien « Accéder à la plateforme ». Lors de votre première connexion, la plateforme vous envoie une invitation par email pour créer votre mot de passe ; ExploCardio.fr ne le connaît jamais. Besoin d'aide pour le paramétrage ? Écrivez-nous sur WhatsApp.",
+  /** F10 : scénarios (D5), fréquence et plages d'envoi (D6), expéditeur ; niveaux d'impayés dans Odoo (D4). */
+  "emailing.reappro.actif": "true",
+  "emailing.reappro.avance_jours": "7",
+  "emailing.reappro.commandes_min": "3",
+  "emailing.reappro.ecart_max_pct": "50",
+  "emailing.panier.actif": "true",
+  "emailing.panier.delai_heures": "24",
+  "emailing.alerte_bons.actif": "true",
+  "emailing.alerte_droits.actif": "true",
+  "emailing.impayes.actif": "true",
+  "emailing.frequence_max": "2",
+  "emailing.frequence_jours": "7",
+  "emailing.plage_debut": "8",
+  "emailing.plage_fin": "19",
+  "emailing.expediteur_nom": "ExploCardio.fr",
+  "emailing.alerte_panne_minutes": "30",
 } as const;
 
 export type CleParametre = keyof typeof PARAMETRES_PAR_DEFAUT | (string & {});

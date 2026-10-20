@@ -1,14 +1,13 @@
 import { randomUUID } from "node:crypto";
-import { registre } from "@/connecteurs/registre";
-import { estErreurConnecteur } from "@/connecteurs/erreurs";
 import type { Devis } from "@/connecteurs/odoo/interfaces";
 import { dbSite } from "@/lib/db/site";
+import { demanderEnvoi, notifierEquipe } from "@/domaine/emailing/envoi";
 import { lireParametre } from "@/lib/parametres";
 import { emailsCommandes, type Rib } from "@/emails/modeles-commandes";
 import type { EmailRendu } from "@/emails/modeles";
 import type { CommandeSite } from "@generated/site/client";
 
-// Emails et alertes de F04 (contracts/emails.md) : par le connecteur emailing (boîte de
+// Emails et alertes de F04 (contracts/emails.md) : par le point d'envoi unique de F10 (boîte de
 // démonstration en phase 1). Un échec d'envoi n'empêche jamais l'enregistrement d'une commande.
 
 export async function ribDuSite(): Promise<Rib> {
@@ -21,21 +20,14 @@ export async function emailDuCompte(compteId: string): Promise<string> {
   return c.utilisateur.email;
 }
 
+/** Relais vers le point d'envoi unique de F10 (famille lue dans le catalogue des modèles). */
 export async function envoyer(destinataire: string, email: EmailRendu, declencheur: string, cle: string) {
-  try {
-    await registre.emailing().envoyerTransactionnel({ ...email, destinataire, declencheur }, cle);
-  } catch (e) {
-    if (!estErreurConnecteur(e)) throw e;
-  }
+  await demanderEnvoi({ modele: email.modele, destinataire, rendu: email, declencheur, cle });
 }
 
 export async function alerterEquipe(objet: string, texte: string, cle: string) {
   const destinataire = (await lireParametre("contact.destinataire_messages"))?.trim() || "admin@demo.explocardio.test";
-  try {
-    await registre.emailing().envoyerNotificationEquipe({ canal: "email", destinataires: [destinataire], objet, texte, declencheur: "commandes" }, `${cle}:${randomUUID()}`);
-  } catch (e) {
-    if (!estErreurConnecteur(e)) throw e;
-  }
+  await notifierEquipe({ canal: "email", destinataires: [destinataire], objet, texte, declencheur: "commandes" }, `${cle}:${randomUUID()}`);
 }
 
 /** Email de confirmation d'une commande (carte ou virement), à partir du devis enregistré. */

@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { synchroniserContact } from "@/domaine/emailing/preferences";
 import { registre } from "@/connecteurs/registre";
 import { estErreurConnecteur } from "@/connecteurs/erreurs";
 import { auth } from "@/lib/auth";
@@ -96,7 +97,7 @@ export async function supprimer(compteId: string, origine = "mon_compte"): Promi
   }
   const email = c.utilisateur.email;
   await notifier(email, await emailsComptes.compteSupprime(), "compte supprimé");
-  await registre.emailing().mettreAJourContact({ email, consentements: { newsletter: false } });
+  await synchroniserContact(email, { newsletter: false });
   if (c.odooPartnerRef) await registre.odoo().clients.archiverPartenaire(c.odooPartnerRef, `archivage:${compteId}`);
 
   const anonyme = `supprime-${randomUUID()}@supprime.invalid`;

@@ -1,5 +1,5 @@
 import { createHmac, randomUUID } from "node:crypto";
-import { registre } from "@/connecteurs/registre";
+import { demanderEnvoi } from "@/domaine/emailing/envoi";
 import { dbSite } from "@/lib/db/site";
 import type { EmailRendu } from "@/emails/modeles";
 
@@ -30,7 +30,7 @@ export async function journaliserSecurite(evenement: EvenementSecurite, utilisat
 
 /** Envoie un email au titulaire (événements sensibles, FR-035). */
 export async function notifier(destinataire: string, email: EmailRendu, declencheur: string) {
-  await registre.emailing().envoyerTransactionnel({ ...email, destinataire, declencheur }, `securite:${declencheur}:${randomUUID()}`);
+  await demanderEnvoi({ modele: email.modele, destinataire, rendu: email, declencheur, cle: `securite:${declencheur}:${randomUUID()}` });
 }
 
 export const MAX_ECHECS = 5;

@@ -1,4 +1,5 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
+import { notifierEquipe } from "@/domaine/emailing/envoi";
 import { registre } from "@/connecteurs/registre";
 import { estErreurConnecteur } from "@/connecteurs/erreurs";
 import { envoyerTache } from "@/file-attente";
@@ -144,7 +145,7 @@ export async function demanderChangementNumero(compteId: string, saisie: string)
   if (!valide) throw new SaisieInvalide({ numero: c.type === "medecin" ? "Le numéro RPPS comporte 11 chiffres." : "Ce numéro SIRET n'est pas valide." });
   await dbSite().demandeChangementNumero.create({ data: { compteId, ancienNumero: c.rpps ?? c.siret, nouveauNumero: numero } });
   const destinataire = (await lireParametre("contact.destinataire_messages"))?.trim() || "admin@demo.explocardio.test";
-  await registre.emailing().envoyerNotificationEquipe(
+  await notifierEquipe(
     { canal: "email", destinataires: [destinataire], objet: "Changement de numéro à vérifier", texte: `Le compte ${c.nomCabinet ?? c.id} demande à remplacer ${c.rpps ?? c.siret} par ${numero}.`, declencheur: "mon compte" },
     `numero:${compteId}:${randomUUID()}`,
   );

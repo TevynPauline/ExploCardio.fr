@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { notifierEquipe } from "@/domaine/emailing/envoi";
 import { Prisma } from "@generated/site/client";
 import { registre } from "@/connecteurs/registre";
 import { dbSite } from "@/lib/db/site";
@@ -101,7 +102,7 @@ export async function confirmerCadeauRemis(compte: Compte & { email: string }, c
   if (r.count === 0) return "deja_pris";
   if (rupture) {
     await notifier(compte.email, await emailsComptes.cadeauEnAttente(), `cadeau en attente de stock ${commandeRef}`);
-    await registre.emailing().envoyerNotificationEquipe(
+    await notifierEquipe(
       {
         canal: "email",
         destinataires: [await destinataireEquipe()],

@@ -5,6 +5,7 @@ import { verifierModeDemonstration } from "@/lib/demo/garde";
 import { leverVerrou, poserVerrou } from "@/lib/demo/verrou";
 import { remplirJeuDeDepart, type BilanRemplissage } from "../../prisma/demo/seed/remplissage";
 import * as administration from "./odoo/demo/administration";
+import { ValeurRefusee } from "./odoo/demo/administration";
 import * as locationsAdmin from "./odoo/demo/locations-admin";
 import * as fideliteAdmin from "./odoo/demo/fidelite-admin";
 import * as emission from "./stripe/demo/emission";
@@ -365,3 +366,35 @@ export async function sousModePlateformeDemo(): Promise<"auto" | "manual"> {
   const { sousModeDemo } = await import("./pca/demo");
   return sousModeDemo();
 }
+
+/** F10 : niveaux de relance des impayés (ce que l'équipe réglera dans les relances de factures d'Odoo). */
+export const relancesDemo = {
+  async modifierNiveaux(auteur: Auteur, niveaux: { niveau: number; joursAvantConsequence: number }[]) {
+    exigerOutils();
+    const jours = niveaux.map((n) => n.joursAvantConsequence);
+    if (jours.some((j) => !Number.isInteger(j) || j < 1 || j > 60)) throw new ValeurRefusee("Chaque niveau : entre 1 et 60 jours avant la conséquence.");
+    if (jours.some((j, i) => i > 0 && j >= jours[i - 1]!)) throw new ValeurRefusee("Chaque niveau doit être plus proche de la conséquence que le précédent.");
+    for (const n of niveaux) await dbDemo().niveauRelance.update({ where: { niveau: n.niveau }, data: { joursAvantConsequence: n.joursAvantConsequence } });
+    await journaliser(auteur, "demo.niveaux_relance", "followup_line", null, { niveaux });
+  },
+};
+
+/** F10 : historique de commandes régulières (relance de réapprovisionnement) et scénarios à la demande. */
+export const emailingDemoOps = {
+  async simulerCommandesRegulieres(auteur: Auteur, h: import("./odoo/demo/commandes-admin").HistoriqueRegulier) {
+    exigerOutils();
+    const { simulerCommandesRegulieres } = await import("./odoo/demo/commandes-admin");
+    const refs = await simulerCommandesRegulieres(h);
+    await journaliser(auteur, "demo.commandes_regulieres", h.partenaireRef, null, { ...h, commandes: refs });
+    return refs;
+  },
+  async lancerScenarios(auteur: Auteur) {
+    exigerOutils();
+    const { traiterTousLesScenarios } = await import("@/domaine/emailing/scenarios");
+    const { releverEnvois } = await import("@/domaine/emailing/envoi");
+    const bilan = await traiterTousLesScenarios();
+    await releverEnvois();
+    await journaliser(auteur, "demo.scenarios_emails_lances", "emailing", null, bilan);
+    return bilan;
+  },
+};

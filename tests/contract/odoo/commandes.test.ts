@@ -161,10 +161,10 @@ suiteDeContrat("odoo", "commandes : opérations ajoutées par F04", ({ registre 
       cle,
     );
     const total = (await commandes().lireCommande(ref)).montantTtc;
-    const r1 = await commandes().enregistrerRemboursement({ commandeRef: ref, montantTtc: 1000, motif: "Geste commercial", source: "stripe", referenceStripe: "FICT-RE-1" }, `${cle}:r1`);
-    expect((await commandes().enregistrerRemboursement({ commandeRef: ref, montantTtc: 1000, motif: "Geste commercial", source: "stripe", referenceStripe: "FICT-RE-1" }, `${cle}:r1`)).avoir).toBe(r1.avoir);
+    const r1 = await commandes().enregistrerRemboursement({ commandeRef: ref, montantTtc: 1000, motif: "Geste commercial", source: "stripe", referenceStripe: `FICT-RE-1-${cle}` }, `${cle}:r1`);
+    expect((await commandes().enregistrerRemboursement({ commandeRef: ref, montantTtc: 1000, motif: "Geste commercial", source: "stripe", referenceStripe: `FICT-RE-1-${cle}` }, `${cle}:r1`)).avoir).toBe(r1.avoir);
     expect((await commandes().lireCommande(ref)).statut).toBe("remboursee_partiellement");
-    await commandes().enregistrerRemboursement({ commandeRef: ref, montantTtc: total - 1000, motif: "Retour", source: "stripe", referenceStripe: "FICT-RE-2" }, `${cle}:r2`);
+    await commandes().enregistrerRemboursement({ commandeRef: ref, montantTtc: total - 1000, motif: "Retour", source: "stripe", referenceStripe: `FICT-RE-2-${cle}` }, `${cle}:r2`);
     const lue = await commandes().lireCommande(ref);
     expect(lue.statut).toBe("remboursee");
     expect(lue.remboursementsTtc).toBe(total);

@@ -3,6 +3,7 @@ import { creerRegistre } from "@/connecteurs/registre";
 import * as administration from "@/connecteurs/odoo/demo/administration";
 import { lancerPaiement } from "@/domaine/commande/paiement";
 import { choisirLivraison, choisirPaiement, enregistrerAdresses, ouvrirCommande } from "@/domaine/commande/tunnel";
+import { programmerImpayes } from "@/domaine/emailing/scenarios/impayes";
 import { traiterVirements } from "@/domaine/commande/virement";
 import { dbSite } from "@/lib/db/site";
 import { compteValide, nettoyer, remplirPanier } from "./outils";
@@ -38,13 +39,14 @@ describe("virement", () => {
     expect(email.rendu).toContain(commande.odooCommandeRef!);
   });
 
-  it("rappel envoyé une seule fois 2 jours avant l'échéance ; annulation à l'échéance (stock rendu, email)", async () => {
+  it("relance unique par niveau avant l'échéance (F10, D4) ; annulation à l'échéance (stock rendu, email)", async () => {
     const { compte, commande } = await commandeVirement();
     const echeance = commande.echeanceVirement!;
     const avantRappel = new Date(echeance.getTime() - 1.5 * 24 * 3600_000);
     await traiterVirements(avantRappel);
-    await traiterVirements(avantRappel);
-    expect(await dbSite().messageDemonstration.count({ where: { destinataire: compte.email, objet: { startsWith: "Rappel : virement attendu" } } })).toBe(1);
+    await programmerImpayes(avantRappel, { compteIds: [compte.compteId] });
+    await programmerImpayes(avantRappel, { compteIds: [compte.compteId] });
+    expect(await dbSite().envoi.findMany({ where: { compteId: compte.compteId, modele: "relance_impaye" }, select: { famille: true } })).toEqual([{ famille: "transactionnel" }]);
     const stockAvant = (await odoo().stock.lireDisponibilite(["EC-ELEC-HOLTER-50"]))[0]!.quantiteDisponible!;
     await traiterVirements(new Date(echeance.getTime() + 60_000));
     expect((await odoo().commandes.lireCommande(commande.odooCommandeRef!)).statut).toBe("annulee");
