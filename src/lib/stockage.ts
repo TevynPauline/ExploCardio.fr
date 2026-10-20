@@ -22,7 +22,8 @@ export const TAILLE_MAX_DOCUMENT = 10 * 1024 * 1024;
 export class FichierRefuse extends Error {}
 
 function racine(): string {
-  return resolve(process.env.STORAGE_DIR || "./stockage");
+  // Dossier choisi à l'exécution : exclu de l'analyse du build (sinon tout le projet est embarqué).
+  return resolve(/* turbopackIgnore: true */ process.env.STORAGE_DIR || "./stockage");
 }
 
 /** Vérifie la signature du fichier : le type annoncé par le navigateur ne suffit pas. */

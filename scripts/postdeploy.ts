@@ -1,9 +1,11 @@
 import { execFileSync } from "node:child_process";
 import nextEnv from "@next/env";
 
-// Étape « postdeploy » de Scalingo (Procfile) : exécutée à chaque déploiement, après le démarrage
-// des nouveaux conteneurs et avant qu'ils reçoivent du trafic. Un échec annule le déploiement
-// (l'ancienne version continue de tourner).
+// Préparation des bases, exécutée deux fois à chaque déploiement Scalingo, sans effet la seconde :
+// - avant `next build` (script « build ») : des pages sont pré-rendues pendant la construction et
+//   lisent les bases ; elles doivent donc exister et, en démonstration, être remplies ;
+// - à l'étape « postdeploy » (Procfile), avant que les nouveaux conteneurs reçoivent du trafic.
+// Un échec arrête le déploiement (l'ancienne version continue de tourner).
 // 1. Migrations des deux bases (site, démonstration).
 // 2. Site de démonstration : jeu de départ créé au PREMIER déploiement seulement (base vide).
 // Rien de secret n'est jamais écrit dans les journaux (mots de passe, clé de double authentification).
@@ -11,8 +13,14 @@ import nextEnv from "@next/env";
 nextEnv.loadEnvConfig(process.cwd(), false);
 
 function migrer(base: "site" | "demo") {
+  const variable = base === "site" ? "DATABASE_URL" : "DEMO_DATABASE_URL";
+  if (!process.env[variable]?.trim()) throw new Error(`${variable} est absente : renseignez-la dans Scalingo (onglet Environment).`);
   console.log(`→ Migrations de la base ${base}`);
-  execFileSync("npx", ["prisma", "migrate", "deploy", "--config", `prisma/${base}/prisma.config.ts`], { stdio: "inherit" });
+  try {
+    execFileSync("npx", ["prisma", "migrate", "deploy", "--config", `prisma/${base}/prisma.config.ts`], { stdio: "inherit" });
+  } catch {
+    throw new Error(`Migrations de la base ${base} impossibles : vérifiez ${variable} et que la base est joignable (voir le message de Prisma ci-dessus).`);
+  }
 }
 
 async function principal() {

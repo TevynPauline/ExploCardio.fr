@@ -8,7 +8,7 @@ Application Scalingo : **explocardio**, région **osc-fr1**, reliée au dépôt 
 | Fichier | Rôle |
 |---|---|
 | `Procfile` | `web` : démarre Next.js sur le port donné par Scalingo ; `postdeploy` : `scripts/postdeploy.ts` |
-| `scripts/postdeploy.ts` | À chaque déploiement : migrations des deux bases ; au premier déploiement seulement, remplissage de la base de démonstration. N'écrit jamais de secret dans les journaux ; refuse de continuer si une variable secrète manque |
+| `scripts/postdeploy.ts` | Exécuté **avant `next build`** (script `build`) puis à l'étape `postdeploy`, sans effet la seconde fois : migrations des deux bases ; au premier déploiement seulement, remplissage de la base de démonstration. Des pages sont pré-rendues pendant la construction et lisent les bases : elles doivent exister dès ce moment. N'écrit jamais de secret dans les journaux ; refuse de continuer si une variable secrète manque |
 | `package.json` | Node 24 (`engines`) ; `prisma` et `tsx` en dépendances d'exécution (nécessaires au postdeploy) |
 | `.slugignore` | Tests, specs et docs exclus de l'image |
 
@@ -20,8 +20,20 @@ conteneur « worker » n'est nécessaire.
 
 Le site utilise deux bases distinctes : **site** (`DATABASE_URL`) et **démonstration**
 (`DEMO_DATABASE_URL`, équivalent fictif d'Odoo). Elles ne doivent pas partager une même base :
-la réinitialisation de la démonstration vide toutes les tables de sa base. D'où **deux addons
-PostgreSQL**.
+la réinitialisation de la démonstration vide toutes les tables de sa base.
+
+Scalingo n'accepte qu'un addon PostgreSQL par application, d'où **deux applications** :
+
+| Application | Rôle |
+|---|---|
+| `explocardio` | Le site (code, conteneur web M) et son addon PostgreSQL : `DATABASE_URL` = `$SCALINGO_POSTGRESQL_URL` (créée par Scalingo) |
+| `explocardio-demo-db` | Uniquement l'addon PostgreSQL de la démonstration ; aucun code, jamais déployée |
+
+`DEMO_DATABASE_URL` de l'application `explocardio` contient l'adresse **complète, en clair**,
+copiée depuis l'onglet Environment de `explocardio-demo-db` (`SCALINGO_POSTGRESQL_URL`). Ne
+jamais y écrire `$SCALINGO_POSTGRESQL_URL` : ce serait la base du site, que la réinitialisation
+de la démonstration viderait. Quand le vrai Odoo sera branché (F14), `explocardio-demo-db` sera
+supprimée.
 
 ## Variables d'environnement
 
@@ -32,8 +44,8 @@ PostgreSQL**.
 | `SITE_MODE` | `demo` |
 | `CONNECTOR_ODOO`, `CONNECTOR_STRIPE`, `CONNECTOR_PCA`, `CONNECTOR_EMAILING` | `demo` |
 | `PCA_DEMO_SUBMODE` | `auto` |
-| `DATABASE_URL` | l'adresse du **premier** addon PostgreSQL (voir étape 3) |
-| `DEMO_DATABASE_URL` | l'adresse du **second** addon PostgreSQL (voir étape 3) |
+| `DATABASE_URL` | `$SCALINGO_POSTGRESQL_URL` (déjà créée par Scalingo avec l'addon) |
+| `DEMO_DATABASE_URL` | l'adresse copiée depuis `explocardio-demo-db` (voir ci-dessus) |
 | `AUTH_SECRET` | chaîne aléatoire de 48 caractères ou plus, **nouvelle** (pas celle de votre poste) |
 | `DEMO_SITE_PASSWORD` | mot de passe d'accès au site de démonstration, à communiquer aux testeurs |
 | `DEMO_ACCOUNTS_PASSWORD` | mot de passe commun des comptes de démonstration (reprenez celui de votre `.env.local` pour garder les mêmes) |
