@@ -24,7 +24,7 @@ Jours fériés : calculés (calendrier français existant), jamais saisis.
 | `references` | références d'articles et de logiciels d'Odoo liées (fiches produit) |
 | `video`, `sousTitres`, `transcription` | vidéo : chemins du fichier MP4 et WebVTT, transcription texte — **obligatoires pour publier** |
 | `etapes` | mode d'emploi : `[{ texte, image, texteRemplacement }]`, au moins une étape |
-| `document` | notice : chemin du PDF |
+| `document` | notice **non liée à un produit** (procédure générale) : chemin du PDF. Les notices et fiches techniques des produits restent sur leur fiche (F03, `DocumentProduit`) et sont reprises automatiquement par le centre d'aide |
 | `reponse` | FAQ : texte (sous-ensemble Markdown sûr, comme les contenus de F01) |
 | `etat` | `preparation` / `publie` ; seuls les contenus publiés sont visibles |
 | `ordre`, `consultations` | tri ; compteur anonyme des ouvertures (FAQ) |

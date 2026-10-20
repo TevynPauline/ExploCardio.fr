@@ -146,8 +146,9 @@ leur mise à jour à tous les emplacements ; publier un tutoriel relié à un pr
 1. **Given** un administrateur, **When** il modifie le numéro dans le back-office, **Then**
    le nouveau numéro et les liens des deux boutons sont mis à jour partout, y compris dans
    les emails suivants.
-2. **Given** un administrateur, **When** il modifie les horaires de réponse, les jours
-   fériés ou une fermeture exceptionnelle, **Then** l'affichage est mis à jour partout.
+2. **Given** un administrateur, **When** il modifie les horaires de réponse ou ajoute une
+   fermeture exceptionnelle, **Then** l'affichage est mis à jour partout ; les jours fériés
+   sont pris en compte automatiquement.
 3. **Given** un administrateur, **When** il crée un contenu d'aide, **Then** il lui
    attribue un type, des appareils ou logiciels, un thème, et le relie aux fiches produit.
 4. **Given** un contenu en préparation, **When** il n'est pas publié, **Then** il est
@@ -216,9 +217,9 @@ son téléphone, et lire l'état de ses droits ; vérifier le même état dans s
   horaires, le site DOIT indiquer quand l'équipe répondra.
 - **FR-007** : La mention « Ne transmettez aucune donnée patient » DOIT figurer près des
   boutons.
-- **FR-008** : Le numéro, les horaires de réponse, les jours fériés et les fermetures
-  exceptionnelles DOIVENT se modifier dans le back-office (F13), sans développeur, et être
-  mis à jour partout.
+- **FR-008** : Le numéro, les horaires de réponse et les fermetures exceptionnelles DOIVENT
+  se modifier dans le back-office (F13), sans développeur, et être mis à jour partout. Les
+  jours fériés sont calculés automatiquement (calendrier français).
 
 **Droits d'assistance**
 
@@ -231,7 +232,8 @@ son téléphone, et lire l'état de ses droits ; vérifier le même état dans s
 
 - **FR-011** : Le site DOIT proposer un centre d'aide réunissant tutoriels vidéo, modes
   d'emploi pas à pas et notices PDF, classés par appareil, par logiciel et par thème, et
-  consultable par tout visiteur.
+  consultable par tout visiteur. Les notices et fiches techniques déjà rattachées aux fiches
+  produit (F03) y sont reprises automatiquement, sans second téléversement.
 - **FR-012** : Le site DOIT proposer une FAQ avec une recherche, les questions les plus
   consultées apparaissant en tête.
 - **FR-013** : Les contenus d'aide DOIVENT être gérés dans le back-office, avec un état en
@@ -254,8 +256,8 @@ son téléphone, et lire l'état de ses droits ; vérifier le même état dans s
 
 ### Key Entities
 
-- **Réglages du contact** : numéro WhatsApp, horaires de réponse, jours fériés, fermetures
-  exceptionnelles, message pré-rempli.
+- **Réglages du contact** : numéro WhatsApp, horaires de réponse, fermetures
+  exceptionnelles. Le message pré-rempli est fixe (FR-005) et ne se règle pas.
 - **Contenu d'aide** : type (tutoriel vidéo, mode d'emploi pas à pas, notice), titre, thème,
   appareils et logiciels concernés, fiches produit liées, état, sous-titres et
   transcription pour une vidéo.
