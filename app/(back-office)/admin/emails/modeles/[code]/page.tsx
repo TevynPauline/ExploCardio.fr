@@ -41,8 +41,8 @@ export default async function Modele({ params, searchParams }: { params: Promise
         {etat.brouillon ? " · brouillon non publié" : ""} · <Link href="/admin/emails/modeles">tous les modèles</Link>
       </p>
       <Retour {...r} />
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="flex flex-col gap-3">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <Card className="flex min-w-0 flex-col gap-3">
           <h2 className="text-h3 font-semibold">Textes</h2>
           <p className="text-small text-muted">
             Informations insérées automatiquement : {variablesDesTextes(etat.defaut).map((v) => `{{${v}}}`).join(", ") || "aucune"}. Elles doivent rester dans l’email. Une ligne vide sépare deux paragraphes ; **texte** met en gras.
@@ -66,7 +66,7 @@ export default async function Modele({ params, searchParams }: { params: Promise
             {etat.publie || etat.brouillon ? <form action={actionOrigineModele}>{champs("origine")}<Button type="submit" variante="secondaire">Revenir au texte d’origine</Button></form> : null}
           </div>
         </Card>
-        <Card className="flex flex-col gap-3">
+        <Card className="flex min-w-0 flex-col gap-3">
           <h2 className="text-h3 font-semibold">Aperçu {etat.brouillon ? "du brouillon" : "du texte en vigueur"}</h2>
           {apercu ? (
             <>

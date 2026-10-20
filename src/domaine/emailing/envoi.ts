@@ -111,7 +111,9 @@ export async function demanderEnvoi(demande: DemandeEnvoi, maintenant = new Date
     programmeLe: demande.programmeLe ?? maintenant,
     creeLe: maintenant,
   });
-  if (envoi.etat !== "programme" || envoi.programmeLe > maintenant || envoi.essais > 0) return { envoiId: envoi.id, etat: envoi.etat };
+  // Déjà créé par un appel simultané (même événement signalé deux fois) : s'il est dû, on le traite
+  // aussi, pour que l'email soit parti au retour ; le connecteur n'envoie qu'une fois par clé.
+  if (envoi.etat !== "programme" || envoi.programmeLe > maintenant || (envoi.prochainEssai && envoi.prochainEssai > maintenant)) return { envoiId: envoi.id, etat: envoi.etat };
   const etat = await traiterEnvoi(envoi, maintenant);
   return { envoiId: envoi.id, etat };
 }
