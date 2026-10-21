@@ -64,10 +64,16 @@ test("une campagne ne vise que les abonnés ; la désinscription par lien l'annu
   const [abonnement] = await requete<{ etat: boolean }>("site", `SELECT etat FROM consentement WHERE email = $1 AND objet = 'newsletter' ORDER BY date DESC LIMIT 1`, [abonne.email]);
   expect(abonnement!.etat).toBe(false);
 
-  // Aucune campagne de test ne reste programmée.
+  // Aucune campagne de test ne reste programmée. Pendant les heures d'envoi, elle a pu partir
+  // dès le lancement des scénarios : il n'y a alors plus rien à annuler.
   await page.goto(`/admin/emails/campagnes/${c!.id}`);
-  await page.getByRole("button", { name: "Annuler la campagne" }).click();
-  await expect(page.getByText(/Campagne annulée/)).toBeVisible();
+  const annuler = page.getByRole("button", { name: "Annuler la campagne" });
+  if (await annuler.count()) {
+    await annuler.click();
+    await expect(page.getByText(/Campagne annulée/)).toBeVisible();
+  }
+  const [fin] = await requete<{ etat: string }>("site", `SELECT etat FROM campagne WHERE id = $1`, [c!.id]);
+  expect(["brouillon", "programmee"]).not.toContain(fin!.etat);
 });
 
 test("désinscription en un clic : POST sans connexion (RFC 8058)", async ({ request }) => {
