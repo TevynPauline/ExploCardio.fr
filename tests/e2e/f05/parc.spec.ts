@@ -26,17 +26,19 @@ test("appareil passé en maintenance ou remis disponible : proposé ou non en mo
 
 test("réglages du back-office (heure limite, jours non livrés) et locations en lecture seule", async ({ page, context }) => {
   await connecterNavigateur(context, COMPTES.admin);
-  await page.goto("/admin/contenus/coordonnees");
+  // F13 (D3) : la livraison se règle dans Paramètres › Livraison.
+  await page.goto("/admin/parametres?theme=livraison");
   await verifierAccessibilite(page);
-  await expect(page.getByRole("heading", { name: "Livraison et mise à disposition" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: "Livraison" })).toBeVisible();
   const retablir = await parametre("livraison.jours_non_livres", "[]");
+  const carte = page.locator("#livraison-jours_non_livres");
   try {
-    await page.getByLabel(/Jours non livrés/).fill("2026-12-24\n2026-13-45");
-    await page.getByRole("button", { name: "Enregistrer" }).click();
+    await carte.getByLabel("Jours non livrés").fill("2026-12-24\n2026-13-45");
+    await carte.getByRole("button", { name: "Enregistrer" }).click();
     await expect(page.getByRole("alert").filter({ hasText: "Jours non livrés" })).toBeVisible();
-    await page.getByLabel(/Jours non livrés/).fill("2026-12-24");
-    await page.getByRole("button", { name: "Enregistrer" }).click();
-    await expect(page.getByRole("status").filter({ hasText: "enregistrés" })).toBeVisible();
+    await carte.getByLabel("Jours non livrés").fill("2026-12-24");
+    await carte.getByRole("button", { name: "Enregistrer" }).click();
+    await expect(page.getByRole("status").filter({ hasText: "enregistré" })).toBeVisible();
     const [p] = await requete<{ valeur: string }>("site", `SELECT valeur FROM parametre WHERE cle = 'livraison.jours_non_livres'`);
     expect(JSON.parse(p!.valeur)).toEqual(["2026-12-24"]);
   } finally {

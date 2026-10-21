@@ -24,6 +24,8 @@ export async function exigerEquipe(roles?: readonly Role[]) {
   if (!session) redirect("/connexion?retour=/admin");
   const role = (session.user as { role?: string }).role;
   if (!estEquipe(role)) redirect("/");
+  // Membre désactivé (F13, D4) : ses sessions sont supprimées ; par prudence, on le refuse ici aussi.
+  if ((session.user as { desactiveLe?: Date | null }).desactiveLe) redirect("/connexion");
   if (!session.user.twoFactorEnabled) redirect("/connexion/activer-double-authentification");
   if (roles && !roles.includes(role)) redirect("/admin?acces=refuse");
   return { ...session, role };

@@ -68,6 +68,15 @@ export const TEXTES_COMPTES = {
         "Bonjour,\n\nVotre commande est partie sans attendre. Votre tensiomètre de bienvenue est momentanément en rupture : il vous sera expédié dès son retour en stock.",
     },
   },
+  invitation_equipe: {
+    objet: "Votre accès au back-office d'ExploCardio.fr",
+    apercu: "Choisissez votre mot de passe",
+    blocs: {
+      corps:
+        "Bonjour,\n\nUn accès au back-office d'ExploCardio.fr vient d'être créé pour vous. Choisissez votre mot de passe avec le bouton ci-dessous : le lien est valable une heure.\n\nÀ votre première connexion, vous activerez la double authentification avec une application de votre téléphone.",
+      fin: "Lien expiré ? Demandez à l'administrateur de vous renvoyer l'invitation.",
+    },
+  },
   compte_supprime: {
     objet: "Votre compte a été supprimé",
     apercu: "Confirmation de suppression",
@@ -108,4 +117,16 @@ export const emailsComptes = {
   doubleAuthentification: (active: boolean) => email("double_authentification", undefined, { etat: active ? "activée" : "désactivée" }),
   cadeauEnAttente: () => email("cadeau_en_attente"),
   compteSupprime: () => email("compte_supprime"),
+  invitationEquipe: (lien: string) =>
+    rendreModele({
+      modele: "invitation_equipe",
+      defaut: TEXTES_COMPTES.invitation_equipe,
+      corps: (t) => (
+        <>
+          {t.bloc("corps")}
+          <BoutonEmail href={lien}>Choisir mon mot de passe</BoutonEmail>
+          {t.bloc("fin")}
+        </>
+      ),
+    }),
 };

@@ -12,26 +12,29 @@ const CHAMPS = ["contact.whatsapp", "contact.horaires", "contact.fermetures"];
 test("numéro et horaires modifiés au back-office : mis à jour partout ; numéro vidé : formulaire de contact", async ({ page, context }) => {
   const avant = await requete<{ cle: string; valeur: string }>("site", `SELECT cle, valeur FROM parametre WHERE cle = ANY($1)`, [CHAMPS]);
   await connecterNavigateur(context, COMPTES.admin);
-  const enregistrer = async (champs: Record<string, string>) => {
-    await page.goto("/admin/contenus/coordonnees");
-    for (const [libelle, valeur] of Object.entries(champs)) await page.getByLabel(libelle, { exact: true }).fill(valeur);
-    await page.getByRole("button", { name: "Enregistrer" }).click();
+  // F13 (D3) : numéro et horaires se règlent dans Paramètres › Contact WhatsApp et horaires.
+  const enregistrer = async (carte: string, champs: Record<string, string>) => {
+    await page.goto("/admin/parametres?theme=contact");
+    const c = page.locator(`#${carte}`);
+    for (const [libelle, valeur] of Object.entries(champs)) await c.getByLabel(libelle, { exact: true }).fill(valeur);
+    await c.getByRole("button", { name: "Enregistrer" }).click();
     await expect(page.locator("main").getByRole("status")).toBeVisible();
   };
   try {
-    await enregistrer({ "Numéro WhatsApp (format international)": "+33 6 99 11 22 33", "Horaires du samedi": "10:00-12:00" });
+    await enregistrer("contact-whatsapp", { "Numéro WhatsApp": "+33 6 99 11 22 33" });
+    await enregistrer("contact-horaires", { Samedi: "10:00-12:00" });
     await page.goto("/services/assistance");
     const zone = page.locator("main").getByRole("region", { name: "Contacter l’équipe" });
     await expect(zone).toContainText("+33 6 99 11 22 33");
     await expect(zone).toContainText("samedi de 10 h à 12 h");
     await expect(page.getByRole("contentinfo")).toContainText("+33 6 99 11 22 33");
 
-    await page.goto("/admin/contenus/coordonnees");
-    await page.getByLabel("Horaires du lundi", { exact: true }).fill("9h-18h");
-    await page.getByRole("button", { name: "Enregistrer" }).click();
+    await page.goto("/admin/parametres?theme=contact");
+    await page.locator("#contact-horaires").getByLabel("Lundi", { exact: true }).fill("9h-18h");
+    await page.locator("#contact-horaires").getByRole("button", { name: "Enregistrer" }).click();
     await expect(page.locator("main").getByRole("alert")).toContainText("n'est pas une plage valide");
 
-    await enregistrer({ "Numéro WhatsApp (format international)": "" });
+    await enregistrer("contact-whatsapp", { "Numéro WhatsApp": "" });
     await page.goto("/services/assistance");
     await expect(page.locator("main").getByRole("link", { name: /^Appeler/ })).toHaveCount(0);
     await expect(page.locator("main").getByRole("link", { name: "Écrivez-nous" })).toHaveAttribute("href", "/qui-sommes-nous#contact");

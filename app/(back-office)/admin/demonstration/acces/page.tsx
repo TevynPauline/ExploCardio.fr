@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { changerMotDePasse } from "@/lib/demo/acces";
-import { exigerAdministrateur } from "@/lib/roles";
+import { exigerDroit } from "@/lib/droits";
 import { Button, Card, Champ, Kicker, Retour } from "@/ui";
 
 export const metadata: Metadata = { title: "Accès au site de démonstration" };
 
 async function changer(donnees: FormData) {
   "use server";
-  const { user } = await exigerAdministrateur();
+  const { user } = await exigerDroit("demonstration", "modifier");
   const nouveau = String(donnees.get("nouveau") ?? "");
   if (nouveau !== String(donnees.get("confirmation") ?? "")) {
     redirect("/admin/demonstration/acces?erreur=" + encodeURIComponent("Les deux saisies ne correspondent pas."));

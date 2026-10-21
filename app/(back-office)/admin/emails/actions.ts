@@ -1,5 +1,6 @@
 "use server";
 
+import { exigerDroit } from "@/lib/droits";
 import { redirect } from "next/navigation";
 import type { TypeCampagne } from "@generated/site/client";
 import { annulerCampagne, CampagneRefusee, creerCampagne, envoyerTestCampagne, modifierCampagne, programmerCampagne, type SaisieCampagne } from "@/domaine/emailing/campagnes";
@@ -17,7 +18,7 @@ import { exigerAdministrateur } from "@/lib/roles";
 // domaine. Erreurs de saisie renvoyées en message, sans perdre la page.
 
 async function auteur() {
-  const { user } = await exigerAdministrateur();
+  const { user } = await exigerDroit("emails", "modifier");
   return { id: user.id, libelle: `${user.name} (${user.email})`, email: user.email };
 }
 
@@ -140,7 +141,10 @@ export async function actionReglerEmails(d: FormData) {
   if (!expediteur || expediteur.length > 60) retour("/admin/emails/scenarios", { erreur: "Nom de l'expéditeur : obligatoire, 60 caractères au plus." });
   valeurs["emailing.expediteur_nom"] = expediteur;
   for (const [cle, valeur] of Object.entries(valeurs)) {
-    if ((await lireParametre(cle)) !== valeur) await ecrireParametre(cle, valeur, user.id);
+    const avant = await lireParametre(cle);
+    if (avant === valeur) continue;
+    await ecrireParametre(cle, valeur, user.id);
+    await dbSite().journalAction.create({ data: { auteurId: user.id, auteur: `${user.name} (${user.email})`, action: "emailing.parametre.modifie", objet: cle, detail: { avant, apres: valeur } } });
   }
   retour("/admin/emails/scenarios", { ok: "Réglages enregistrés : ils s'appliquent aux envois suivants, y compris ceux déjà programmés." });
 }

@@ -95,7 +95,7 @@ export function construireElements(references: ReferenceArticle[], chemins: Map<
 
 async function contenusAideIndexes(): Promise<ElementAide[]> {
   const { contenusPublies, etapesDe } = await import("../aide/lecture");
-  return (await contenusPublies()).map((c) => ({
+  return (await contenusPublies({}, true)).map((c) => ({
     slug: c.slug,
     type: c.type,
     titre: c.titre,

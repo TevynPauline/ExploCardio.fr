@@ -1,5 +1,8 @@
 "use server";
 
+import { dbSite } from "@/lib/db/site";
+
+import { exigerDroit } from "@/lib/droits";
 import { redirect } from "next/navigation";
 import {
   ContenuInvalide,
@@ -21,7 +24,7 @@ import { deposerDocument, deposerImage, FichierRefuse } from "@/lib/stockage";
 // Back-office du catalogue (F03, US6) : administrateur uniquement pour toute écriture.
 
 async function auteur() {
-  const { user } = await exigerAdministrateur();
+  const { user } = await exigerDroit("catalogue", "modifier");
   return { id: user.id, libelle: `${user.name} (${user.email})` };
 }
 
@@ -136,7 +139,10 @@ export async function actionServices(d: FormData) {
   }
   for (const cle of CLES_SERVICES) {
     const valeur = t(d, cle).trim();
-    if ((await lireParametre(cle)) !== valeur) await ecrireParametre(cle, valeur, user.id);
+    const avant = await lireParametre(cle);
+    if (avant === valeur) continue;
+    await ecrireParametre(cle, valeur, user.id);
+    await dbSite().journalAction.create({ data: { auteurId: user.id, auteur: `${user.name} (${user.email})`, action: "catalogue.parametre.modifie", objet: cle, detail: { avant, apres: valeur } } });
   }
   invaliderDepuisAction("contenus");
   retour(chemin, { ok: "Réglages enregistrés." });

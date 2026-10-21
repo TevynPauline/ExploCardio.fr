@@ -6,6 +6,7 @@ import { LIBELLES_STATUT_FINANCEMENT } from "@/domaine/financement/demande";
 import { euros } from "@/lib/montants";
 import { Button, Card, Kicker, Retour } from "@/ui";
 import { actionCommandeFinancee, actionNote, actionStatut } from "../actions";
+import { RappelPatient } from "@/ui/admin";
 
 export const metadata: Metadata = { title: "Demande de financement" };
 
@@ -27,6 +28,7 @@ export default async function FicheFinancement({ params, searchParams }: { param
       <h1 className="text-h2 font-light">Demande de {cabinet.nom || u.name}</h1>
       <p><Link href="/admin/financements">Toutes les demandes</Link></p>
       <Retour {...r} />
+      <RappelPatient />
 
       <Card className="flex flex-col gap-2">
         <h2 className="text-h3 font-semibold">Demande</h2>

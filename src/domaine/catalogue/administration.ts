@@ -87,6 +87,18 @@ export async function listerPourAdmin(): Promise<{ lignes: LigneAdmin[]; odooInd
   return { lignes, odooIndisponible: false };
 }
 
+/** Ce qui manque pour qu'un produit soit complet sur le site (F13, US3) : libellés courts. */
+export function aCompleter(l: Pick<LigneAdmin, "contenu" | "etat" | "manquants">): string[] {
+  const c = l.contenu;
+  const liste: string[] = [];
+  if (!c || !textesDe(c).descriptionCourte?.trim()) liste.push("Texte");
+  if (!c || photosDe(c).length === 0) liste.push("Photo");
+  if (!c?.sousCategorieId) liste.push("Type");
+  for (const m of l.manquants) if (/Odoo/.test(m)) liste.push(m.replace(/\.$/, ""));
+  if (l.etat !== "publie" && l.etat !== "orphelin") liste.push("Publication");
+  return [...new Set(liste)];
+}
+
 export async function lireArticleAdmin(reference: string): Promise<{ article: Article | null; contenu: LigneAdmin["contenu"]; odooIndisponible: boolean }> {
   const contenu = await dbSite().contenuProduit.findUnique({ where: { defaultCode: reference }, include: { sousCategorie: true } });
   try {

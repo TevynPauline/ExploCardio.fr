@@ -5,6 +5,7 @@ import { ETAPES_MAX } from "@/domaine/aide/administration";
 import { etapesDe, THEMES, TYPES } from "@/domaine/aide/lecture";
 import { dbSite } from "@/lib/db/site";
 import { Button, Card, Kicker, Retour } from "@/ui";
+import { ApercuCadres } from "@/ui/ApercuCadres";
 import { ChampAdmin, classeChamp } from "@/ui/admin";
 import { actionEnregistrerAide, actionPublierAide, actionRetirerAide } from "../actions";
 
@@ -131,6 +132,13 @@ export default async function ContenuAideAdmin({ params, searchParams }: Props) 
               <Button type="submit">Publier</Button>
             </form>
           )}
+        </Card>
+      ) : null}
+
+      {c ? (
+        <Card className="flex flex-col gap-3">
+          <h2 className="text-h3 font-semibold">Aperçu</h2>
+          <ApercuCadres chemin={`/aide/${c.slug}`} />
         </Card>
       ) : null}
     </div>

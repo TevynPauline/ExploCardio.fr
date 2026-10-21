@@ -20,9 +20,10 @@ test("Mon compte : droits à côté du contact ; équipe : client retrouvé par 
   const contexte = await browser.newContext({ baseURL, storageState: "playwright/.auth/acces-demo.json" });
   await connecterNavigateur(contexte, COMPTES.support);
   const support = await contexte.newPage();
+  // F13 (D6) : la recherche du support est dans la rubrique Clients.
   await support.goto("/admin/assistance");
-  await support.getByLabel("Nom, cabinet, email, téléphone, RPPS ou SIRET").fill(telephone.replace(/\s/g, ""));
+  await support.getByLabel("Nom, cabinet, téléphone, email, RPPS ou SIRET").fill(telephone.replace(/\s/g, ""));
   await support.getByRole("button", { name: "Rechercher" }).click();
-  await expect(support.getByRole("listitem").filter({ hasText: c.email })).toBeVisible();
+  await expect(support.getByRole("row").filter({ hasText: c.email })).toBeVisible();
   await contexte.close();
 });

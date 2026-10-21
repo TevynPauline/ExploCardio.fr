@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { modeDuConnecteur, modeDuSite } from "@/lib/config";
+import { rubriquesVisibles } from "@/lib/droits";
 import { exigerEquipe } from "@/lib/roles";
 import { Logo } from "@/ui";
 import { BoutonDeconnexion } from "./BoutonDeconnexion";
@@ -11,30 +11,11 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-// Back-office (socle F11) : réservé à l'équipe, double authentification obligatoire.
-// F13 l'étendra (contenus, paramètres, comptes, demandes).
+// Back-office (F11, F13) : réservé à l'équipe, double authentification obligatoire ; menu
+// regroupé, chaque rôle ne voit que ses rubriques (D1, D2).
 export default async function MiseEnPageBackOffice({ children }: { children: ReactNode }) {
   const { role, user } = await exigerEquipe();
-  const outilsDemo = modeDuSite() === "demo" && modeDuConnecteur("odoo") === "demo" && role === "admin";
-  const liens = [
-    { href: "/admin", libelle: "Tableau de bord" },
-    ...(role === "admin" || role === "commercial" ? [{ href: "/admin/comptes", libelle: "Comptes" }] : []),
-    ...(role === "admin" || role === "commercial" ? [{ href: "/admin/catalogue", libelle: "Catalogue" }] : []),
-    { href: "/admin/commandes", libelle: "Commandes" },
-    { href: "/admin/locations", libelle: "Locations" },
-    { href: "/admin/assistance", libelle: "Assistance" },
-    ...(role === "admin" || role === "support" ? [{ href: "/admin/logiciels-cloud", libelle: "Logiciels Cloud" }] : []),
-    ...(role === "admin" || role === "commercial" ? [{ href: "/admin/financements", libelle: "Financements" }] : []),
-    ...(role === "admin" || role === "commercial" ? [{ href: "/admin/devis", libelle: "Devis" }] : []),
-    ...(role === "admin" ? [{ href: "/admin/contenus", libelle: "Contenus" }] : []),
-    ...(role === "admin" ? [{ href: "/admin/emails", libelle: "Emails" }] : []),
-    ...(outilsDemo
-      ? [
-          { href: "/admin/demonstration", libelle: "Démonstration" },
-          { href: "/admin/demonstration/boite", libelle: "Boîte de démonstration" },
-        ]
-      : []),
-  ];
+  const liens = rubriquesVisibles(role);
   return (
     <div className="min-h-screen">
       <header className="border-b border-line bg-surface">

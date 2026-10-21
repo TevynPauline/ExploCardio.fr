@@ -3,8 +3,8 @@ import { verifierAccessibilite } from "../axe";
 import { COMPTES, connecterNavigateur } from "../session";
 import { PANIER_1200, clientConnecte, composerPanier, ecranDemo, payerParCarte, requete } from "./outils";
 
-// T023 (US6, SC-007, D7) : page « Assistance » du back-office, en lecture seule, ouverte au
-// support : recherche par nom, cabinet, email, téléphone, RPPS, SIRET ; ajustement manuel au
+// T023 (US6, SC-007, D7) : droits d'un client en lecture seule pour le support (rubrique Clients
+// depuis F13) : recherche par nom, cabinet, email, téléphone, RPPS, SIRET ; ajustement manuel au
 // démonstrateur affiché avec son motif.
 
 test.describe.configure({ timeout: 240_000 });
@@ -20,14 +20,17 @@ test("le support retrouve les droits d'un client en quelques secondes, sans pouv
   const support = await contexte.newPage();
   await support.goto("/admin");
   const debut = Date.now();
-  await support.getByRole("navigation", { name: "Back-office" }).getByRole("link", { name: "Assistance" }).click();
+  // F13 (D6) : la recherche du support et la fiche client sont dans la rubrique Clients.
+  await support.getByRole("navigation", { name: "Back-office" }).getByRole("link", { name: "Clients" }).click();
   for (const recherche of [c.email, compte!.rpps]) {
-    await support.getByLabel("Nom, cabinet, email, téléphone, RPPS ou SIRET").fill(recherche);
+    await support.getByLabel("Nom, cabinet, téléphone, email, RPPS ou SIRET").fill(recherche);
     await support.getByRole("button", { name: "Rechercher" }).click();
-    await expect(support.getByRole("listitem").filter({ hasText: c.email })).toContainText("Droits actifs");
+    await expect(support.getByRole("row").filter({ hasText: c.email })).toBeVisible();
   }
+  await support.getByRole("row").filter({ hasText: c.email }).getByRole("link").click();
+  await expect(support.locator("main")).toContainText("Droits actifs");
   expect(Date.now() - debut).toBeLessThan(15_000); // SC-007
-  await expect(support.locator("main").getByRole("button").filter({ hasNotText: "Rechercher" })).toHaveCount(0);
+  await expect(support.locator("main").getByRole("button")).toHaveCount(0);
   await expect(support.getByRole("heading", { name: "Règles en vigueur" })).toBeVisible();
   await verifierAccessibilite(support);
 
@@ -40,6 +43,6 @@ test("le support retrouve les droits d'un client en quelques secondes, sans pouv
     await expect(admin.getByRole("status").first()).toBeVisible();
   });
   await support.reload();
-  await expect(support.getByRole("listitem").filter({ hasText: c.email })).toContainText("Geste commercial après une panne");
+  await expect(support.locator("main")).toContainText("Geste commercial après une panne");
   await contexte.close();
 });

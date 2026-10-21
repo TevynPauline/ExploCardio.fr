@@ -23,9 +23,28 @@ export function CaseAdmin({ name, libelle, coche, value = "oui" }: { name: strin
   );
 }
 
+/** État de publication (F13, US2) : en préparation (visible en aperçu), publié, retiré. */
+export function EtatAdmin({ id, etat }: { id: string; etat: "preparation" | "publie" | "retire" }) {
+  return (
+    <label htmlFor={id} className="flex flex-col gap-1 text-small font-medium text-ink">
+      État
+      <select id={id} name="etat" defaultValue={etat} className={classeChamp}>
+        <option value="preparation">En préparation (visible seulement en aperçu)</option>
+        <option value="publie">Publié</option>
+        <option value="retire">Retiré</option>
+      </select>
+    </label>
+  );
+}
+
 /** Valeur d'un champ date-heure local (« 2026-10-15T09:00 »). */
 export function valeurDate(d: Date | null): string {
   if (!d) return "";
   const local = new Date(d.getTime() - d.getTimezoneOffset() * 60_000);
   return local.toISOString().slice(0, 16);
+}
+
+/** Rappel sur les écrans à texte libre ou à image (F13, FR-035) : jamais de donnée de patient. */
+export function RappelPatient() {
+  return <p className="ec-box--info p-3 text-small">Aucune donnée de patient : n’indiquez ni nom, ni information médicale d’un patient dans ces champs ou ces images.</p>;
 }

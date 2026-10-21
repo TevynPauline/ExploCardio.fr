@@ -1,10 +1,10 @@
 "use server";
 
+import { exigerDroit } from "@/lib/droits";
 import { redirect } from "next/navigation";
 import { locationsDemo, ValeurRefusee } from "@/connecteurs/demonstration";
 import { estErreurConnecteur } from "@/connecteurs/erreurs";
 import { centimesDepuisSaisie } from "@/lib/montants";
-import { exigerAdministrateur } from "@/lib/roles";
 
 // Cycle des locations en démonstration (F05, T017) : ce que l'équipe fera dans Odoo. Le suivi
 // des locations passe aussitôt après chaque action (en temps normal : toutes les 5 minutes).
@@ -12,7 +12,7 @@ import { exigerAdministrateur } from "@/lib/roles";
 const CHEMIN = "/admin/demonstration/locations";
 
 async function auteur() {
-  const { user } = await exigerAdministrateur();
+  const { user } = await exigerDroit("demonstration", "modifier");
   return { id: user.id, libelle: `${user.name} (${user.email})` };
 }
 

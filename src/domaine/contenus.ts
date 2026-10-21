@@ -1,4 +1,5 @@
 import { unstable_cache } from "next/cache";
+import { enApercu } from "@/lib/apercu";
 import { dbSite } from "@/lib/db/site";
 import { ETIQUETTES } from "@/lib/cache";
 
@@ -47,6 +48,11 @@ const lireBandeauPublie = enCache("bandeau", async () => {
 
 /** Messages du bandeau visibles maintenant : les dates sont vérifiées à chaque affichage. */
 export async function lireBandeau(maintenant = new Date()): Promise<MessageBandeau[]> {
+  // Aperçu de l'équipe (F13, D7) : messages publiés et en préparation, sans cache ni dates.
+  if (await enApercu()) {
+    const messages = await dbSite().contenu.findMany({ where: { type: "bandeau", etat: { in: ["publie", "preparation"] } }, orderBy: { ordre: "asc" } });
+    return messages.map((m) => ({ id: m.id, texte: m.corps, lien: m.lien }));
+  }
   return (await lireBandeauPublie())
     .filter((m) =>
       messageVisible({ etat: "publie", debut: m.debut ? new Date(m.debut) : null, fin: m.fin ? new Date(m.fin) : null }, maintenant),
@@ -59,9 +65,16 @@ export const lireTuiles = enCache("tuiles", async (): Promise<Tuile[]> => {
   return tuiles.map((t) => ({ id: t.id, titre: t.titre, phrase: t.corps, lien: t.lien ?? "/", badge: t.badge, fond: t.fond }));
 });
 
-export const lireActualites = enCache("actualites", async (): Promise<Actualite[]> => {
+const lireActualitesPubliees = enCache("actualites", () => lireActualitesSelon(["publie"]));
+
+/** Actualités publiées ; en aperçu de l'équipe (F13, D7), avec celles en préparation, sans cache. */
+export async function lireActualites(): Promise<Actualite[]> {
+  return (await enApercu()) ? lireActualitesSelon(["publie", "preparation"]) : lireActualitesPubliees();
+}
+
+async function lireActualitesSelon(etats: ("publie" | "preparation")[]): Promise<Actualite[]> {
   const actus = await dbSite().contenu.findMany({
-    where: { type: "actualite", etat: "publie" },
+    where: { type: "actualite", etat: { in: etats } },
     orderBy: [{ publieLe: "desc" }, { creeLe: "desc" }],
     take: 6,
   });
@@ -77,7 +90,7 @@ export const lireActualites = enCache("actualites", async (): Promise<Actualite[
       image: images[0] ?? null,
     };
   });
-});
+}
 
 export const lireMarques = enCache("marques", async (): Promise<MarqueAffichee[]> => {
   const marques = await dbSite().marque.findMany({ where: { visible: true }, orderBy: { ordre: "asc" } });

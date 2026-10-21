@@ -35,6 +35,10 @@ model Utilisateur {
   twoFactorEnabled Boolean?  @default(false)
   /// Blocage temporaire après des échecs de connexion répétés (F02).
   bloqueJusqua     DateTime?
+  /// F13 (D4) : membre de l'équipe désactivé (connexion refusée), et date de son invitation.
+  desactiveLe      DateTime?
+  desactivePar     String?
+  inviteLe         DateTime?
 
   prenom     String?
   nom        String?
@@ -235,9 +239,14 @@ model Contenu {
   fond          String?
   typeActualite TypeActualite?
   publieLe      DateTime?
+  /// F13 (D8) : textes des pages — nom du texte (« assistance », « mentions-legales »…) et
+  /// brouillon non publié (le texte publié reste dans `corps`).
+  cle           String?
+  brouillon     String?
   creeLe        DateTime        @default(now())
   modifieLe     DateTime        @updatedAt
 
+  @@unique([type, cle])
   @@index([type, etat])
   @@map("contenu")
 }
@@ -603,18 +612,33 @@ model DemandeDevis {
   notes          String?
   opportuniteRef String?
   creeLe         DateTime           @default(now())
+  /// F13 (D11) : traitement par l'équipe et verrou optimiste.
+  traitePar      String?
+  modifieLe      DateTime           @default(now()) @updatedAt
 
   @@map("demande_devis")
 }
 
+enum EtatMessage {
+  nouveau
+  en_cours
+  traite
+}
+
 model MessageContact {
-  id          String   @id @default(cuid())
+  id          String      @id @default(cuid())
   motif       String
   coordonnees Json
   texte       String
-  date        DateTime @default(now())
-  etat        String   @default("nouveau")
+  date        DateTime    @default(now())
+  /// F13 (D11) : suivi par l'équipe, note interne.
+  etat        EtatMessage @default(nouveau)
+  notes       String?
+  traitePar   String?
+  traiteLe    DateTime?
+  modifieLe   DateTime    @default(now()) @updatedAt
 
+  @@index([etat, date])
   @@map("message_contact")
 }
 

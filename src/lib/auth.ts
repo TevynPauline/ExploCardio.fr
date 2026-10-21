@@ -1,5 +1,6 @@
 import { betterAuth } from "better-auth";
 import { demanderEnvoi } from "@/domaine/emailing/envoi";
+import { estDesactive } from "@/domaine/equipe/desactivation";
 import { APIError, createAuthMiddleware, getSessionFromCtx } from "better-auth/api";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
@@ -38,6 +39,8 @@ export const auth = betterAuth({
       civilite: { type: "string", required: false },
       telephone: { type: "string", required: false },
       specialite: { type: "string", required: false },
+      // F13 (D4) : membre de l'équipe désactivé.
+      desactiveLe: { type: "date", required: false, input: false },
     },
   },
   session: {
@@ -60,7 +63,8 @@ export const auth = betterAuth({
       await notifier(user.email, await emailsComptes.motDePasseModifie(), "mot de passe réinitialisé");
     },
     async sendResetPassword({ user, url }) {
-      const email = await emailReinitialisationMotDePasse(url);
+      // F13 : une invitation au back-office passe par le même lien, avec son propre email.
+      const email = url.includes("invitation%3D1") ? await emailsComptes.invitationEquipe(url) : await emailReinitialisationMotDePasse(url);
       await demanderEnvoi({ modele: email.modele, destinataire: user.email, rendu: email, declencheur: "réinitialisation du mot de passe", cle: `reinitialisation:${user.id}:${url.slice(-24)}` });
     },
   },
@@ -85,7 +89,8 @@ export const auth = betterAuth({
         const mdp = corps.newPassword ?? corps.password ?? "";
         if (!motDePasseConforme(mdp)) throw new APIError("BAD_REQUEST", { message: MESSAGE_MOT_DE_PASSE });
       }
-      if (ctx.path === "/sign-in/email" && corps.email && (await estBloque(corps.email))) {
+      // Compte bloqué après des échecs, ou membre de l'équipe désactivé (F13) : même message.
+      if (ctx.path === "/sign-in/email" && corps.email && ((await estBloque(corps.email)) || (await estDesactive(corps.email)))) {
         throw new APIError("UNAUTHORIZED", { message: MESSAGE_ECHEC_CONNEXION });
       }
     }),

@@ -26,6 +26,9 @@ Tous les comptes ont le même mot de passe, communiqué par l'administrateur.
 | `admin@demo.explocardio.test` | Back-office complet et outils de démonstration |
 | `support@demo.explocardio.test` | Consultation des clients, de leurs droits et des accès Cloud |
 
+Il n'y a pas de compte commercial de démonstration : l'administrateur en crée un au besoin
+depuis **Équipe** (invitation par email, dans la boîte de démonstration).
+
 Les comptes **administrateur** et **support** demandent aussi un code de double
 authentification : ajoutez la clé fournie par l'administrateur dans une application
 d'authentification (par exemple sur votre téléphone).
@@ -61,10 +64,13 @@ Dans le back-office, rubrique **Démonstration** :
 - **S'inscrire** : bouton « Mon compte / Connexion » puis « Créer un compte », ou
   `/inscription`. Utilisez un RPPS fictif commençant par `99` (11 chiffres) et une adresse en
   `@demo.explocardio.test`. L'email de confirmation arrive dans la **boîte de démonstration**.
-- **Valider un compte** (administrateur ou commercial) : rubrique **Comptes** du back-office.
-  Valider, refuser (motif obligatoire), suspendre, rétablir ; chaque décision envoie un email.
-  Les demandes de changement de RPPS ou SIRET sont dans **Comptes → Demandes**.
-- **Réglages** (administrateur) : validation automatique, offre de bienvenue, spécialités.
+- **Valider un compte** (administrateur ou commercial) : rubrique **Clients** du back-office.
+  Valider, refuser (motif obligatoire) ; suspendre et rétablir (administrateur) ; chaque
+  décision envoie un email. Les demandes de changement de RPPS ou SIRET sont dans **Clients →
+  Changements de numéro**.
+- **Réglages** : validation automatique et spécialités dans **Paramètres → Comptes**
+  (administrateur) ; offre de bienvenue dans **Paramètres → Offre de bienvenue**
+  (administrateur ou commercial).
 - **Mon compte** : informations, adresses, préférences (newsletter), sécurité (mot de passe,
   double authentification facultative), mes données (export JSON, suppression du compte).
 - **Sécurité** : 5 mots de passe erronés en 15 minutes bloquent le compte 15 minutes (email au
@@ -112,7 +118,7 @@ Dans le back-office, rubrique **Démonstration** :
   « Commandes », bouton **Virement reçu** : la commande passe payée et facturée, le client est
   prévenu. Un montant différent laisse la commande en attente et alerte l'équipe. Sans
   virement, un rappel part 2 jours avant l'échéance et la commande est annulée à l'échéance.
-  Le RIB et ces délais se règlent dans **Contenus → Coordonnées et textes**.
+  Le RIB se règle dans **Paramètres → Virement**.
 - **Mise à disposition** : voir la section F05 ci-dessous. Panier mixte : l'achat se paie
   d'abord, puis le client autorise le prélèvement mensuel ; si cette autorisation échoue, elle
   se reprend depuis **Mon compte → Commandes** sans repayer l'achat.
@@ -161,8 +167,9 @@ Dans le back-office, rubrique **Démonstration** :
   fermé à la date de fin, instructions et date limite de retour. L'autorisation de
   prélèvement reste valable jusqu'au retour, pour un éventuel retard ou une dégradation.
 - **Back-office → Locations** (toute l'équipe) : commandées, en cours, impayés, retards, en
-  lecture seule. **Contenus → Coordonnées et textes** : heure limite, jours non livrés, zones
-  éloignées, rappels, conditions de location.
+  lecture seule. **Paramètres → Livraison** et **→ Fidélité et rappels** : heure limite, jours
+  non livrés, zones éloignées, rappels ; **Contenus → Coordonnées et textes** : conditions de
+  location.
 
 ## Bons d'achat, droits d'assistance et promotions (F06)
 
@@ -194,9 +201,9 @@ Le parcours « consommables → bons d'achat → assistance offerte » : tout es
   s'affichent dans le bandeau et sur les fiches (prix d'origine, prix remisé HT, date de fin),
   et s'arrêtent à la minute de leur fin. Un article encore au panier à la fin d'une promotion
   passe au prix en vigueur, avec un message.
-- **Back-office → Assistance** (toute l'équipe, lecture seule) : recherche par nom, cabinet,
-  email, téléphone, RPPS ou SIRET ; statut et fin des droits, ajustements, interventions,
-  règles en vigueur.
+- **Back-office → Clients** (toute l'équipe ; lecture seule pour le support) : recherche par
+  nom, cabinet, email, téléphone, RPPS ou SIRET ; la fiche du client montre le statut et la fin
+  des droits, les ajustements, les interventions et les règles en vigueur.
 - **Démonstration → Fidélité** (ce que l'équipe fera dans Odoo) : ajuster une cagnotte ou des
   droits (motif obligatoire), clore une intervention payée, exécuter l'expiration des bons
   échus et les rappels à une date simulée, créer ou terminer une promotion. Les paliers, la
@@ -236,9 +243,8 @@ n'est créé, et « Accéder à la plateforme » mène à une page de démonstra
 - **Hébergement des données de santé** : tant que le badge « En préparation » est affiché
   (Contenus → Coordonnées et textes), la page propose un formulaire d'intérêt ; les demandes
   apparaissent dans **Back-office → Devis** et sont copiées en opportunités dans Odoo.
-- **Réglages** : délai de grâce, rappels, adresse de la plateforme et aide à la première
-  connexion dans **Contenus → Coordonnées et textes → Rappels et accès Cloud** (avec les délais
-  des rappels de fidélité de F06).
+- **Réglages** : délai de grâce, rappels et adresse de la plateforme dans **Paramètres → Accès
+  Cloud** ; le texte d'aide à la première connexion dans **Contenus → Coordonnées et textes**.
 
 ## Contact WhatsApp et centre d'aide (F09)
 
@@ -248,8 +254,8 @@ n'est créé, et « Accéder à la plateforme » mène à une page de démonstra
   compte », sur les fiches produit, les pages d'aide et dans les emails. En démonstration, les
   boutons ouvrent une page qui explique que personne n'est contacté et montre le message qui
   aurait été pré-rempli (« Bonjour, je suis le Dr [nom], cabinet [cabinet]. » ; rien d'autre).
-- **Réglages** : numéro, horaires par jour et fermetures exceptionnelles dans **Contenus →
-  Coordonnées et textes** ; jours fériés automatiques. Numéro vidé : plus aucun bouton, le
+- **Réglages** : numéro, horaires par jour et fermetures exceptionnelles dans **Paramètres →
+  Contact WhatsApp et horaires** ; jours fériés automatiques. Numéro vidé : plus aucun bouton, le
   formulaire de contact est proposé.
 - **Centre d'aide** (`/aide`, menu Services et pied de page) : modes d'emploi pas à pas,
   tutoriels vidéo (sous-titres et transcription obligatoires), notices des produits reprises de
@@ -259,7 +265,7 @@ n'est créé, et « Accéder à la plateforme » mène à une page de démonstra
 - **Contenus → Centre d'aide** (administrateur) : créer, téléverser (vidéo MP4 de 50 Mo au plus,
   sous-titres WebVTT, PDF, images des étapes), relier aux produits, publier ou retirer.
 - **Mon compte** : l'état des droits d'assistance à côté du contact ; **Back-office →
-  Assistance** retrouve un client par son téléphone, avec ou sans espaces.
+  Clients** retrouve un client par son téléphone, avec ou sans espaces.
 
 ## Emails automatisés (F10)
 
@@ -308,13 +314,55 @@ n'est créé, et « Accéder à la plateforme » mène à une page de démonstra
   financée** : commande sans montant à régler et sans facture au client, stock décompté.
 - Aucun nom d'organisme de financement n'apparaît côté client.
 
-## Les contenus du site (administrateur)
+## Le back-office (F13)
+
+- **Rubriques et rôles** : chaque membre de l'équipe ne voit que ses rubriques. Une page
+  interdite ramène au tableau de bord avec « réservée à un autre rôle ».
+
+  | Rubrique | Administrateur | Commercial | Support |
+  |---|---|---|---|
+  | À traiter, Clients, Commandes et locations, Logiciels Cloud | ✅ | ✅ | lecture (et accès Cloud) |
+  | Demandes, Catalogue, Contenus | ✅ | ✅ | — |
+  | Paramètres | ✅ | lecture ; offre de bienvenue | — |
+  | Emails, Équipe, Journal, Démonstration | ✅ | — | — |
+
+- **À traiter** : comptes à valider (les prioritaires d'abord), demandes reçues, messages
+  nouveaux, accès Cloud à ouvrir, erreurs des connecteurs.
+- **Clients** : liste par statut, recherche, et fiche complète : identité, décision, droits
+  d'assistance, locations, commandes récentes, factures, accès Cloud. Si Odoo est injoignable,
+  les blocs concernés le disent et le reste s'affiche.
+- **Demandes** : financements, devis et messages de contact ; chaque demande passe de
+  « nouveau » à « en cours » puis « traité », avec une note interne et le nom de qui l'a suivie.
+- **Paramètres** (administrateur) : un écran par thème (livraison, contact et horaires,
+  comptes, virement, fidélité et rappels, accès Cloud, sécurité et alertes). Une valeur
+  incohérente est refusée avec l'explication ; chaque paramètre a son historique et un bouton
+  « Remettre cette valeur ». Les prix, remises, promotions, bons d'achat, droits d'assistance et
+  garanties se règlent dans Odoo, pas ici.
+- **Équipe** (administrateur) : inviter un membre (il reçoit un lien pour choisir son mot de
+  passe, puis active la double authentification), changer son rôle, le désactiver ou le
+  réactiver. Il reste toujours au moins un administrateur actif.
+- **Journal** (administrateur) : appels aux connecteurs (filtres par connecteur, résultat,
+  dates) et actions de l'équipe. Après 5 erreurs successives d'un connecteur, l'équipe est
+  prévenue une fois par heure au plus (seuil dans **Paramètres → Sécurité et alertes**).
+- **Inactivité** : une session de l'équipe inactive 30 minutes est fermée (délai réglable) ;
+  la page de connexion l'explique.
+- **Deux personnes sur le même contenu** : la seconde qui enregistre est prévenue (qui, à
+  quelle heure) et rien n'est écrasé.
+
+## Les contenus du site (administrateur et commercial)
 
 Dans le back-office, rubrique **Contenus** : bandeau promotionnel, six tuiles d'accès rapide,
-actualités, coordonnées et textes de l'accueil, produits phares et liens rapides des menus,
-marques partenaires. Une modification est visible sur le site en moins d'une minute et
-inscrite au journal. Ces contenus sont **réels** : ils sont conservés quand on réinitialise la
-démonstration.
+actualités, textes des pages (présentation, services, pages légales), coordonnées et textes
+de l'accueil, produits phares et liens rapides des menus, marques partenaires, centre d'aide.
+Une modification est visible sur le site en moins d'une minute et inscrite au journal. Ces
+contenus sont **réels** : ils sont conservés quand on réinitialise la démonstration.
+
+- **En préparation, aperçu, publication** : un contenu « en préparation » n'est visible que
+  dans l'**aperçu** (cadres ordinateur et mobile en bas de l'écran d'édition, ou « Ouvrir dans
+  un onglet ») ; « Quitter l'aperçu » revient au site tel que le voient les visiteurs.
+- **Textes des pages** : le texte est enregistré en brouillon, prévisualisé, puis publié ;
+  « Revenir au texte d'origine » rétablit la version livrée avec le site.
+- Toute image demande un texte de remplacement ; aucun écran n'accepte de donnée de patient.
 
 ## Réinitialiser entre deux séances
 

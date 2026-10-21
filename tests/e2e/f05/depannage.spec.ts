@@ -90,10 +90,13 @@ test("heure limite passée : le lendemain n'est plus proposé ; parc en maintena
     await expect(carte).not.toContainText("Livraison demain");
     await expect(carte).toContainText("Première livraison possible");
 
-    await requete("demo", `UPDATE stock_lot SET statut = 'en_maintenance', "retourPrevu" = now() + interval '12 days' WHERE id = ANY($1)`, [lots.map((x) => x.id)]);
+    // Date de retour en UTC : la colonne n'a pas de fuseau horaire, et le site la lit en UTC
+    // (ni now() de PostgreSQL ni un Date local ne conviennent hors d'une machine en UTC).
+    const retourPrevu = new Date(Date.now() + 12 * 86_400_000);
+    await requete("demo", `UPDATE stock_lot SET statut = 'en_maintenance', "retourPrevu" = $2 WHERE id = ANY($1)`, [lots.map((x) => x.id), retourPrevu.toISOString()]);
     await page.reload();
     // La première date proposée est le premier jour ouvré à partir du retour prévu des appareils.
-    const retour = new Date(Date.now() + 12 * 86_400_000).toISOString().slice(0, 10);
+    const retour = retourPrevu.toISOString().slice(0, 10);
     const attendue = premiereDateLivraison(new Date(), regles("00:00"), null, retour);
     await expect(carte).toContainText(`Première livraison possible : ${libelleJour(attendue)}`);
   } finally {

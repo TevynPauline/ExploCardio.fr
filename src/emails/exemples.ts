@@ -30,6 +30,7 @@ export const EXEMPLES: Record<string, () => Promise<EmailRendu>> = {
   compte_retabli: emailsComptes.compteRetabli,
   compte_bloque: emailsComptes.compteBloque,
   compte_supprime: emailsComptes.compteSupprime,
+  invitation_equipe: () => emailsComptes.invitationEquipe(urlDuSite("/api/auth/reset-password/exemple?callbackURL=%2Freinitialiser-mot-de-passe%3Finvitation%3D1")),
   mot_de_passe_modifie: emailsComptes.motDePasseModifie,
   confirmer_nouvel_email: () => emailsComptes.confirmerNouvelEmail(urlDuSite("/api/auth/verify-email?token=exemple")),
   email_change: () => emailsComptes.ancienEmailPrevenu("nouvelle.adresse@exemple.test"),

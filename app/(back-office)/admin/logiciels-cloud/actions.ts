@@ -1,10 +1,10 @@
 "use server";
 
+import { exigerDroit } from "@/lib/droits";
 import { redirect } from "next/navigation";
 import { estErreurConnecteur } from "@/connecteurs/erreurs";
 import { confirmerTache, fermerAcces, ouvrirAcces, retablirAcces, suspendreAcces } from "@/domaine/cloud/acces";
 import { dbSite } from "@/lib/db/site";
-import { exigerEquipe } from "@/lib/roles";
 
 // Actions de l'équipe sur les accès Cloud (F12, FR-015, FR-018, FR-020) : motif obligatoire,
 // journalisées avec leur auteur par le domaine ; le client est prévenu.
@@ -13,7 +13,7 @@ const CHEMIN = "/admin/logiciels-cloud";
 const t = (d: FormData, n: string) => String(d.get(n) ?? "").trim();
 
 async function auteur() {
-  const { user } = await exigerEquipe(["admin", "support"]);
+  const { user } = await exigerDroit("cloud.agir", "modifier");
   return { id: user.id, libelle: `${user.name} (${user.email})` };
 }
 

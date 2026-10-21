@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
-import { exigerEquipe } from "@/lib/roles";
+import { exigerDroit } from "@/lib/droits";
 
-// Comptes professionnels (F02, US2) : administrateur et commercial (D5).
+// Comptes professionnels (F02, US2) : rubrique « Clients » (F13, D2) ; le support y est en lecture seule.
 export default async function MiseEnPageComptes({ children }: { children: ReactNode }) {
-  await exigerEquipe(["admin", "commercial"]);
+  await exigerDroit("clients", "voir");
   return <>{children}</>;
 }

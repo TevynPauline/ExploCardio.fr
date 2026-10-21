@@ -46,7 +46,8 @@ test("virement : commande en attente avec RIB, puis virement reçu → payée et
 
   const [apres] = await requete<{ statut: string }>("demo", `SELECT statut FROM sale_order WHERE ref = $1`, [cmd!.ref]);
   expect(apres!.statut).not.toBe("en_attente_paiement");
-  expect(await requete("site", `SELECT 1 FROM message_demonstration WHERE destinataire = $1 AND objet LIKE 'Paiement reçu%'`, [c.email])).toHaveLength(1);
+  // L'email passe par la file d'envoi : il arrive dans la boîte de démonstration peu après.
+  await expect.poll(async () => (await requete("site", `SELECT 1 FROM message_demonstration WHERE destinataire = $1 AND objet LIKE 'Paiement reçu%'`, [c.email])).length, { timeout: 20_000 }).toBe(1);
   await page.goto(`/mon-compte/commandes`);
   await page.getByRole("link", { name: `Commande ${cmd!.ref}` }).click();
   await expect(main).toContainText("Payée");

@@ -41,6 +41,7 @@ export const CATALOGUE = {
   confirmer_nouvel_email: T("Confirmation d’une nouvelle adresse", "F02", COMPTE),
   email_change: T("Ancienne adresse prévenue d’un changement", "F02", COMPTE),
   double_authentification: T("Double authentification activée ou désactivée", "F02", COMPTE),
+  invitation_equipe: T("Invitation au back-office", "F13", COMPTE),
   cadeau_en_attente: T("Cadeau de bienvenue en attente", "F02", COMMANDE),
   // F04 — commandes, paiements, financement
   commande_confirmee: T("Confirmation de commande", "F04", COMMANDE),

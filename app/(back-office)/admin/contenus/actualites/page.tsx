@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { dbSite } from "@/lib/db/site";
 import { Button, Card, Kicker, Retour } from "@/ui";
-import { CaseAdmin, ChampAdmin, classeChamp, valeurDate } from "@/ui/admin";
+import { CaseAdmin, ChampAdmin, classeChamp, EtatAdmin, valeurDate, RappelPatient } from "@/ui/admin";
+import { ApercuCadres } from "@/ui/ApercuCadres";
 import { enregistrerActualite, supprimerActualite } from "../actions";
 
 export const metadata: Metadata = { title: "Actualités" };
@@ -12,9 +13,10 @@ type Actu = {
   corps: string;
   lien: string | null;
   typeActualite: string | null;
-  etat: string;
+  etat: "preparation" | "publie" | "retire";
   publieLe: Date | null;
   images: unknown;
+  modifieLe: Date;
 };
 
 function FormulaireActualite({ a }: { a?: Actu }) {
@@ -61,7 +63,8 @@ function FormulaireActualite({ a }: { a?: Actu }) {
           <CaseAdmin name="retirerImage" libelle="Retirer l'image" />
         </div>
       ) : null}
-      <CaseAdmin name="publie" libelle="Publiée" coche={a ? a.etat === "publie" : true} />
+      <input type="hidden" name="modifieLe" value={a?.modifieLe?.toISOString() ?? ""} />
+      <EtatAdmin id={`etat-${p}`} etat={a?.etat ?? "publie"} />
       <div className="flex items-end">
         <Button type="submit">{a ? "Enregistrer" : "Créer l'actualité"}</Button>
       </div>
@@ -78,6 +81,7 @@ export default async function Actualites({ searchParams }: { searchParams: Promi
       <Kicker>Contenus</Kicker>
       <h1 className="text-h2 font-light">Actualités</h1>
       <Retour {...r} />
+      <RappelPatient />
       <Card>
         <h2 className="mb-3 text-h3 font-semibold">Nouvelle actualité</h2>
         <FormulaireActualite />
@@ -91,6 +95,10 @@ export default async function Actualites({ searchParams }: { searchParams: Promi
           </form>
         </Card>
       ))}
+      <Card>
+        <h2 className="mb-3 text-h3 font-semibold">Aperçu des actualités (accueil)</h2>
+        <ApercuCadres chemin="/" />
+      </Card>
     </div>
   );
 }

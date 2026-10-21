@@ -1,3 +1,4 @@
+import { enApercu } from "@/lib/apercu";
 import { dbSite } from "@/lib/db/site";
 import type { ContenuAide, ThemeAide, TypeContenuAide } from "@generated/site/client";
 import { normaliserTexte } from "../recherche/normaliser";
@@ -44,13 +45,20 @@ function correspond(c: ContenuAide, f: FiltresAide): boolean {
   return true;
 }
 
-export async function contenusPublies(f: FiltresAide = {}): Promise<ContenuAide[]> {
-  const tous = await dbSite().contenuAide.findMany({ where: { etat: "publie" }, orderBy: [{ ordre: "asc" }, { titre: "asc" }] });
+/** États visibles : publiés ; en aperçu de l'équipe (F13, D7), aussi ceux en préparation. */
+async function etatsVisibles(): Promise<("publie" | "preparation")[]> {
+  return (await enApercu()) ? ["publie", "preparation"] : ["publie"];
+}
+
+/** `publiesSeulement` : pour l'index de recherche, partagé par tous les visiteurs (jamais d'aperçu). */
+export async function contenusPublies(f: FiltresAide = {}, publiesSeulement = false): Promise<ContenuAide[]> {
+  const etats = publiesSeulement ? ["publie" as const] : await etatsVisibles();
+  const tous = await dbSite().contenuAide.findMany({ where: { etat: { in: etats } }, orderBy: [{ ordre: "asc" }, { titre: "asc" }] });
   return tous.filter((c) => correspond(c, f));
 }
 
 export async function contenuPublie(slug: string): Promise<ContenuAide | null> {
-  return dbSite().contenuAide.findFirst({ where: { slug, etat: "publie" } });
+  return dbSite().contenuAide.findFirst({ where: { slug, etat: { in: await etatsVisibles() } } });
 }
 
 /** FAQ : les questions les plus consultées en tête (D5), puis l'ordre éditorial. */
@@ -68,7 +76,7 @@ export async function documentsProduits(reference?: string): Promise<DocumentPro
 
 /** Aide d'un modèle, pour sa fiche produit (US3-5). */
 export async function aideDe(references: string[]): Promise<ContenuAide[]> {
-  const tous = await dbSite().contenuAide.findMany({ where: { etat: "publie", references: { hasSome: references } }, orderBy: [{ type: "asc" }, { ordre: "asc" }] });
+  const tous = await dbSite().contenuAide.findMany({ where: { etat: { in: await etatsVisibles() }, references: { hasSome: references } }, orderBy: [{ type: "asc" }, { ordre: "asc" }] });
   return tous;
 }
 

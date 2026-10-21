@@ -8,6 +8,7 @@ import { exigerAdministrateur } from "@/lib/roles";
 import { Button, Card, Champ, Kicker, Retour } from "@/ui";
 import { actionBrouillonModele, actionOrigineModele, actionPublierModele, actionTesterModele } from "../../actions";
 import { dateCourte } from "../../campagnes/etats";
+import { RappelPatient } from "@/ui/admin";
 
 export const metadata: Metadata = { title: "Modèle d’email" };
 
@@ -41,6 +42,7 @@ export default async function Modele({ params, searchParams }: { params: Promise
         {etat.brouillon ? " · brouillon non publié" : ""} · <Link href="/admin/emails/modeles">tous les modèles</Link>
       </p>
       <Retour {...r} />
+      <RappelPatient />
       <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <Card className="flex min-w-0 flex-col gap-3">
           <h2 className="text-h3 font-semibold">Textes</h2>

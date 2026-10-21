@@ -11,6 +11,7 @@ import { sessionCourante } from "@/lib/roles";
 import { Card, Kicker, Retour } from "@/ui";
 import { actionPublier, actionRetirer } from "../actions";
 import { FormulaireContenu } from "./FormulaireContenu";
+import { RappelPatient } from "@/ui/admin";
 
 export const metadata: Metadata = { title: "Contenu d'un produit" };
 
@@ -48,6 +49,7 @@ export default async function ContenuProduit({
       <h1 className="text-h2 font-light">{titre}</h1>
       <p><Link href="/admin/catalogue" className="inline-flex min-h-11 items-center">Retour à la liste</Link></p>
       <Retour {...retour} />
+      <RappelPatient />
 
       <Card className="flex flex-col gap-3">
         <h2 className="text-h3 font-semibold">Données d’Odoo</h2>

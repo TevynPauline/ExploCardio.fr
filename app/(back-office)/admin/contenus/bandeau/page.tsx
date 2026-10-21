@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import { dbSite } from "@/lib/db/site";
 import { Button, Card, Kicker, Retour } from "@/ui";
-import { CaseAdmin, ChampAdmin, classeChamp, valeurDate } from "@/ui/admin";
+import { ChampAdmin, classeChamp, EtatAdmin, valeurDate } from "@/ui/admin";
+import { ApercuCadres } from "@/ui/ApercuCadres";
 import { enregistrerMessageBandeau, supprimerMessageBandeau } from "../actions";
 
 export const metadata: Metadata = { title: "Bandeau promotionnel" };
 
-type Message = { id: string; corps: string; lien: string | null; ordre: number; etat: string; debut: Date | null; fin: Date | null };
+type Message = { id: string; corps: string; lien: string | null; ordre: number; etat: "preparation" | "publie" | "retire"; debut: Date | null; fin: Date | null; modifieLe: Date };
 
 function FormulaireMessage({ m }: { m?: Message }) {
   const p = m?.id ?? "nouveau";
@@ -32,7 +33,8 @@ function FormulaireMessage({ m }: { m?: Message }) {
           <input id={`fin-${p}`} name="fin" type="datetime-local" defaultValue={valeurDate(m?.fin ?? null)} className={classeChamp} />
         </ChampAdmin>
       </div>
-      <CaseAdmin name="actif" libelle="Message actif" coche={m ? m.etat === "publie" : true} />
+      <input type="hidden" name="modifieLe" value={m?.modifieLe.toISOString() ?? ""} />
+      <EtatAdmin id={`etat-${p}`} etat={m?.etat ?? "publie"} />
       <div className="flex flex-wrap gap-2">
         <Button type="submit">{m ? "Enregistrer" : "Ajouter le message"}</Button>
       </div>
@@ -62,6 +64,10 @@ export default async function Bandeau({ searchParams }: { searchParams: Promise<
       <Card>
         <h2 className="mb-3 text-h3 font-semibold">Nouveau message</h2>
         <FormulaireMessage />
+      </Card>
+      <Card>
+        <h2 className="mb-3 text-h3 font-semibold">Aperçu du bandeau (accueil)</h2>
+        <ApercuCadres chemin="/" />
       </Card>
     </div>
   );

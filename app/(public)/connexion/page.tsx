@@ -8,11 +8,16 @@ import { FormulaireConnexion } from "./FormulaireConnexion";
 export const metadata: Metadata = { title: "Connexion" };
 
 // Page de connexion (F02, US3), dans la mise en page publique.
-export default async function Connexion({ searchParams }: { searchParams: Promise<{ retour?: string }> }) {
-  const retour = cheminDeRetour((await searchParams).retour);
+export default async function Connexion({ searchParams }: { searchParams: Promise<{ retour?: string; raison?: string }> }) {
+  const p = await searchParams;
+  const retour = cheminDeRetour(p.retour);
   return (
     <div className="mx-auto flex max-w-md flex-col gap-6 px-4 py-12">
       <h1 className="text-h2 font-light">Connexion</h1>
+      {/* F13 (D5) : session de l'équipe fermée après inactivité. */}
+      {p.raison === "inactivite" ? (
+        <p role="status" className="ec-box--promo p-4">Votre session a été fermée après une période d’inactivité. Reconnectez-vous pour continuer.</p>
+      ) : null}
       <Card>
         <Suspense>
           <FormulaireConnexion />

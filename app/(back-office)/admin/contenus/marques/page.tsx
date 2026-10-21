@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { dbSite } from "@/lib/db/site";
 import { Button, Card, Kicker, Retour } from "@/ui";
-import { CaseAdmin, ChampAdmin, classeChamp } from "@/ui/admin";
+import { CaseAdmin, ChampAdmin, classeChamp, RappelPatient } from "@/ui/admin";
 import { enregistrerMarque } from "../actions";
 
 export const metadata: Metadata = { title: "Marques" };
@@ -53,6 +53,7 @@ export default async function Marques({ searchParams }: { searchParams: Promise<
       <Kicker>Contenus</Kicker>
       <h1 className="text-h2 font-light">Marques</h1>
       <Retour {...r} />
+      <RappelPatient />
       {marques.map((m) => (
         <Card key={m.id}>
           <FormulaireMarque m={m} />

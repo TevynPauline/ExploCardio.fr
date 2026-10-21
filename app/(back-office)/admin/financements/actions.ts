@@ -1,15 +1,15 @@
 "use server";
 
+import { exigerDroit } from "@/lib/droits";
 import { redirect } from "next/navigation";
 import type { StatutDemandeFinancement } from "@generated/site/client";
 import { estErreurConnecteur } from "@/connecteurs/erreurs";
 import { ActionRefusee, ajouterNote, changerStatut, creerCommandeFinancee } from "@/domaine/financement/administration";
-import { exigerEquipe } from "@/lib/roles";
 
 // Actions sur une demande de financement (FR-036, FR-038, FR-039), journalisées par le domaine.
 
 async function auteur() {
-  const { user } = await exigerEquipe(["admin", "commercial"]);
+  const { user } = await exigerDroit("demandes", "modifier");
   return { id: user.id, libelle: `${user.name} (${user.email})` };
 }
 

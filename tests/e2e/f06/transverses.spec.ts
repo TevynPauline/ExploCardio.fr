@@ -29,5 +29,5 @@ test("pages client de F06", async ({ page, browser, baseURL }) => {
 
 test("back-office de F06", async ({ page, context }) => {
   await connecterNavigateur(context, COMPTES.admin);
-  expect(await sansDefilement(page, ["/admin/assistance?q=demo", "/admin/demonstration/fidelite"])).toEqual([]);
+  expect(await sansDefilement(page, ["/admin/clients?statut=tous&q=demo", "/admin/demonstration/fidelite"])).toEqual([]);
 });

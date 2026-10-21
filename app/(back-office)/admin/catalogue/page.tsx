@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { listerPourAdmin, type LigneAdmin } from "@/domaine/catalogue/administration";
+import { aCompleter, listerPourAdmin, type LigneAdmin } from "@/domaine/catalogue/administration";
 import { FAMILLES } from "@/domaine/familles";
 import { euros } from "@/lib/montants";
 import { Kicker } from "@/ui";
@@ -75,7 +75,8 @@ export default async function Catalogue({ searchParams }: { searchParams: Promis
               <th scope="col" className="py-2 pr-4 font-medium">Produit</th>
               <th scope="col" className="py-2 pr-4 font-medium">Catégorie</th>
               <th scope="col" className="py-2 pr-4 font-medium">Prix HT (Odoo)</th>
-              <th scope="col" className="py-2 font-medium">Contenu</th>
+              <th scope="col" className="py-2 pr-4 font-medium">Contenu</th>
+              <th scope="col" className="py-2 font-medium">Ce qui manque</th>
             </tr>
           </thead>
           <tbody>
@@ -89,10 +90,8 @@ export default async function Catalogue({ searchParams }: { searchParams: Promis
                 </th>
                 <td className="py-2 pr-4">{CATEGORIES.find((c) => c.code === l.article?.categorie)?.libelle ?? "—"}</td>
                 <td className="py-2 pr-4">{l.article ? euros(Math.min(...l.article.variantes.map((v) => v.prixHt))) : "—"}</td>
-                <td className="py-2">
-                  {ETATS[l.etat]}
-                  {l.etat !== "publie" && l.manquants.length ? <span className="block text-small text-muted">Manque : {l.manquants.length}</span> : null}
-                </td>
+                <td className="py-2 pr-4">{ETATS[l.etat]}</td>
+                <td className="py-2">{aCompleter(l).join(", ") || "Rien"}</td>
               </tr>
             ))}
           </tbody>

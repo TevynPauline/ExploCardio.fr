@@ -8,6 +8,7 @@ import { actionCreerCampagne } from "../actions";
 import { dateCourte as date, ETATS_CAMPAGNE } from "./etats";
 import { FormulaireCampagne } from "./FormulaireCampagne";
 import { NavEmails } from "../NavEmails";
+import { RappelPatient } from "@/ui/admin";
 
 export const metadata: Metadata = { title: "Campagnes" };
 
@@ -23,6 +24,7 @@ export default async function Campagnes({ searchParams }: { searchParams: Promis
       <NavEmails actif="/admin/emails/campagnes" />
       <p className="text-muted">Promotions, ventes flash et nouveautés : envoyées uniquement aux abonnés confirmés à la newsletter, les jours ouvrés, avec un lien de désinscription.</p>
       <Retour {...r} />
+      <RappelPatient />
       <Card className="flex flex-col gap-3">
         <h2 className="text-h3 font-semibold">Campagnes récentes</h2>
         {!campagnes.length ? <p className="text-muted">Aucune campagne pour l’instant.</p> : null}

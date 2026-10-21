@@ -3,7 +3,7 @@ import Link from "next/link";
 import { lireParametre } from "@/lib/parametres";
 import { sessionCourante } from "@/lib/roles";
 import { Card, Kicker, Retour } from "@/ui";
-import { ChampAdmin, classeChamp } from "@/ui/admin";
+import { ChampAdmin, classeChamp, RappelPatient } from "@/ui/admin";
 import { actionServices } from "../actions";
 
 export const metadata: Metadata = { title: "Pages services" };
@@ -32,6 +32,7 @@ export default async function Services({ searchParams }: { searchParams: Promise
       <h1 className="text-h2 font-light">Pages services et financement</h1>
       <p><Link href="/admin/catalogue" className="inline-flex min-h-11 items-center">Retour à la liste</Link></p>
       <Retour {...retour} />
+      <RappelPatient />
       <Card>
         <form action={actionServices} className="flex flex-col gap-4">
           <fieldset disabled={!admin} className="flex flex-col gap-4">

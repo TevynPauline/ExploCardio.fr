@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
-import { exigerEquipe } from "@/lib/roles";
+import { exigerDroit } from "@/lib/droits";
 
 // Locations en lecture seule (F05, US8) : toute l'équipe ; elles se gèrent dans Odoo.
 export default async function MiseEnPageLocations({ children }: { children: ReactNode }) {
-  await exigerEquipe(["admin", "commercial", "support"]);
+  await exigerDroit("commandes", "voir");
   return <>{children}</>;
 }

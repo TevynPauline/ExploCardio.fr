@@ -35,3 +35,21 @@ export async function journaliser(auteur: { id: string; libelle: string }, actio
     data: { auteurId: auteur.id, auteur: auteur.libelle, action, objet, detail: JSON.parse(JSON.stringify({ avant, apres })) },
   });
 }
+
+/** Verrou optimiste (F13, D9) : refuse si le contenu a changé depuis l'ouverture du formulaire. */
+export async function verifierVersionContenu(id: string, lu: string) {
+  if (!id || !lu) return;
+  const actuel = await dbSite().contenu.findUnique({ where: { id }, select: { modifieLe: true } });
+  if (!actuel || actuel.modifieLe.toISOString() === lu) return;
+  const derniere = await dbSite().journalAction.findFirst({ where: { objet: id }, orderBy: { date: "desc" } });
+  const heure = actuel.modifieLe.toLocaleTimeString("fr-FR", { timeZone: "Europe/Paris", hour: "2-digit", minute: "2-digit" });
+  throw new SaisieRefusee(`Ce contenu a été modifié${derniere ? ` par ${derniere.auteur}` : ""} à ${heure} depuis que vous l'avez ouvert : rien n'a été écrasé. Rechargez la page pour repartir de la dernière version.`);
+}
+
+/** Toute image enregistrée porte un texte de remplacement (F13, FR-008). */
+export function exigerTexteRemplacement(texte: string, objet = "Image"): string {
+  const t = texte.trim();
+  if (!t) throw new SaisieRefusee(`${objet} : le texte de remplacement est obligatoire.`);
+  if (t.length > 200) throw new SaisieRefusee(`${objet} : texte de remplacement de 200 caractères au plus.`);
+  return t;
+}

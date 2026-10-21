@@ -1,9 +1,9 @@
 "use server";
 
+import { exigerDroit } from "@/lib/droits";
 import { redirect } from "next/navigation";
 import { SaisieRefusee } from "@/domaine/admin-contenus";
 import { enregistrerContenuAide, ETAPES_MAX, publierContenuAide, retirerContenuAide, type SaisieAide } from "@/domaine/aide/administration";
-import { exigerAdministrateur } from "@/lib/roles";
 import { FichierRefuse } from "@/lib/stockage";
 
 // Centre d'aide au back-office (F09, US4) : administrateur ; validation, journal, publication.
@@ -15,7 +15,7 @@ const f = (d: FormData, cle: string) => {
 };
 
 async function auteur() {
-  const { user } = await exigerAdministrateur();
+  const { user } = await exigerDroit("contenus", "modifier");
   return { id: user.id, libelle: `${user.name} (${user.email})` };
 }
 

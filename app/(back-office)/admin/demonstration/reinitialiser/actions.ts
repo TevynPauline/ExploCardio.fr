@@ -2,10 +2,10 @@
 
 import { redirect } from "next/navigation";
 import { reinitialiserDemonstration } from "@/connecteurs/demonstration";
-import { exigerAdministrateur } from "@/lib/roles";
+import { exigerDroit } from "@/lib/droits";
 
 export async function reinitialiser(donnees: FormData) {
-  const { user } = await exigerAdministrateur();
+  const { user } = await exigerDroit("demonstration", "modifier");
   if (donnees.get("confirmation") !== "oui") {
     redirect("/admin/demonstration/reinitialiser?erreur=confirmation");
   }

@@ -1,12 +1,12 @@
 "use server";
 
+import { exigerDroit } from "@/lib/droits";
 import { redirect } from "next/navigation";
 import { registre } from "@/connecteurs/registre";
-import { SaisieRefusee, dateFacultative, exigerLien, exigerTexte, journaliser } from "@/domaine/admin-contenus";
+import { SaisieRefusee, dateFacultative, exigerLien, exigerTexte, exigerTexteRemplacement, journaliser, verifierVersionContenu } from "@/domaine/admin-contenus";
 import { invaliderDepuisAction } from "@/lib/cache";
 import { dbSite } from "@/lib/db/site";
 import { ecrireParametre } from "@/lib/parametres";
-import { exigerAdministrateur } from "@/lib/roles";
 import { FichierRefuse, deposerImage } from "@/lib/stockage";
 
 // Actions du mini back-office (US6) : administrateur, validation, journal, invalidation du
@@ -15,7 +15,7 @@ import { FichierRefuse, deposerImage } from "@/lib/stockage";
 type Auteur = { id: string; libelle: string };
 
 async function auteur(): Promise<Auteur> {
-  const { user } = await exigerAdministrateur();
+  const { user } = await exigerDroit("contenus", "modifier");
   return { id: user.id, libelle: `${user.name} (${user.email})` };
 }
 
@@ -37,12 +37,22 @@ async function executer(chemin: string, succes: string, operation: (a: Auteur) =
 
 const t = (d: FormData, cle: string) => String(d.get(cle) ?? "");
 
+/** Verrou optimiste (F13, D9) : refuse si le contenu a changé depuis l'ouverture du formulaire. */
+const verifierVersion = (id: string, d: FormData) => verifierVersionContenu(id, t(d, "modifieLe"));
+
+/** État choisi dans le formulaire (F13, US2) ; « publié » par défaut. */
+function etatChoisi(d: FormData): "preparation" | "publie" | "retire" {
+  const e = t(d, "etat");
+  return e === "preparation" || e === "retire" ? e : "publie";
+}
+
 // ------------------------------------------------------------------ Bandeau
 
 export async function enregistrerMessageBandeau(d: FormData) {
   const chemin = "/admin/contenus/bandeau";
   await executer(chemin, "Message enregistré.", async (a) => {
     const id = t(d, "id");
+    await verifierVersion(id, d);
     const debut = dateFacultative(t(d, "debut"), "Début");
     const fin = dateFacultative(t(d, "fin"), "Fin");
     if (debut && fin && fin <= debut) throw new SaisieRefusee("La date de fin doit être après la date de début.");
@@ -50,7 +60,7 @@ export async function enregistrerMessageBandeau(d: FormData) {
       corps: exigerTexte(t(d, "texte"), "Texte du message", 1, 140),
       lien: exigerLien(t(d, "lien"), false),
       ordre: Number.parseInt(t(d, "ordre") || "0", 10) || 0,
-      etat: d.get("actif") === "oui" ? ("publie" as const) : ("retire" as const),
+      etat: etatChoisi(d),
       debut,
       fin,
     };
@@ -101,14 +111,14 @@ export async function enregistrerTuile(d: FormData) {
 export async function enregistrerActualite(d: FormData) {
   await executer("/admin/contenus/actualites", "Actualité enregistrée.", async (a) => {
     const id = t(d, "id");
+    await verifierVersion(id, d);
     const type = t(d, "typeActualite");
     if (!["actualite", "nouveau_produit", "nouvelle_offre"].includes(type)) throw new SaisieRefusee("Type d'actualité invalide.");
     const image = d.get("image");
     const texteRemplacement = t(d, "texteRemplacement").trim();
     let images: { url: string; texteRemplacement: string }[] | undefined;
     if (image instanceof File && image.size > 0) {
-      if (!texteRemplacement) throw new SaisieRefusee("Image : le texte de remplacement est obligatoire.");
-      images = [{ url: await deposerImage(image, "actualites"), texteRemplacement }];
+      images = [{ url: await deposerImage(image, "actualites"), texteRemplacement: exigerTexteRemplacement(texteRemplacement) }];
     } else if (id && texteRemplacement) {
       const existant = await dbSite().contenu.findUniqueOrThrow({ where: { id } });
       const actuelles = (existant.images as { url: string; texteRemplacement: string }[]) ?? [];
@@ -120,7 +130,7 @@ export async function enregistrerActualite(d: FormData) {
       corps: exigerTexte(t(d, "texte"), "Texte", 1, 300),
       lien: exigerLien(t(d, "lien"), false),
       typeActualite: type as "actualite" | "nouveau_produit" | "nouvelle_offre",
-      etat: d.get("publie") === "oui" ? ("publie" as const) : ("retire" as const),
+      etat: etatChoisi(d),
       publieLe: dateFacultative(t(d, "publieLe"), "Date") ?? new Date(),
       ...(images !== undefined ? { images } : {}),
     };
@@ -147,84 +157,23 @@ export async function supprimerActualite(d: FormData) {
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
+// Coordonnées affichées et textes (F01, F05, F12) ; les paramètres de fonctionnement sont dans
+// l'écran Paramètres (F13, D3).
 export async function enregistrerCoordonnees(d: FormData) {
   await executer("/admin/contenus/coordonnees", "Coordonnées et textes enregistrés.", async (a) => {
     const email = t(d, "email").trim();
-    const destinataire = t(d, "destinataire").trim();
     const telephone = t(d, "telephone").trim();
     if (email && !EMAIL.test(email)) throw new SaisieRefusee("Email : adresse invalide.");
-    if (destinataire && !EMAIL.test(destinataire)) throw new SaisieRefusee("Destinataire des messages : adresse invalide.");
     if (telephone && !/^[+0-9 ().-]{6,20}$/.test(telephone)) throw new SaisieRefusee("Téléphone : numéro invalide.");
     const motifs = t(d, "motifs").split("\n").map((m) => m.trim()).filter(Boolean);
     if (!motifs.length) throw new SaisieRefusee("Motifs : indiquez au moins un motif (un par ligne).");
-    const iban = t(d, "iban").replace(/\s+/g, "").toUpperCase();
-    if (iban && !/^[A-Z]{2}[0-9]{2}[A-Z0-9]{10,30}$/.test(iban)) throw new SaisieRefusee("IBAN : format invalide.");
-    const bic = t(d, "bic").trim().toUpperCase();
-    if (bic && !/^[A-Z0-9]{8}([A-Z0-9]{3})?$/.test(bic)) throw new SaisieRefusee("BIC : format invalide (8 ou 11 caractères).");
-    const heureExpress = t(d, "heureExpress").trim();
-    if (!/^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(heureExpress)) throw new SaisieRefusee("Heure limite express : format HH:MM attendu.");
-    const rappel = Number(t(d, "rappelJours"));
-    if (!Number.isInteger(rappel) || rappel < 1 || rappel > 15) throw new SaisieRefusee("Rappel de virement : entre 1 et 15 jours.");
-    // F05 : calendrier de livraison et rappels des locations (FR-007, FR-040).
-    const jours = t(d, "joursNonLivres").split(/\s+/).map((x) => x.trim()).filter(Boolean);
-    const joursInvalide = jours.find((x) => !/^\d{4}-\d{2}-\d{2}$/.test(x) || Number.isNaN(new Date(`${x}T12:00:00Z`).getTime()));
-    if (joursInvalide) throw new SaisieRefusee(`Jours non livrés : « ${joursInvalide} » n'est pas une date AAAA-MM-JJ.`);
-    const zones = t(d, "zones").split(",").map((x) => x.trim()).filter(Boolean);
-    if (zones.some((z) => !/^\d{2,5}$/.test(z))) throw new SaisieRefusee("Zones : début de code postal attendu (exemple : 20).");
-    const entier = (nom: string, libelle: string, min: number, max: number) => {
-      const n = Number(t(d, nom));
-      if (!Number.isInteger(n) || n < min || n > max) throw new SaisieRefusee(`${libelle} : nombre entier entre ${min} et ${max}.`);
-      return String(n);
-    };
-    // F09 : numéro WhatsApp, horaires de réponse et fermetures exceptionnelles (FR-008).
-    const whatsapp = t(d, "whatsapp").trim();
-    if (whatsapp && !/^\+?[0-9 ().-]{6,20}$/.test(whatsapp)) throw new SaisieRefusee("Numéro WhatsApp : numéro invalide (format international, ex. +33 6 12 34 56 78).");
-    const horaires: Record<string, [string, string][]> = {};
-    for (const j of ["1", "2", "3", "4", "5", "6", "7"]) {
-      const brut = t(d, `horaires-${j}`).trim();
-      horaires[j] = [];
-      for (const plage of brut ? brut.split(/[,;]\s*/) : []) {
-        const m = /^([01]\d|2[0-3]):([0-5]\d)\s*-\s*([01]\d|2[0-3]):([0-5]\d)$/.exec(plage.trim());
-        if (!m || `${m[1]}:${m[2]}` >= `${m[3]}:${m[4]}`) throw new SaisieRefusee(`Horaires : « ${plage} » n'est pas une plage valide (exemple : 09:00-18:00).`);
-        horaires[j].push([`${m[1]}:${m[2]}`, `${m[3]}:${m[4]}`]);
-      }
-    }
-    const fermetures = t(d, "fermetures").split("\n").map((l) => l.trim()).filter(Boolean).map((l) => {
-      const m = /^(\d{4}-\d{2}-\d{2})\s+(\d{4}-\d{2}-\d{2})\s*(.*)$/.exec(l);
-      if (!m || m[1]! > m[2]!) throw new SaisieRefusee(`Fermetures : « ${l} » attendu sous la forme AAAA-MM-JJ AAAA-MM-JJ motif.`);
-      return { du: m[1]!, au: m[2]!, ...(m[3] ? { motif: m[3].slice(0, 80) } : {}) };
-    });
-    // F06 et F12 : rappels et accès Cloud (principe VI).
-    const urlPlateforme = t(d, "urlPlateforme").trim();
-    if (!/^(https:\/\/[^\s]+|\/[A-Za-z0-9/_-]*)$/.test(urlPlateforme)) throw new SaisieRefusee("Adresse de la plateforme : https://… ou chemin du site commençant par /.");
     const valeurs: Record<string, string> = {
-      "contact.whatsapp": whatsapp,
-      "contact.horaires": JSON.stringify(horaires),
-      "contact.fermetures": JSON.stringify(fermetures),
-      "fidelite.rappel_droits_jours": entier("rappelDroits", "Rappel avant la fin des droits", 1, 60),
-      "fidelite.rappel_expiration_jours": entier("rappelExpiration", "Rappel avant l'expiration de bons", 1, 120),
-      "cloud.delai_grace_jours": entier("delaiGrace", "Délai de grâce", 0, 180),
-      "cloud.rappel_periode_jours": entier("rappelPeriode", "Rappel avant la fin d'une période incluse", 1, 120),
-      "cloud.rappel_fin_jours": entier("rappelFinCloud", "Rappel avant la fin d'un accès Cloud", 1, 60),
-      "cloud.url_plateforme": urlPlateforme,
-      "cloud.aide_premiere_connexion": exigerTexte(t(d, "aideConnexion"), "Aide à la première connexion", 20, 1500),
-      "livraison.jours_non_livres": JSON.stringify([...new Set(jours)].sort()),
-      "livraison.zones_sans_lendemain": JSON.stringify(zones),
-      "livraison.delai_zones_jours": entier("delaiZones", "Délai des zones éloignées", 0, 10),
-      "location.rappel_echeance_jours": entier("rappelEcheance", "Rappel avant échéance", 1, 15),
-      "location.rappel_retour_jours": entier("rappelRetour", "Rappel de retour", 1, 15),
-      "location.conditions": exigerTexte(t(d, "conditionsLocation"), "Conditions de location", 20, 4000),
-      "virement.titulaire": exigerTexte(t(d, "titulaire"), "Titulaire du compte", 0, 100),
-      "virement.iban": iban,
-      "virement.bic": bic,
-      "virement.rappel_jours": String(rappel),
-      "commande.heure_limite_express": heureExpress,
       "contact.email": email,
       "contact.telephone": telephone,
       "contact.adresse": exigerTexte(t(d, "adresse"), "Adresse", 0, 200),
-      "contact.destinataire_messages": destinataire,
       "contact.motifs": JSON.stringify(motifs),
-      "accueil.offre_bienvenue": exigerTexte(t(d, "offreBienvenue"), "Texte de l'offre de bienvenue", 0, 300),
+      "location.conditions": exigerTexte(t(d, "conditionsLocation"), "Conditions de location", 20, 4000),
+      "cloud.aide_premiere_connexion": exigerTexte(t(d, "aideConnexion"), "Aide à la première connexion", 20, 1500),
       "accueil.engagements_reactivite": exigerTexte(t(d, "engagements"), "Engagements de réactivité", 0, 400),
       "accueil.badge_hebergement": exigerTexte(t(d, "badgeHebergement"), "Badge de l'hébergement", 0, 30),
       "accueil.badge_logiciel_cloud": exigerTexte(t(d, "badgeLogicielCloud"), "Badge du logiciel Cloud", 0, 30),

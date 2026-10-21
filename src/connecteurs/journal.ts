@@ -44,6 +44,11 @@ async function inscrire(entree: EntreeJournal) {
         dureeMs: entree.dureeMs,
       },
     });
+    if (entree.resultat === "erreur") {
+      // Import différé : le domaine du journal prévient l'équipe par le connecteur emailing.
+      const { verifierSeuil } = await import("@/domaine/journal/seuil");
+      await verifierSeuil(entree.connecteur, entree.mode);
+    }
   } catch (e) {
     // Le journal ne doit jamais faire échouer l'appel lui-même.
     console.error("[journal des connecteurs] inscription impossible", e);

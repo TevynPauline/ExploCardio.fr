@@ -20,9 +20,13 @@
 | Journal | **absent** (`JournalConnecteur`, `JournalAction` alimentés) | F11 | tout |
 | Tableau de bord | mode des connecteurs | F11 | « À traiter » |
 
-**Constat majeur** : 32 pages n'ont pas de garde de rôle propre ; le menu filtre selon le rôle,
-mais l'adresse directe s'ouvre (les actions serveur ont souvent leur propre garde, pas
-toujours). La durée de session est de 7 jours pour tous, sans fermeture après inactivité.
+**Constat** (corrigé le 2026-10-21 pendant l'implémentation) : chaque rubrique est gardée par
+sa mise en page (`layout.tsx`) et chaque action par sa propre garde ; l'inventaire initial, qui
+ne lisait que les `page.tsx`, avait conclu à tort à 32 pages sans garde. En revanche, les
+listes de rôles de ces gardes, écrites module par module, s'écartent de D2 (contenus réservés à
+l'administrateur, accès Cloud fermés au commercial, comptes fermés au support) et ne sont
+définies nulle part en un seul endroit. La durée de session est de 7 jours pour tous, sans
+fermeture après inactivité.
 
 ## R2. Une matrice des droits unique (FR-020 à FR-023, SC-003, D2)
 

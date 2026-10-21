@@ -58,11 +58,13 @@ test("refuser un compte exige un motif et prévient le professionnel", async ({ 
 test("validation automatique : le compte est validé dès la confirmation de l'email", async ({ page, browser, baseURL }) => {
   test.setTimeout(120_000);
   await connecterNavigateur(page.context(), COMPTES.admin);
-  await page.goto("/admin/comptes/reglages");
+  // F13 (D3) : la validation automatique se règle dans Paramètres › Comptes.
+  const reglage = page.locator("#comptes-validation_auto");
+  await page.goto("/admin/parametres?theme=comptes");
   await verifierAccessibilite(page);
-  await page.getByRole("checkbox", { name: /Valider automatiquement/ }).check();
-  await page.getByRole("button", { name: "Enregistrer" }).click();
-  await expect(page.getByRole("status").filter({ hasText: "Réglages enregistrés" })).toBeVisible();
+  await reglage.getByRole("checkbox", { name: /Valider automatiquement/ }).check();
+  await reglage.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "enregistré" })).toBeVisible();
   try {
     const visiteur = await browser.newContext({ baseURL, storageState: "playwright/.auth/acces-demo.json" });
     const compte = await creerCompteEnAttente(await visiteur.newPage());
@@ -70,17 +72,19 @@ test("validation automatique : le compte est validé dès la confirmation de l'e
     const [c] = await requete<{ statut: string }>("site", `SELECT statut FROM compte_client WHERE id = $1`, [compte.id]);
     expect(c!.statut).toBe("valide");
   } finally {
-    await page.goto("/admin/comptes/reglages");
-    await page.getByRole("checkbox", { name: /Valider automatiquement/ }).uncheck();
-    await page.getByRole("button", { name: "Enregistrer" }).click();
+    await page.goto("/admin/parametres?theme=comptes");
+    await reglage.getByRole("checkbox", { name: /Valider automatiquement/ }).uncheck();
+    await reglage.getByRole("button", { name: "Enregistrer" }).click();
     // Attendre l'enregistrement : sinon la validation automatique reste active pour les parcours suivants.
-    await expect(page.getByRole("status").filter({ hasText: "Réglages enregistrés" })).toBeVisible();
+    await expect(page.getByRole("status").filter({ hasText: "enregistré" })).toBeVisible();
     await expect.poll(async () => (await requete<{ valeur: string }>("site", `SELECT valeur FROM parametre WHERE cle = 'comptes.validation_auto'`))[0]?.valeur).toBe("false");
   }
 });
 
-test("le support n'a pas accès aux comptes", async ({ page }) => {
+test("le support voit les comptes sans pouvoir décider (F13, D2)", async ({ page }) => {
   await connecterNavigateur(page.context(), COMPTES.support);
   await page.goto("/admin/comptes");
-  await expect(page).toHaveURL(/\/admin\?acces=refuse/);
+  await expect(page).toHaveURL(/\/admin\/clients/);
+  await page.getByRole("region", { name: "Liste des clients" }).getByRole("link").first().click();
+  await expect(page.getByRole("button", { name: /Valider le compte|Refuser le compte|Suspendre le compte/ })).toHaveCount(0);
 });

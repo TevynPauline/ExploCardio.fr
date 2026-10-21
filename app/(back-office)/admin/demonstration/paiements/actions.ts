@@ -1,5 +1,6 @@
 "use server";
 
+import { exigerDroit } from "@/lib/droits";
 import { redirect } from "next/navigation";
 import { commandesDemo, paiementDemo, ValeurRefusee } from "@/connecteurs/demonstration";
 import { estErreurConnecteur } from "@/connecteurs/erreurs";
@@ -9,7 +10,7 @@ import { exigerAdministrateur } from "@/lib/roles";
 const CHEMIN = "/admin/demonstration/paiements";
 
 async function auteur() {
-  const { user } = await exigerAdministrateur();
+  const { user } = await exigerDroit("demonstration", "modifier");
   return { id: user.id, libelle: `${user.name} (${user.email})` };
 }
 

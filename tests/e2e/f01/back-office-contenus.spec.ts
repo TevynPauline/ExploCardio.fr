@@ -42,6 +42,8 @@ test("un lien de tuile vers une page inexistante est refusé avec l'explication"
 });
 
 test("ajouter un message au bandeau puis le désactiver", async ({ page, context }) => {
+  // Messages laissés par un essai interrompu : ils passeraient avant dans la rotation.
+  await requete("site", `DELETE FROM contenu WHERE type = 'bandeau' AND corps LIKE 'Promotion admin %'`);
   await connecterNavigateur(context, COMPTES.admin);
   await page.goto("/admin/contenus/bandeau");
   const texte = `Promotion admin ${Date.now() % 100000}`;

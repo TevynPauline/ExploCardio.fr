@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { pannesDemo } from "@/connecteurs/demonstration";
 import { ETIQUETTES, invaliderDepuisAction } from "@/lib/cache";
 import { CONNECTEURS, type NomConnecteur } from "@/lib/config";
-import { exigerAdministrateur } from "@/lib/roles";
+import { exigerDroit } from "@/lib/droits";
 import { sousModePlateformeDemo as sousModeDemo } from "@/connecteurs/demonstration";
 import { dbSite } from "@/lib/db/site";
 import { ecrireParametre } from "@/lib/parametres";
@@ -20,7 +20,7 @@ const NOMS: Record<NomConnecteur, string> = {
 
 async function basculer(donnees: FormData) {
   "use server";
-  const { user } = await exigerAdministrateur();
+  const { user } = await exigerDroit("demonstration", "modifier");
   const connecteur = String(donnees.get("connecteur")) as NomConnecteur;
   if (!CONNECTEURS.includes(connecteur)) redirect("/admin/demonstration/pannes");
   const active = donnees.get("active") === "oui";
@@ -32,7 +32,7 @@ async function basculer(donnees: FormData) {
 
 async function changerSousMode(donnees: FormData) {
   "use server";
-  const { user } = await exigerAdministrateur();
+  const { user } = await exigerDroit("demonstration", "modifier");
   const mode = donnees.get("mode") === "manual" ? "manual" : "auto";
   await ecrireParametre("demo.pca_sous_mode", mode, user.id);
   await dbSite().journalAction.create({ data: { auteurId: user.id, auteur: `${user.name} (${user.email})`, action: "demo.pca_sous_mode", objet: mode } });

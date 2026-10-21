@@ -9,6 +9,7 @@ import { Button, Card, Champ, Kicker, Retour } from "@/ui";
 import { actionAnnulerCampagne, actionModifierCampagne, actionProgrammerCampagne, actionTesterCampagne } from "../../actions";
 import { dateCourte, ETATS_CAMPAGNE } from "../etats";
 import { FormulaireCampagne } from "../FormulaireCampagne";
+import { RappelPatient } from "@/ui/admin";
 
 export const metadata: Metadata = { title: "Campagne" };
 
@@ -33,6 +34,7 @@ export default async function CampagneDetail({ params, searchParams }: { params:
         {c.programmeePour ? ` · envoi le ${dateCourte(c.programmeePour)}` : ""} · <Link href="/admin/emails/campagnes">toutes les campagnes</Link>
       </p>
       <Retour {...r} />
+      <RappelPatient />
 
       {brouillon ? (
         <>

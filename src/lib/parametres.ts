@@ -42,6 +42,9 @@ export const PARAMETRES_PAR_DEFAUT = {
   "emailing.plage_fin": "19",
   "emailing.expediteur_nom": "ExploCardio.fr",
   "emailing.alerte_panne_minutes": "30",
+  /** F13 : fermeture des sessions d'équipe inactives (D5) et seuil d'alerte des connecteurs (D10). */
+  "securite.inactivite_minutes": "30",
+  "connecteurs.seuil_alerte": "5",
 } as const;
 
 export type CleParametre = keyof typeof PARAMETRES_PAR_DEFAUT | (string & {});

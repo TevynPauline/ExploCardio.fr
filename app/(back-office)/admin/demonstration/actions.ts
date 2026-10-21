@@ -1,17 +1,17 @@
 "use server";
 
+import { exigerDroit } from "@/lib/droits";
 import { redirect } from "next/navigation";
 import { ecranDemonstration, ValeurRefusee, type Auteur } from "@/connecteurs/demonstration";
 import { estErreurConnecteur } from "@/connecteurs/erreurs";
 import { invaliderDepuisAction } from "@/lib/cache";
-import { exigerAdministrateur } from "@/lib/roles";
 import { centimesDepuisSaisie } from "@/lib/montants";
 
 // Actions de l'écran de démonstration (US5) : administrateur uniquement ; chaque modification
 // est journalisée (T064) et invalide aussitôt le cache des pages concernées (T063, SC-009).
 
 async function auteur(): Promise<Auteur> {
-  const { user } = await exigerAdministrateur();
+  const { user } = await exigerDroit("demonstration", "modifier");
   return { id: user.id, libelle: `${user.name} (${user.email})` };
 }
 
