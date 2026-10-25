@@ -89,6 +89,43 @@ export const PARAMETRES_INITIAUX: Record<string, string> = {
     "Votre accès est ouvert : utilisez le lien « Accéder à la plateforme ». Lors de votre première connexion, la plateforme vous envoie une invitation par email pour créer votre mot de passe ; ExploCardio.fr ne le connaît jamais. Besoin d'aide pour le paramétrage ? Écrivez-nous sur WhatsApp.",
 };
 
+// F16 : vignettes de départ du carrousel (l'équipe les remplace au back-office) et arguments
+// « Pourquoi préférer ExploCardio.fr » (textes à valider par Régis).
+export const VIGNETTES_INITIALES = [
+  {
+    cle: "offre-bienvenue",
+    titre: "Un tensiomètre offert",
+    corps: "Créez votre compte professionnel : un tensiomètre électronique vous est offert avec votre première commande.",
+    lien: "/inscription",
+    libelleLien: "Créer mon compte",
+    fond: "lin",
+  },
+  {
+    cle: null,
+    titre: "Vos consommables Holter",
+    corps: "Électrodes, piles, sacoches : tout pour vos enregistrements, au prix HT affiché.",
+    lien: "/accessoires-consommables",
+    libelleLien: "Voir les consommables",
+    fond: "blue-soft",
+  },
+  {
+    cle: null,
+    titre: "Holter ECG DMS 300-4L",
+    corps: "L'enregistreur Holter ECG à l'achat, en financement ou au mois, sans engagement.",
+    lien: "/holter-ecg/dms-300-4l",
+    libelleLien: "Découvrir",
+    fond: "pale",
+  },
+];
+
+export const ARGUMENTS_INITIAUX = [
+  { cle: "intro", titre: "Pourquoi préférer ExploCardio.fr", corps: "Un seul métier, le vôtre : les explorations fonctionnelles cardiaques. Tout est pensé pour vous faire gagner du temps." },
+  { cle: "1", titre: "Le spécialiste de votre seul métier", corps: "Holter, MAPA, épreuve d'effort, ECG : une sélection de matériels éprouvés, sans catalogue de 10 000 références." },
+  { cle: "2", titre: "Des prix HT clairs", corps: "Chaque modèle standard affiche son prix dès la première page, sans « prix sur demande »." },
+  { cle: "3", titre: "Une assistance offerte", corps: "Vos achats de consommables ouvrent vos droits d'assistance et créditent vos bons d'achat." },
+  { cle: "4", titre: "Du matériel au mois", corps: "Location sans engagement, dépannage express livré dès le lendemain." },
+];
+
 export async function remplirContenusInitiaux(db: PrismaClient) {
   if ((await db.contenu.count({ where: { type: "tuile" } })) === 0) {
     await db.contenu.createMany({
@@ -106,6 +143,18 @@ export async function remplirContenusInitiaux(db: PrismaClient) {
   }
   if ((await db.marque.count()) === 0) {
     await db.marque.createMany({ data: MARQUES_INITIALES.map((m, i) => ({ ...m, ordre: i + 1 })) });
+  }
+  if ((await db.contenu.count({ where: { type: "vignette" } })) === 0) {
+    await db.contenu.createMany({
+      data: VIGNETTES_INITIALES.map((v, i) => ({ type: "vignette" as const, ...v, ordre: i + 1, etat: "publie" as const })),
+    });
+  }
+  for (const [i, a] of ARGUMENTS_INITIAUX.entries()) {
+    await db.contenu.upsert({
+      where: { type_cle: { type: "argument", cle: a.cle } },
+      create: { type: "argument", cle: a.cle, titre: a.titre, corps: a.corps, ordre: i, etat: "publie" },
+      update: {},
+    });
   }
   for (const [cle, valeur] of Object.entries(PARAMETRES_INITIAUX)) {
     await db.parametre.upsert({ where: { cle }, create: { cle, valeur }, update: {} });

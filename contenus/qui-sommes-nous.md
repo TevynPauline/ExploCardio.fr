@@ -1,6 +1,6 @@
 # Qui sommes-nous
 
-ExploCardio.fr est le spécialiste des explorations fonctionnelles cardiaques, hors imagerie.
+ExploCardio.fr est le spécialiste des explorations fonctionnelles cardiaques.
 Le site est animé par une équipe réactive, fondée par **Régis Andrieu**, qui connaît le
 quotidien des cardiologues libéraux, des cabinets et des centres.
 

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { lireTexte } from "@/domaine/textes";
 import { Kicker, TexteRiche } from "@/ui";
+import { FilAriane } from "@/ui/FilAriane";
 
 const PAGES = ["mentions-legales", "cgv", "cgu", "confidentialite", "cookies"] as const;
 type Page = (typeof PAGES)[number];
@@ -25,6 +26,7 @@ export default async function PageLegale({ params }: { params: Promise<{ legale:
   const { titre, html } = await lireTexte(legale);
   return (
     <div className="mx-auto flex max-w-page flex-col gap-4 px-4 py-10">
+      <FilAriane etapes={[{ libelle: titre }]} />
       <Kicker>Informations</Kicker>
       <h1 className="text-display font-light">{titre}</h1>
       <TexteRiche html={html} />

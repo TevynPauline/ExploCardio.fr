@@ -8,6 +8,7 @@ import { Kicker } from "../Kicker";
 import { TexteRiche } from "../TexteRiche";
 import { CarteProduit } from "./CarteProduit";
 import { Filtres } from "./Filtres";
+import { FilAriane } from "@/ui/FilAriane";
 
 type Props = {
   cle: CleFamille;
@@ -24,6 +25,7 @@ export async function PageCategorie({ cle, parametres, avant, apres }: Props) {
   const filtre = Boolean(filtres.marque || filtres.type || filtres.dispo);
   return (
     <div className="mx-auto flex max-w-page flex-col gap-8 px-4 py-10">
+      <FilAriane etapes={cle === "ecg-de-repos" ? [{ libelle: FAMILLES["holter-ecg"].libelle, href: FAMILLES["holter-ecg"].chemin }, { libelle: famille.libelle }] : [{ libelle: famille.libelle }]} />
       <header className="flex flex-col gap-3">
         <Kicker>Catalogue</Kicker>
         <h1 className="text-display font-light">{titre}</h1>

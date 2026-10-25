@@ -16,6 +16,8 @@ import { PromotionsFiche } from "../fidelite/PromotionsFiche";
 import { Galerie } from "./Galerie";
 import { OngletsFiche } from "./OngletsFiche";
 import { SelecteurFormule } from "./SelecteurFormule";
+import { FilAriane } from "@/ui/FilAriane";
+import { MentionMetropole } from "../commande/MentionMetropole";
 
 type Props = { cle: CleFamille; slug: string; parametres: Record<string, string | string[] | undefined> };
 
@@ -54,10 +56,11 @@ export async function Fiche({ cle, slug, parametres }: Props) {
     );
   }
 
+  const categorie = { libelle: r.fiche.categorie.libelle, href: r.fiche.categorie.chemin };
   const fil = (
-    <nav aria-label="Fil d’Ariane" className="text-small">
-      <Link href={r.fiche.categorie.chemin} className="inline-flex min-h-11 items-center">{r.fiche.categorie.libelle}</Link>
-    </nav>
+    <FilAriane
+      etapes={[...(categorie.href === "/holter-ecg/ecg-de-repos" ? [{ libelle: "Holter ECG", href: "/holter-ecg" }] : []), categorie, { libelle: r.fiche.nom }]}
+    />
   );
 
   if (r.type === "indisponible") {
@@ -112,6 +115,7 @@ export async function Fiche({ cle, slug, parametres }: Props) {
               <GainsAchat compteId={compte?.id ?? null} defaultCode={f.variantes[0]!.defaultCode} />
             </>
           )}
+          <MentionMetropole />
         </div>
       </div>
       <OngletsFiche fiche={f} />

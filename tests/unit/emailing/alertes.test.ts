@@ -52,9 +52,11 @@ describe("alerte de fin des droits", () => {
   it("droits prolongés entre la programmation et l'envoi : sans objet, non envoyée", async () => {
     const c = await compteAvecDroits();
     // Programmée un samedi : reportée au lundi matin.
-    let samedi = new Date(c.fin.getTime() - 7 * JOUR);
-    while (samedi.getUTCDay() !== 6) samedi = new Date(samedi.getTime() + JOUR);
-    samedi.setUTCHours(10);
+    // Un samedi à 10 h (UTC) dans les 7 jours qui précèdent la fin, quel que soit le jour du test.
+    const debutJour = Date.UTC(c.fin.getUTCFullYear(), c.fin.getUTCMonth(), c.fin.getUTCDate(), 10);
+    const samedi = [0, 1, 2, 3, 4, 5, 6, 7]
+      .map((n) => new Date(debutJour - n * JOUR))
+      .find((d) => d.getUTCDay() === 6 && d < c.fin && c.fin.getTime() - d.getTime() <= 7 * JOUR)!;
     await envoyerRappelsFidelite(samedi);
     const [e] = await dbSite().envoi.findMany({ where: { compteId: c.compteId, modele: "droits_rappel_fin" } });
     expect(e!.etat).toBe("programme");

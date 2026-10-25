@@ -29,6 +29,7 @@ export default async function Hebergement() {
   const enPreparation = Boolean(p.badgeHebergement);
   return (
     <PagePresentation
+      parents={[{ libelle: "Services", href: "/services" }]}
       texte="hebergement-donnees-sante"
       surtitre="Services"
       avant={

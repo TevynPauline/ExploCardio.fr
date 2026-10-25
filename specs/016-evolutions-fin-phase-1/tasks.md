@@ -33,14 +33,14 @@ après accord (D11).
 
 ## Phase 1: Setup
 
-- [ ] T001 Créer `tests/unit/f16/` et `tests/e2e/f16/` (outils communs : `tests/e2e/f16/outils.ts`, réutilisant `../session.ts`, `../bases.ts`, `../axe.ts`)
+- [X] T001 Créer `tests/unit/f16/` et `tests/e2e/f16/` (outils communs : `tests/e2e/f16/outils.ts`, réutilisant `../session.ts`, `../bases.ts`, `../axe.ts`)
 
 ---
 
 ## Phase 2: Foundational (lot A)
 
-- [ ] T002 Migration de la base du site `scripts/nouvelle-migration.sh site f16_vignettes` : `TypeContenu` + `vignette`, `argument` ; `Contenu.libelleLien String?` (`prisma/site/schema.prisma`)
-- [ ] T003 [P] Composant commun `src/ui/FilAriane.tsx` (`nav` « Fil d'Ariane », liste ordonnée, `aria-current="page"`, version téléphone « ‹ Rubrique parente », cibles 44 px) et son test unitaire de rendu `tests/unit/f16/fil-ariane.test.tsx`
+- [X] T002 Migration de la base du site `scripts/nouvelle-migration.sh site f16_vignettes` : `TypeContenu` + `vignette`, `argument` ; `Contenu.libelleLien String?` (`prisma/site/schema.prisma`)
+- [X] T003 [P] Composant commun `src/ui/FilAriane.tsx` (`nav` « Fil d'Ariane », liste ordonnée, `aria-current="page"`, version téléphone « ‹ Rubrique parente », cibles 44 px) et son test unitaire de rendu `tests/unit/f16/fil-ariane.test.tsx`
 
 ---
 
@@ -51,9 +51,9 @@ d'Ariane partout sauf l'accueil et le paiement.
 
 **Independent Test** : quickstart §1 et §2.
 
-- [ ] T004 [P] [US1] Écrire `tests/e2e/f16/navigation.spec.ts` : en-tête à 320 et 390 px (menu à gauche, logo centré, loupe/panier/compte à droite, cibles 44 px) ; à 1 024, 1 093 (écran de 1 366 px à 125 %), 1 280 (écran de 1 920 px à 150 %) et 1 920 px de large, les 7 entrées du menu visibles sur une ligne, méga-menu ouvrable au clavier ; fil d'Ariane sur famille, type, fiche, services, aide, Mon compte (liens corrects, `aria-current`), absent de l'accueil et des étapes de paiement ; axe-core
-- [ ] T005 [US1] En-tête : `src/ui/en-tete/BarreNavigation.tsx` (grille menu | logo centré | actions sous `lg`, logo réduit au symbole sous 360 px), `MenuMobile.tsx` (bouton à gauche, masqué dès `lg`), `MegaMenu.tsx` et deuxième ligne du menu dès `lg` avec espacements réduits entre 1 024 et 1 279 px
-- [ ] T006 [US1] Placer `FilAriane` sur les pages : familles et types (`app/(public)/holter-ecg`, `holter-tensionnel`, `epreuve-effort`, `accessoires-consommables`, `catalogue`), fiches (remplace le fil de `src/ui/catalogue/Fiche.tsx`), services et leurs sous-pages, financement, mise à disposition, qui sommes-nous, aide et articles d'aide (remplace celui de `app/(public)/aide/[slug]`), recherche, panier, Mon compte et ses rubriques, pages légales ; version courte dans le tunnel hors paiement
+- [X] T004 [P] [US1] Écrire `tests/e2e/f16/navigation.spec.ts` : en-tête à 320 et 390 px (menu à gauche, logo centré, loupe/panier/compte à droite, cibles 44 px) ; à 1 024, 1 093 (écran de 1 366 px à 125 %), 1 280 (écran de 1 920 px à 150 %) et 1 920 px de large, les 7 entrées du menu visibles sur une ligne, méga-menu ouvrable au clavier ; fil d'Ariane sur famille, type, fiche, services, aide, Mon compte (liens corrects, `aria-current`), absent de l'accueil et des étapes de paiement ; axe-core
+- [X] T005 [US1] En-tête : `src/ui/en-tete/BarreNavigation.tsx` (grille menu | logo centré | actions sous `lg`, logo réduit au symbole sous 360 px), `MenuMobile.tsx` (bouton à gauche, masqué dès `lg`), `MegaMenu.tsx` et deuxième ligne du menu dès `lg` avec espacements réduits entre 1 024 et 1 279 px
+- [X] T006 [US1] Placer `FilAriane` sur les pages : familles et types (`app/(public)/holter-ecg`, `holter-tensionnel`, `epreuve-effort`, `accessoires-consommables`, `catalogue`), fiches (remplace le fil de `src/ui/catalogue/Fiche.tsx`), services et leurs sous-pages, financement, mise à disposition, qui sommes-nous, aide et articles d'aide (remplace celui de `app/(public)/aide/[slug]`), recherche, panier, Mon compte et ses rubriques, pages légales ; version courte dans le tunnel hors paiement
 
 **Checkpoint** : navigation conforme sur téléphone, Mac et PC Windows agrandi.
 
@@ -65,11 +65,11 @@ d'Ariane partout sauf l'accueil et le paiement.
 
 **Independent Test** : quickstart §4 (côté site).
 
-- [ ] T007 [P] [US2] Écrire `tests/unit/f16/vignettes.test.ts` : visibilité (état publié, période, vignette `offre-bienvenue` masquée si `bienvenue.active = false`), ordre, aperçu (préparation visible seulement en aperçu)
-- [ ] T008 [P] [US2] Écrire `tests/e2e/f16/carrousel.spec.ts` : défilement toutes les 6 s, pause au survol, au focus et par bouton, flèches et points au clavier, annonce « n sur N », aucun défilement en `prefers-reduced-motion`, une seule vignette sans contrôles, vignette dont la page liée a disparu affichée sans bouton, aucune vignette → accueil commençant par les accès rapides avec un titre de page ; bouton d'une vignette → page liée ; axe-core
-- [ ] T009 [US2] Lecture `lireVignettes()` dans `src/domaine/contenus.ts` (cache « contenus », aperçu F13, période, offre de bienvenue selon `bienvenue.active`, bouton omis si la page liée n'existe plus)
-- [ ] T010 [US2] Composant client `src/ui/accueil/Carrousel.tsx` (une vignette à la fois, hauteur fixe ~420/480 px, translation CSS, minuteur 6 s, pause/lecture, flèches, points, région étiquetée, `prefers-reduced-motion`, première image prioritaire, fonds de la charte et motif des trois points sans image, contraste du texte garanti sur image par un voile)
-- [ ] T011 [US2] Données de départ `prisma/site/seed/` : vignette « Offre de bienvenue » (`cle = offre-bienvenue`) et deux vignettes d'exemple (une offre de consommables, un produit phare) ; retrait du paramètre `accueil.offre_bienvenue` du seed et du catalogue des paramètres (`src/domaine/parametres/catalogue.ts`)
+- [X] T007 [P] [US2] Écrire `tests/unit/f16/vignettes.test.ts` : visibilité (état publié, période, vignette `offre-bienvenue` masquée si `bienvenue.active = false`), ordre, aperçu (préparation visible seulement en aperçu)
+- [X] T008 [P] [US2] Écrire `tests/e2e/f16/carrousel.spec.ts` : défilement toutes les 6 s, pause au survol, au focus et par bouton, flèches et points au clavier, annonce « n sur N », aucun défilement en `prefers-reduced-motion`, une seule vignette sans contrôles, vignette dont la page liée a disparu affichée sans bouton, aucune vignette → accueil commençant par les accès rapides avec un titre de page ; bouton d'une vignette → page liée ; axe-core
+- [X] T009 [US2] Lecture `lireVignettes()` dans `src/domaine/contenus.ts` (cache « contenus », aperçu F13, période, offre de bienvenue selon `bienvenue.active`, bouton omis si la page liée n'existe plus)
+- [X] T010 [US2] Composant client `src/ui/accueil/Carrousel.tsx` (une vignette à la fois, hauteur fixe ~420/480 px, translation CSS, minuteur 6 s, pause/lecture, flèches, points, région étiquetée, `prefers-reduced-motion`, première image prioritaire, fonds de la charte et motif des trois points sans image, contraste du texte garanti sur image par un voile)
+- [X] T011 [US2] Données de départ `prisma/site/seed/` : vignette « Offre de bienvenue » (`cle = offre-bienvenue`) et deux vignettes d'exemple (une offre de consommables, un produit phare) ; retrait du paramètre `accueil.offre_bienvenue` du seed et du catalogue des paramètres (`src/domaine/parametres/catalogue.ts`)
 
 ---
 
@@ -79,9 +79,9 @@ d'Ariane partout sauf l'accueil et le paiement.
 
 **Independent Test** : quickstart §4 (côté back-office).
 
-- [ ] T012 [P] [US3] Écrire `tests/e2e/f16/carrousel-admin.spec.ts` : création en préparation → aperçu ordinateur et mobile seulement → publication visible en moins d'une minute (SC-003) → vignette datée de demain invisible → réordonner → retirer ; image sans texte de remplacement refusée ; titre > 60, phrase > 140, bouton > 30 refusés ; lien inconnu refusé ; deux onglets : le second prévenu ; commercial autorisé, support refusé ; journal
-- [ ] T013 [US3] Écran `app/(back-office)/admin/contenus/carrousel/page.tsx` et actions dans `app/(back-office)/admin/contenus/actions.ts` (règles F13 : `exigerDroit("contenus","modifier")`, verrou `verifierVersionContenu`, `exigerTexteRemplacement`, `exigerLien`, `etatChoisi`, journal `contenus.vignette.*`, `ApercuCadres` sur `/`, `RappelPatient`) ; carte « Carrousel » dans `app/(back-office)/admin/contenus/page.tsx`
-- [ ] T014 [US3] Retirer l'écran Actualités du back-office (`app/(back-office)/admin/contenus/actualites/`, actions `enregistrerActualite`/`supprimerActualite`, carte de l'index des contenus) et `lireActualites` de l'accueil ; mettre à jour les tests F01/F13 qui l'utilisaient (`tests/e2e/f01/back-office-contenus.spec.ts`, `tests/e2e/f13/contenus.spec.ts`, `tests/unit/back-office/droits.test.ts` si besoin) ; les lignes `actualite` restent en base
+- [X] T012 [P] [US3] Écrire `tests/e2e/f16/carrousel-admin.spec.ts` : création en préparation → aperçu ordinateur et mobile seulement → publication visible en moins d'une minute (SC-003) → vignette datée de demain invisible → réordonner → retirer ; image sans texte de remplacement refusée ; titre > 60, phrase > 140, bouton > 30 refusés ; lien inconnu refusé ; deux onglets : le second prévenu ; commercial autorisé, support refusé ; journal
+- [X] T013 [US3] Écran `app/(back-office)/admin/contenus/carrousel/page.tsx` et actions dans `app/(back-office)/admin/contenus/actions.ts` (règles F13 : `exigerDroit("contenus","modifier")`, verrou `verifierVersionContenu`, `exigerTexteRemplacement`, `exigerLien`, `etatChoisi`, journal `contenus.vignette.*`, `ApercuCadres` sur `/`, `RappelPatient`) ; carte « Carrousel » dans `app/(back-office)/admin/contenus/page.tsx`
+- [X] T014 [US3] Retirer l'écran Actualités du back-office (`app/(back-office)/admin/contenus/actualites/`, actions `enregistrerActualite`/`supprimerActualite`, carte de l'index des contenus) et `lireActualites` de l'accueil ; mettre à jour les tests F01/F13 qui l'utilisaient (`tests/e2e/f01/back-office-contenus.spec.ts`, `tests/e2e/f13/contenus.spec.ts`, `tests/unit/back-office/droits.test.ts` si besoin) ; les lignes `actualite` restent en base
 
 ---
 
@@ -91,10 +91,10 @@ d'Ariane partout sauf l'accueil et le paiement.
 
 **Independent Test** : quickstart §3.
 
-- [ ] T015 [P] [US4] Écrire `tests/e2e/f16/accueil.spec.ts` : ordre carrousel → accès rapides → Pourquoi → Service et fidélité → Offre digitale → contact ; absence des sections Équipement, Actualités, Offre de bienvenue et du grand logo ; 4 arguments affichés ; modification d'un argument au back-office visible en moins d'une minute ; affichage à 320 et 1 920 px sans défilement horizontal ; axe-core
-- [ ] T016 [US4] Composant `src/ui/accueil/Pourquoi.tsx` (introduction, 4 arguments, 4 schémas SVG décoratifs `aria-hidden` aux tokens de la charte) et lecture `lireArguments()` dans `src/domaine/contenus.ts` ; données de départ (textes de la spec) dans `prisma/site/seed/`
-- [ ] T017 [US4] Écran `app/(back-office)/admin/contenus/accueil/page.tsx` (introduction et 4 arguments, verrou, journal `contenus.argument.modifie`, aperçu `/`)
-- [ ] T018 [US4] `app/(public)/page.tsx` : nouvel ordre ; retirer `Heros`, `Equipements`, `OffreBienvenue`, `Actualites` de l'accueil (supprimer les composants devenus inutiles de `src/ui/accueil/`) ; titre de page conservé (`h1` « ExploCardio.fr — Le spécialiste des explorations fonctionnelles cardiaques », visuellement discret) ; adapter `tests/e2e/f01/accueil.spec.ts` et les tests F01/F02/F06 qui visaient le héros, l'offre de bienvenue ou les actualités
+- [X] T015 [P] [US4] Écrire `tests/e2e/f16/accueil.spec.ts` : ordre carrousel → accès rapides → Pourquoi → Service et fidélité → Offre digitale → contact ; absence des sections Équipement, Actualités, Offre de bienvenue et du grand logo ; 4 arguments affichés ; modification d'un argument au back-office visible en moins d'une minute ; affichage à 320 et 1 920 px sans défilement horizontal ; axe-core
+- [X] T016 [US4] Composant `src/ui/accueil/Pourquoi.tsx` (introduction, 4 arguments, 4 schémas SVG décoratifs `aria-hidden` aux tokens de la charte) et lecture `lireArguments()` dans `src/domaine/contenus.ts` ; données de départ (textes de la spec) dans `prisma/site/seed/`
+- [X] T017 [US4] Écran `app/(back-office)/admin/contenus/accueil/page.tsx` (introduction et 4 arguments, verrou, journal `contenus.argument.modifie`, aperçu `/`)
+- [X] T018 [US4] `app/(public)/page.tsx` : nouvel ordre ; retirer `Heros`, `Equipements`, `OffreBienvenue`, `Actualites` de l'accueil (supprimer les composants devenus inutiles de `src/ui/accueil/`) ; titre de page conservé (`h1` « ExploCardio.fr — Le spécialiste des explorations fonctionnelles cardiaques », visuellement discret) ; adapter `tests/e2e/f01/accueil.spec.ts` et les tests F01/F02/F06 qui visaient le héros, l'offre de bienvenue ou les actualités
 
 ---
 
@@ -104,8 +104,8 @@ d'Ariane partout sauf l'accueil et le paiement.
 
 **Independent Test** : quickstart §5.
 
-- [ ] T019 [P] [US5] Écrire `tests/unit/f16/prix-ligne.test.ts` (prix de ligne selon le barème dégressif, arrondis, TVA) et `tests/e2e/f16/panier-direct.spec.ts` : flèches, saisie au clavier, saisie rapide « 1 » puis « 12 » (seule la dernière enregistrée), prix de ligne mis à jour en moins de 250 ms sans quitter le champ (SC-005), totaux corrigés, quantité retrouvée après rechargement, quantité au-delà du permis corrigée avec message, champ vidé sans prix à zéro, échec d'enregistrement simulé → message et retour à la quantité enregistrée
-- [ ] T020 [US5] Barème de prix transmis à la ligne (fonction pure `prixLigne` dans `src/domaine/commande/prix-ligne.ts`, données préparées par `app/(public)/panier/page.tsx`) ; `src/ui/commande/LignePanier.tsx` : calcul immédiat, enregistrement 300 ms après la dernière frappe, totaux estimés puis corrigés (« mise à jour… »), retour arrière en cas d'échec
+- [X] T019 [P] [US5] Écrire `tests/unit/f16/prix-ligne.test.ts` (prix de ligne selon le barème dégressif, arrondis, TVA) et `tests/e2e/f16/panier-direct.spec.ts` : flèches, saisie au clavier, saisie rapide « 1 » puis « 12 » (seule la dernière enregistrée), prix de ligne mis à jour en moins de 250 ms sans quitter le champ (SC-005), totaux corrigés, quantité retrouvée après rechargement, quantité au-delà du permis corrigée avec message, champ vidé sans prix à zéro, échec d'enregistrement simulé → message et retour à la quantité enregistrée
+- [X] T020 [US5] Barème de prix transmis à la ligne (fonction pure `prixLigne` dans `src/domaine/commande/prix-ligne.ts`, données préparées par `app/(public)/panier/page.tsx`) ; `src/ui/commande/LignePanier.tsx` : calcul immédiat, enregistrement 300 ms après la dernière frappe, totaux estimés puis corrigés (« mise à jour… »), retour arrière en cas d'échec
 
 ---
 
@@ -116,10 +116,10 @@ d'Ariane partout sauf l'accueil et le paiement.
 
 **Independent Test** : quickstart §6.
 
-- [ ] T021 [P] [US9] Écrire `tests/e2e/f16/presentation.spec.ts` : aucune occurrence de « hors imagerie » dans les pages publiques parcourues, un email de la boîte de démonstration et une facture PDF de démonstration (SC-009) ; bloc contact sans « Régis Andrieu, fondateur » ; Qui sommes-nous le présente toujours ; mention métropole sur une fiche, le panier et les conditions de livraison avec lien vers le contact
-- [ ] T022 [US9] Retirer « (hors imagerie) » : `app/layout.tsx` (titre, description), `src/ui/PiedDePage.tsx`, `src/emails/Gabarit.tsx`, `src/connecteurs/odoo/demo/factures-pdf.ts`, `contenus/catalogue.md`, `contenus/qui-sommes-nous.md`, `docs/brand/design-system.md`, `docs/brand/README.md` ; `src/ui/accueil/BlocContact.tsx` sans « Régis Andrieu, fondateur »
-- [ ] T023 [US8] Composant `src/ui/commande/MentionMetropole.tsx` placé sur la fiche (`src/ui/catalogue/Fiche.tsx`), le panier et la page des conditions de livraison (CGV, section livraison)
-- [ ] T024 Lot A : pages modifiées ajoutées aux contrôles transverses (`tests/e2e/no-egress.spec.ts`, `tests/e2e/accessibilite-charte.spec.ts` dont `/admin/contenus/carrousel` et `/admin/contenus/accueil`) ; typecheck, lint, contraste, tests unitaires et e2e de F01, F13 et F16 ; rapport à Pauline et demande de commit du lot A
+- [X] T021 [P] [US9] Écrire `tests/e2e/f16/presentation.spec.ts` : aucune occurrence de « hors imagerie » dans les pages publiques parcourues, un email de la boîte de démonstration et une facture PDF de démonstration (SC-009) ; bloc contact sans « Régis Andrieu, fondateur » ; Qui sommes-nous le présente toujours ; mention métropole sur une fiche, le panier et les conditions de livraison avec lien vers le contact
+- [X] T022 [US9] Retirer « (hors imagerie) » : `app/layout.tsx` (titre, description), `src/ui/PiedDePage.tsx`, `src/emails/Gabarit.tsx`, `src/connecteurs/odoo/demo/factures-pdf.ts`, `contenus/catalogue.md`, `contenus/qui-sommes-nous.md`, `docs/brand/design-system.md`, `docs/brand/README.md` ; `src/ui/accueil/BlocContact.tsx` sans « Régis Andrieu, fondateur »
+- [X] T023 [US8] Composant `src/ui/commande/MentionMetropole.tsx` placé sur la fiche (`src/ui/catalogue/Fiche.tsx`), le panier et la page des conditions de livraison (CGV, section livraison)
+- [X] T024 Lot A : pages modifiées ajoutées aux contrôles transverses (`tests/e2e/no-egress.spec.ts`, `tests/e2e/accessibilite-charte.spec.ts` dont `/admin/contenus/carrousel` et `/admin/contenus/accueil`) ; typecheck, lint, contraste, tests unitaires et e2e de F01, F13 et F16 ; rapport à Pauline et demande de commit du lot A
 
 ---
 

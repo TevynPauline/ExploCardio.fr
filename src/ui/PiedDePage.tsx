@@ -23,7 +23,7 @@ export async function PiedDePage({ newsletter }: { newsletter?: ReactNode }) {
         <div className="flex flex-col gap-4">
           <Logo version="horizontal-blanc" hauteur={28} />
           <p className="text-small text-white">
-            Le spécialiste des explorations fonctionnelles cardiaques (hors imagerie).
+            Le spécialiste des explorations fonctionnelles cardiaques.
           </p>
           {/* F09 : contact WhatsApp partout (version compacte), horaires et état. */}
           <ContactWhatsApp variante="compacte" />

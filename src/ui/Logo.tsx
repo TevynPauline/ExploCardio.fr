@@ -3,6 +3,7 @@ import horizontal from "@brand/assets/explocardio-fr-logo-horizontal.svg";
 import horizontalBlanc from "@brand/assets/explocardio-fr-logo-horizontal-blanc.svg";
 import empile from "@brand/assets/explocardio-fr-logo.svg";
 import empileBlanc from "@brand/assets/explocardio-fr-logo-blanc.svg";
+import symbole from "@brand/assets/explocardio-fr-symbole.svg";
 
 /**
  * Logo officiel, toujours intégré depuis docs/brand/assets (principe VII) :
@@ -13,6 +14,8 @@ const versions = {
   "horizontal-blanc": horizontalBlanc,
   empile,
   "empile-blanc": empileBlanc,
+  /** Symbole seul : petits formats, quand le logo ferait moins de 120 px de large (charte). */
+  symbole,
 } as const;
 
 type LogoProps = {

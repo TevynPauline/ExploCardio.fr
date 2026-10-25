@@ -4,6 +4,7 @@ import { rechercher } from "@/domaine/recherche/index";
 import { FAMILLES } from "@/domaine/familles";
 import { euros } from "@/lib/montants";
 import { Card, Kicker } from "@/ui";
+import { FilAriane } from "@/ui/FilAriane";
 
 export const metadata: Metadata = { title: "Recherche" };
 
@@ -14,6 +15,7 @@ export default async function PageRecherche({ searchParams }: { searchParams: Pr
   const resultat = q.trim().length >= 2 ? await rechercher(q, { maxParGroupe: 100 }) : null;
   return (
     <div className="mx-auto flex max-w-page flex-col gap-6 px-4 py-10">
+      <FilAriane etapes={[{ libelle: "Recherche" }]} />
       <Kicker>Recherche</Kicker>
       <h1 className="text-h2 font-light">{q ? `Résultats pour « ${q} »` : "Rechercher"}</h1>
       <form action="/recherche" className="flex max-w-xl gap-2">

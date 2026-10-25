@@ -5,6 +5,7 @@ import { lireTexte } from "@/domaine/textes";
 import { liensContact } from "@/lib/contact-whatsapp";
 import { Card, Kicker, TexteRiche } from "@/ui";
 import { FormulaireContact } from "@/ui/FormulaireContact";
+import { FilAriane } from "@/ui/FilAriane";
 
 export const metadata: Metadata = { title: "Qui sommes-nous / Contact" };
 
@@ -17,6 +18,7 @@ export default async function QuiSommesNous({ searchParams }: { searchParams: Pr
     <div className="mx-auto grid max-w-page grid-cols-1 gap-10 px-4 py-10 lg:grid-cols-[1fr_1.1fr]">
       <div className="flex flex-col gap-4">
         <Kicker>ExploCardio.fr</Kicker>
+        <FilAriane etapes={[{ libelle: "Qui sommes-nous" }]} />
         <h1 className="text-display font-light">{titre}</h1>
         <TexteRiche html={html} />
         {p.telephone || p.email || p.adresse ? (

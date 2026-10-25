@@ -34,3 +34,5 @@ playwright/.auth/
 stockage/
 # Rapports du test de connexion à Odoo (données réelles de l'entreprise)
 rapports-odoo/
+.captures/
+docs/captures-f16/

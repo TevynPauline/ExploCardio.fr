@@ -6,7 +6,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: { default: "ExploCardio.fr", template: "%s — ExploCardio.fr" },
-  description: "Le spécialiste des explorations fonctionnelles cardiaques (hors imagerie).",
+  description: "Le spécialiste des explorations fonctionnelles cardiaques.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

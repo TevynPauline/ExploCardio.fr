@@ -25,7 +25,8 @@ test("centre d'aide : thèmes, appareils, recherche, FAQ, mode d'emploi, notices
   await page.getByRole("navigation", { name: "Thèmes de l’aide" }).getByRole("link", { name: "Enregistrement" }).click();
   await expect(page.locator("main")).toContainText("Poser un enregistreur Holter DMS 300-4L");
   await page.getByRole("link", { name: "Poser un enregistreur Holter DMS 300-4L" }).click();
-  const etapes = page.locator("main ol > li");
+  // Les étapes, pas le fil d’Ariane (F16), qui est aussi une liste numérotée.
+  const etapes = page.locator("main :not(nav) > ol > li");
   await expect(etapes).toHaveCount(3);
   await expect(etapes.first().getByRole("img")).toHaveAttribute("alt", /.+/);
   await expect(page.locator("main").getByRole("region", { name: "Contacter l’équipe" })).toContainText("Besoin d’aide ? Écrivez-nous ou appelez-nous sur WhatsApp.");

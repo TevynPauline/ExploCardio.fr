@@ -7,6 +7,7 @@ import { lireParametresPublics } from "@/domaine/contenus";
 import { cheminDeRetour } from "@/lib/retour";
 import { Card, Kicker } from "@/ui";
 import { FormulaireInscription } from "@/ui/comptes/FormulaireInscription";
+import { FilAriane } from "@/ui/FilAriane";
 
 export const metadata: Metadata = { title: "Créer un compte professionnel" };
 export const dynamic = "force-dynamic";
@@ -18,6 +19,7 @@ export default async function Inscription({ searchParams }: { searchParams: Prom
   const [liste, active, p] = await Promise.all([specialites(), offreActive(), lireParametresPublics()]);
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-10">
+      <FilAriane etapes={[{ libelle: "Créer un compte" }]} />
       <Kicker>Compte professionnel</Kicker>
       <h1 className="text-display font-light">Créer votre compte</h1>
       <p>

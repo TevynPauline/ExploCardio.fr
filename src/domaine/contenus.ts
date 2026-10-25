@@ -8,15 +8,6 @@ import { ETIQUETTES } from "@/lib/cache";
 
 export type MessageBandeau = { id: string; texte: string; lien: string | null };
 export type Tuile = { id: string; titre: string; phrase: string; lien: string; badge: string | null; fond: string | null };
-export type Actualite = {
-  id: string;
-  titre: string;
-  texte: string;
-  lien: string | null;
-  type: "actualite" | "nouveau_produit" | "nouvelle_offre";
-  publieLe: string | null;
-  image: { url: string; texteRemplacement: string } | null;
-};
 export type MarqueAffichee = { id: string; nom: string; logo: string | null; familles: string[] };
 
 type ContenuBandeau = { etat: string; debut: Date | null; fin: Date | null };
@@ -64,33 +55,6 @@ export const lireTuiles = enCache("tuiles", async (): Promise<Tuile[]> => {
   const tuiles = await dbSite().contenu.findMany({ where: { type: "tuile" }, orderBy: { ordre: "asc" }, take: 6 });
   return tuiles.map((t) => ({ id: t.id, titre: t.titre, phrase: t.corps, lien: t.lien ?? "/", badge: t.badge, fond: t.fond }));
 });
-
-const lireActualitesPubliees = enCache("actualites", () => lireActualitesSelon(["publie"]));
-
-/** Actualités publiées ; en aperçu de l'équipe (F13, D7), avec celles en préparation, sans cache. */
-export async function lireActualites(): Promise<Actualite[]> {
-  return (await enApercu()) ? lireActualitesSelon(["publie", "preparation"]) : lireActualitesPubliees();
-}
-
-async function lireActualitesSelon(etats: ("publie" | "preparation")[]): Promise<Actualite[]> {
-  const actus = await dbSite().contenu.findMany({
-    where: { type: "actualite", etat: { in: etats } },
-    orderBy: [{ publieLe: "desc" }, { creeLe: "desc" }],
-    take: 6,
-  });
-  return actus.map((a) => {
-    const images = (a.images as { url: string; texteRemplacement: string }[] | null) ?? [];
-    return {
-      id: a.id,
-      titre: a.titre,
-      texte: a.corps,
-      lien: a.lien,
-      type: a.typeActualite ?? "actualite",
-      publieLe: (a.publieLe ?? a.creeLe).toISOString(),
-      image: images[0] ?? null,
-    };
-  });
-}
 
 export const lireMarques = enCache("marques", async (): Promise<MarqueAffichee[]> => {
   const marques = await dbSite().marque.findMany({ where: { visible: true }, orderBy: { ordre: "asc" } });

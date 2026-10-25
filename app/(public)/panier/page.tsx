@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { compteConnecte } from "@/domaine/comptes/session";
-import { cheminsDesFiches } from "@/domaine/catalogue/lecture";
+import { cheminsDesFiches, lireCatalogue } from "@/domaine/catalogue/lecture";
+import type { Bareme } from "@/domaine/commande/prix-ligne";
 import { COOKIE_PANIER, panierPour } from "@/domaine/catalogue/panier";
 import { panierDetaille } from "@/domaine/commande/devis";
 import { codesFinancables } from "@/domaine/financement/demande";
@@ -17,7 +18,10 @@ import { modeDuSite } from "@/lib/config";
 import { Card, Kicker } from "@/ui";
 import { CodePromo } from "@/ui/commande/CodePromo";
 import { LignePanier } from "@/ui/commande/LignePanier";
+import { TotauxEnDirect } from "@/ui/commande/TotauxEnDirect";
 import { TotauxAbonnement, TotauxAchat } from "@/ui/commande/Totaux";
+import { FilAriane } from "@/ui/FilAriane";
+import { MentionMetropole } from "@/ui/commande/MentionMetropole";
 
 export const metadata: Metadata = { title: "Panier" };
 
@@ -36,6 +40,7 @@ export default async function Panier({ searchParams }: { searchParams: Promise<{
   if (!detail || !detail.lignes.length) {
     return (
       <div className="mx-auto flex max-w-page flex-col gap-4 px-4 py-10">
+        <FilAriane etapes={[{ libelle: "Panier" }]} />
         <Kicker>Panier</Kicker>
         <h1 className="text-display font-light">Votre panier est vide</h1>
         {avis ? <p role="status" className="ec-box--info p-4">{avis}</p> : null}
@@ -44,7 +49,8 @@ export default async function Panier({ searchParams }: { searchParams: Promise<{
     );
   }
 
-  const chemins = await cheminsDesFiches();
+  const [chemins, catalogue] = await Promise.all([cheminsDesFiches(), lireCatalogue()]);
+  const variantes = new Map(catalogue.entrees.flatMap((e) => e.article.variantes.map((v) => [v.defaultCode, v] as const)));
   const achats = detail.lignes.filter((l) => l.formule === "achat");
   const locations = detail.lignes.filter((l) => l.formule === "mise_a_disposition");
   const financables = await codesFinancables(achats.map((l) => l.defaultCode));
@@ -58,6 +64,16 @@ export default async function Panier({ searchParams }: { searchParams: Promise<{
     dbSite().panier.findUnique({ where: { id: detail.panierId } }),
   ]);
   const devis = detail.devis;
+  // F16 (D6) : barème de chaque ligne, pour afficher son prix dès que la quantité change.
+  const bareme = (l: (typeof detail.lignes)[number]): Bareme | null => {
+    if (l.prixUnitaireHt === null || l.totalHt === null) return null;
+    const brut = l.prixUnitaireHt * l.quantite;
+    const remisePourcent = brut > 0 ? ((l.remiseHt ?? 0) / brut) * 100 : 0;
+    const v = variantes.get(l.defaultCode);
+    if (l.formule !== "achat" || !v) return { prixHt: l.prixUnitaireHt, paliers: [], prixClientHt: null, remisePourcent };
+    const palierAtteint = v.paliers.some((pa) => l.quantite >= pa.quantiteMin);
+    return { prixHt: v.prixHt, paliers: v.paliers, prixClientHt: palierAtteint ? null : l.prixUnitaireHt, remisePourcent };
+  };
   const ligne = (l: (typeof detail.lignes)[number]) => (
     <LignePanier
       key={l.id}
@@ -77,11 +93,13 @@ export default async function Panier({ searchParams }: { searchParams: Promise<{
       delaiJours={l.delaiJours}
       indisponible={l.indisponible}
       obligatoire={l.formule === "achat" && obligatoires.has(l.defaultCode)}
+      bareme={bareme(l)}
     />
   );
 
   return (
     <div className="mx-auto flex max-w-page flex-col gap-8 px-4 py-10">
+      <FilAriane etapes={[{ libelle: "Panier" }]} />
       <div className="flex flex-col gap-2">
         <Kicker>Panier</Kicker>
         <h1 className="text-display font-light">Votre panier</h1>
@@ -114,10 +132,12 @@ export default async function Panier({ searchParams }: { searchParams: Promise<{
             </div>
             {devis?.achat ? (
               <Card>
+                <TotauxEnDirect>
                 <TotauxAchat achat={devis.achat} regleCumul={devis.regleCumul} />
                 {devis.achat.fraisPortHt > 0 && devis.seuilFrancoHt > 0 ? (
                   <p className="mt-2 text-small text-muted">Livraison standard offerte dès {(devis.seuilFrancoHt / 100).toLocaleString("fr-FR")} € HT d’achats.</p>
                 ) : null}
+                </TotauxEnDirect>
               </Card>
             ) : null}
           </div>
@@ -135,7 +155,9 @@ export default async function Panier({ searchParams }: { searchParams: Promise<{
           ))}
           {devis?.abonnement ? (
             <Card className="lg:ml-auto lg:w-1/2">
-              <TotauxAbonnement abonnement={devis.abonnement} />
+              <TotauxEnDirect>
+                <TotauxAbonnement abonnement={devis.abonnement} />
+              </TotauxEnDirect>
             </Card>
           ) : null}
         </section>
@@ -155,6 +177,7 @@ export default async function Panier({ searchParams }: { searchParams: Promise<{
         {financables.size ? <Link href="/financement/demande?depuis=panier" className="ec-btn ec-btn--secondary">Demander mon financement</Link> : null}
         <Link href="/catalogue" className="inline-flex min-h-11 items-center">Continuer mes achats</Link>
       </div>
+      <MentionMetropole />
     </div>
   );
 }

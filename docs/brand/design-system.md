@@ -6,7 +6,7 @@
 ## 1. Positionnement et ton
 
 - **Marque :** ExploCardio.fr. Toujours écrit ainsi, avec « .fr », C majuscule, sans espace.
-- **Signature :** « Le spécialiste des explorations fonctionnelles cardiaques (hors imagerie) ».
+- **Signature :** « Le spécialiste des explorations fonctionnelles cardiaques » (« (hors imagerie) » retiré le 2026-10-25, F16).
 - **Cible :** cardiologues libéraux, cabinets et centres. Ton institutionnel, sobre, rassurant et concret. On vouvoie, on écrit des phrases courtes et on évite le jargon marketing.
 - **Personnalité visuelle :** épurée, calme, médicale sans être clinique. Couleurs pastel, beaucoup d'air, aucun effet tape-à-l'œil.
 - **Interdits :** pas de cœur, pas de tracé ECG, pas de pictogramme médical cliché (stéthoscope, croix). Pas de dégradés criards, d'ombres lourdes ni de photos de stock génériques.
@@ -59,7 +59,7 @@ Une seule police, **Inter** (Google Fonts), avec 4 graisses : 300, 400, 500 et 6
 | Corps | 16 px | 400 | Interligne 1,6, 65 à 75 caractères par ligne au maximum |
 | Petit texte | 14 px | 400 | Couleur muted |
 | Surtitre (kicker) | 12 px | 500 | MAJUSCULES, interlettrage 0,12 em, couleur deep-strong, précédé des 3 points |
-| Mention douce | 14 à 16 px | 300 italique | Par exemple « (hors imagerie) » |
+| Mention douce | 14 à 16 px | 300 italique | Par exemple une précision courte sous un titre |
 
 Le contraste vient des graisses (titres Light, sous-titres Semibold) et non des couleurs.
 
@@ -91,7 +91,7 @@ Le contraste vient des graisses (titres Light, sous-titres Semibold) et non des 
 
 ## 8. Structure éditoriale (reprise de la brochure)
 
-1. **Héros :** fond eucalyptus pâle, logo empilé, H1 « Le spécialiste des explorations fonctionnelles cardiaques », mention « (hors imagerie) » et grands points décoratifs.
+1. **Carrousel (F16) :** vignettes d'offres, d'informations et de produits phares gérées au back-office, sans logo géant ni signature ; fonds pastel et grands points décoratifs en l'absence d'image.
 2. **L'équipement et les marques :** Holter ECG (DMS), Holter tensionnel / MAPA (DMS, SunTech, Microlife WatchBP 03, IEM Mobil-O-Graph), épreuve et écho d'effort (DMS, Norav, Ergoline, RAM, Koch Évolution, SunTech Tango M2), environnement de l'épreuve d'effort, accessoires et consommables.
 3. **Offre digitale et flexibilité :** achat direct, financement, mise à disposition au mois, pack dépannage express, logiciel Cloud (badge « En préparation »), outils en ligne (tutos, agenda partagé, garantie express, espace client).
 4. **Offre de bienvenue** (encart lin) : un tensiomètre offert à la création de compte.

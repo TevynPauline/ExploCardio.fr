@@ -14,7 +14,8 @@ export default function Contenus() {
         cartes={[
           { titre: "Bandeau promotionnel", texte: "Messages, ordre, dates de début et de fin.", href: "/admin/contenus/bandeau" },
           { titre: "Tuiles d'accès rapide", texte: "Titre, phrase, lien, badge, fond des 6 tuiles.", href: "/admin/contenus/tuiles" },
-          { titre: "Actualités", texte: "Actualités, nouveaux produits, nouvelles offres.", href: "/admin/contenus/actualites" },
+          { titre: "Carrousel de l'accueil", texte: "Vignettes : offres, informations du moment, produits phares ; ordre, dates, aperçu.", href: "/admin/contenus/carrousel" },
+          { titre: "Pourquoi préférer ExploCardio.fr", texte: "Introduction et quatre arguments de l'accueil.", href: "/admin/contenus/accueil" },
           { titre: "Textes des pages", texte: "Services, financement, catégories, qui sommes-nous, pages légales : brouillon, aperçu, publication.", href: "/admin/contenus/pages" },
           { titre: "Coordonnées et textes", texte: "Coordonnées du bloc Contact, textes de l'accueil.", href: "/admin/contenus/coordonnees" },
           { titre: "Menus", texte: "Produits phares et liens rapides des méga-menus.", href: "/admin/contenus/menus" },

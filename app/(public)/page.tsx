@@ -1,37 +1,32 @@
-import {
-  lireActualites,
-  lireMarques,
-  lireParametresPublics,
-  lireTuiles,
-} from "@/domaine/contenus";
+import { lireParametresPublics, lireTuiles } from "@/domaine/contenus";
+import { lireArguments, lireVignettes } from "@/domaine/vignettes";
 import { liensContact } from "@/lib/contact-whatsapp";
 import { AccesRapide } from "@/ui/accueil/AccesRapide";
-import { Actualites } from "@/ui/accueil/Actualites";
 import { BlocContact } from "@/ui/accueil/BlocContact";
-import { Equipements } from "@/ui/accueil/Equipements";
-import { Heros } from "@/ui/accueil/Heros";
-import { OffreBienvenue } from "@/ui/accueil/OffreBienvenue";
+import { Carrousel } from "@/ui/accueil/Carrousel";
 import { OffreDigitale } from "@/ui/accueil/OffreDigitale";
+import { Pourquoi } from "@/ui/accueil/Pourquoi";
 import { ServiceFidelite } from "@/ui/accueil/ServiceFidelite";
 
-// Page d'accueil (US1, FR-015) : les 8 sections dans l'ordre.
+// Page d'accueil (F01, US1 ; F16, FR-009) : carrousel, accès rapides, « Pourquoi préférer
+// ExploCardio.fr », service et fidélité, offre digitale, contact.
 export default async function Accueil() {
-  const [tuiles, marques, actualites, parametres, contact] = await Promise.all([
+  const [vignettes, tuiles, argumentsAccueil, parametres, contact] = await Promise.all([
+    lireVignettes(),
     lireTuiles(),
-    lireMarques(),
-    lireActualites(),
+    lireArguments(),
     lireParametresPublics(),
     liensContact(),
   ]);
   return (
     <>
-      <Heros />
+      {/* Titre de la page (accessibilité, référencement), sans grand bandeau (F16, FR-011). */}
+      <h1 className="sr-only">ExploCardio.fr — Le spécialiste des explorations fonctionnelles cardiaques</h1>
+      <Carrousel vignettes={vignettes} />
       <AccesRapide tuiles={tuiles} />
-      <Equipements marques={marques} />
-      <OffreDigitale badgeLogicielCloud={parametres.badgeLogicielCloud} whatsapp={contact?.ecrire ?? "/qui-sommes-nous#contact"} />
-      <OffreBienvenue texte={parametres.offreBienvenue} />
+      <Pourquoi argumentsAccueil={argumentsAccueil} />
       <ServiceFidelite engagements={parametres.engagementsReactivite} />
-      <Actualites actualites={actualites} />
+      <OffreDigitale badgeLogicielCloud={parametres.badgeLogicielCloud} whatsapp={contact?.ecrire ?? "/qui-sommes-nous#contact"} />
       <BlocContact parametres={parametres} />
     </>
   );

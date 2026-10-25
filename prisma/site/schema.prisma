@@ -212,6 +212,9 @@ enum TypeContenu {
   tuile
   actualite
   page
+  /// F16 : vignettes du carrousel de l'accueil et arguments « Pourquoi préférer ExploCardio.fr ».
+  vignette
+  argument
 }
 
 enum EtatPublication {
@@ -243,6 +246,8 @@ model Contenu {
   /// brouillon non publié (le texte publié reste dans `corps`).
   cle           String?
   brouillon     String?
+  /// F16 : texte du bouton d'une vignette du carrousel (30 caractères au plus).
+  libelleLien   String?
   creeLe        DateTime        @default(now())
   modifieLe     DateTime        @updatedAt
 

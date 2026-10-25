@@ -106,50 +106,114 @@ export async function enregistrerTuile(d: FormData) {
   });
 }
 
-// ------------------------------------------------------------------ Actualités
+// ------------------------------------------------------------------ Carrousel (F16)
 
-export async function enregistrerActualite(d: FormData) {
-  await executer("/admin/contenus/actualites", "Actualité enregistrée.", async (a) => {
+const FONDS_VIGNETTE = ["pale", "blue-soft", "lin", "mint"];
+
+/** Lien d'une vignette : page du site, fiche produit publiée ou adresse https:// (F16, FR-013). */
+async function lienVignette(saisie: string): Promise<string | null> {
+  const lien = saisie.trim();
+  if (!lien) return null;
+  const { cheminsFichesPubliees, lienDisponible } = await import("@/domaine/vignettes");
+  if (lienDisponible(lien, await cheminsFichesPubliees())) return lien;
+  return exigerLien(lien, true);
+}
+
+export async function enregistrerVignette(d: FormData) {
+  await executer("/admin/contenus/carrousel", "Vignette enregistrée.", async (a) => {
     const id = t(d, "id");
     await verifierVersion(id, d);
-    const type = t(d, "typeActualite");
-    if (!["actualite", "nouveau_produit", "nouvelle_offre"].includes(type)) throw new SaisieRefusee("Type d'actualité invalide.");
+    const fond = t(d, "fond") || "pale";
+    if (!FONDS_VIGNETTE.includes(fond)) throw new SaisieRefusee("Fond : choisissez un encart de la charte.");
+    const lien = await lienVignette(t(d, "lien"));
+    const libelleLien = exigerTexte(t(d, "libelleLien"), "Texte du bouton", 0, 30) || null;
+    if (Boolean(lien) !== Boolean(libelleLien)) throw new SaisieRefusee("Bouton : indiquez à la fois son texte et son lien, ou aucun des deux.");
     const image = d.get("image");
     const texteRemplacement = t(d, "texteRemplacement").trim();
     let images: { url: string; texteRemplacement: string }[] | undefined;
     if (image instanceof File && image.size > 0) {
-      images = [{ url: await deposerImage(image, "actualites"), texteRemplacement: exigerTexteRemplacement(texteRemplacement) }];
+      images = [{ url: await deposerImage(image, "vignettes"), texteRemplacement: exigerTexteRemplacement(texteRemplacement) }];
     } else if (id && texteRemplacement) {
       const existant = await dbSite().contenu.findUniqueOrThrow({ where: { id } });
       const actuelles = (existant.images as { url: string; texteRemplacement: string }[]) ?? [];
-      if (actuelles[0]) images = [{ ...actuelles[0], texteRemplacement }];
+      if (actuelles[0]) images = [{ ...actuelles[0], texteRemplacement: exigerTexteRemplacement(texteRemplacement) }];
     }
     if (d.get("retirerImage") === "oui") images = [];
     const donnees = {
-      titre: exigerTexte(t(d, "titre"), "Titre", 1, 90),
-      corps: exigerTexte(t(d, "texte"), "Texte", 1, 300),
-      lien: exigerLien(t(d, "lien"), false),
-      typeActualite: type as "actualite" | "nouveau_produit" | "nouvelle_offre",
+      titre: exigerTexte(t(d, "titre"), "Titre", 1, 60),
+      corps: exigerTexte(t(d, "phrase"), "Phrase", 1, 140),
+      lien,
+      libelleLien,
+      fond,
       etat: etatChoisi(d),
-      publieLe: dateFacultative(t(d, "publieLe"), "Date") ?? new Date(),
+      debut: dateFacultative(t(d, "debut"), "Début"),
+      fin: dateFacultative(t(d, "fin"), "Fin"),
       ...(images !== undefined ? { images } : {}),
     };
+    if (donnees.debut && donnees.fin && donnees.debut >= donnees.fin) throw new SaisieRefusee("La fin doit être après le début.");
     if (id) {
       const avant = await dbSite().contenu.findUniqueOrThrow({ where: { id } });
       await dbSite().contenu.update({ where: { id }, data: donnees });
-      await journaliser(a, "contenus.actualite.modifiee", id, avant, donnees);
+      await journaliser(a, "contenus.vignette.modifiee", id, avant, donnees);
     } else {
-      const cree = await dbSite().contenu.create({ data: { ...donnees, type: "actualite" } });
-      await journaliser(a, "contenus.actualite.creee", cree.id, null, donnees);
+      const ordre = (await dbSite().contenu.aggregate({ where: { type: "vignette" }, _max: { ordre: true } }))._max.ordre ?? 0;
+      const cree = await dbSite().contenu.create({ data: { ...donnees, type: "vignette", ordre: ordre + 1 } });
+      await journaliser(a, "contenus.vignette.creee", cree.id, null, donnees);
     }
   });
 }
 
-export async function supprimerActualite(d: FormData) {
-  await executer("/admin/contenus/actualites", "Actualité supprimée.", async (a) => {
+/** Monte ou descend une vignette d'un cran dans l'ordre du carrousel. */
+export async function deplacerVignette(d: FormData) {
+  await executer("/admin/contenus/carrousel", "Ordre du carrousel enregistré.", async (a) => {
     const id = t(d, "id");
-    const avant = await dbSite().contenu.delete({ where: { id } });
-    await journaliser(a, "contenus.actualite.supprimee", id, avant, null);
+    const sens = t(d, "sens") === "haut" ? -1 : 1;
+    const liste = await dbSite().contenu.findMany({ where: { type: "vignette" }, orderBy: [{ ordre: "asc" }, { creeLe: "asc" }], select: { id: true } });
+    const i = liste.findIndex((v) => v.id === id);
+    const j = i + sens;
+    if (i < 0 || j < 0 || j >= liste.length) return;
+    [liste[i], liste[j]] = [liste[j]!, liste[i]!];
+    await dbSite().$transaction(liste.map((v, k) => dbSite().contenu.update({ where: { id: v.id }, data: { ordre: k + 1 } })));
+    await journaliser(a, "contenus.vignette.deplacee", id, { position: i + 1 }, { position: j + 1 });
+  });
+}
+
+export async function supprimerVignette(d: FormData) {
+  await executer("/admin/contenus/carrousel", "Vignette supprimée.", async (a) => {
+    const id = t(d, "id");
+    const v = await dbSite().contenu.findUniqueOrThrow({ where: { id } });
+    if (v.cle === "offre-bienvenue") throw new SaisieRefusee("La vignette de l'offre de bienvenue ne se supprime pas : retirez-la, ou désactivez l'offre dans Paramètres.");
+    await dbSite().contenu.delete({ where: { id } });
+    await journaliser(a, "contenus.vignette.supprimee", id, v, null);
+  });
+}
+
+// ------------------------------------------------------------------ Pourquoi préférer ExploCardio.fr (F16)
+
+export async function enregistrerArguments(d: FormData) {
+  await executer("/admin/contenus/accueil", "Arguments enregistrés.", async (a) => {
+    const lignes = await dbSite().contenu.findMany({ where: { type: "argument" } });
+    // Verrou (F13, D9) : la version lue est celle de la ligne modifiée le plus récemment.
+    const lu = t(d, "modifieLe");
+    const recente = lignes.reduce<Date | null>((m, l) => (!m || l.modifieLe > m ? l.modifieLe : m), null);
+    if (lu && recente && recente.toISOString() !== lu) {
+      const derniere = await dbSite().journalAction.findFirst({ where: { action: "contenus.argument.modifie" }, orderBy: { date: "desc" } });
+      throw new SaisieRefusee(`Ces arguments ont été modifiés${derniere ? ` par ${derniere.auteur}` : ""} depuis que vous avez ouvert la page : rien n'a été écrasé. Rechargez la page.`);
+    }
+    const saisies = [
+      { cle: "intro", titre: exigerTexte(t(d, "titre-intro"), "Titre de la section", 1, 60), corps: exigerTexte(t(d, "corps-intro"), "Introduction", 0, 200) },
+      ...["1", "2", "3", "4"].map((c) => ({ cle: c, titre: exigerTexte(t(d, `titre-${c}`), `Argument ${c} : titre`, 1, 60), corps: exigerTexte(t(d, `corps-${c}`), `Argument ${c} : phrase`, 1, 200) })),
+    ];
+    for (const [i, s] of saisies.entries()) {
+      const avant = lignes.find((l) => l.cle === s.cle);
+      if (avant && avant.titre === s.titre && avant.corps === s.corps) continue;
+      await dbSite().contenu.upsert({
+        where: { type_cle: { type: "argument", cle: s.cle } },
+        create: { type: "argument", cle: s.cle, titre: s.titre, corps: s.corps, ordre: i, etat: "publie" },
+        update: { titre: s.titre, corps: s.corps },
+      });
+      await journaliser(a, "contenus.argument.modifie", s.cle, avant ? { titre: avant.titre, corps: avant.corps } : null, { titre: s.titre, corps: s.corps });
+    }
   });
 }
 

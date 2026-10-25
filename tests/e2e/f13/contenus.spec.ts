@@ -100,13 +100,13 @@ test("texte de la page Assistance : brouillon, aperçu, publication, retour à l
   }
 });
 
-test("actualité : une image sans texte de remplacement est refusée", async ({ page, context }) => {
+test("vignette : une image sans texte de remplacement est refusée", async ({ page, context }) => {
   await connecterNavigateur(context, COMPTES.admin);
-  await page.goto("/admin/contenus/actualites");
+  await page.goto("/admin/contenus/carrousel");
   await page.locator("#titre-nouvelle").fill("Essai image F13");
-  await page.locator("#texte-nouvelle").fill("Texte d'essai.");
+  await page.locator("#phrase-nouvelle").fill("Phrase d'essai.");
   await page.locator("#image-nouvelle").setInputFiles({ name: "image.png", mimeType: "image/png", buffer: PNG });
-  await page.getByRole("button", { name: "Créer l'actualité" }).click();
+  await page.getByRole("button", { name: "Créer la vignette" }).click();
   await expect(page.locator("main").getByRole("alert")).toContainText("texte de remplacement est obligatoire");
   expect(await requete("site", `SELECT id FROM contenu WHERE titre = 'Essai image F13'`)).toHaveLength(0);
 });

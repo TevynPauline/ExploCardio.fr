@@ -91,7 +91,7 @@ export async function genererPdfFacture(f: DonneesFacturePdf): Promise<Uint8Arra
   ecrire("ExploCardio.fr", marge, { taille: 18, police: gras });
   ecrire(`${f.type === "avoir" ? "AVOIR" : "FACTURE"} ${MENTION_FICTIVE}`, 340, { taille: 14, police: gras });
   y -= 18;
-  ecrire("Explorations fonctionnelles cardiaques (hors imagerie)", marge, { couleur: SECONDAIRE });
+  ecrire("Le spécialiste des explorations fonctionnelles cardiaques", marge, { couleur: SECONDAIRE });
   ecrire(`N° ${f.numero}`, 340);
   y -= 14;
   ecrire(`Date : ${f.date.toLocaleDateString("fr-FR")}`, 340);

@@ -8,6 +8,7 @@ export const metadata: Metadata = { title: "Assistance et service" };
 export default async function Assistance() {
   return (
     <PagePresentation
+      parents={[{ libelle: "Services", href: "/services" }]}
       texte="assistance"
       surtitre="Services"
       apres={

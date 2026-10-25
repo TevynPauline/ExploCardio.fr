@@ -9,6 +9,7 @@ export const metadata: Metadata = { title: "Installation et formation" };
 export default function InstallationFormation() {
   return (
     <PagePresentation
+      parents={[{ libelle: "Services", href: "/services" }]}
       texte="installation-formation"
       surtitre="Services"
       apres={

@@ -32,7 +32,7 @@
 
 ```
 /speckit.specify Page d'accueil du site marchand ExploCardio.fr, conforme à docs/brand/design-system.md.
-Sections dans l'ordre : héros (fond eucalyptus pâle, logo empilé, H1 « Le spécialiste des explorations fonctionnelles cardiaques », mention « (hors imagerie) », grands points décoratifs, CTA « Découvrir le catalogue » et « Demander une mise à disposition ») ; équipements & marques (3 cartes : Holter ECG, Holter tensionnel/MAPA, épreuve & écho d'effort, puis grille des marques) ; offre digitale & flexibilité (achat, financement, mise à disposition, pack dépannage express, logiciel Cloud « En préparation ») ; offre de bienvenue (encart lin) ; service & fidélité (parcours 3 étapes consommables → points → hotline & SAV offerts) ; contact (bloc sombre) ; footer.
+Sections dans l'ordre : carrousel de vignettes (F16 : offres, informations, produits phares, gérés au back-office) ; équipements & marques (3 cartes : Holter ECG, Holter tensionnel/MAPA, épreuve & écho d'effort, puis grille des marques) ; offre digitale & flexibilité (achat, financement, mise à disposition, pack dépannage express, logiciel Cloud « En préparation ») ; offre de bienvenue (encart lin) ; service & fidélité (parcours 3 étapes consommables → points → hotline & SAV offerts) ; contact (bloc sombre) ; footer.
 Emplacements photo en placeholders. Responsive mobile-first.
 ```
 

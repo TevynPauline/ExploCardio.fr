@@ -71,6 +71,9 @@ const PAGES_BACK_OFFICE = [
   "/admin/devis?etat=tous",
   "/admin/contenus/pages",
   "/admin/contenus/pages/assistance",
+  // F16
+  "/admin/contenus/carrousel",
+  "/admin/contenus/accueil",
   "/admin/parametres",
   "/admin/parametres?theme=contact",
   "/admin/parametres?theme=securite",

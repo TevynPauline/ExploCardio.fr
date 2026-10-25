@@ -37,7 +37,7 @@ function typeReel(octets: Buffer): string | null {
 }
 
 /** Enregistre une image et renvoie son chemin public (« /stockage/images/… »). */
-export async function deposerImage(fichier: File, dossier: "actualites" | "marques" | "produits" | "aide"): Promise<string> {
+export async function deposerImage(fichier: File, dossier: "actualites" | "vignettes" | "marques" | "produits" | "aide"): Promise<string> {
   if (fichier.size === 0) throw new FichierRefuse("Le fichier est vide.");
   if (fichier.size > TAILLE_MAX) throw new FichierRefuse("Le fichier dépasse 2 Mo.");
   let octets: Buffer = Buffer.from(await fichier.arrayBuffer());

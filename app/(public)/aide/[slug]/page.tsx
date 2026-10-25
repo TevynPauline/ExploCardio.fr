@@ -5,6 +5,7 @@ import { contenuPublie, etapesDe, reponseHtml, THEMES, TYPES } from "@/domaine/a
 import { cheminsDesFiches } from "@/domaine/catalogue/lecture";
 import { Kicker } from "@/ui";
 import { ContactWhatsApp } from "@/ui/contact/ContactWhatsApp";
+import { FilAriane } from "@/ui/FilAriane";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -23,9 +24,7 @@ export default async function ContenuAide({ params }: Props) {
   const fiches = [...new Set(c.references.map((r) => chemins.get(r)).filter((x): x is string => Boolean(x)))];
   return (
     <div className="mx-auto flex max-w-page flex-col gap-8 px-4 py-10">
-      <nav aria-label="Fil d’Ariane" className="text-small">
-        <Link href="/aide" className="inline-flex min-h-11 items-center">Centre d’aide</Link>
-      </nav>
+      <FilAriane etapes={[{ libelle: "Services", href: "/services" }, { libelle: "Centre d’aide", href: "/aide" }, { libelle: c.titre }]} />
       <header className="flex flex-col gap-2">
         <Kicker>{TYPES[c.type]} · {THEMES[c.theme]}</Kicker>
         <h1 className="text-display font-light">{c.titre}</h1>

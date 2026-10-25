@@ -20,7 +20,7 @@ export function MegaMenu({
     <div
       id={`megamenu-${entree.cle}`}
       hidden={!visible}
-      className={visible ? "absolute inset-x-0 top-full hidden xl:block" : "hidden"}
+      className={visible ? "absolute inset-x-0 top-full hidden lg:block" : "hidden"}
     >
       <div className="mx-auto max-w-page px-4">
         <div className="mt-2 max-h-[70vh] overflow-y-auto rounded-lg border border-line bg-surface p-6 shadow">

@@ -99,16 +99,24 @@ export function BarreNavigation({ entrees, articlesPanier: initial }: Props) {
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-surface">
       <div ref={zone} onMouseLeave={surSortie} onMouseEnter={annulerMinuteur} className="relative">
-        <div className="mx-auto flex max-w-page items-center gap-2 px-4 sm:gap-4">
-          <Link href="/" aria-label="ExploCardio.fr, accueil" className="inline-flex min-h-14 min-w-0 shrink items-center">
-            <span className="sm:hidden">
-              <Logo hauteur={22} priority />
+        {/* Téléphone et tablette (F16, D4) : menu à gauche, logo au centre, recherche, panier et
+            compte à droite. Ordinateur (dès 1 024 px) : logo à gauche, menu sur la deuxième ligne. */}
+        <div className="mx-auto grid max-w-page grid-cols-[1fr_auto_1fr] items-center gap-2 px-4 sm:gap-4 lg:flex">
+          <div className="flex items-center lg:hidden">
+            <MenuMobile entrees={entrees} />
+          </div>
+          <Link href="/" aria-label="ExploCardio.fr, accueil" className="inline-flex min-h-14 min-w-11 items-center justify-center lg:justify-start">
+            <span className="min-[420px]:hidden">
+              <Logo version="symbole" hauteur={22} priority />
+            </span>
+            <span className="hidden min-[420px]:inline sm:hidden">
+              <Logo hauteur={18} priority />
             </span>
             <span className="hidden sm:inline">
               <Logo hauteur={28} priority />
             </span>
           </Link>
-          <div className="ml-auto flex shrink-0 items-center sm:gap-1">
+          <div className="flex shrink-0 items-center justify-end sm:gap-1 lg:ml-auto">
             <Recherche />
             <Link
               href="/panier"
@@ -130,13 +138,13 @@ export function BarreNavigation({ entrees, articlesPanier: initial }: Props) {
               <span className="hidden lg:inline">Mon compte / Connexion</span>
               <span className="sr-only lg:hidden">Mon compte / Connexion</span>
             </Link>
-            <MenuMobile entrees={entrees} />
           </div>
         </div>
 
-        {/* Ordinateur : les sept entrées sur une seconde ligne, pour qu'elles tiennent toutes. */}
-        <nav aria-label="Navigation principale" className="hidden border-t border-line xl:block">
-          <ul className="mx-auto flex max-w-page flex-wrap items-center justify-center gap-x-2 px-4">
+        {/* Ordinateur : les sept entrées sur une seconde ligne, pour qu'elles tiennent toutes ;
+            dès 1 024 px (F16 : PC Windows à affichage agrandi), plus serrées jusqu'à 1 280 px. */}
+        <nav aria-label="Navigation principale" className="hidden border-t border-line lg:block">
+          <ul className="mx-auto flex max-w-page flex-wrap items-center justify-center gap-x-0 px-0 xl:gap-x-2 xl:px-4">
             {entrees.map((e) => (
               <li key={e.cle} onMouseEnter={() => surEntree(e.cle)}>
                 <button
@@ -151,7 +159,7 @@ export function BarreNavigation({ entrees, articlesPanier: initial }: Props) {
                     setOuvert(ouvert === e.cle ? null : e.cle);
                   }}
                   onKeyDown={(ev) => auClavierEntree(ev, e.cle)}
-                  className="inline-flex min-h-12 items-center gap-1 whitespace-nowrap px-2 text-small font-medium text-ink aria-expanded:text-action"
+                  className="inline-flex min-h-12 items-center gap-1 whitespace-nowrap px-1 text-small font-medium text-ink aria-expanded:text-action xl:px-2"
                 >
                   {e.libelle}
                   <IconeChevron className={ouvert === e.cle ? "rotate-180" : ""} />

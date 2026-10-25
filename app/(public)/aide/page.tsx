@@ -6,6 +6,7 @@ import { Kicker } from "@/ui";
 import { QuestionFaq } from "@/ui/aide/QuestionFaq";
 import { ContactWhatsApp } from "@/ui/contact/ContactWhatsApp";
 import type { ThemeAide, TypeContenuAide } from "@generated/site/client";
+import { FilAriane } from "@/ui/FilAriane";
 
 export const metadata: Metadata = { title: "Centre d’aide" };
 
@@ -45,6 +46,7 @@ export default async function CentreAide({ searchParams }: Props) {
 
   return (
     <div className="mx-auto flex max-w-page flex-col gap-8 px-4 py-10">
+      <FilAriane etapes={[{ libelle: "Services", href: "/services" }, { libelle: "Centre d’aide" }]} />
       <header className="flex flex-col gap-3">
         <Kicker>Services</Kicker>
         <h1 className="text-display font-light">Centre d’aide</h1>

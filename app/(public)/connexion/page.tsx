@@ -4,6 +4,7 @@ import Link from "next/link";
 import { cheminDeRetour } from "@/lib/retour";
 import { Card } from "@/ui";
 import { FormulaireConnexion } from "./FormulaireConnexion";
+import { FilAriane } from "@/ui/FilAriane";
 
 export const metadata: Metadata = { title: "Connexion" };
 
@@ -13,6 +14,7 @@ export default async function Connexion({ searchParams }: { searchParams: Promis
   const retour = cheminDeRetour(p.retour);
   return (
     <div className="mx-auto flex max-w-md flex-col gap-6 px-4 py-12">
+      <FilAriane etapes={[{ libelle: "Connexion" }]} />
       <h1 className="text-h2 font-light">Connexion</h1>
       {/* F13 (D5) : session de l'équipe fermée après inactivité. */}
       {p.raison === "inactivite" ? (

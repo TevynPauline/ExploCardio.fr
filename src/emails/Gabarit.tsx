@@ -85,7 +85,7 @@ export function Gabarit({ apercu, titre, children, contact, famille = "transacti
             </Section>
           ) : null}
           <Text style={petit}>
-            {expediteur} — Le spécialiste des explorations fonctionnelles cardiaques (hors imagerie).
+            {expediteur} — Le spécialiste des explorations fonctionnelles cardiaques.
             {adresse ? ` ${adresse}.` : ""}
           </Text>
           <Text style={{ ...petit, margin: 0 }}>

@@ -21,7 +21,7 @@ export function MenuMobile({ entrees }: { entrees: EntreeNavigation[] }) {
   const fermer = () => dialogue.current?.close();
 
   return (
-    <div className="xl:hidden">
+    <div className="lg:hidden">
       <button
         type="button"
         onClick={ouvrir}
