@@ -68,8 +68,8 @@ une fiche produit : vérifier la disposition de l'en-tête et le fil d'Ariane.
 
 ### User Story 2 - Découvrir l'actualité commerciale sur l'accueil (Priority: P1)
 
-En arrivant sur l'accueil, le médecin voit un carrousel de grandes vignettes : une opération
-sur les électrodes ce mois-ci, l'offre de bienvenue, un nouveau Holter. Chaque vignette mène à
+En arrivant sur l'accueil, le médecin voit un carrousel de grandes vignettes : une offre sur
+les électrodes ce mois-ci, l'offre de bienvenue, une information temporaire, un produit phare. Chaque vignette mène à
 la page concernée. Les vignettes défilent seules, et il peut les arrêter ou les parcourir à
 son rythme.
 
@@ -143,10 +143,10 @@ section Équipement et la présence des quatre arguments ; modifier un argument 
 
 1. **Given** l'accueil, **When** il s'affiche, **Then** les sections apparaissent dans cet ordre :
    carrousel ; six accès rapides ; « Pourquoi préférer ExploCardio.fr » ; « Service et
-   fidélité » ; « Offre digitale » ; bloc contact.
+   fidélité » ; « Offre digitale » ; « Actualités » ; bloc contact.
 2. **Given** l'accueil, **When** il s'affiche, **Then** il ne contient plus la section
-   « L'équipement » (trois familles, marques de référence, trois cartes) ni la section
-   « Actualités ».
+   « L'équipement » (trois familles, marques de référence, trois cartes) ; la section
+   « Actualités » est conservée (décision du 2026-10-25).
 3. **Given** la section « Pourquoi préférer ExploCardio.fr », **When** elle s'affiche, **Then**
    elle présente une courte introduction et quatre arguments (titre et phrase), chacun avec un
    schéma décoratif dans le style des trois points de la charte.
@@ -371,8 +371,9 @@ facture de démonstration ; afficher le bloc contact et la page Qui sommes-nous.
 - **FR-008** : L'offre de bienvenue DOIT être présentée sous forme de vignette du carrousel,
   modifiable comme les autres, et ne plus avoir de section propre sur l'accueil.
 - **FR-009** : L'accueil DOIT présenter, dans cet ordre : carrousel ; six accès rapides ;
-  « Pourquoi préférer ExploCardio.fr » ; « Service et fidélité » ; « Offre digitale » ; bloc
-  contact. Les sections « L'équipement » et « Actualités » DOIVENT être retirées de l'accueil.
+  « Pourquoi préférer ExploCardio.fr » ; « Service et fidélité » ; « Offre digitale » ;
+  « Actualités » ; bloc contact. La section « L'équipement » DOIT être retirée de l'accueil ; la
+  section et la gestion des actualités (F01, F13) sont conservées.
 - **FR-010** : La section « Pourquoi préférer ExploCardio.fr » DOIT présenter une introduction
   et quatre arguments (titre et phrase), chacun accompagné d'un schéma décoratif dans le
   langage graphique de la charte (trois points, pastels décoratifs), sans pictogramme médical
@@ -391,8 +392,10 @@ facture de démonstration ; afficher le bloc contact et la page Qui sommes-nous.
   phrase et 30 pour le texte du bouton, et leur lien DOIT être vérifié comme les liens de F13.
 - **FR-014** : L'administrateur et le commercial DOIVENT pouvoir modifier l'introduction et les
   quatre arguments de « Pourquoi préférer ExploCardio.fr ».
-- **FR-015** : Les actualités existantes DOIVENT pouvoir être présentées comme vignettes ; la
-  gestion séparée des actualités au back-office peut être retirée une fois les contenus repris.
+- **FR-015** : Les vignettes du carrousel DOIVENT être des contenus distincts des actualités :
+  le carrousel remplace uniquement le grand bandeau (logo et signature) et accueille des offres,
+  des informations temporaires, des produits phares ou des consommables du moment, choisis au
+  back-office ; les actualités gardent leur section et leur écran de gestion.
 
 **Panier**
 
@@ -533,8 +536,9 @@ explorations fonctionnelles cardiaques. Tout est pensé pour vous faire gagner d
 - Les images des vignettes sont fournies par ExploCardio.fr ; en attendant, les vignettes
   utilisent des fonds de la charte (eucalyptus pâle, bleu doux, lin) et le motif des trois
   points.
-- Une vignette « Offre de bienvenue » et une vignette par actualité de démonstration existante
-  sont créées au départ pour que le carrousel ne soit pas vide.
+- Une vignette « Offre de bienvenue » et deux vignettes d'exemple (une offre, un produit phare)
+  sont créées au départ pour que le carrousel ne soit pas vide ; leur contenu définitif sera
+  choisi par l'équipe au back-office.
 - Le fil d'Ariane suit l'arborescence du site (familles, types, fiches), pas l'historique du
   navigateur, comme sur la plupart des sites marchands.
 - Le devis n'est proposé qu'aux professionnels connectés, car il est nominatif et se retrouve
