@@ -10,7 +10,7 @@ F16 applique les retours de Régis sur le site de démonstration. Deux lots :
 
 - **Lot A — ergonomie et accueil** : en-tête mobile (menu à gauche, logo au centre), menu
   horizontal dès 1 024 px, fil d'Ariane commun, carrousel de vignettes géré au back-office à la
-  place du grand bandeau (les actualités restent), section « Pourquoi préférer
+  place du grand bandeau, section « Pourquoi préférer
   ExploCardio.fr », nouvel ordre de l'accueil, prix du panier en direct, mention « hors métropole », slogan et bloc contact.
 - **Lot B — commande** : devis depuis le panier (document d'Odoo, transformable en commande),
   inscription sans RPPS avec SIRET ou SIREN demandé à la première commande et vérifié après
@@ -92,7 +92,7 @@ specs/016-evolutions-fin-phase-1/
 src/ui/en-tete/            BarreNavigation, MenuMobile, MegaMenu (dispositions et seuils)
 src/ui/FilAriane.tsx       fil d'Ariane commun (remplace ceux de Fiche et de l'aide)
 src/ui/accueil/            Carrousel (nouveau), Pourquoi (nouveau) ; Heros, Equipements,
-                           OffreBienvenue retirés de l'accueil ; Actualites conservé
+                           OffreBienvenue, Actualites retirés de l'accueil
 src/ui/commande/           LignePanier (prix en direct), BoutonDevis, MentionMetropole
 src/domaine/contenus.ts    lireVignettes, lireArguments (cache « contenus », aperçu F13)
 src/domaine/commande/      devis-client.ts (demander, lister, commander un devis)
@@ -113,7 +113,7 @@ module qui possède déjà l'écran (F01 accueil, F02 inscription, F04 panier, F
 
 | # | Sujet | Proposition |
 |---|---|---|
-| D1 | **Vignettes du carrousel** (modifiée et validée le 2026-10-25) | Le carrousel remplace **seulement** le grand bandeau vert (logo, signature). Nouveau type de contenu « vignette » dans un nouvel écran **Contenus → Carrousel** : offres, informations temporaires, produits phares, consommables du moment, à définir par l'équipe au back-office. La section **Actualités** de l'accueil et son écran de gestion **restent** (placés après l'Offre digitale, avant le contact). Au départ : la vignette « Offre de bienvenue » (masquée automatiquement si l'offre est désactivée ; le paramètre texte « offre de bienvenue » disparaît) et deux vignettes d'exemple. |
+| D1 | **Vignettes du carrousel** (modifiée et validée le 2026-10-25) | Le carrousel remplace **seulement** le grand bandeau vert (logo, signature). Nouveau type de contenu « vignette » dans un nouvel écran **Contenus → Carrousel** : offres, informations temporaires, produits phares, consommables du moment, à définir par l'équipe au back-office. La section **Actualités** est retirée de l'accueil et son écran du back-office aussi (décision finale du 2026-10-25) ; les actualités déjà saisies restent en base, non affichées. Au départ : la vignette « Offre de bienvenue » (masquée automatiquement si l'offre est désactivée ; le paramètre texte « offre de bienvenue » disparaît) et deux vignettes d'exemple. |
 | D2 | **Comportement du carrousel** | Une vignette visible à la fois, pleine largeur, hauteur fixe (environ 420 px sur ordinateur, 480 px sur téléphone) ; image recommandée 1 600 × 640 px ; défilement toutes les 6 s, pause au survol, au focus et par bouton ; flèches et points ; aucun défilement automatique si le visiteur réduit les animations ; la première image est chargée en priorité, les autres ensuite. |
 | D3 | **« Pourquoi préférer ExploCardio.fr »** | Introduction et quatre arguments modifiables dans **Contenus → Accueil** ; les quatre schémas sont des dessins fixes de la charte (trois points, pastels), non modifiables au back-office. |
 | D4 | **En-tête** | Téléphone et tablette : menu à gauche, logo au centre, loupe, panier et compte à droite. Le menu horizontal (deuxième ligne) apparaît dès 1 024 px au lieu de 1 280 px, avec des espacements réduits entre 1 024 et 1 279 px. |

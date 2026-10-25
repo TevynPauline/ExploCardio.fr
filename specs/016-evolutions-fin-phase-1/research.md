@@ -34,11 +34,11 @@ plan en découlent.
 - **Constat** : l'accueil (`app/(public)/page.tsx`) enchaîne Heros (logo et signature),
   AccesRapide, Equipements, OffreDigitale, OffreBienvenue, ServiceFidelite, Actualites,
   BlocContact. `Contenu` (F13) a déjà les états, dates, images avec texte de remplacement, ordre,
-  aperçu, verrou optimiste et journal. Les actualités ne sont lues que par l'accueil ; elles
-  restent (décision D1 modifiée).
+  aperçu, verrou optimiste et journal. Les actualités ne sont lues que par l'accueil ; leur
+  section et leur écran sont retirés (décision D1 finale).
 - **Decision** : types `vignette` et `argument` ajoutés à `TypeContenu` ; champ `libelleLien`
   (texte du bouton) ajouté à `Contenu`. Nouvel écran **Contenus → Carrousel**, bâti sur le
-  modèle de celui des actualités (qui reste) ; lecture `lireVignettes()` en cache « contenus », aperçu F13. La
+  modèle de celui des actualités (qui est retiré) ; lecture `lireVignettes()` en cache « contenus », aperçu F13. La
   vignette « Offre de bienvenue » porte `cle = "offre-bienvenue"` et n'est montrée que si
   l'offre est active (paramètre existant `bienvenue.active`). Carrousel en composant client :
   translation CSS, minuteur de 6 s, pause au survol et au focus, `prefers-reduced-motion`,

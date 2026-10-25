@@ -6,7 +6,7 @@
 
 | Champ | Changement |
 |---|---|
-| `type` | enum `TypeContenu` + `vignette`, `argument` (`actualite` inchangé : section et écran conservés) |
+| `type` | enum `TypeContenu` + `vignette`, `argument` (`actualite` conservé en base, plus affiché ni géré) |
 | `libelleLien` | **nouveau**, `String?` — texte du bouton d'une vignette, 30 caractères au plus |
 
 **Vignette** (`type = vignette`) : `titre` (≤ 60), `corps` = phrase (≤ 140), `lien` (vérifié

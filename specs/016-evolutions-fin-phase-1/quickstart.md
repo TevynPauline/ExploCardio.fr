@@ -10,8 +10,8 @@ démonstration.
 2. **Fil d'Ariane** : Accueil → Holter ECG → une fiche : « Accueil › Holter ECG › … » ;
    cliquer « Holter ECG » ramène à la famille. Sur téléphone : « ‹ Holter ECG ».
 3. **Accueil** : ordre carrousel, accès rapides, Pourquoi, Service et fidélité, Offre digitale,
-   Actualités, contact ; ni logo géant, ni signature, ni « Régis Andrieu, fondateur », ni section
-   Équipement.
+   contact ; ni logo géant, ni signature, ni « Régis Andrieu, fondateur », ni section Équipement
+   ou Actualités.
 4. **Carrousel** : défilement toutes les 6 s ; Pause ; flèches et points au clavier ; en mouvement
    réduit, aucun défilement seul. Back-office → Contenus → Carrousel : vignette en préparation
    (aperçu seulement), publiée (visible en moins d'une minute), datée de demain (invisible).
