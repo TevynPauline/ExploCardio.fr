@@ -413,7 +413,10 @@ facture de démonstration ; afficher le bloc contact et la page Qui sommes-nous.
 - **FR-019** : La demande DOIT créer un devis dans Odoo (base fictive en phase 1), numéroté,
   reprenant articles, formules, quantités, prix HT et TTC, frais de livraison et date de fin de
   validité (30 jours) ; le PDF DOIT être téléchargeable aussitôt et envoyé par email au
-  professionnel ; l'équipe DOIT être prévenue.
+  professionnel ; l'équipe DOIT être prévenue. Les frais de livraison du devis sont calculés
+  pour l'adresse de livraison par défaut du compte et le mode de livraison standard ; si le
+  mode change dans le tunnel, les frais sont recalculés. Sans adresse en France métropolitaine,
+  le devis est refusé avec le bouton « Nous contacter » (FR-029).
 - **FR-020** : « Mon compte » DOIT lister les devis du professionnel avec leur état (valide,
   expiré, commandé) et permettre de télécharger le PDF et de commander un devis valide aux prix
   du devis.
@@ -425,7 +428,9 @@ facture de démonstration ; afficher le bloc contact et la page Qui sommes-nous.
 
 - **FR-023** : L'inscription des professionnels NE DOIT PLUS demander de numéro RPPS ; le SIRET
   ou le SIREN y DOIT être facultatif, vérifié dans sa forme (longueur et clé de contrôle)
-  lorsqu'il est saisi.
+  lorsqu'il est saisi. Sans RPPS, la qualité de professionnel de santé n'est plus contrôlée
+  automatiquement : elle l'est par l'équipe lors de la vérification du numéro (FR-026), en
+  attendant l'avis de la comptabilité et du juridique.
 - **FR-024** : Un compte dont l'email est confirmé DOIT pouvoir commander sans validation
   préalable de l'équipe (la règle de F02 « en attente de validation : consulter sans
   commander » est remplacée), sous réserve de FR-034 pour les mises à disposition.
@@ -436,7 +441,15 @@ facture de démonstration ; afficher le bloc contact et la page Qui sommes-nous.
   du juridique.
 - **FR-026** : Tout numéro renseigné et non vérifié DOIT apparaître dans « À traiter » ;
   l'administrateur ou le commercial le marque vérifié ou refusé (motif obligatoire). Un refus
-  suspend le compte pour les commandes suivantes et prévient le professionnel par email.
+  suspend automatiquement le compte pour les commandes suivantes (exception à la règle de F13 :
+  la suspension liée à un numéro refusé est ouverte au commercial ; le rétablissement reste
+  réservé à l'administrateur) et prévient le professionnel par email. En vérifiant le numéro,
+  l'équipe contrôle aussi que l'activité déclarée correspond à un professionnel de santé
+  (cabinet, centre, établissement).
+- **FR-035** : Plus aucun email « Votre compte est validé » ni « Votre demande de compte »
+  (refus) n'est envoyé : l'email de bienvenue qui suit la confirmation de l'adresse suffit, et le
+  refus d'un numéro est annoncé par l'email « Votre numéro d'entreprise » (motif et contact),
+  modifiable au back-office comme les autres modèles (F10).
 - **FR-027** : Les textes du site qui parlent du RPPS (inscription, aide, conditions, emails)
   DOIVENT être mis à jour.
 - **FR-034** : Exception pour les mises à disposition (décision du 2026-10-25) : l'expédition
