@@ -55,7 +55,7 @@ export default async function Rgpd({ searchParams }: { searchParams: Promise<{ o
         <h2 className="mb-3 text-h3 font-semibold">Saisir une demande reçue</h2>
         <form action={enregistrer} className="grid gap-3 sm:grid-cols-2">
           <label className="flex flex-col gap-1 text-small font-medium sm:col-span-2">
-            Email, RPPS ou SIRET du compte
+            Email, SIRET ou SIREN du compte
             <input name="compte" required className="min-h-11 rounded-sm border border-muted bg-surface px-2 font-normal" />
           </label>
           <label className="flex flex-col gap-1 text-small font-medium">

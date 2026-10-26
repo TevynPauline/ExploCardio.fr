@@ -64,6 +64,7 @@ export async function enregistrerAchat(commande: CommandeSite): Promise<boolean>
         codePromo: commande.codePromo ?? undefined,
         bonsUtilisesHt: commande.bonsHt,
         reservationCle: commande.reservationRef ?? undefined,
+        devisRef: commande.devisRef ?? undefined,
       },
       `commande:${commande.ref}`,
     );
@@ -121,7 +122,8 @@ export async function enregistrerAbonnement(commande: CommandeSite, montantTtc: 
             debut,
             dateLivraison: date ? new Date(`${date}T12:00:00Z`) : undefined,
             commandeRef: commande.odooCommandeRef ?? undefined,
-            expeditionBloquee: compte.statut !== "valide",
+            // F16 (FR-034) : expédition après la vérification du numéro d'entreprise.
+            expeditionBloquee: compte.numeroVerification !== "verifie",
             reservationCle: reservations.find((r) => r.defaultCode === l.defaultCode && r.n === n)?.cle,
           },
           `${commande.ref}:abonnement:${l.defaultCode}:${n}`,
@@ -164,7 +166,7 @@ export async function enregistrerAbonnement(commande: CommandeSite, montantTtc: 
     );
     await retirerDuPanier(c, "mise_a_disposition");
     await journal("abonnement.enregistre", c.ref, { abonnements: refs });
-    if (compte.statut !== "valide") {
+    if (compte.numeroVerification !== "verifie") {
       const { alerterValidationPrioritaire } = await import("../location/validation");
       await alerterValidationPrioritaire(compte.id, c.ref);
     }

@@ -3,17 +3,16 @@ import { dbDemo } from "@/lib/db/demo";
 import { dbSite } from "@/lib/db/site";
 import { confirmerEmail, inscrire } from "@/domaine/comptes/inscription";
 import { exporter, supprimer, verifierMotDePasse } from "@/domaine/comptes/rgpd";
-import { valider } from "@/domaine/comptes/validation";
-import { saisieDeTest } from "./outils";
+import { saisieDeTest, sirenDeTest } from "./outils";
 
 // T038 (US6, FR-039 à FR-041).
 
 async function compteValide() {
-  const s = saisieDeTest();
+  // F16 : validé à la confirmation de l'email ; numéro d'entreprise saisi (cadeau de bienvenue).
+  const s = saisieDeTest({ numero: sirenDeTest() });
   await inscrire(s);
   const c = await dbSite().compteClient.findFirstOrThrow({ where: { utilisateur: { email: s.email } } });
   await confirmerEmail(c.utilisateurId);
-  await valider(c.id, { id: "equipe-test", libelle: "test" });
   return { ...(await dbSite().compteClient.findUniqueOrThrow({ where: { id: c.id } })), email: s.email, motDePasse: s.motDePasse };
 }
 

@@ -5,7 +5,8 @@ import { MOT_DE_PASSE, lienDeConfirmation, remplirInscription, rppsDeTest } from
 import { OSCAR, accepterConditions, ajouterMad, locationsDe, payerSurPageDemo, rendreParcDesTests, requete } from "./outils";
 
 // T019 (US2, FR-008, FR-009, FR-044, FR-045, SC-004) : un médecin sans compte se fait dépanner
-// sans perdre ses choix ; l'appareil part après la validation ; refus → remboursement intégral.
+// sans perdre ses choix ; F16 (FR-034) : numéro d'entreprise saisi dans le parcours, l'appareil
+// part après sa vérification par l'équipe ; numéro refusé → remboursement intégral.
 
 test.describe.configure({ timeout: 300_000, mode: "serial" });
 test.beforeEach(rendreParcDesTests);
@@ -43,6 +44,7 @@ async function louerSansCompte(page: Page) {
   }
   // Reprise du tunnel, avec le panier du visiteur (appareil conservé).
   await page.waitForURL(/\/commande\/adresses/);
+  await page.locator("main").getByLabel("SIRET ou SIREN de votre cabinet").fill("73282932000074");
   await page.getByRole("button", { name: "Continuer" }).click();
   await page.waitForURL(/\/commande\/livraison/);
   await expect(page.getByLabel(/Jour de livraison/)).toBeVisible();
@@ -51,7 +53,7 @@ async function louerSansCompte(page: Page) {
   await page.getByRole("button", { name: "Continuer" }).click();
   await page.waitForURL(/\/commande\/recapitulatif/);
   await expect(page.locator("main")).toContainText("Oscar 2");
-  await expect(page.getByRole("status").filter({ hasText: "l’appareil sera expédié dès la validation de votre compte" })).toBeVisible();
+  await expect(page.getByRole("status").filter({ hasText: "l’appareil sera expédié dès cette vérification" })).toBeVisible();
   await accepterConditions(page);
   await page.getByRole("button", { name: "Autoriser le prélèvement mensuel" }).click();
   await payerSurPageDemo(page, { moyen: "Carte Visa" });
@@ -68,17 +70,17 @@ async function decider(browser: Browser, baseURL: string | undefined, compteId: 
   const contexte = await browser.newContext({ baseURL, storageState: "playwright/.auth/acces-demo.json" });
   await connecterNavigateur(contexte, COMPTES.admin);
   const page = await contexte.newPage();
-  await page.goto(`/admin/comptes/${compteId}`);
-  if (decision === "valider") await page.getByRole("button", { name: "Valider le compte" }).click();
+  await page.goto(`/admin/clients/${compteId}`);
+  if (decision === "valider") await page.getByRole("button", { name: "Numéro vérifié" }).click();
   else {
-    await page.locator("#motif-refus").fill("Numéro RPPS introuvable dans l'annuaire");
-    await page.getByRole("button", { name: "Refuser le compte" }).click();
+    await page.locator("#motif-numero").fill("numéro introuvable dans l'annuaire des entreprises");
+    await page.getByRole("button", { name: "Numéro refusé" }).click();
   }
   await expect(page.getByRole("status").filter({ hasText: "Décision enregistrée" })).toBeVisible();
   await contexte.close();
 }
 
-test("sans compte : inscription dans le parcours, choix conservés, expédition après validation", async ({ page, browser, baseURL }) => {
+test("sans compte : inscription dans le parcours, choix conservés, expédition après vérification du numéro", async ({ page, browser, baseURL }) => {
   const debut = Date.now();
   const r = await louerSansCompte(page);
   expect(Date.now() - debut).toBeLessThan(8 * 60_000); // SC-004
@@ -86,14 +88,14 @@ test("sans compte : inscription dans le parcours, choix conservés, expédition 
   expect(l!.etat).toBe("commandee");
   const [bloquee] = await requete<{ b: boolean }>("demo", `SELECT "expeditionBloquee" AS b FROM sale_subscription WHERE ref = $1`, [l!.ref]);
   expect(bloquee!.b).toBe(true);
-  expect(await requete("site", `SELECT 1 FROM message_demonstration WHERE objet LIKE 'Validation prioritaire%' AND rendu LIKE '%' || $1 || '%'`, [r.email])).toHaveLength(1);
+  expect(await requete("site", `SELECT 1 FROM message_demonstration WHERE objet LIKE 'Vérification prioritaire%' AND rendu LIKE '%' || $1 || '%'`, [r.email])).toHaveLength(1);
 
   await decider(browser, baseURL, r.compteId, "valider");
   const [apres] = await requete<{ b: boolean }>("demo", `SELECT "expeditionBloquee" AS b FROM sale_subscription WHERE ref = $1`, [l!.ref]);
   expect(apres!.b).toBe(false);
 });
 
-test("compte refusé : location annulée et intégralement remboursée, client prévenu", async ({ page, browser, baseURL }) => {
+test("numéro refusé : location annulée et intégralement remboursée, client prévenu", async ({ page, browser, baseURL }) => {
   const r = await louerSansCompte(page);
   await decider(browser, baseURL, r.compteId, "refuser");
   const [l] = await locationsDe(r.partenaireRef);

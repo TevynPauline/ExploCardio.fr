@@ -45,7 +45,8 @@ async function changerStatut(compteId: string, vers: Statut, data: object = {}) 
   return c;
 }
 
-export async function valider(compteId: string, auteur: Auteur): Promise<void> {
+/** `prevenir: false` : validation à la confirmation de l'email (F16), sans email « compte validé ». */
+export async function valider(compteId: string, auteur: Auteur, options: { prevenir?: boolean } = {}): Promise<void> {
   const c = await changerStatut(compteId, "valide", { valideLe: new Date(), motifRefus: null });
   await dbSite().decisionCompte.create({ data: { compteId, decision: "validation", auteurId: auteur?.id ?? null } });
   try {
@@ -56,11 +57,10 @@ export async function valider(compteId: string, auteur: Auteur): Promise<void> {
     await envoyerTache(FILE_FICHE_CLIENT, { compteId }, `fiche:${compteId}`);
   }
   await ouvrirDroitSiEligible(compteId);
-  await notifier(c.utilisateur.email, await emailsComptes.compteValide(), "compte validé");
+  if (options.prevenir !== false) await notifier(c.utilisateur.email, await emailsComptes.compteValide(), "compte validé");
   await journal(auteur, "comptes.valide", compteId, { de: c.statut });
-  // F05 : locations payées avant la validation, expédition débloquée.
-  const { surCompteValide } = await import("../location/validation");
-  await surCompteValide(compteId);
+  // F16 (FR-034) : les expéditions de location attendent la vérification du numéro, pas la
+  // validation du compte ; elles sont débloquées par verification-numero.ts.
 }
 
 export async function refuser(compteId: string, auteur: Exclude<Auteur, null>, motif: string): Promise<void> {

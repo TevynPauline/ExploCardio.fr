@@ -2,7 +2,8 @@ import { expect, test } from "@playwright/test";
 import { verifierAccessibilite } from "../axe";
 import { MOT_DE_PASSE, lienDeConfirmation, remplirInscription, requete, rppsDeTest } from "./outils";
 
-// T015 (US1, FR-001 à FR-009, SC-011, SC-012).
+// T015 (US1, FR-001 à FR-009, SC-011, SC-012) ; F16 : sans RPPS, SIRET ou SIREN facultatif,
+// compte validé dès la confirmation de l'email.
 
 test("formulaire : newsletter décochée, CGU/CGV obligatoires, règles du mot de passe en direct", async ({ page }) => {
   await page.goto("/inscription");
@@ -16,9 +17,9 @@ test("formulaire : newsletter décochée, CGU/CGV obligatoires, règles du mot d
   await expect(page.getByText("✓ un caractère spécial", { exact: false })).toBeVisible();
 });
 
-test("erreurs sur les champs, saisie conservée : RPPS mal formé, livraison en outre-mer", async ({ page }) => {
+test("erreurs sur les champs, saisie conservée : numéro mal formé, livraison en outre-mer", async ({ page }) => {
   await page.goto("/inscription");
-  await remplirInscription(page, "1234", `erreurs-${Date.now()}@demo.explocardio.test`);
+  await remplirInscription(page, "1234", `erreurs-${Date.now()}@demo.explocardio.test`, { numero: "1234" });
   await page.locator("main").getByRole("checkbox", { name: /livraison identique/ }).uncheck();
   await page.locator("main #adresseLivraison\\.ligne1").fill("1 rue de la Réunion");
   await page.locator("main #adresseLivraison\\.codePostal").fill("97400");
@@ -26,13 +27,13 @@ test("erreurs sur les champs, saisie conservée : RPPS mal formé, livraison en 
   await page.waitForTimeout(3_200);
   await page.getByRole("button", { name: "Créer mon compte" }).click();
   await expect(page.getByRole("alert").filter({ hasText: "à corriger" })).toBeVisible();
-  await expect(page.getByText("Le numéro RPPS comporte 11 chiffres.")).toBeVisible();
+  await expect(page.getByText(/indiquez un SIRET \(14 chiffres\) ou un SIREN/)).toBeVisible();
   await expect(page.getByText(/livre uniquement en France métropolitaine/)).toBeVisible();
   await expect(page.getByLabel("Nom du cabinet ou de la structure")).toHaveValue("Cabinet de test");
-  await expect(page.getByLabel("Numéro RPPS", { exact: true })).toHaveAttribute("aria-invalid", "true");
+  await expect(page.getByLabel("SIRET ou SIREN (facultatif)")).toHaveAttribute("aria-invalid", "true");
 });
 
-test("inscription, confirmation de l'email, compte en attente ; doublon refusé sans rien révéler", async ({ page, baseURL }) => {
+test("inscription, confirmation de l'email, compte validé ; doublon refusé sans rien révéler", async ({ page, baseURL }) => {
   test.setTimeout(90_000);
   const rpps = rppsDeTest();
   const email = `inscription-e2e-${rpps}@demo.explocardio.test`;
@@ -50,11 +51,11 @@ test("inscription, confirmation de l'email, compte en attente ; doublon refusé 
   await expect(page).toHaveURL(/\/inscription\/email-confirme/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Votre adresse est confirmée");
   const [c] = await requete<{ statut: string }>("site", `SELECT c.statut FROM compte_client c JOIN utilisateur u ON u.id = c."utilisateurId" WHERE u.email = $1`, [email]);
-  expect(c!.statut).toBe("en_attente");
+  expect(c!.statut).toBe("valide");
 
-  // Doublon : même message qu'une adresse inconnue (SC-012)
+  // Doublon (même adresse email) : message neutre (SC-012)
   await page.goto("/inscription");
-  await remplirInscription(page, rpps, `autre-${rpps}@demo.explocardio.test`);
+  await remplirInscription(page, rpps, email);
   await page.waitForTimeout(3_200);
   await page.getByRole("button", { name: "Créer mon compte" }).click();
   await expect(page.getByRole("alert").filter({ hasText: "Nous ne pouvons pas créer ce compte" })).toBeVisible();

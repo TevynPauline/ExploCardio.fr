@@ -124,6 +124,13 @@ enum TypeCompteClient {
   structure
 }
 
+/// F16 : vérification par l'équipe du SIRET ou du SIREN du compte.
+enum VerificationNumero {
+  a_verifier
+  verifie
+  refuse
+}
+
 enum StatutCompteClient {
   email_a_confirmer
   en_attente
@@ -151,6 +158,11 @@ model CompteClient {
   creeLe           DateTime           @default(now())
   modifieLe        DateTime           @updatedAt
   valideLe         DateTime?
+  /// F16 (FR-026) : vérification du SIRET ou du SIREN par l'équipe, après coup.
+  numeroVerification VerificationNumero?
+  numeroVerifieLe    DateTime?
+  numeroVerifiePar   String?
+  motifRefusNumero   String?
 
   adresses            Adresse[]
   demandesFinancement DemandeFinancement[]
@@ -400,6 +412,8 @@ model Panier {
   /// F06 (D1) : montant de bons choisi au panier ; null = le maximum utilisable.
   bonsDemandesHt Int?
   utiliserBons   Boolean       @default(false)
+  /// F16 : panier recomposé depuis ce devis d'Odoo encore valable (retiré si le panier change).
+  devisRef       String?
   lignes         LignePanier[]
   creeLe         DateTime      @default(now())
   modifieLe      DateTime      @updatedAt
@@ -477,6 +491,8 @@ model CommandeSite {
   paiementAbonnementRef         String?
   /// Dernier devis d'Odoo affiché, pour signaler un écart
   devis                         Json?
+  /// F16 : devis d'Odoo confirmé par cette commande (prix du devis).
+  devisRef                      String?
   lignes                        Json                   @default("[]")
   codePromo                     String?
   bonsHt                        Int                    @default(0)

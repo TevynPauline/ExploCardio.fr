@@ -18,7 +18,7 @@ test("le support gère un accès à la main, avec un motif, journalisé", async 
   const support = await contexte.newPage();
   await support.goto("/admin");
   await support.getByRole("navigation", { name: "Back-office" }).getByRole("link", { name: "Logiciels Cloud" }).click();
-  await support.getByLabel("Nom, cabinet, email, RPPS ou SIRET").fill(c.email);
+  await support.getByLabel("Nom, cabinet, email, SIRET ou SIREN").fill(c.email);
   await support.getByRole("button", { name: "Rechercher" }).click();
   const client = support.getByRole("region", { name: `Client ${c.email}` });
   const acces = client.getByRole("listitem", { name: /Accès CardioScan/ });

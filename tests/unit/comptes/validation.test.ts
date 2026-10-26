@@ -1,20 +1,25 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { definirPanne } from "@/connecteurs/panne-simulee";
 import { dbSite } from "@/lib/db/site";
-import { confirmerEmail, inscrire } from "@/domaine/comptes/inscription";
+import { inscrire } from "@/domaine/comptes/inscription";
 import { peutCommander } from "@/domaine/comptes/statuts";
 import { refuser, retablir, suspendre, valider } from "@/domaine/comptes/validation";
-import { saisieDeTest } from "./outils";
+import { saisieDeTest, sirenDeTest } from "./outils";
 
 // T021 (US2, FR-012 à FR-016).
 
 const equipe = { id: "equipe-test", libelle: "Équipe de test" };
 
+/**
+ * Compte « en attente de validation » de l'ancienne règle (avant F16) : les décisions de l'équipe
+ * (valider, refuser, suspendre, rétablir) restent possibles pour ces comptes.
+ */
 async function compteEnAttente(newsletter = false) {
-  const s = saisieDeTest({ newsletter });
+  const s = saisieDeTest({ newsletter, numero: sirenDeTest() });
   await inscrire(s);
   const c = await dbSite().compteClient.findFirstOrThrow({ where: { utilisateur: { email: s.email } } });
-  await confirmerEmail(c.utilisateurId);
+  await dbSite().compteClient.update({ where: { id: c.id }, data: { statut: "en_attente" } });
+  await dbSite().utilisateur.update({ where: { id: c.utilisateurId }, data: { emailVerified: true } });
   return { id: c.id, email: s.email, rpps: s.numero };
 }
 

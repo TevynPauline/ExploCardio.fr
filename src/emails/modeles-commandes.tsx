@@ -22,6 +22,15 @@ export const TEXTES_COMMANDES = {
       facture: "Votre facture est disponible dans votre compte, rubrique « Mes factures ».",
     },
   },
+  devis_envoye: {
+    objet: "Votre devis {{ref}}",
+    apercu: "Votre devis est prêt",
+    blocs: {
+      corps: "Bonjour,\n\nVoici votre devis {{ref}}, comme demandé depuis votre panier.",
+      total: "Total : {{total_ht}} HT, soit {{total_ttc}} TTC.",
+      validite: "Ces prix sont garantis jusqu'au {{validite}}. Vous pouvez télécharger le PDF et commander ce devis depuis votre compte, rubrique « Mes devis ».",
+    },
+  },
   commande_annulee: {
     objet: "Commande {{ref}} annulée",
     apercu: "Votre commande a été annulée",
@@ -137,6 +146,17 @@ export const emailsCommandes = {
         </>
       ),
     ),
+  /** F16 (FR-019) : devis demandé depuis le panier ; PDF et commande depuis Mon compte. */
+  devisEnvoye: (p: { ref: string; lignes: LigneEmail[]; totalHt: number; totalTtc: number; validiteLe: Date }) =>
+    email("devis_envoye", { ref: p.ref, total_ht: euros(p.totalHt), total_ttc: euros(p.totalTtc), validite: dateFr(p.validiteLe) }, (t) => (
+      <>
+        {t.bloc("corps")}
+        <Lignes lignes={p.lignes} />
+        {t.bloc("total")}
+        {t.bloc("validite")}
+        <BoutonEmail href={urlDuSite("/mon-compte/devis")}>Voir mon devis</BoutonEmail>
+      </>
+    )),
   annulation: (p: { ref: string; motif: string }) =>
     email("commande_annulee", { ref: p.ref, motif: p.motif }, (t) => (
       <>

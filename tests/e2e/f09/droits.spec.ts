@@ -22,7 +22,7 @@ test("Mon compte : droits à côté du contact ; équipe : client retrouvé par 
   const support = await contexte.newPage();
   // F13 (D6) : la recherche du support est dans la rubrique Clients.
   await support.goto("/admin/assistance");
-  await support.getByLabel("Nom, cabinet, téléphone, email, RPPS ou SIRET").fill(telephone.replace(/\s/g, ""));
+  await support.getByLabel("Nom, cabinet, téléphone, email, SIRET ou SIREN").fill(telephone.replace(/\s/g, ""));
   await support.getByRole("button", { name: "Rechercher" }).click();
   await expect(support.getByRole("row").filter({ hasText: c.email })).toBeVisible();
   await contexte.close();

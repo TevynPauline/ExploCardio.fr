@@ -46,11 +46,11 @@ export async function actionEmail(_p: EtatFormulaire, d: FormData): Promise<Etat
 
 export async function actionNumero(_p: EtatFormulaire, d: FormData): Promise<EtatFormulaire> {
   const { compte } = await compteCourant("/mon-compte/informations");
-  return executer(d, "Votre demande est transmise à notre équipe, qui la vérifiera avant de l'appliquer.", () => demanderChangementNumero(compte.id, t(d, "numero")));
+  return executer(d, "Numéro enregistré : notre équipe le vérifiera prochainement.", () => demanderChangementNumero(compte.id, t(d, "numero")));
 }
 
 function adresse(d: FormData, prefixe: string): AdresseSaisie {
-  return { ligne1: t(d, `${prefixe}.ligne1`), ligne2: t(d, `${prefixe}.ligne2`), codePostal: t(d, `${prefixe}.codePostal`), ville: t(d, `${prefixe}.ville`) };
+  return { ligne1: t(d, `${prefixe}.ligne1`), ligne2: t(d, `${prefixe}.ligne2`), codePostal: t(d, `${prefixe}.codePostal`), ville: t(d, `${prefixe}.ville`), pays: t(d, `${prefixe}.pays`) || undefined };
 }
 
 export async function actionAdresses(_p: EtatFormulaire, d: FormData): Promise<EtatFormulaire> {

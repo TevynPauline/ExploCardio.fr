@@ -11,14 +11,17 @@ export function rppsDeTest(): string {
 
 export const MOT_DE_PASSE = "Motdepasse-Test-2026!";
 
-/** Remplit le formulaire d'inscription (médecin, adresses identiques au cabinet). */
-export async function remplirInscription(page: Page, rpps: string, email: string, options: { newsletter?: boolean } = {}) {
+/**
+ * Remplit le formulaire d'inscription (adresses identiques au cabinet). F16 : plus de RPPS ; le
+ * SIRET ou le SIREN est facultatif (`numero`). `rpps` ne sert plus qu'à rendre l'email unique.
+ */
+export async function remplirInscription(page: Page, _rpps: string, email: string, options: { newsletter?: boolean; numero?: string } = {}) {
   const f = page.locator("main");
   await f.getByLabel("Civilité").selectOption("Dr");
   await f.getByLabel("Spécialité").selectOption("Cardiologie");
   await f.getByLabel("Prénom", { exact: true }).fill("Camille");
   await f.getByLabel("Nom", { exact: true }).fill("Testeur");
-  await f.getByLabel("Numéro RPPS", { exact: true }).fill(rpps);
+  if (options.numero) await f.getByLabel(/^SIRET ou SIREN/).fill(options.numero);
   await f.getByLabel("Nom du cabinet ou de la structure").fill("Cabinet de test");
   await f.getByLabel("Email professionnel").fill(email);
   await f.getByLabel("Téléphone").fill("+33 6 99 00 00 42");
@@ -37,8 +40,11 @@ export async function lienDeConfirmation(email: string): Promise<string> {
   return new URL(lien).pathname + new URL(lien).search;
 }
 
-/** Inscrit un professionnel par le formulaire et confirme son email ; renvoie son RPPS et son email. */
-export async function creerCompteEnAttente(page: Page, options: { newsletter?: boolean } = {}) {
+/**
+ * Inscrit un professionnel par le formulaire et confirme son email. F16 : le compte est alors
+ * validé (il peut commander) ; son numéro d'entreprise n'est pas encore vérifié.
+ */
+export async function creerCompteEnAttente(page: Page, options: { newsletter?: boolean; numero?: string } = {}) {
   const rpps = rppsDeTest();
   const email = `compte-${rpps}@demo.explocardio.test`;
   await page.goto("/inscription");
@@ -59,10 +65,10 @@ export async function creerCompteEnAttente(page: Page, options: { newsletter?: b
   return { rpps, email, id: c!.id };
 }
 
-/** Inscrit et fait valider un compte (validation par l'équipe simulée en base). */
+/** Inscrit un compte et simule la vérification de son numéro par l'équipe (F16). */
 export async function creerCompteValide(page: Page, options: { newsletter?: boolean } = {}) {
   const compte = await creerCompteEnAttente(page, options);
-  await requete("site", `UPDATE compte_client SET statut = 'valide', "valideLe" = now() WHERE id = $1`, [compte.id]);
+  await requete("site", `UPDATE compte_client SET statut = 'valide', "valideLe" = COALESCE("valideLe", now()), siret = '73282932000074', "numeroVerification" = 'verifie' WHERE id = $1`, [compte.id]);
   return compte;
 }
 

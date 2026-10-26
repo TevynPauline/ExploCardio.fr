@@ -6,6 +6,8 @@ import { liensContact } from "@/lib/contact-whatsapp";
 import { Card, Kicker, TexteRiche } from "@/ui";
 import { FormulaireContact } from "@/ui/FormulaireContact";
 import { FilAriane } from "@/ui/FilAriane";
+import { MOTIF_HORS_METROPOLE } from "@/domaine/comptes/adresses";
+import { messageHorsMetropole } from "@/domaine/commande/hors-metropole";
 
 export const metadata: Metadata = { title: "Qui sommes-nous / Contact" };
 
@@ -13,7 +15,10 @@ export const metadata: Metadata = { title: "Qui sommes-nous / Contact" };
 export default async function QuiSommesNous({ searchParams }: { searchParams: Promise<{ motif?: string }> }) {
   const { motif } = await searchParams;
   const [{ titre, html }, p, whatsapp] = await Promise.all([lireTexte("qui-sommes-nous"), lireParametresPublics(), liensContact()]);
-  const motifInitial = motif && p.motifs.includes(motif) ? motif : null;
+  // F16 (FR-029) : « Nous contacter » après un refus hors métropole, panier repris dans le message.
+  const horsMetropole = motif === "hors-metropole";
+  const motifInitial = horsMetropole ? MOTIF_HORS_METROPOLE : motif && p.motifs.includes(motif) ? motif : null;
+  const messageInitial = horsMetropole ? await messageHorsMetropole() : "";
   return (
     <div className="mx-auto grid max-w-page grid-cols-1 gap-10 px-4 py-10 lg:grid-cols-[1fr_1.1fr]">
       <div className="flex flex-col gap-4">
@@ -35,6 +40,7 @@ export default async function QuiSommesNous({ searchParams }: { searchParams: Pr
           <FormulaireContact
             motifs={p.motifs}
             motifInitial={motifInitial}
+            messageInitial={messageInitial}
             jeton={jetonAffichage()}
             liensWhatsapp={whatsapp ? { appeler: whatsapp.appeler, ecrire: whatsapp.ecrire } : null}
           />

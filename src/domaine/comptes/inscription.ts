@@ -4,11 +4,13 @@ import { Prisma } from "@generated/site/client";
 import { auth } from "@/lib/auth";
 import { dbSite } from "@/lib/db/site";
 import { lireParametre } from "@/lib/parametres";
-import { MESSAGE_HORS_METROPOLE, codePostalMetropole } from "./adresses";
+import { refusLivraison } from "./adresses";
 import { MESSAGE_MOT_DE_PASSE, motDePasseConforme } from "./motdepasse";
-import { normaliserNumero, rppsValide, siretValide } from "./numeros";
+import { normaliserNumero, siretOuSirenValide } from "./numeros";
 
-// Inscription et confirmation de l'email (F02, US1, R1).
+// Inscription et confirmation de l'email (F02, US1, R1). F16 : plus de RPPS ; le SIRET ou le
+// SIREN est facultatif (ou exigé, selon le paramètre « comptes.numero_exige ») et vérifié après
+// coup par l'équipe ; le compte peut commander dès la confirmation de son email.
 
 export const MESSAGE_INSCRIPTION_IMPOSSIBLE =
   "Nous ne pouvons pas créer ce compte. Si vous avez déjà un compte, connectez-vous ou réinitialisez votre mot de passe ; sinon, contactez-nous.";
@@ -18,14 +20,14 @@ export const TEXTE_CGU_CGV =
 export const TEXTE_NEWSLETTER_INSCRIPTION =
   "Je souhaite recevoir la newsletter d'ExploCardio.fr (nouveautés, offres). Je peux me désinscrire à tout moment.";
 
-export type AdresseSaisie = { ligne1: string; ligne2?: string; codePostal: string; ville: string };
+export type AdresseSaisie = { ligne1: string; ligne2?: string; codePostal: string; ville: string; pays?: string };
 
 export type SaisieInscription = {
   civilite: string;
   prenom: string;
   nom: string;
   specialite: string;
-  type: "medecin" | "structure";
+  /** SIRET ou SIREN, facultatif selon le paramètre « comptes.numero_exige » (F16). */
   numero: string;
   cabinet: string;
   telephone: string;
@@ -49,9 +51,17 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 function validerAdresse(a: AdresseSaisie | "cabinet", prefixe: string, e: ErreursInscription, livraison = false) {
   if (a === "cabinet") return;
   if (a.ligne1.trim().length < 3) e[`${prefixe}.ligne1`] = "Indiquez l'adresse.";
-  if (!/^\d{5}$/.test(a.codePostal.trim())) e[`${prefixe}.codePostal`] = "Le code postal comporte 5 chiffres.";
-  else if (livraison && !codePostalMetropole(a.codePostal)) e[`${prefixe}.codePostal`] = MESSAGE_HORS_METROPOLE;
+  const refus = livraison ? refusLivraison(a, prefixe) : null;
+  if (refus) Object.assign(e, refus);
+  else if (!/^\d{5}$/.test(a.codePostal.trim())) e[`${prefixe}.codePostal`] = "Le code postal comporte 5 chiffres.";
   if (a.ville.trim().length < 2) e[`${prefixe}.ville`] = "Indiquez la ville.";
+}
+
+export const MESSAGE_NUMERO_INVALIDE = "Ce numéro n'est pas valide : indiquez un SIRET (14 chiffres) ou un SIREN (9 chiffres).";
+
+/** Moment où le SIRET ou le SIREN est exigé (F16, FR-025). */
+export async function numeroExige(): Promise<"premiere_commande" | "inscription"> {
+  return (await lireParametre("comptes.numero_exige")) === "inscription" ? "inscription" : "premiere_commande";
 }
 
 export async function specialites(): Promise<string[]> {
@@ -68,8 +78,11 @@ export async function validerInscription(s: SaisieInscription): Promise<ErreursI
   if (s.prenom.trim().length < 1) e.prenom = "Indiquez votre prénom.";
   if (s.nom.trim().length < 1) e.nom = "Indiquez votre nom.";
   if (!(await specialites()).includes(s.specialite)) e.specialite = "Choisissez votre spécialité.";
-  if (s.type === "medecin" && !rppsValide(s.numero)) e.numero = "Le numéro RPPS comporte 11 chiffres.";
-  if (s.type === "structure" && !siretValide(s.numero)) e.numero = "Ce numéro SIRET n'est pas valide (14 chiffres).";
+  if (s.numero.trim()) {
+    if (!siretOuSirenValide(s.numero)) e.numero = MESSAGE_NUMERO_INVALIDE;
+  } else if ((await numeroExige()) === "inscription") {
+    e.numero = "Indiquez le SIRET ou le SIREN de votre cabinet ou de votre structure.";
+  }
   if (s.cabinet.trim().length < 2) e.cabinet = "Indiquez le nom du cabinet ou de la structure.";
   if (!/^[+0-9 ().-]{6,20}$/.test(s.telephone.trim())) e.telephone = "Indiquez un numéro de téléphone valide.";
   if (!EMAIL.test(s.email.trim())) e.email = "Indiquez une adresse email valide.";
@@ -101,19 +114,6 @@ export async function inscrire(s: SaisieInscription, retour: string | null = nul
   if (await dbSite().utilisateur.findUnique({ where: { email } })) {
     return { ok: false, erreurs: {}, message: MESSAGE_INSCRIPTION_IMPOSSIBLE };
   }
-  if (s.type === "medecin") {
-    const existant = await dbSite().compteClient.findUnique({ where: { rpps: numero } });
-    if (existant) {
-      if (existant.statut === "refuse") {
-        await signalerEquipe(
-          "Réinscription d'un compte refusé",
-          `Une nouvelle inscription a été tentée avec le RPPS ${numero}, déjà refusé. Elle n'a pas été créée.`,
-        );
-      }
-      return { ok: false, erreurs: {}, message: MESSAGE_INSCRIPTION_IMPOSSIBLE };
-    }
-  }
-
   const reponse = await auth.api.signUpEmail({
     body: {
       callbackURL: retour ? `/inscription/email-confirme?retour=${encodeURIComponent(retour)}` : "/inscription/email-confirme",
@@ -137,9 +137,9 @@ export async function inscrire(s: SaisieInscription, retour: string | null = nul
       const compte = await tx.compteClient.create({
         data: {
           utilisateurId,
-          type: s.type,
-          rpps: s.type === "medecin" ? numero : null,
-          siret: s.type === "structure" ? numero : null,
+          type: "structure",
+          siret: numero || null,
+          numeroVerification: numero ? "a_verifier" : null,
           nomCabinet: s.cabinet.trim(),
           statut: "email_a_confirmer",
           adresses: { create: [cabinet, livraison, facturation] },
@@ -155,7 +155,7 @@ export async function inscrire(s: SaisieInscription, retour: string | null = nul
       }
     });
   } catch (e) {
-    // Inscription simultanée avec le même RPPS : une seule aboutit (cas limite).
+    // Inscription simultanée avec la même adresse : une seule aboutit (cas limite).
     await dbSite().utilisateur.delete({ where: { id: utilisateurId } }).catch(() => undefined);
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
       return { ok: false, erreurs: {}, message: MESSAGE_INSCRIPTION_IMPOSSIBLE };
@@ -170,29 +170,27 @@ function nettoyer(a: AdresseSaisie) {
 }
 
 /**
- * Appelée par Better Auth après la confirmation de l'email (R1) : compte « en attente », ou
- * validé aussitôt en validation automatique ; abonnement à la newsletter transmis à l'outil
- * d'emailing (FR-028) ; équipe prévenue d'un nouveau compte à valider.
+ * Appelée par Better Auth après la confirmation de l'email (R1). F16 (FR-024) : le compte est
+ * validé aussitôt (fiche Odoo créée) et peut commander ; aucun email « compte validé » n'est
+ * envoyé (FR-035). L'équipe est prévenue s'il y a un numéro à vérifier. Abonnement à la
+ * newsletter transmis à l'outil d'emailing (FR-028).
  */
 export async function confirmerEmail(utilisateurId: string): Promise<void> {
   const compte = await dbSite().compteClient.findUnique({ where: { utilisateurId }, include: { utilisateur: true } });
   if (!compte || compte.statut !== "email_a_confirmer") return;
-  const auto = (await lireParametre("comptes.validation_auto")) === "true";
-  if (auto) {
-    const { valider } = await import("./validation");
-    await valider(compte.id, null);
-  } else {
-    await dbSite().compteClient.update({ where: { id: compte.id }, data: { statut: "en_attente" } });
+  const { valider } = await import("./validation");
+  await valider(compte.id, null, { prevenir: false });
+  if (compte.siret) {
     await signalerEquipe(
-      "Nouveau compte à valider",
-      `${compte.utilisateur.name} (${compte.nomCabinet ?? ""}, ${compte.rpps ?? compte.siret ?? ""}) a confirmé son email et attend la validation de son compte.`,
+      "Nouveau compte : numéro à vérifier",
+      `${compte.utilisateur.name} (${compte.nomCabinet ?? ""}, ${compte.siret}) a confirmé son email. Son numéro est à vérifier dans le back-office (À traiter).`,
     );
   }
   const { synchroniserNewsletterDuCompte } = await import("./newsletter");
   await synchroniserNewsletterDuCompte(compte.id);
 }
 
-/** Supprime les comptes restés « email à confirmer » plus de 30 jours (le RPPS redevient libre). */
+/** Supprime les comptes restés « email à confirmer » plus de 30 jours (l'adresse redevient libre). */
 export async function purgerNonConfirmes(maintenant = new Date()): Promise<number> {
   const limite = new Date(maintenant.getTime() - 30 * 86_400_000);
   const anciens = await dbSite().compteClient.findMany({

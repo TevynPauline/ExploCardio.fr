@@ -13,6 +13,8 @@ export default async function Adresses({ searchParams }: { searchParams: Promise
   const r = await chargerCommande("/commande/adresses", ref);
   if ("refus" in r && r.refus) return <RefusTunnel message={r.refus.message} lien={r.refus.redirection} />;
   const commande = r.commande!;
+  // F16 (FR-025) : numéro d'entreprise demandé s'il manque, avant le paiement.
+  const demanderNumero = !r.compte.siret;
   const a = adressesDe(commande);
   const valeurs: Record<string, string> = {};
   for (const [p, adr] of Object.entries(a)) for (const [k, v] of Object.entries(adr ?? {})) valeurs[`${p}.${k}`] = String(v ?? "");
@@ -23,7 +25,7 @@ export default async function Adresses({ searchParams }: { searchParams: Promise
       <h1 className="text-display font-light">Vos adresses</h1>
       <Etapes courante="adresses" atteinte={commande.etape === "terminee" ? "recapitulatif" : commande.etape} refCommande={commande.ref} />
       <div className="max-w-2xl">
-        <FormulaireAdresses refCommande={commande.ref} valeurs={valeurs} identique={identique} />
+        <FormulaireAdresses refCommande={commande.ref} valeurs={valeurs} identique={identique} demanderNumero={demanderNumero} />
       </div>
     </div>
   );

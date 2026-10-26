@@ -6,21 +6,19 @@ import { ecrireParametre } from "@/lib/parametres";
 import { cadeauPourCommande, confirmerCadeauRemis, etatBienvenue, ouvrirDroitSiEligible, retablirCadeau } from "@/domaine/comptes/bienvenue";
 import { confirmerEmail, inscrire } from "@/domaine/comptes/inscription";
 import { changerAbonnement } from "@/domaine/comptes/newsletter";
-import { valider } from "@/domaine/comptes/validation";
-import { rppsDeTest, saisieDeTest } from "./outils";
+import { saisieDeTest, sirenDeTest } from "./outils";
 
 // T031 (US4, FR-017 à FR-025, SC-002, SC-009).
 
 const registre = creerRegistre(process.env);
-const equipe = { id: "equipe-test", libelle: "test" };
 const CADEAU = "EC-BIENVENUE-TENSIOMETRE";
 
-async function compteValide(options: { newsletter?: boolean; numero?: string; type?: "medecin" | "structure" } = {}) {
-  const s = saisieDeTest({ newsletter: options.newsletter ?? true, ...(options.numero ? { numero: options.numero } : {}), ...(options.type ? { type: options.type } : {}) });
+/** F16 : compte validé à la confirmation de l'email ; le cadeau suit le numéro d'entreprise. */
+async function compteValide(options: { newsletter?: boolean; numero?: string } = {}) {
+  const s = saisieDeTest({ newsletter: options.newsletter ?? true, numero: options.numero ?? sirenDeTest() });
   await inscrire(s);
   const c = await dbSite().compteClient.findFirstOrThrow({ where: { utilisateur: { email: s.email } } });
   await confirmerEmail(c.utilisateurId);
-  await valider(c.id, equipe);
   const v = await dbSite().compteClient.findUniqueOrThrow({ where: { id: c.id } });
   return { ...v, email: s.email };
 }
@@ -84,14 +82,14 @@ describe("offre de bienvenue", () => {
       }),
     );
     expect(resultats.filter((r) => r === "remis" || r === "en_attente_stock")).toHaveLength(1);
-    expect(await dbSite().attributionCadeau.count({ where: { numero: c.rpps! } })).toBe(1);
+    expect(await dbSite().attributionCadeau.count({ where: { numero: c.siret! } })).toBe(1);
   });
 
-  it("un même numéro ne s'ouvre qu'une fois ; deux RPPS d'un même cabinet ont chacun leur cadeau", async () => {
+  it("un même numéro ne s'ouvre qu'une fois ; deux numéros différents ont chacun leur cadeau", async () => {
     const a = await compteValide();
     expect(await ouvrirDroitSiEligible(a.id)).toBe(false); // déjà ouvert à la validation
     const b = await compteValide();
-    expect(a.rpps).not.toBe(b.rpps);
+    expect(a.siret).not.toBe(b.siret);
     expect((await etatBienvenue(b.id)).etat).toBe("beneficiaire");
   });
 
@@ -117,12 +115,15 @@ describe("offre de bienvenue", () => {
     expect((await etatBienvenue(c.id)).etat).toBe("beneficiaire");
   });
 
-  it("SIRET et RPPS distincts : chacun son cadeau", async () => {
-    const structure = await compteValide({ type: "structure", numero: "73282932000074" });
-    const medecin = await compteValide({ numero: rppsDeTest() });
-    expect((await etatBienvenue(structure.id)).etat === "beneficiaire" || (await etatBienvenue(structure.id)).etat === "recu").toBe(true);
-    expect((await etatBienvenue(medecin.id)).etat).toBe("beneficiaire");
-    await dbSite().attributionCadeau.deleteMany({ where: { numero: "73282932000074" } });
-    await dbSite().utilisateur.deleteMany({ where: { compteClient: { siret: "73282932000074" } } });
+  it("un SIRET partagé par deux comptes d'un même cabinet : un seul cadeau (F16)", async () => {
+    const siret = "73282932000074";
+    await dbSite().attributionCadeau.deleteMany({ where: { numero: siret } });
+    const premier = await compteValide({ numero: siret });
+    const second = await compteValide({ numero: "732 829 320 00074" });
+    expect((await etatBienvenue(premier.id)).etat).toBe("beneficiaire");
+    expect((await etatBienvenue(second.id)).etat).not.toBe("beneficiaire");
+    await dbSite().attributionCadeau.deleteMany({ where: { numero: siret } });
+    await dbSite().utilisateur.deleteMany({ where: { compteClient: { siret } } });
   });
+
 });

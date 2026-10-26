@@ -12,6 +12,7 @@ import { NavMonCompte } from "@/ui/comptes/NavMonCompte";
 
 const RUBRIQUES = [
   { href: "/mon-compte/commandes", titre: "Commandes", texte: "Suivi de vos commandes." },
+  { href: "/mon-compte/devis", titre: "Devis", texte: "Vos devis, à télécharger ou commander." },
   { href: "/mon-compte/factures", titre: "Factures", texte: "Vos factures et avoirs." },
   { href: "/mon-compte/locations", titre: "Locations en cours", texte: "Vos mises à disposition." },
   { href: "/mon-compte/financements", titre: "Financements", texte: "Vos demandes et leur statut." },

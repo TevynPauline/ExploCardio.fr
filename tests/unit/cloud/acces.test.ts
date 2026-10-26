@@ -108,7 +108,7 @@ describe("accès Cloud", () => {
   it("seules l'identité professionnelle, l'email, le RPPS ou SIRET et le cabinet sont transmis (FR-026) ; aucun mot de passe stocké (SC-005)", async () => {
     const c = await client();
     const compte = await dbSite().compteClient.findUniqueOrThrow({ where: { id: c.compteId }, include: { utilisateur: true } });
-    expect(Object.keys(medecinDe(compte)).sort()).toEqual(["email", "nom", "partenaireRef", "rpps"]);
+    expect(Object.keys(medecinDe(compte)).sort()).toEqual(["email", "nom", "partenaireRef", "rpps", "siret"]);
     const colonnes = await dbSite().$queryRaw<{ column_name: string }[]>`SELECT column_name FROM information_schema.columns WHERE table_name IN ('acces_logiciel', 'tache_acces')`;
     expect(colonnes.map((x) => x.column_name).join(" ")).not.toMatch(/passe|password|patient|identifiant/i);
   });

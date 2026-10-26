@@ -106,7 +106,8 @@ export async function ajouterAuPanier(identite: IdentitePanier, ligne: LigneAAjo
     create: { panierId: panier.id, defaultCode: ligne.defaultCode, formule: ligne.formule, quantite: ligne.quantite, prixHtConstate: prixHt, promotionConstatee },
     update: { quantite: { increment: ligne.quantite }, prixHtConstate: prixHt, promotionConstatee },
   });
-  await dbSite().panier.update({ where: { id: panier.id }, data: { modifieLe: new Date() } });
+  // F16 : un panier modifié n'est plus celui du devis (prix du jour).
+  await dbSite().panier.update({ where: { id: panier.id }, data: { modifieLe: new Date(), devisRef: null } });
   // F05 (D4) : le kit d'accessoires requis rejoint le panier d'office s'il manque.
   let kit: { nom: string; ajoute: boolean; possede: boolean } | null = null;
   if (ligne.formule === "mise_a_disposition") {
@@ -146,7 +147,7 @@ export async function modifierLigne(identite: IdentitePanier, ligneId: string, q
   const ligne = await ligneDe(identite, ligneId);
   if (!ligne) return false;
   await dbSite().lignePanier.update({ where: { id: ligne.id }, data: { quantite } });
-  await dbSite().panier.update({ where: { id: ligne.panierId }, data: { modifieLe: new Date() } });
+  await dbSite().panier.update({ where: { id: ligne.panierId }, data: { modifieLe: new Date(), devisRef: null } });
   return true;
 }
 
@@ -159,7 +160,7 @@ export async function supprimerLigne(identite: IdentitePanier, ligneId: string):
     if ((await kitsObligatoires(ligne.panierId, identite.compteId)).has(ligne.defaultCode)) return false;
   }
   await dbSite().lignePanier.delete({ where: { id: ligne.id } });
-  await dbSite().panier.update({ where: { id: ligne.panierId }, data: { modifieLe: new Date() } });
+  await dbSite().panier.update({ where: { id: ligne.panierId }, data: { modifieLe: new Date(), devisRef: null } });
   return true;
 }
 

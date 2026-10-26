@@ -26,14 +26,15 @@ démonstration.
    « Numéro vérifié ».
 8. **Location** par un compte au numéro non vérifié : expédition bloquée jusqu'à la vérification.
 9. **Devis** : panier de 6 000 € HT → « Recevoir un devis » → PDF FICTIF, email dans la boîte de
-   démonstration, équipe prévenue → Mon compte → Devis → Commander : prix du devis. Devis expiré
-   (date avancée dans l'écran de démonstration) → panier aux prix du jour.
+   démonstration, équipe prévenue → Mon compte → Devis → Commander : prix du devis, puis paiement
+   (le devis passe à « Commandé »). Devis expiré (aucun outil de démonstration pour avancer la
+   date : vérifié par `tests/e2e/f16/devis.spec.ts`) → panier aux prix du jour, avec un message.
 10. **Hors métropole** : adresse 97400 ou « Autre pays » → commande refusée, « Nous contacter »
     ouvre le contact prérempli.
 
 ## Contrôles automatiques
 
 ```bash
-npm test -- tests/unit/f16 tests/contract/odoo/devis.test.ts
+npx vitest run tests/unit/f16 tests/contract/odoo/devis.test.ts
 npx playwright test tests/e2e/f16
 ```

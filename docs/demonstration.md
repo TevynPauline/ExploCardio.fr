@@ -62,15 +62,18 @@ Dans le back-office, rubrique **Démonstration** :
 ## Les comptes professionnels (F02)
 
 - **S'inscrire** : bouton « Mon compte / Connexion » puis « Créer un compte », ou
-  `/inscription`. Utilisez un RPPS fictif commençant par `99` (11 chiffres) et une adresse en
-  `@demo.explocardio.test`. L'email de confirmation arrive dans la **boîte de démonstration**.
-- **Valider un compte** (administrateur ou commercial) : rubrique **Clients** du back-office.
-  Valider, refuser (motif obligatoire) ; suspendre et rétablir (administrateur) ; chaque
-  décision envoie un email. Les demandes de changement de RPPS ou SIRET sont dans **Clients →
-  Changements de numéro**.
-- **Réglages** : validation automatique et spécialités dans **Paramètres → Comptes**
-  (administrateur) ; offre de bienvenue dans **Paramètres → Offre de bienvenue**
-  (administrateur ou commercial).
+  `/inscription`, avec une adresse en `@demo.explocardio.test`. Plus de RPPS (F16) : le SIRET ou
+  le SIREN est **facultatif** à l'inscription et demandé une seule fois, à la première commande
+  (exemple valide : `732 829 320 00074`). L'email de confirmation arrive dans la **boîte de
+  démonstration** ; une fois l'adresse confirmée, le compte peut commander aussitôt.
+- **Vérifier le numéro** (administrateur ou commercial) : **Accueil du back-office → Numéros à
+  vérifier**, puis la fiche du client (lien vers l'annuaire des entreprises) : « Numéro vérifié »
+  ou « Numéro refusé » (motif obligatoire : compte suspendu, email au client). Tant que le numéro
+  n'est pas vérifié, les commandes sont acceptées mais un appareil loué n'est pas expédié.
+  Suspendre et rétablir un compte restent réservés à l'administrateur.
+- **Réglages** : moment où le numéro est exigé (première commande ou inscription) et
+  spécialités dans **Paramètres → Comptes** (administrateur) ; offre de bienvenue dans
+  **Paramètres → Offre de bienvenue** (administrateur ou commercial).
 - **Mon compte** : informations, adresses, préférences (newsletter), sécurité (mot de passe,
   double authentification facultative), mes données (export JSON, suppression du compte).
 - **Sécurité** : 5 mots de passe erronés en 15 minutes bloquent le compte 15 minutes (email au
@@ -202,7 +205,7 @@ Le parcours « consommables → bons d'achat → assistance offerte » : tout es
   et s'arrêtent à la minute de leur fin. Un article encore au panier à la fin d'une promotion
   passe au prix en vigueur, avec un message.
 - **Back-office → Clients** (toute l'équipe ; lecture seule pour le support) : recherche par
-  nom, cabinet, email, téléphone, RPPS ou SIRET ; la fiche du client montre le statut et la fin
+  nom, cabinet, email, téléphone, SIRET ou SIREN ; la fiche du client montre le statut et la fin
   des droits, les ajustements, les interventions et les règles en vigueur.
 - **Démonstration → Fidélité** (ce que l'équipe fera dans Odoo) : ajuster une cagnotte ou des
   droits (motif obligatoire), clore une intervention payée, exécuter l'expiration des bons
@@ -210,6 +213,26 @@ Le parcours « consommables → bons d'achat → assistance offerte » : tout es
   validité, le seuil, la durée et le plafond des droits et le prix de l'assistance à l'acte se
   règlent dans **Démonstration → Paramètres commerciaux** ; une modification ne touche que les
   commandes suivantes.
+
+## Évolutions de fin de phase 1 (F16)
+
+- **Accueil** : carrousel (actualités, opérations, produits phares, offre de bienvenue) défilant
+  toutes les 6 secondes, avec pause et flèches ; puis les six accès rapides, « Pourquoi préférer
+  ExploCardio.fr », Service et fidélité, Offre digitale et le bloc contact. Diapositives et
+  arguments dans **Contenus → Carrousel** et **Contenus → Accueil**.
+- **Navigation** : sur téléphone, menu à gauche, logo au centre ; menu horizontal dès 1 024 px ;
+  fil d'Ariane sur les pages intérieures.
+- **Panier** : le prix d'une ligne et les totaux suivent la quantité dès la saisie.
+- **Devis depuis le panier** (client connecté) : « Recevoir un devis » crée un devis numéroté
+  dans Odoo (base fictive), valable 30 jours (règle de vente d'Odoo). Le PDF « DEVIS FICTIF » se télécharge aussitôt, l'email arrive dans la boîte de
+  démonstration et l'équipe est prévenue. Le panier ne change pas. **Mon compte → Devis** liste
+  les devis (valable, expiré, commandé) : « Commander » remplace le panier par les articles du
+  devis, à ses prix, jusqu'au paiement qui confirme ce même devis ; un devis expiré revient au
+  panier aux prix du jour.
+- **Hors France métropolitaine** : une adresse de livraison en outre-mer (97, 98) ou dans un
+  autre pays est refusée à l'inscription, dans Mon compte, dans le tunnel et pour un devis ;
+  « Nous contacter » ouvre le formulaire de contact avec le motif « Commande hors métropole » et
+  le contenu du panier. La Corse est acceptée.
 
 ## Logiciels Cloud et plateforme HDS (F12)
 
@@ -351,9 +374,11 @@ n'est créé, et « Accéder à la plateforme » mène à une page de démonstra
 
 ## Les contenus du site (administrateur et commercial)
 
-Dans le back-office, rubrique **Contenus** : bandeau promotionnel, six tuiles d'accès rapide,
-actualités, textes des pages (présentation, services, pages légales), coordonnées et textes
-de l'accueil, produits phares et liens rapides des menus, marques partenaires, centre d'aide.
+Dans le back-office, rubrique **Contenus** : bandeau promotionnel, carrousel de l'accueil,
+six tuiles d'accès rapide (avec image facultative), section « Pourquoi préférer
+ExploCardio.fr », textes des pages (présentation, services, pages légales), coordonnées et
+textes de l'accueil, produits phares et liens rapides des menus, marques partenaires, centre
+d'aide.
 Une modification est visible sur le site en moins d'une minute et inscrite au journal. Ces
 contenus sont **réels** : ils sont conservés quand on réinitialise la démonstration.
 

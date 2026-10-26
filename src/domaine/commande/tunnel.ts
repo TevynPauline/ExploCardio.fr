@@ -7,7 +7,7 @@ import { estErreurConnecteur } from "@/connecteurs/erreurs";
 import { dbSite } from "@/lib/db/site";
 import { lireParametre } from "@/lib/parametres";
 import type { CommandeSite, CompteClient, LignePanier, MoyenPaiementCommande } from "@generated/site/client";
-import { MESSAGE_HORS_METROPOLE, codePostalMetropole } from "../comptes/adresses";
+import { refusLivraison } from "../comptes/adresses";
 import { cadeauPourCommande } from "../comptes/bienvenue";
 import { peutCommander, type Statut } from "../comptes/statuts";
 import { datesProposees, estLendemain, libelleJour } from "../location/calendrier";
@@ -33,7 +33,7 @@ export class SaisieInvalide extends Error {
   }
 }
 
-export type AdresseSaisie = { ligne1: string; ligne2?: string; codePostal: string; ville: string };
+export type AdresseSaisie = { ligne1: string; ligne2?: string; codePostal: string; ville: string; pays?: string };
 export type Adresses = { livraison: AdresseSaisie; facturation: AdresseSaisie };
 
 export type LigneCommandee = { defaultCode: string; formule: "achat" | "mise_a_disposition"; quantite: number; offerte?: boolean };
@@ -67,7 +67,7 @@ async function nouvelleReference(): Promise<string> {
   }
 }
 
-function adresseDuCompte(compte: CompteAvecAdresses, type: string): AdresseSaisie | null {
+export function adresseDuCompte(compte: CompteAvecAdresses, type: string): AdresseSaisie | null {
   const a = compte.adresses.find((x) => x.type === type);
   return a ? { ligne1: a.ligne1, ligne2: a.ligne2 ?? undefined, codePostal: a.codePostal, ville: a.ville } : null;
 }
@@ -111,7 +111,7 @@ export async function ouvrirCommande(compteId: string): Promise<CommandeSite> {
     const actuel = await dbSite().commandeSite.findUniqueOrThrow({ where: { id: enCours.id } });
     // Paiement en cours et panier inchangé : on garde l'état (même session, jamais deux débits).
     if (actuel.etatAchat === "paiement_en_cours") return actuel;
-    return dbSite().commandeSite.update({ where: { id: enCours.id }, data: { lignes: copie, codePromo: panier?.codePromo ?? null, bonsHt: bons, ...etats } });
+    return dbSite().commandeSite.update({ where: { id: enCours.id }, data: { lignes: copie, codePromo: panier?.codePromo ?? null, devisRef: panier?.devisRef ?? null, bonsHt: bons, ...etats } });
   }
   const livraison = adresseDuCompte(compte, "livraison") ?? adresseDuCompte(compte, "cabinet");
   const facturation = adresseDuCompte(compte, "facturation") ?? adresseDuCompte(compte, "cabinet");
@@ -121,6 +121,7 @@ export async function ouvrirCommande(compteId: string): Promise<CommandeSite> {
       compteId,
       lignes: copie,
       codePromo: panier?.codePromo ?? null,
+      devisRef: panier?.devisRef ?? null,
       bonsHt: bons,
       adresses: livraison && facturation ? { livraison, facturation } : {},
       ...etats,
@@ -138,8 +139,9 @@ export function adressesDe(c: CommandeSite): Partial<Adresses> {
 
 function validerAdresse(a: AdresseSaisie, prefixe: string, e: Record<string, string>, metropole: boolean) {
   if (!a.ligne1?.trim()) e[`${prefixe}.ligne1`] = "Indiquez l'adresse.";
-  if (!/^\d{5}$/.test(a.codePostal?.trim() ?? "")) e[`${prefixe}.codePostal`] = "Indiquez un code postal de 5 chiffres.";
-  else if (metropole && !codePostalMetropole(a.codePostal)) e[`${prefixe}.codePostal`] = MESSAGE_HORS_METROPOLE;
+  const refus = metropole ? refusLivraison({ codePostal: a.codePostal ?? "", pays: a.pays }, prefixe) : null;
+  if (refus) Object.assign(e, refus);
+  else if (!/^\d{5}$/.test(a.codePostal?.trim() ?? "")) e[`${prefixe}.codePostal`] = "Indiquez un code postal de 5 chiffres.";
   if (!a.ville?.trim()) e[`${prefixe}.ville`] = "Indiquez la ville.";
 }
 
@@ -149,6 +151,7 @@ export async function enregistrerAdresses(commande: CommandeSite, a: Adresses): 
   validerAdresse(a.livraison, "livraison", e, true);
   validerAdresse(a.facturation, "facturation", e, false);
   if (Object.keys(e).length) throw new SaisieInvalide(e);
+  // Le pays n'est pas gardé : seules les adresses en France sont acceptées.
   const propre = (x: AdresseSaisie) => ({ ligne1: x.ligne1.trim(), ligne2: x.ligne2?.trim() || undefined, codePostal: x.codePostal.trim(), ville: x.ville.trim() });
   return dbSite().commandeSite.update({
     where: { id: commande.id },
@@ -177,6 +180,7 @@ export async function devisCommande(commande: CommandeSite, options: { cadeau?: 
     codePromo: commande.codePromo,
     bonsDemandesHt: commande.bonsHt,
     modeLivraison: commande.modeLivraison,
+    devisRef: commande.devisRef,
   });
   if (!(await avantHeureLimiteExpress())) {
     for (const m of devis.modesLivraison) {

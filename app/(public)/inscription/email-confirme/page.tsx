@@ -27,13 +27,13 @@ export default async function EmailConfirme({ searchParams }: { searchParams: Pr
       <Kicker>Compte professionnel</Kicker>
       <h1 className="text-display font-light">Votre adresse est confirmée</h1>
       <p>
-        Merci. Notre équipe vérifie maintenant votre numéro RPPS ou SIRET ; vous recevrez un email dès que votre compte
-        sera validé. En attendant, vous pouvez consulter le site et ses prix.
+        Merci. Votre compte est ouvert : vous pouvez commander dès maintenant. Le SIRET ou le SIREN de votre cabinet vous sera
+        demandé à votre première commande, si vous ne l’avez pas indiqué ; notre équipe le vérifie ensuite.
       </p>
       {retour ? (
         <>
           <p>
-            Votre panier est conservé. Une mise à disposition peut être payée dès maintenant : l’appareil part dès la validation de votre compte.
+            Votre panier est conservé. Une mise à disposition peut être payée dès maintenant : l’appareil part dès la vérification de votre numéro d’entreprise.
           </p>
           <p><Link href={`/connexion?retour=${encodeURIComponent(retour)}`} className="ec-btn ec-btn--primary">Reprendre ma commande</Link></p>
         </>

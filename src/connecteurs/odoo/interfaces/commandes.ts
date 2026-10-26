@@ -32,6 +32,8 @@ export type NouvelleCommande = {
   codePromo?: string;
   /** Réservation de stock faite avant le paiement : consommée par la commande (F04). */
   reservationCle?: Cle;
+  /** F16 : commande passée depuis ce devis encore valable (prix du devis). */
+  devisRef?: string;
 };
 
 // --- Devis (F04, R1) : Odoo calcule ; le site affiche ce qui sera facturé. ----------------
@@ -54,6 +56,34 @@ export type DemandeDevis = {
   codePromo?: string | null;
   bonsDemandesHt?: Centimes;
   modeLivraison?: string | null;
+  /** F16 : devis encore valable dont les prix s'appliquent aux mêmes articles. */
+  devisRef?: string | null;
+};
+
+// --- Devis enregistrés (F16, US6) : un devis d'Odoo, transformable en commande. ------------
+
+export type EtatDevisEnregistre = "valide" | "expire" | "commande";
+
+export type NouveauDevis = DemandeDevis & {
+  partenaireRef: string;
+  livraison: { adresse: string; codePostal: string; ville: string };
+};
+
+export type ResumeDevisEnregistre = MarqueFictive & {
+  ref: string;
+  creeLe: Date;
+  validiteLe: Date;
+  totalHt: Centimes;
+  totalTtc: Centimes;
+  etat: EtatDevisEnregistre;
+  commandeRef: string | null;
+};
+
+export type DevisEnregistre = ResumeDevisEnregistre & {
+  partenaireRef: string;
+  /** Lignes demandées (pour recomposer le panier) et calcul complet d'Odoo. */
+  demande: { defaultCode: string; formule: FormuleLigne; quantite: number }[];
+  calcul: Devis;
 };
 
 export type LigneDevisCalculee = {
@@ -188,4 +218,12 @@ export interface CommandesOdoo {
   listerRemboursementsAExecuter(): Promise<RemboursementAExecuter[]>;
   /** Enregistre un remboursement et émet l'avoir ; idempotent par clé (F04, FR-030). */
   enregistrerRemboursement(remboursement: EnregistrementRemboursement, cle: Cle): Promise<{ avoir: string }>;
+  /** F16 : enregistre un devis (une seule fois par clé) ; validité fixée par Odoo. */
+  creerDevis(devis: NouveauDevis, cle: Cle): Promise<DevisEnregistre>;
+  /** F16 : devis du client, du plus récent au plus ancien. */
+  listerDevis(partenaireRef: string): Promise<ResumeDevisEnregistre[]>;
+  /** F16 : un devis ; NotFound s'il n'existe pas ou appartient à un autre client. */
+  lireDevis(partenaireRef: string, ref: string): Promise<DevisEnregistre>;
+  /** F16 : PDF du devis (mention FICTIF en démonstration). */
+  lireDevisPdf(partenaireRef: string, ref: string): Promise<Uint8Array>;
 }

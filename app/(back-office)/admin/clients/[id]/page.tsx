@@ -15,6 +15,7 @@ import { RappelPatient } from "@/ui/admin";
 
 export const metadata: Metadata = { title: "Fiche client" };
 
+const LIBELLES_NUMERO: Record<"a_verifier" | "verifie" | "refuse", string> = { a_verifier: "à vérifier", verifie: "vérifié", refuse: "refusé" };
 const ETATS_ACCES: Record<EtatAccesLogiciel, string> = { en_ouverture: "En cours d’ouverture", actif: "Actif", grace: "Délai de grâce", suspendu: "Suspendu", ferme: "Fermé" };
 const date = (d: Date | null | undefined) => (d ? d.toLocaleDateString("fr-FR", { timeZone: "Europe/Paris" }) : "—");
 const zone = "rounded-sm border border-muted bg-surface p-2";
@@ -33,9 +34,8 @@ export default async function FicheClient({ params, searchParams }: { params: Pr
   if (!f) notFound();
   const c = f.compte;
   const u = c.utilisateur;
-  const annuaire = c.rpps
-    ? `https://annuaire.sante.fr/web/site-pro/recherche/resultats?idNat=${encodeURIComponent(c.rpps)}`
-    : `https://annuaire-entreprises.data.gouv.fr/etablissement/${encodeURIComponent(c.siret ?? "")}`;
+  // Annuaire des entreprises : fiche de l'établissement (SIRET) ou de l'entreprise (SIREN).
+  const annuaire = `https://annuaire-entreprises.data.gouv.fr/${(c.siret ?? "").length === 9 ? "entreprise" : "etablissement"}/${encodeURIComponent(c.siret ?? "")}`;
   const peutValider = peut(role, "comptes.valider", "modifier");
   const peutSuspendre = peut(role, "comptes.suspendre", "modifier");
   const indispo = (b: string) => f.indisponibles.includes(b);
@@ -56,13 +56,18 @@ export default async function FicheClient({ params, searchParams }: { params: Pr
           <dt className="font-medium">Email</dt><dd className="break-all">{u.email}</dd>
           <dt className="font-medium">Téléphone</dt><dd>{u.telephone ?? "—"}</dd>
           <dt className="font-medium">Spécialité</dt><dd>{u.specialite ?? "—"}</dd>
-          <dt className="font-medium">{c.rpps ? "RPPS" : "SIRET"}</dt>
+          <dt className="font-medium">SIRET ou SIREN</dt>
           <dd>
-            {c.rpps ?? c.siret}{" "}
-            <a href={annuaire} target="_blank" rel="noopener noreferrer">
-              Vérifier dans l’annuaire public<span className="sr-only"> (nouvel onglet)</span>
-            </a>
+            {c.siret ?? "non renseigné"}
+            {c.siret ? <> · {LIBELLES_NUMERO[c.numeroVerification ?? "a_verifier"]}{c.numeroVerifiePar ? ` (${c.numeroVerifiePar})` : ""}{" "}</> : " "}
+            {c.siret ? (
+              <a href={annuaire} target="_blank" rel="noopener noreferrer">
+                Vérifier dans l’annuaire des entreprises<span className="sr-only"> (nouvel onglet)</span>
+              </a>
+            ) : null}
           </dd>
+          {c.rpps ? (<><dt className="font-medium">RPPS (ancien)</dt><dd>{c.rpps}</dd></>) : null}
+          {c.motifRefusNumero ? (<><dt className="font-medium">Motif du refus du numéro</dt><dd>{c.motifRefusNumero}</dd></>) : null}
           <dt className="font-medium">Cabinet</dt><dd>{c.nomCabinet ?? "—"}</dd>
           <dt className="font-medium">Inscription</dt><dd>{c.creeLe.toLocaleString("fr-FR")}</dd>
           {c.valideLe ? (<><dt className="font-medium">Validation</dt><dd>{c.valideLe.toLocaleString("fr-FR")}</dd></>) : null}
@@ -80,6 +85,25 @@ export default async function FicheClient({ params, searchParams }: { params: Pr
         </ul>
       </Card>
 
+      {/* F16 (FR-026) : vérification du numéro d'entreprise, après coup. */}
+      {c.siret && c.numeroVerification === "a_verifier" && peutValider ? (
+        <Card className="flex flex-col gap-4">
+          <h2 className="text-h3 font-semibold">Numéro à vérifier</h2>
+          <p className="text-small text-muted">Vérifiez que le numéro correspond à une entreprise en activité et à un professionnel de santé (cabinet, centre, établissement).</p>
+          <form action={decider}>
+            <input type="hidden" name="id" value={c.id} />
+            <input type="hidden" name="decision" value="numero_verifie" />
+            <Button type="submit">Numéro vérifié</Button>
+          </form>
+          <form action={decider} className="flex flex-col gap-2">
+            <input type="hidden" name="id" value={c.id} />
+            <input type="hidden" name="decision" value="numero_refuse" />
+            <label htmlFor="motif-numero" className="text-small font-medium">Motif du refus (envoyé au client)</label>
+            <textarea id="motif-numero" name="motif" rows={2} required className={zone} />
+            <div><Button type="submit" variante="secondaire">Numéro refusé</Button></div>
+          </form>
+        </Card>
+      ) : null}
       {c.statut === "en_attente" && peutValider ? (
         <Card className="flex flex-col gap-4">
           <h2 className="text-h3 font-semibold">Décision</h2>

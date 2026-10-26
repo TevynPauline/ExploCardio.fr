@@ -1,5 +1,5 @@
 import { NotFound } from "../../erreurs";
-import type { DemandeDevis, Devis, LigneDevisCalculee, ModeLivraisonDevis } from "../interfaces";
+import type { DemandeDevis, Devis, EtatDevisEnregistre, FormuleLigne, LigneDevisCalculee, ModeLivraisonDevis } from "../interfaces";
 import { prixClient } from "./catalogue";
 import { INCLURE_DISPONIBILITE, etatsAchat } from "./disponibilite";
 import { soldeUtilisable } from "./fidelite";
@@ -28,7 +28,7 @@ async function lireCodePromo(tx: Tx, code: string | null | undefined, maintenant
   if (promo.fin && promo.fin <= maintenant) return refus("Ce code a expiré.");
   // F06 (FR-032) : limites d'usage fixées dans Odoo.
   const limites = (promo.limites ?? {}) as LimitesCode;
-  const actives = { codePromo: propre, statut: { notIn: ["annulee" as const, "brouillon" as const] } };
+  const actives = { codePromo: propre, statut: { notIn: ["annulee" as const, "brouillon" as const, "devis" as const] } };
   if (limites.usagesMax !== undefined && (await tx.commandeVente.count({ where: actives })) >= limites.usagesMax) return refus("Ce code a atteint son nombre d'utilisations.");
   if (limites.montantMinimumCentimes && brutAchats < limites.montantMinimumCentimes) {
     return refus(`Ce code est valable dès ${(limites.montantMinimumCentimes / 100).toLocaleString("fr-FR")} € HT d'achats.`);
@@ -38,7 +38,7 @@ async function lireCodePromo(tx: Tx, code: string | null | undefined, maintenant
     if (p && limites.parClient !== undefined && (await tx.commandeVente.count({ where: { ...actives, partenaireId: p.id } })) >= limites.parClient) {
       return refus("Vous avez déjà utilisé ce code.");
     }
-    if (p && limites.nouveauxClients && (await tx.commandeVente.count({ where: { partenaireId: p.id, statut: { notIn: ["annulee", "brouillon"] } } })) > 0) {
+    if (p && limites.nouveauxClients && (await tx.commandeVente.count({ where: { partenaireId: p.id, statut: { notIn: ["annulee", "brouillon", "devis"] } } })) > 0) {
       return refus("Ce code est réservé à une première commande.");
     }
   }
@@ -73,7 +73,35 @@ export type OptionsDevis = {
   /** Frais de port imposés (jeu de départ de F11, sans mode de livraison). */
   fraisPortImposeHt?: number;
   maintenant?: Date;
+  /** F16 : à la confirmation, les prix d'un devis expiré pendant le paiement restent ceux payés. */
+  devisMemeExpire?: boolean;
 };
+
+// --- Devis enregistrés (F16) : instantané et prix figés --------------------------------------
+
+/** Instantané gardé avec un devis enregistré, dans le champ `livraison` de la commande. */
+export type InstantaneDevis = {
+  adresse: string;
+  codePostal: string;
+  ville: string;
+  mode: string | null;
+  devis: { creeLe?: string; demande: { defaultCode: string; formule: FormuleLigne; quantite: number }[]; calcul: Devis };
+};
+
+export function etatDevis(c: { statut: string; validiteLe: Date | null }, maintenant = new Date()): EtatDevisEnregistre {
+  if (c.statut !== "devis") return "commande";
+  return c.validiteLe && c.validiteLe > maintenant ? "valide" : "expire";
+}
+
+/** Prix figés des achats d'un devis encore à l'état « devis », du même client. */
+async function prixDuDevis(tx: Tx, demande: DemandeDevis, maintenant: Date, memeExpire: boolean) {
+  if (!demande.devisRef || !demande.partenaireRef) return null;
+  const c = await tx.commandeVente.findUnique({ where: { ref: demande.devisRef }, include: { partenaire: true } });
+  if (!c || c.statut !== "devis" || c.partenaire.ref !== demande.partenaireRef) return null;
+  if (!memeExpire && etatDevis(c, maintenant) !== "valide") return null;
+  const lignes = (c.livraison as unknown as InstantaneDevis).devis.calcul.lignes;
+  return new Map(lignes.filter((l) => l.formule === "achat" && !l.offerte).map((l) => [l.defaultCode, l]));
+}
 
 export async function calculerDevis(demande: DemandeDevis, tx: Tx = db(), options: OptionsDevis = {}): Promise<Devis> {
   const maintenant = options.maintenant ?? new Date();
@@ -90,6 +118,7 @@ export async function calculerDevis(demande: DemandeDevis, tx: Tx = db(), option
     .filter((l) => l.formule === "achat" && !l.offerte)
     .reduce((s, l) => s + (prix.find((p) => p.defaultCode === l.defaultCode)?.prixHt ?? variantes.find((v) => v.defaultCode === l.defaultCode)!.prixHtCentimes) * l.quantite, 0);
   const code = await lireCodePromo(tx, demande.codePromo, maintenant, demande.partenaireRef, brutAchats);
+  const figes = await prixDuDevis(tx, demande, maintenant, options.devisMemeExpire ?? false);
 
   let remisesAuto = 0;
   let remiseCode = 0;
@@ -103,6 +132,13 @@ export async function calculerDevis(demande: DemandeDevis, tx: Tx = db(), option
     }
     if (l.offerte) {
       return { defaultCode: v.defaultCode, formule: l.formule, libelle, quantite: l.quantite, prixUnitaireHt: 0, remiseHt: 0, totalHt: 0, tauxTva, offerte: true, promotion: null };
+    }
+    // F16 : prix du devis encore valable (remise ramenée à la quantité si elle a changé).
+    const fige = figes?.get(v.defaultCode);
+    if (fige) {
+      const remise = fige.quantite === l.quantite ? fige.remiseHt : Math.round((fige.remiseHt * l.quantite) / fige.quantite);
+      remisesAuto += remise;
+      return { ...fige, libelle, quantite: l.quantite, totalHt: fige.prixUnitaireHt * l.quantite - remise, remiseHt: remise, tauxTva };
     }
     // Prix unitaire : le plus favorable entre le prix du client et le prix dégressif atteint.
     const palier = publiques

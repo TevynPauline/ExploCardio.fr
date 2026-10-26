@@ -42,9 +42,11 @@ export const CATALOGUE = {
   email_change: T("Ancienne adresse prévenue d’un changement", "F02", COMPTE),
   double_authentification: T("Double authentification activée ou désactivée", "F02", COMPTE),
   invitation_equipe: T("Invitation au back-office", "F13", COMPTE),
+  numero_refuse: T("Numéro d'entreprise refusé", "F16", COMPTE),
   cadeau_en_attente: T("Cadeau de bienvenue en attente", "F02", COMMANDE),
   // F04 — commandes, paiements, financement
   commande_confirmee: T("Confirmation de commande", "F04", COMMANDE),
+  devis_envoye: T("Devis envoyé", "F16", COMMANDE),
   commande_annulee: T("Commande annulée", "F04", COMMANDE),
   virement_recu: T("Virement reçu, facture disponible", "F04", COMMANDE),
   commande_expediee: T("Commande expédiée", "F04", COMMANDE),

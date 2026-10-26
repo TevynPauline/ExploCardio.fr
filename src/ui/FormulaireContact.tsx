@@ -6,7 +6,7 @@ import { envoyerContact, type EtatContact } from "@/actions/formulaires";
 import { Button } from "./Button";
 import { Champ } from "./Champ";
 
-type Props = { motifs: string[]; motifInitial: string | null; jeton: string; liensWhatsapp: { appeler: string; ecrire: string } | null };
+type Props = { motifs: string[]; motifInitial: string | null; messageInitial?: string; jeton: string; liensWhatsapp: { appeler: string; ecrire: string } | null };
 
 const champsVides = { motif: "", nom: "", email: "", telephone: "", cabinet: "", message: "" };
 
@@ -15,8 +15,8 @@ const champsVides = { motif: "", nom: "", email: "", telephone: "", cabinet: "",
  * conservée, avertissement « aucune donnée de patient », champ piège invisible.
  * Motif « Assistance » : boutons WhatsApp au-dessus (le SAV n'est pas géré par le site).
  */
-export function FormulaireContact({ motifs, motifInitial, jeton, liensWhatsapp }: Props) {
-  const initial: EtatContact = { statut: "initial", erreurs: {}, saisie: { ...champsVides, motif: motifInitial ?? "" } };
+export function FormulaireContact({ motifs, motifInitial, messageInitial = "", jeton, liensWhatsapp }: Props) {
+  const initial: EtatContact = { statut: "initial", erreurs: {}, saisie: { ...champsVides, motif: motifInitial ?? "", message: messageInitial } };
   const [etat, action, enCours] = useActionState(envoyerContact, initial);
   const [motif, setMotif] = useState(etat.saisie.motif);
   const message = useRef<HTMLParagraphElement>(null);

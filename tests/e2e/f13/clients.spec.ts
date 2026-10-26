@@ -11,8 +11,8 @@ test.describe.configure({ timeout: 240_000, mode: "serial" });
 
 async function chercher(page: Page, q: string) {
   await page.goto("/admin/clients?statut=tous");
-  await page.getByLabel("Nom, cabinet, téléphone, email, RPPS ou SIRET").fill(q);
-  await page.getByLabel("Nom, cabinet, téléphone, email, RPPS ou SIRET").press("Enter");
+  await page.getByLabel("Nom, cabinet, téléphone, email, SIRET ou SIREN").fill(q);
+  await page.getByLabel("Nom, cabinet, téléphone, email, SIRET ou SIREN").press("Enter");
   await expect(page).toHaveURL(new RegExp(`q=${encodeURIComponent(q).replace(/\./g, "\\.")}`));
 }
 

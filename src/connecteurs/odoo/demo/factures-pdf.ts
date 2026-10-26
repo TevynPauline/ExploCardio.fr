@@ -31,7 +31,11 @@ export function euros(centimes: number): string {
 
 export type DonneesFacturePdf = {
   numero: string;
-  type: "facture" | "avoir";
+  type: "facture" | "avoir" | "devis";
+  /** F16 : fin de validité d'un devis. */
+  validiteLe?: Date;
+  /** F16 : lignes de texte ajoutées sous les totaux (abonnement mensuel d'un devis…). */
+  mentions?: string[];
   date: Date;
   client: { nom: string; adresse: string[]; rpps: string | null; siret: string | null };
   commandeRef: string | null;
@@ -48,11 +52,11 @@ export type DonneesFacturePdf = {
   montantTtc: number;
 };
 
-function filigrane(page: PDFPage, police: PDFFont) {
+function filigrane(page: PDFPage, police: PDFFont, mention = MENTION_FICTIVE) {
   const { width, height } = page.getSize();
   const taille = 110;
-  const largeur = police.widthOfTextAtSize(MENTION_FICTIVE, taille);
-  page.drawText(MENTION_FICTIVE, {
+  const largeur = police.widthOfTextAtSize(mention, taille);
+  page.drawText(mention, {
     x: width / 2 - (largeur / 2) * Math.cos(Math.PI / 4),
     y: height / 2 - (largeur / 2) * Math.sin(Math.PI / 4),
     size: taille,
@@ -64,8 +68,11 @@ function filigrane(page: PDFPage, police: PDFFont) {
 }
 
 export async function genererPdfFacture(f: DonneesFacturePdf): Promise<Uint8Array> {
+  // F16 : « devis » est masculin (« FICTIF ») ; facture et avoir restent « FICTIVE ».
+  const mention = f.type === "devis" ? "FICTIF" : MENTION_FICTIVE;
+  const titre = f.type === "avoir" ? "AVOIR" : f.type === "devis" ? "DEVIS" : "FACTURE";
   const pdf = await PDFDocument.create();
-  pdf.setTitle(`${f.type === "avoir" ? "Avoir" : "Facture"} ${f.numero} — ${MENTION_FICTIVE}`);
+  pdf.setTitle(`${titre.charAt(0)}${titre.slice(1).toLowerCase()} ${f.numero} — ${mention}`);
   pdf.setAuthor("ExploCardio.fr (démonstration)");
   pdf.setSubject("Document fictif de démonstration, sans valeur comptable");
   const normal = await pdf.embedFont(StandardFonts.Helvetica);
@@ -83,13 +90,13 @@ export async function genererPdfFacture(f: DonneesFacturePdf): Promise<Uint8Arra
       color: opts.couleur ?? ENCRE,
     });
 
-  filigrane(page, gras);
+  filigrane(page, gras, mention);
 
   // En-tête : mention FICTIVE bien visible
-  ecrire(`${MENTION_FICTIVE} — DOCUMENT DE DÉMONSTRATION SANS VALEUR`, marge, { taille: 11, police: gras, couleur: ACTION });
+  ecrire(`${mention} — DOCUMENT DE DÉMONSTRATION SANS VALEUR`, marge, { taille: 11, police: gras, couleur: ACTION });
   y -= 30;
   ecrire("ExploCardio.fr", marge, { taille: 18, police: gras });
-  ecrire(`${f.type === "avoir" ? "AVOIR" : "FACTURE"} ${MENTION_FICTIVE}`, 340, { taille: 14, police: gras });
+  ecrire(`${titre} ${mention}`, 340, { taille: 14, police: gras });
   y -= 18;
   ecrire("Le spécialiste des explorations fonctionnelles cardiaques", marge, { couleur: SECONDAIRE });
   ecrire(`N° ${f.numero}`, 340);
@@ -98,6 +105,10 @@ export async function genererPdfFacture(f: DonneesFacturePdf): Promise<Uint8Arra
   if (f.commandeRef) {
     y -= 14;
     ecrire(`Commande : ${f.commandeRef}`, 340);
+  }
+  if (f.validiteLe) {
+    y -= 14;
+    ecrire(`Valable jusqu'au ${f.validiteLe.toLocaleDateString("fr-FR")}`, 340, { police: gras });
   }
 
   y -= 36;
@@ -126,9 +137,9 @@ export async function genererPdfFacture(f: DonneesFacturePdf): Promise<Uint8Arra
   for (const l of f.lignes) {
     if (y < 140) {
       page = pdf.addPage([595.28, 841.89]);
-      filigrane(page, gras);
+      filigrane(page, gras, mention);
       y = 790;
-      ecrire(`${MENTION_FICTIVE} — suite ${f.numero}`, marge, { police: gras, couleur: ACTION });
+      ecrire(`${mention} — suite ${f.numero}`, marge, { police: gras, couleur: ACTION });
       y -= 24;
     }
     const libelle = l.libelle.length > 48 ? `${l.libelle.slice(0, 47)}…` : l.libelle;
@@ -154,10 +165,15 @@ export async function genererPdfFacture(f: DonneesFacturePdf): Promise<Uint8Arra
     ecrire(euros(montant), 470, { police });
     y -= 16;
   }
+  for (const m of f.mentions ?? []) {
+    y -= 4;
+    ecrire(m, marge);
+    y -= 14;
+  }
 
   y = 60;
   ecrire(
-    `Document ${MENTION_FICTIVE} généré par le site de démonstration ExploCardio.fr. Aucune valeur comptable ni fiscale.`,
+    `Document ${mention} généré par le site de démonstration ExploCardio.fr. Aucune valeur comptable ni fiscale.`,
     marge,
     { taille: 8, couleur: SECONDAIRE },
   );

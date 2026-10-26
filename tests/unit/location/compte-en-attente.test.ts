@@ -3,13 +3,15 @@ import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { creerRegistre } from "@/connecteurs/registre";
 import { enregistrerEffetsCommande } from "@/domaine/commande/effets";
 import { lancerPaiement } from "@/domaine/commande/paiement";
-import { refuser, valider } from "@/domaine/comptes/validation";
+import { refuserNumero, verifierNumero } from "@/domaine/comptes/verification-numero";
 import { traiterEvenementPaiement } from "@/domaine/paiements";
 import { dbDemo } from "@/lib/db/demo";
 import { dbSite } from "@/lib/db/site";
 import { commandeMad, evenement, nettoyer, rendreParcDesTests } from "./outils";
 
 // T018 — location payée par un compte en attente de validation (F05, US2, FR-009, FR-044, FR-045).
+// F16 (FR-034) : le compte peut commander dès la confirmation de son email ; l'appareil loué
+// attend la vérification du numéro d'entreprise par l'équipe.
 
 enregistrerEffetsCommande();
 afterAll(async () => {
@@ -21,7 +23,8 @@ const odoo = () => creerRegistre(process.env).odoo();
 const equipe = { id: "test", libelle: "équipe de test" };
 
 async function payerEnAttente() {
-  const { compte, commande, date } = await commandeMad({ statut: "en_attente", achats: [{ defaultCode: "EC-KIT-HOLTER-MAD", quantite: 1 }], code: "EC-DMS-3004L-CLOUD" });
+  const { compte, commande, date } = await commandeMad({ achats: [{ defaultCode: "EC-KIT-HOLTER-MAD", quantite: 1 }], code: "EC-DMS-3004L-CLOUD" });
+  await dbSite().compteClient.update({ where: { id: compte.compteId }, data: { numeroVerification: "a_verifier" } });
   // Achat du kit (carte), puis autorisation de prélèvement.
   const achat = await lancerPaiement(commande, true);
   expect(achat.type, JSON.stringify(achat)).toBe("paiement");
@@ -41,32 +44,32 @@ async function payerEnAttente() {
   return { compte, commande: c, date, partenaireRef };
 }
 
-describe("compte en attente de validation", () => {
-  it("location payée : expédition bloquée, alerte de validation prioritaire", async () => {
+describe("numéro d'entreprise à vérifier (F16)", () => {
+  it("location payée : expédition bloquée, alerte de vérification prioritaire", async () => {
     const { commande, partenaireRef } = await payerEnAttente();
     expect(commande.etatAbonnement).toBe("payee");
     const [l] = await odoo().location.listerLocations(partenaireRef);
     expect(l).toMatchObject({ etat: "commandee", expeditionBloquee: true });
-    expect(await dbSite().messageDemonstration.count({ where: { objet: { startsWith: "Validation prioritaire" }, rendu: { contains: commande.ref } } })).toBe(1);
+    expect(await dbSite().messageDemonstration.count({ where: { objet: { startsWith: "Vérification prioritaire" }, rendu: { contains: commande.ref } } })).toBe(1);
   });
 
-  it("validation : expédition débloquée ; date recalculée et client prévenu si elle n'est plus tenable", async () => {
+  it("numéro vérifié : expédition débloquée ; date recalculée et client prévenu si elle n'est plus tenable", async () => {
     const { compte, partenaireRef } = await payerEnAttente();
-    // La date annoncée est passée (validation tardive).
+    // La date annoncée est passée (vérification tardive).
     const [l] = await odoo().location.listerLocations(partenaireRef);
     await dbDemo().abonnement.update({ where: { ref: l!.ref }, data: { dateLivraison: new Date("2020-01-02T12:00:00Z") } });
-    await valider(compte.compteId, equipe);
+    await verifierNumero(compte.compteId, equipe);
     const [apres] = await odoo().location.listerLocations(partenaireRef);
     expect(apres!.expeditionBloquee).toBe(false);
     expect(apres!.dateLivraison!.getTime()).toBeGreaterThan(Date.now());
     expect(await dbSite().messageDemonstration.count({ where: { destinataire: compte.email, objet: "Votre date de livraison a changé" } })).toBe(1);
   });
 
-  it("refus : location annulée, premier mois et kit intégralement remboursés, appareil rendu, client prévenu", async () => {
+  it("numéro refusé : location annulée, premier mois et kit intégralement remboursés, appareil rendu, client prévenu", async () => {
     const { compte, commande, partenaireRef } = await payerEnAttente();
     const [l] = await odoo().location.listerLocations(partenaireRef);
     const lot = (await dbDemo().abonnement.findUniqueOrThrow({ where: { ref: l!.ref } })).numeroSerieId!;
-    await refuser(compte.compteId, equipe, "Numéro RPPS introuvable");
+    await refuserNumero(compte.compteId, equipe, "numéro introuvable dans l'annuaire des entreprises");
     expect((await odoo().location.listerLocations(partenaireRef))[0]!.etat).toBe("annulee");
     expect((await dbDemo().numeroSerie.findUniqueOrThrow({ where: { id: lot } })).statut).toBe("disponible");
     const remboursements = await dbDemo().remboursementDemo.findMany({ where: { cle: { in: [`refus:${l!.ref}`, `refus-kit:${commande.ref}`] } } });

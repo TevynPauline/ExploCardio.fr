@@ -2,6 +2,7 @@ import { unstable_cache } from "next/cache";
 import { enApercu } from "@/lib/apercu";
 import { dbSite } from "@/lib/db/site";
 import { ETIQUETTES } from "@/lib/cache";
+import { MOTIF_HORS_METROPOLE } from "./comptes/adresses";
 
 // Lecture des contenus éditoriaux publiés (F01, T007). Mis en cache avec l'étiquette
 // « contenus », invalidée à chaque enregistrement du mini back-office (SC-003 : < 1 minute).
@@ -101,6 +102,13 @@ export type ParametresPublics = {
   badgeLogicielCloud: string | null;
 };
 
+/** F16 (FR-029) : le motif « Commande hors métropole » est toujours proposé, avant « Autre ». */
+function avecMotifHorsMetropole(motifs: string[]): string[] {
+  if (motifs.includes(MOTIF_HORS_METROPOLE)) return motifs;
+  const autre = motifs.indexOf("Autre");
+  return autre < 0 ? [...motifs, MOTIF_HORS_METROPOLE] : [...motifs.slice(0, autre), MOTIF_HORS_METROPOLE, ...motifs.slice(autre)];
+}
+
 export const lireParametresPublics = enCache("parametres", async (): Promise<ParametresPublics> => {
   const lignes = await dbSite().parametre.findMany({ where: { cle: { in: [...CLES_PARAMETRES] } } });
   const v = (cle: (typeof CLES_PARAMETRES)[number]) => lignes.find((l) => l.cle === cle)?.valeur.trim() || null;
@@ -114,7 +122,7 @@ export const lireParametresPublics = enCache("parametres", async (): Promise<Par
     email: v("contact.email"),
     telephone: v("contact.telephone"),
     adresse: v("contact.adresse"),
-    motifs: motifs.length ? motifs : ["Autre"],
+    motifs: avecMotifHorsMetropole(motifs.length ? motifs : ["Autre"]),
     offreBienvenue: v("accueil.offre_bienvenue") ?? "",
     engagementsReactivite: v("accueil.engagements_reactivite"),
     badgeHebergement: v("accueil.badge_hebergement"),

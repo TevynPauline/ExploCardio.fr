@@ -50,6 +50,10 @@ export type EtatBienvenue =
   | { etat: "recu" }
   | { etat: "non_abonne" }
   | { etat: "non_valide" }
+  /** F16 : pas encore de SIRET ou de SIREN (le cadeau suit le numéro, saisi à la 1re commande). */
+  | { etat: "sans_numero" }
+  /** F16 : numéro partagé (même cabinet) dont le cadeau a déjà été attribué à un autre compte. */
+  | { etat: "deja_servi" }
   | { etat: "inactive" };
 
 /** Ce que « Mon compte » affiche (US4-1, US4-5, US4-7). */
@@ -57,11 +61,14 @@ export async function etatBienvenue(compteId: string): Promise<EtatBienvenue> {
   const compte = await dbSite().compteClient.findUniqueOrThrow({ where: { id: compteId } });
   const numero = numeroDu(compte);
   const attribution = numero ? await dbSite().attributionCadeau.findUnique({ where: { numero } }) : null;
+  // F16 : un numéro partagé (même cabinet) n'ouvre qu'un cadeau, au premier compte.
+  if (attribution && attribution.compteId !== compte.id) return { etat: "deja_servi" };
   if (attribution?.etat === "remis") return { etat: "recu" };
   if (attribution?.etat === "en_attente_stock") return { etat: "en_attente_stock" };
   if (attribution?.etat === "droit_ouvert") return { etat: "beneficiaire" };
   if (!(await offreActive())) return { etat: "inactive" };
   if (compte.statut !== "valide") return { etat: "non_valide" };
+  if (!numero && (await estAbonne(compteId))) return { etat: "sans_numero" };
   return { etat: "non_abonne" };
 }
 
@@ -73,7 +80,7 @@ export async function cadeauPourCommande(compte: Compte): Promise<{ defaultCode:
   const numero = numeroDu(compte);
   if (!numero || compte.statut !== "valide") return null;
   const attribution = await dbSite().attributionCadeau.findUnique({ where: { numero } });
-  if (attribution?.etat !== "droit_ouvert") return null;
+  if (attribution?.etat !== "droit_ouvert" || attribution.compteId !== compte.id) return null;
   const offre = await registre.odoo().fidelite.lireOffreBienvenue();
   if (!offre) return null;
   return { defaultCode: offre.defaultCode, quantite: 1, offerte: true };

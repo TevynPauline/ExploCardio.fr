@@ -22,13 +22,14 @@ import { TotauxEnDirect } from "@/ui/commande/TotauxEnDirect";
 import { TotauxAbonnement, TotauxAchat } from "@/ui/commande/Totaux";
 import { FilAriane } from "@/ui/FilAriane";
 import { MentionMetropole } from "@/ui/commande/MentionMetropole";
+import { BoutonDevis } from "@/ui/commande/BoutonDevis";
 
 export const metadata: Metadata = { title: "Panier" };
 
 // Panier (F04, US1) : deux blocs, « Paiement unique » et « Abonnement mensuel », montants du
 // devis d'Odoo, quantités modifiables, code promo, changements signalés.
-export default async function Panier({ searchParams }: { searchParams: Promise<{ ajout?: string }> }) {
-  const { ajout } = await searchParams;
+export default async function Panier({ searchParams }: { searchParams: Promise<{ ajout?: string; devis?: string }> }) {
+  const { ajout, devis: retourDevis } = await searchParams;
   // F10 : retour de « Commander de nouveau » (relance de réapprovisionnement).
   const avis =
     ajout === "recommande" ? "L’article de votre relance a été ajouté à votre panier. Vérifiez la quantité avant de commander." : ajout === "impossible" ? "Cet article ne peut plus être commandé en ligne : contactez-nous pour le remplacer." : null;
@@ -106,6 +107,16 @@ export default async function Panier({ searchParams }: { searchParams: Promise<{
         {modeDuSite() === "demo" ? <p className="text-small text-muted">Version de démonstration : aucun paiement réel.</p> : null}
       </div>
       {avis ? <p role="status" className="ec-box--info p-4">{avis}</p> : null}
+      {/* F16 (FR-020, FR-021) : panier recomposé depuis un devis de Mon compte. */}
+      {detail.devisRef ? (
+        <p role="status" className="ec-box--info p-4">
+          Panier repris de votre devis {detail.devisRef} : ses prix s’appliquent jusqu’au paiement. Si vous modifiez le panier, les prix du jour s’appliquent.
+        </p>
+      ) : retourDevis === "expire" ? (
+        <p role="status" className="ec-box--info p-4">
+          Votre devis a expiré : les articles sont dans votre panier aux prix du jour. Vérifiez les montants avant de commander.
+        </p>
+      ) : null}
       {detail.indisponible ? (
         <p role="status" className="ec-box--info p-4">
           Les prix et la disponibilité sont momentanément indisponibles. Votre panier est conservé : réessayez dans quelques instants.
@@ -174,6 +185,7 @@ export default async function Panier({ searchParams }: { searchParams: Promise<{
         ) : (
           <Link href="/commande/adresses" className="ec-btn ec-btn--primary">Commander</Link>
         )}
+        {!detail.bloquant && !detail.devisRef ? <BoutonDevis connecte={Boolean(compte)} /> : null}
         {financables.size ? <Link href="/financement/demande?depuis=panier" className="ec-btn ec-btn--secondary">Demander mon financement</Link> : null}
         <Link href="/catalogue" className="inline-flex min-h-11 items-center">Continuer mes achats</Link>
       </div>

@@ -36,7 +36,20 @@ async function commandeCourante(ref: string) {
 
 export async function actionAdresses(_e: EtatEtape, d: FormData): Promise<EtatEtape> {
   const commande = await commandeCourante(t(d, "ref"));
-  const lire = (p: string) => ({ ligne1: t(d, `${p}.ligne1`), ligne2: t(d, `${p}.ligne2`), codePostal: t(d, `${p}.codePostal`), ville: t(d, `${p}.ville`) });
+  // F16 (FR-025) : numéro d'entreprise demandé à la première commande s'il manque.
+  if (d.get("numeroDemande") === "oui") {
+    const compte = await compteConnecte();
+    const { enregistrerNumero, NumeroRefuse } = await import("@/domaine/comptes/verification-numero");
+    try {
+      if (compte) await enregistrerNumero(compte.id, t(d, "numero"));
+    } catch (e) {
+      if (e instanceof NumeroRefuse) {
+        return { erreurs: { numero: e.message }, message: "Votre numéro d'entreprise n'est pas valide : corrigez-le pour continuer.", saisie: Object.fromEntries([...d.entries()].map(([k, v]) => [k, String(v)])) };
+      }
+      throw e;
+    }
+  }
+  const lire = (p: string) => ({ ligne1: t(d, `${p}.ligne1`), ligne2: t(d, `${p}.ligne2`), codePostal: t(d, `${p}.codePostal`), ville: t(d, `${p}.ville`), pays: t(d, `${p}.pays`) || undefined });
   const adresses: Adresses = { livraison: lire("livraison"), facturation: d.get("identique") === "oui" ? lire("livraison") : lire("facturation") };
   try {
     await enregistrerAdresses(commande, adresses);
@@ -75,6 +88,9 @@ export async function actionPaiement(d: FormData) {
 
 export async function actionPayer(_e: EtatEtape, d: FormData): Promise<EtatEtape> {
   const commande = await commandeCourante(t(d, "ref"));
+  // F16 (FR-025) : pas de paiement sans numéro d'entreprise.
+  const compte = await compteConnecte();
+  if (compte && !compte.siret) redirect(`/commande/adresses?ref=${commande.ref}`);
   let lancement;
   try {
     lancement = await lancerPaiement(commande, d.get("cgv") === "oui", d.get("conditions") === "oui");

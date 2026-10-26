@@ -1,6 +1,5 @@
 import { specialites } from "@/domaine/comptes/inscription";
 import { compteCourant } from "@/domaine/comptes/session";
-import { dbSite } from "@/lib/db/site";
 import { Card, Kicker } from "@/ui";
 import { FormulaireEmail, FormulaireInformations, FormulaireNumero } from "@/ui/comptes/FormulairesProfil";
 import { NavMonCompte } from "@/ui/comptes/NavMonCompte";
@@ -10,10 +9,7 @@ export const metadata = { title: "Informations" };
 export default async function Informations() {
   const { compte } = await compteCourant("/mon-compte/informations");
   const u = compte.utilisateur;
-  const [liste, demande] = await Promise.all([
-    specialites(),
-    dbSite().demandeChangementNumero.findFirst({ where: { compteId: compte.id, etat: "en_attente" }, orderBy: { demandeeLe: "desc" } }),
-  ]);
+  const liste = await specialites();
   return (
     <>
       <Kicker>Mon compte</Kicker>
@@ -31,8 +27,8 @@ export default async function Informations() {
         <FormulaireEmail actuel={u.email} />
       </Card>
       <Card>
-        <h2 className="mb-3 text-h3 font-semibold">{compte.type === "medecin" ? "Numéro RPPS" : "Numéro SIRET"}</h2>
-        <FormulaireNumero libelle={compte.type === "medecin" ? "RPPS" : "SIRET"} actuel={compte.rpps ?? compte.siret ?? "—"} enAttente={demande?.nouveauNumero ?? null} />
+        <h2 className="mb-3 text-h3 font-semibold">Numéro d’entreprise (SIRET ou SIREN)</h2>
+        <FormulaireNumero actuel={compte.siret} aVerifier={compte.numeroVerification === "a_verifier"} />
       </Card>
     </>
   );

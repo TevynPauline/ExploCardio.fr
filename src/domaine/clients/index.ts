@@ -48,10 +48,11 @@ export type LigneClient = {
   prioritaire: boolean;
 };
 
-export async function listerClients(statut: StatutListe, recherche = ""): Promise<LigneClient[]> {
+/** `numero = "a_verifier"` (F16) : seulement les comptes dont le numéro d'entreprise est à vérifier. */
+export async function listerClients(statut: StatutListe, recherche = "", numero?: "a_verifier"): Promise<LigneClient[]> {
   const condition = await conditionRecherche(recherche);
   const comptes = await dbSite().compteClient.findMany({
-    where: { ...(statut === "tous" ? { statut: { not: "supprime" } } : { statut }), ...(condition ?? {}) },
+    where: { ...(statut === "tous" ? { statut: { not: "supprime" } } : { statut }), ...(numero ? { numeroVerification: numero } : {}), ...(condition ?? {}) },
     include: { utilisateur: true, commandes: { where: { etape: "terminee" }, select: { id: true }, take: 1 } },
     orderBy: { creeLe: statut === "en_attente" ? "asc" : "desc" },
     take: 200,
@@ -61,14 +62,15 @@ export async function listerClients(statut: StatutListe, recherche = ""): Promis
     nom: c.utilisateur.name,
     civilite: c.utilisateur.civilite,
     email: c.utilisateur.email,
-    numero: c.rpps ? `RPPS ${c.rpps}` : `SIRET ${c.siret ?? ""}`,
+    numero: c.siret ? `${c.siret.length === 9 ? "SIREN" : "SIRET"} ${c.siret}${c.numeroVerification === "a_verifier" ? " (à vérifier)" : c.numeroVerification === "refuse" ? " (refusé)" : ""}` : c.rpps ? `RPPS ${c.rpps}` : "—",
     cabinet: c.nomCabinet,
     statut: c.statut,
     creeLe: c.creeLe,
-    prioritaire: c.statut === "en_attente" && c.commandes.length > 0,
+    // Prioritaire : déjà commandé sans compte validé (F05) ou sans numéro vérifié (F16).
+    prioritaire: (c.statut === "en_attente" || c.numeroVerification === "a_verifier") && c.commandes.length > 0,
   }));
   // À valider : les comptes prioritaires en tête, puis les plus anciens (FR-001).
-  return statut === "en_attente" ? [...lignes.filter((l) => l.prioritaire), ...lignes.filter((l) => !l.prioritaire)] : lignes;
+  return statut === "en_attente" || numero ? [...lignes.filter((l) => l.prioritaire), ...lignes.filter((l) => !l.prioritaire)] : lignes;
 }
 
 export async function compterParStatut(): Promise<Record<string, number>> {

@@ -18,6 +18,12 @@ function Saisie({ p, id }: { p: ParametreLu; id: string }) {
           {p.libelle}
         </label>
       );
+    case "choix":
+      return (
+        <select id={id} name="valeur" defaultValue={s.valeur} aria-describedby={aide} className={classeChamp}>
+          {Object.entries(p.choix ?? {}).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+        </select>
+      );
     case "horaires":
       return (
         <fieldset className="grid gap-2 sm:grid-cols-2" aria-describedby={aide}>

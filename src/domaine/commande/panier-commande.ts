@@ -8,5 +8,5 @@ export async function retirerDuPanier(commande: CommandeSite, formule: "achat" |
   if (!panier) return;
   const codes = lignesDe(commande).filter((l) => l.formule === formule).map((l) => l.defaultCode);
   await dbSite().lignePanier.deleteMany({ where: { panierId: panier.id, formule, defaultCode: { in: codes } } });
-  if (formule === "achat") await dbSite().panier.update({ where: { id: panier.id }, data: { codePromo: null } });
+  if (formule === "achat") await dbSite().panier.update({ where: { id: panier.id }, data: { codePromo: null, devisRef: null } });
 }

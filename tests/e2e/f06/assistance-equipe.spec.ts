@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { verifierAccessibilite } from "../axe";
 import { COMPTES, connecterNavigateur } from "../session";
-import { PANIER_1200, clientConnecte, composerPanier, ecranDemo, payerParCarte, requete } from "./outils";
+import { PANIER_1200, clientConnecte, composerPanier, ecranDemo, payerParCarte } from "./outils";
 
 // T023 (US6, SC-007, D7) : droits d'un client en lecture seule pour le support (rubrique Clients
 // depuis F13) : recherche par nom, cabinet, email, téléphone, RPPS, SIRET ; ajustement manuel au
@@ -13,7 +13,6 @@ test("le support retrouve les droits d'un client en quelques secondes, sans pouv
   const c = await clientConnecte(browser, baseURL, page);
   await composerPanier(page, c.email, PANIER_1200);
   await payerParCarte(page);
-  const [compte] = await requete<{ rpps: string }>("site", `SELECT c.rpps FROM compte_client c JOIN utilisateur u ON u.id = c."utilisateurId" WHERE u.email = $1`, [c.email]);
 
   const contexte = await browser.newContext({ baseURL, storageState: "playwright/.auth/acces-demo.json" });
   await connecterNavigateur(contexte, COMPTES.support);
@@ -22,8 +21,9 @@ test("le support retrouve les droits d'un client en quelques secondes, sans pouv
   const debut = Date.now();
   // F13 (D6) : la recherche du support et la fiche client sont dans la rubrique Clients.
   await support.getByRole("navigation", { name: "Back-office" }).getByRole("link", { name: "Clients" }).click();
-  for (const recherche of [c.email, compte!.rpps]) {
-    await support.getByLabel("Nom, cabinet, téléphone, email, RPPS ou SIRET").fill(recherche);
+  // F16 : plus de RPPS à l'inscription ; le SIRET de test est partagé, la recherche se fait par email.
+  for (const recherche of [c.email]) {
+    await support.getByLabel("Nom, cabinet, téléphone, email, SIRET ou SIREN").fill(recherche);
     await support.getByRole("button", { name: "Rechercher" }).click();
     await expect(support.getByRole("row").filter({ hasText: c.email })).toBeVisible();
   }

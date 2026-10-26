@@ -23,7 +23,7 @@ export const MARQUES_INITIALES = [
   { nom: "Koch Évolution", familles: ["effort"] },
 ];
 
-export const MOTIFS_INITIAUX = ["Information produit", "Mise à disposition", "Financement", "Assistance", "Autre"];
+export const MOTIFS_INITIAUX = ["Information produit", "Mise à disposition", "Financement", "Assistance", "Commande hors métropole", "Autre"];
 
 export const PARAMETRES_INITIAUX: Record<string, string> = {
   "contact.email": "",

@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { sansOptimisation } from "../images";
 import { Placeholder } from "../Placeholder";
 import { cx } from "../cx";
 
@@ -27,7 +28,7 @@ export function PhotoProduit({
         sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
         className="object-contain"
         priority={prioritaire}
-        unoptimized
+        unoptimized={sansOptimisation(photo.chemin)}
       />
     </div>
   );

@@ -7,9 +7,8 @@ import { dbSite } from "@/lib/db/site";
 import { urlDuSite } from "@/emails/charte";
 import { emailsComptes } from "@/emails/modeles-comptes";
 import { lireParametre } from "@/lib/parametres";
-import { MESSAGE_HORS_METROPOLE, codePostalMetropole } from "./adresses";
+import { refusLivraison } from "./adresses";
 import { specialites } from "./inscription";
-import { normaliserNumero, rppsValide, siretValide } from "./numeros";
 import { journaliserSecurite, notifier } from "./securite";
 
 // « Mon compte » : informations, adresses, email, numéro (F02, US5, FR-037).
@@ -57,14 +56,15 @@ export async function mettreAJourInformations(compteId: string, i: Informations)
   await surMedecinModifie(compteId);
 }
 
-export type AdresseSaisie = { ligne1: string; ligne2?: string; codePostal: string; ville: string };
+export type AdresseSaisie = { ligne1: string; ligne2?: string; codePostal: string; ville: string; pays?: string };
 
 export async function mettreAJourAdresses(compteId: string, adresses: Record<"cabinet" | "livraison" | "facturation", AdresseSaisie>): Promise<void> {
   const e: Record<string, string> = {};
   for (const [type, a] of Object.entries(adresses)) {
     if (a.ligne1.trim().length < 3) e[`${type}.ligne1`] = "Indiquez l'adresse.";
-    if (!/^\d{5}$/.test(a.codePostal.trim())) e[`${type}.codePostal`] = "Le code postal comporte 5 chiffres.";
-    else if (type === "livraison" && !codePostalMetropole(a.codePostal)) e[`${type}.codePostal`] = MESSAGE_HORS_METROPOLE;
+    const refus = type === "livraison" ? refusLivraison(a, type) : null;
+    if (refus) Object.assign(e, refus);
+    else if (!/^\d{5}$/.test(a.codePostal.trim())) e[`${type}.codePostal`] = "Le code postal comporte 5 chiffres.";
     if (a.ville.trim().length < 2) e[`${type}.ville`] = "Indiquez la ville.";
   }
   if (Object.keys(e).length) throw new SaisieInvalide(e);
@@ -138,15 +138,24 @@ export async function confirmerChangementEmail(utilisateurId: string, jeton: str
 
 // ------------------------------------------------------------------ Changement de numéro
 
+/**
+ * F16 : le SIRET ou le SIREN saisi dans Mon compte est enregistré aussitôt et repasse « à
+ * vérifier » ; l'équipe le vérifie ensuite (À traiter). Les commandes d'achat restent possibles.
+ */
 export async function demanderChangementNumero(compteId: string, saisie: string): Promise<void> {
+  const { enregistrerNumero, NumeroRefuse } = await import("./verification-numero");
   const c = await dbSite().compteClient.findUniqueOrThrow({ where: { id: compteId } });
-  const numero = normaliserNumero(saisie);
-  const valide = c.type === "medecin" ? rppsValide(numero) : siretValide(numero);
-  if (!valide) throw new SaisieInvalide({ numero: c.type === "medecin" ? "Le numéro RPPS comporte 11 chiffres." : "Ce numéro SIRET n'est pas valide." });
-  await dbSite().demandeChangementNumero.create({ data: { compteId, ancienNumero: c.rpps ?? c.siret, nouveauNumero: numero } });
+  let numero: string;
+  try {
+    numero = await enregistrerNumero(compteId, saisie);
+  } catch (e) {
+    if (e instanceof NumeroRefuse) throw new SaisieInvalide({ numero: e.message });
+    throw e;
+  }
+  if (numero === c.siret) return;
   const destinataire = (await lireParametre("contact.destinataire_messages"))?.trim() || "admin@demo.explocardio.test";
   await notifierEquipe(
-    { canal: "email", destinataires: [destinataire], objet: "Changement de numéro à vérifier", texte: `Le compte ${c.nomCabinet ?? c.id} demande à remplacer ${c.rpps ?? c.siret} par ${numero}.`, declencheur: "mon compte" },
+    { canal: "email", destinataires: [destinataire], objet: "Numéro d'entreprise à vérifier", texte: `Le compte ${c.nomCabinet ?? c.id} a indiqué le numéro ${numero}${c.siret ? ` (à la place de ${c.siret})` : ""} : à vérifier dans le back-office (À traiter).`, declencheur: "mon compte" },
     `numero:${compteId}:${randomUUID()}`,
   );
 }

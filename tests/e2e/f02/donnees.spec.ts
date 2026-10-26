@@ -26,7 +26,7 @@ test("export : mot de passe redemandé, fichier JSON lisible", async ({ page }) 
   expect(telechargement.suggestedFilename()).toMatch(/^explocardio-mes-donnees-\d{4}-\d{2}-\d{2}\.json$/);
   const donnees = JSON.parse(await readFile((await telechargement.path())!, "utf8"));
   expect(donnees.identité.email).toBe(c.email);
-  expect(donnees.compte.rpps).toBe(c.rpps);
+  expect(donnees.compte.siret).toBe("73282932000074");
   expect(Date.now() - debut).toBeLessThan(10 * 60_000);
 });
 

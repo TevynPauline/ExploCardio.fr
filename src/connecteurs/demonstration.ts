@@ -41,6 +41,9 @@ export async function reinitialiserDemonstration(auteur: Auteur): Promise<BilanR
       site.demandeDevis.deleteMany(),
       site.messageContact.deleteMany(),
       site.messageDemonstration.deleteMany(),
+      // F10 : envois des séances ; leurs clés citent les références fictives, qui repartent de
+      // zéro (sinon un email d'une nouvelle commande au même numéro serait pris pour un doublon).
+      site.envoi.deleteMany(),
       site.panneSimulee.deleteMany(),
       site.evenementPaiementTraite.deleteMany(),
       // F01 : inscriptions à la newsletter et limites d'envoi, données de test en phase 1

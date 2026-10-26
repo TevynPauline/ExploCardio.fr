@@ -14,6 +14,9 @@ type Element = { href: string; libelle: string; nombre: number; detail?: string 
 async function aTraiter(role: string): Promise<Element[]> {
   const elements: Element[] = [];
   if (peut(role, "comptes.valider", "modifier")) {
+    // F16 (FR-026) : numéros d'entreprise à vérifier (après coup) ; anciens comptes en attente.
+    const aVerifier = await dbSite().compteClient.count({ where: { numeroVerification: "a_verifier", statut: { not: "supprime" } } });
+    elements.push({ href: "/admin/clients?statut=tous&numero=a_verifier", libelle: "Numéros à vérifier", nombre: aVerifier });
     const attente = await listerClients("en_attente");
     const prioritaires = attente.filter((c) => c.prioritaire).length;
     elements.push({ href: "/admin/clients?statut=en_attente", libelle: "Comptes à valider", nombre: attente.length, detail: prioritaires ? `dont ${prioritaires} prioritaire${prioritaires > 1 ? "s" : ""}` : undefined });

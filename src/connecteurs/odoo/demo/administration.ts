@@ -35,7 +35,7 @@ export async function apercuBase() {
   ]);
   const compteurs = {
     partenaires: await db().partenaire.count(),
-    commandes: await db().commandeVente.count(),
+    commandes: await db().commandeVente.count({ where: { statut: { not: "devis" } } }),
     factures: await db().facture.count(),
     abonnements: await db().abonnement.count(),
     accesCloud: await db().accesCloud.count(),
@@ -184,6 +184,7 @@ export async function modifierRemisePromotion(id: number, remisePourcent: number
 
 export async function listerCommandesRecentes(limite = 30) {
   return db().commandeVente.findMany({
+    where: { statut: { not: "devis" } },
     include: { partenaire: true, remboursements: true },
     orderBy: { date: "desc" },
     take: limite,

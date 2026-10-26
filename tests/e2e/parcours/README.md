@@ -9,7 +9,7 @@ SC-001 est atteint quand tous les parcours ci-dessous existent et passent.
 | Parcours | Module | Fichier attendu | État |
 |---|---|---|---|
 | Accueil, navigation, recherche, contact, newsletter, cookies, contenus | F01 | `../f01/*.spec.ts` | ✅ |
-| Inscription (RPPS ou SIRET), validation, connexion, Mon compte, données personnelles | F02 | `../f02/*.spec.ts` | ✅ |
+| Inscription (SIRET ou SIREN facultatif), validation, connexion, Mon compte, données personnelles | F02 | `../f02/*.spec.ts` | ✅ |
 | Catalogue : catégories et filtres, fiches et formules, consommables, disponibilité, back-office du catalogue, devis, services | F03 | `../f03/*.spec.ts` | ✅ |
 | Achat : panier, paiement American Express (accepté, refusé, authentification forte), virement, facture FICTIVE, suivi et remboursement | F04 | `../f04/*.spec.ts` | ✅ |
 | Mise à disposition : dépannage express, sans compte, kit, suivi, résiliation, retour, échéances, impayés, retards, parc | F05 | `../f05/*.spec.ts` | ✅ |
@@ -19,6 +19,7 @@ SC-001 est atteint quand tous les parcours ci-dessous existent et passent.
 | Emails automatisés : transactionnels toujours envoyés, relance de consommables, consentement et campagnes, préférences avec ou sans connexion, back-office (scénarios, modèles, suivi) | F10 | `../f10/*.spec.ts` | ✅ |
 | Demande de financement (F04) ou de devis (F03), copie en opportunité | F04 / F03 | `../f04/financement.spec.ts`, `../f04/back-office-financement.spec.ts`, `../f03/*.spec.ts` | ✅ |
 | Back-office : droits par rôle, clients et fiche, contenus (aperçu, textes des pages, verrou), catalogue, paramètres et historique, demandes, journal, inactivité | F13 | `../f13/*.spec.ts` | ✅ |
+| Fin de phase 1 : navigation et fil d'Ariane, carrousel et accueil (images), prix du panier en direct, numéro d'entreprise à la première commande et vérification, devis depuis le panier, hors métropole | F16 | `../f16/*.spec.ts` | ✅ |
 
 ## Règles communes
 

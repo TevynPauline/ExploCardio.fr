@@ -69,7 +69,7 @@ export default async function LogicielsCloud({ searchParams }: { searchParams: P
 
       <form role="search" className="flex max-w-2xl flex-wrap items-end gap-3">
         <div className="min-w-64 flex-1">
-          <Champ id="recherche" name="q" libelle="Nom, cabinet, email, RPPS ou SIRET" defaultValue={q} autoComplete="off" />
+          <Champ id="recherche" name="q" libelle="Nom, cabinet, email, SIRET ou SIREN" defaultValue={q} autoComplete="off" />
         </div>
         <Button type="submit">Rechercher</Button>
       </form>

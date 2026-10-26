@@ -69,15 +69,15 @@ export function FormulaireEmail({ actuel }: { actuel: string }) {
   );
 }
 
-export function FormulaireNumero({ libelle, actuel, enAttente }: { libelle: string; actuel: string; enAttente: string | null }) {
+export function FormulaireNumero({ actuel, aVerifier }: { actuel: string | null; aVerifier: boolean }) {
   const [etat, action, enCours] = useActionState(actionNumero, initial);
   return (
     <form onSubmit={sansRemiseAZero(action)} noValidate className="flex max-w-md flex-col gap-3">
       <Message etat={etat} />
-      <p>{libelle} actuel : <strong className="font-semibold">{actuel}</strong></p>
-      {enAttente ? <p className="ec-box--info p-3">Demande en cours de vérification : {enAttente}</p> : null}
-      <Champ id="numero" name="numero" libelle={`Nouveau numéro ${libelle}`} inputMode="numeric" defaultValue={etat.saisie.numero} erreur={etat.erreurs.numero} aide="Le changement est vérifié par notre équipe avant d'être appliqué." />
-      <div><Button type="submit" variante="secondaire" disabled={enCours}>Demander le changement</Button></div>
+      <p>SIRET ou SIREN actuel : <strong className="font-semibold">{actuel ?? "non renseigné"}</strong></p>
+      {aVerifier ? <p className="ec-box--info p-3">Numéro en cours de vérification par notre équipe ; vos commandes d’achat restent possibles.</p> : null}
+      <Champ id="numero" name="numero" libelle={actuel ? "Nouveau SIRET ou SIREN" : "SIRET ou SIREN"} inputMode="numeric" defaultValue={etat.saisie.numero} erreur={etat.erreurs.numero} aide="14 ou 9 chiffres. Le numéro est vérifié par notre équipe après son enregistrement." />
+      <div><Button type="submit" variante="secondaire" disabled={enCours}>{actuel ? "Changer de numéro" : "Enregistrer le numéro"}</Button></div>
     </form>
   );
 }
@@ -89,7 +89,7 @@ export function FormulaireAdresses({ valeurs }: { valeurs: Record<string, string
     <form onSubmit={sansRemiseAZero(action)} noValidate className="flex flex-col gap-6">
       <Message etat={etat} />
       <ChampsAdresse prefixe="cabinet" legende="Adresse du cabinet" valeurs={v} erreurs={etat.erreurs} />
-      <ChampsAdresse prefixe="livraison" legende="Adresse de livraison" valeurs={v} erreurs={etat.erreurs} aideCodePostal="Livraison en France métropolitaine (Corse comprise)." />
+      <ChampsAdresse prefixe="livraison" legende="Adresse de livraison" valeurs={v} erreurs={etat.erreurs} aideCodePostal="Livraison en France métropolitaine (Corse comprise)." pays />
       <ChampsAdresse prefixe="facturation" legende="Adresse de facturation" valeurs={v} erreurs={etat.erreurs} />
       <div><Button type="submit" disabled={enCours}>Enregistrer les adresses</Button></div>
     </form>

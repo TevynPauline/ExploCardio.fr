@@ -36,6 +36,8 @@ export type PanierDetaille = {
   devis: Devis | null;
   codePromo: string | null;
   utiliserBons: boolean;
+  /** F16 : panier recomposé depuis ce devis encore valable (ses prix s'appliquent). */
+  devisRef: string | null;
   /** Odoo injoignable : rien n'est affirmé, la commande attend. */
   indisponible: boolean;
   /** La commande ne peut pas être lancée (article indisponible, Odoo injoignable, panier vide). */
@@ -62,7 +64,7 @@ export async function bonsAuPanierActifs(): Promise<boolean> {
 
 export async function panierDetaille(panierId: string, compteId: string | null, modeLivraison: string | null = null): Promise<PanierDetaille> {
   const panier = await dbSite().panier.findUniqueOrThrow({ where: { id: panierId }, include: { lignes: { orderBy: { ajouteLe: "asc" } } } });
-  const base = { panierId, codePromo: panier.codePromo, utiliserBons: panier.utiliserBons };
+  const base = { panierId, codePromo: panier.codePromo, utiliserBons: panier.utiliserBons, devisRef: panier.devisRef };
   const brutes: LigneDetaillee[] = panier.lignes.map((l) => ({
     id: l.id,
     defaultCode: l.defaultCode,
@@ -94,6 +96,7 @@ export async function panierDetaille(panierId: string, compteId: string | null, 
         codePromo: panier.codePromo,
         bonsDemandesHt: bons,
         modeLivraison,
+        devisRef: panier.devisRef,
       }),
       odoo.stock.lireDisponibilite([...new Set(panier.lignes.map((l) => l.defaultCode))]),
     ]);

@@ -77,6 +77,14 @@ export const TEXTES_COMPTES = {
       fin: "Lien expiré ? Demandez à l'administrateur de vous renvoyer l'invitation.",
     },
   },
+  numero_refuse: {
+    objet: "Votre numéro d'entreprise",
+    apercu: "Nous n'avons pas pu vérifier votre numéro",
+    blocs: {
+      corps:
+        "Bonjour,\n\nNous n'avons pas pu vérifier le numéro d'entreprise (SIRET ou SIREN) de votre compte ExploCardio.fr : {{motif}}\n\nVos prochaines commandes sont suspendues en attendant. Contactez-nous : nous vous expliquerons comment régulariser votre compte.",
+    },
+  },
   compte_supprime: {
     objet: "Votre compte a été supprimé",
     apercu: "Confirmation de suppression",
@@ -117,6 +125,8 @@ export const emailsComptes = {
   doubleAuthentification: (active: boolean) => email("double_authentification", undefined, { etat: active ? "activée" : "désactivée" }),
   cadeauEnAttente: () => email("cadeau_en_attente"),
   compteSupprime: () => email("compte_supprime"),
+  /** F16 (FR-035) : numéro d'entreprise refusé par l'équipe, avec le motif. */
+  numeroRefuse: (motif: string) => email("numero_refuse", CONTACT(), { motif }),
   invitationEquipe: (lien: string) =>
     rendreModele({
       modele: "invitation_equipe",

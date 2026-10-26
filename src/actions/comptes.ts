@@ -16,7 +16,7 @@ export type EtatInscription = { erreurs: ErreursInscription; message?: string; s
 const t = (d: FormData, cle: string) => String(d.get(cle) ?? "");
 
 function adresse(d: FormData, prefixe: string): AdresseSaisie {
-  return { ligne1: t(d, `${prefixe}.ligne1`), ligne2: t(d, `${prefixe}.ligne2`), codePostal: t(d, `${prefixe}.codePostal`), ville: t(d, `${prefixe}.ville`) };
+  return { ligne1: t(d, `${prefixe}.ligne1`), ligne2: t(d, `${prefixe}.ligne2`), codePostal: t(d, `${prefixe}.codePostal`), ville: t(d, `${prefixe}.ville`), pays: t(d, `${prefixe}.pays`) || undefined };
 }
 
 async function session(): Promise<string> {
@@ -43,7 +43,6 @@ export async function actionInscription(_precedent: EtatInscription, d: FormData
     prenom: t(d, "prenom"),
     nom: t(d, "nom"),
     specialite: t(d, "specialite"),
-    type: t(d, "type") === "structure" ? "structure" : "medecin",
     numero: t(d, "numero"),
     cabinet: t(d, "cabinet"),
     telephone: t(d, "telephone"),

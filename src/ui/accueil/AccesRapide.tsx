@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { sansOptimisation } from "../images";
 import Link from "next/link";
 import type { Tuile } from "@/domaine/contenus";
 import { Badge } from "../Badge";
@@ -28,7 +29,7 @@ export function AccesRapide({ tuiles }: { tuiles: Tuile[] }) {
                 // F16 : image en haut de la tuile, fondue vers le texte (masque en dégradé) ; la
                 // tuile garde ses couleurs, ses points, son badge et son texte.
                 <span className="pointer-events-none absolute inset-x-0 top-0 h-3/5 [mask-image:linear-gradient(to_bottom,black_45%,transparent)]">
-                  <Image src={t.image.url} alt={t.image.texteRemplacement} fill sizes="(min-width: 1024px) 380px, (min-width: 768px) 50vw, 100vw" className="object-cover" unoptimized />
+                  <Image src={t.image.url} alt={t.image.texteRemplacement} fill sizes="(min-width: 1024px) 380px, (min-width: 768px) 50vw, 100vw" className="object-cover" unoptimized={sansOptimisation(t.image.url)} />
                 </span>
               ) : null}
               <span className="relative flex items-start justify-between gap-3">

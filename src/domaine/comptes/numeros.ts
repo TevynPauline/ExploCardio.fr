@@ -1,4 +1,4 @@
-// Contrôle des numéros RPPS et SIRET (F02, FR-003, R2). Le format ne prouve pas l'identité :
+// Contrôle des numéros RPPS, SIRET et SIREN (F02, FR-003, R2 ; F16 : SIRET ou SIREN seulement). Le format ne prouve pas l'identité :
 // la vérification réelle reste celle de l'équipe.
 
 export function normaliserNumero(saisie: string): string {
@@ -32,4 +32,16 @@ export function siretValide(saisie: string): boolean {
     return [...n].reduce((s, c) => s + Number(c), 0) % 5 === 0;
   }
   return luhn(n);
+}
+
+/** SIREN : 9 chiffres, clé de Luhn (F16). */
+export function sirenValide(saisie: string): boolean {
+  const n = normaliserNumero(saisie);
+  return /^\d{9}$/.test(n) && !/^0{9}$/.test(n) && (n === "356000000" || luhn(n));
+}
+
+/** Numéro d'entreprise accepté depuis F16 : SIRET (14 chiffres) ou SIREN (9 chiffres). */
+export function siretOuSirenValide(saisie: string): boolean {
+  const n = normaliserNumero(saisie);
+  return n.length === 9 ? sirenValide(n) : siretValide(n);
 }

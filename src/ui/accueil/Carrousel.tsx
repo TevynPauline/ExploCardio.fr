@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { sansOptimisation } from "../images";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import type { Vignette } from "@/domaine/vignettes";
@@ -83,7 +84,7 @@ export function Carrousel({ vignettes }: { vignettes: Vignette[] }) {
                   <>
                     {/* F16 (choix du 2026-10-26) : image légèrement transparente sur toute la vignette,
                         sur le fond pastel, sous le texte (encre) qui reste lisible. */}
-                    <Image src={v.image.url} alt={v.image.texteRemplacement} fill sizes="(min-width: 1180px) 1180px, 100vw" priority={i === 0} className="object-cover opacity-30" unoptimized />
+                    <Image src={v.image.url} alt={v.image.texteRemplacement} fill sizes="(min-width: 1180px) 1180px, 100vw" priority={i === 0} className="object-cover opacity-30" unoptimized={sansOptimisation(v.image.url)} />
                   </>
                 ) : (
                   <span aria-hidden="true" className="pointer-events-none absolute -right-8 top-8 hidden items-end gap-5 md:flex">

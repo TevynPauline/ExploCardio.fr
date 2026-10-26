@@ -13,17 +13,17 @@ async function journal(action: string, objet: string, detail: object) {
   await dbSite().journalAction.create({ data: { auteur: "locations", action, objet, detail: JSON.parse(JSON.stringify(detail)) } });
 }
 
-/** Au paiement d'une location par un compte en attente : alerte prioritaire à l'équipe. */
+/** Au paiement d'une location par un compte au numéro non vérifié : alerte prioritaire (F16). */
 export async function alerterValidationPrioritaire(compteId: string, commandeRef: string) {
   const compte = await dbSite().compteClient.findUniqueOrThrow({ where: { id: compteId }, include: { utilisateur: true } });
   await alerterEquipe(
-    "Validation prioritaire : location payée",
-    `${compte.utilisateur.name} (${compte.utilisateur.email}, RPPS ${compte.rpps ?? "—"}, SIRET ${compte.siret ?? "—"}) a payé une mise à disposition (commande ${commandeRef}) avant la validation de son compte. Rien ne part avant la validation : à vérifier en priorité.`,
+    "Vérification prioritaire : location payée",
+    `${compte.utilisateur.name} (${compte.utilisateur.email}, SIRET ou SIREN ${compte.siret ?? "—"}) a payé une mise à disposition (commande ${commandeRef}) avant la vérification de son numéro d'entreprise. Rien ne part avant la vérification : à faire en priorité (À traiter).`,
     `validation-prioritaire:${commandeRef}`,
   );
 }
 
-/** Compte validé : expédition débloquée ; nouvelle date si celle annoncée n'est plus tenable. */
+/** Numéro vérifié (F16) : expédition débloquée ; nouvelle date si celle annoncée n'est plus tenable. */
 export async function surCompteValide(compteId: string, maintenant = new Date()) {
   const compte = await dbSite().compteClient.findUnique({ where: { id: compteId }, include: { utilisateur: true, adresses: true } });
   if (!compte?.odooPartnerRef) return;

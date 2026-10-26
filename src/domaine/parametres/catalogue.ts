@@ -19,7 +19,8 @@ export type TypeParametre =
   | "zones"
   | "liste"
   | "horaires"
-  | "fermetures";
+  | "fermetures"
+  | "choix";
 
 export type Theme = "livraison" | "contact" | "comptes" | "virement" | "rappels" | "cloud" | "securite" | "bienvenue";
 
@@ -35,12 +36,14 @@ export type DefinitionParametre = {
   defaut?: string;
   /** Rôles autorisés à le modifier ; administrateur seul par défaut. */
   roles?: RoleEquipe[];
+  /** Valeurs possibles d'un paramètre de type « choix » (valeur → libellé). */
+  choix?: Record<string, string>;
 };
 
 export const THEMES: Record<Theme, { libelle: string; description: string }> = {
   livraison: { libelle: "Livraison", description: "Heure limite, jours non livrés et zones éloignées. Les tarifs de livraison se règlent dans Odoo." },
   contact: { libelle: "Contact WhatsApp et horaires", description: "Ligne WhatsApp Business, horaires de réponse (jours fériés pris en compte automatiquement) et fermetures exceptionnelles." },
-  comptes: { libelle: "Comptes", description: "Validation des comptes professionnels et spécialités proposées à l'inscription." },
+  comptes: { libelle: "Comptes", description: "Numéro d'entreprise (SIRET ou SIREN) et spécialités proposées à l'inscription." },
   virement: { libelle: "Virement", description: "Coordonnées bancaires indiquées aux clients qui paient par virement. Le virement n'est pas proposé tant que l'IBAN est vide." },
   rappels: { libelle: "Fidélité et rappels", description: "Utilisation des bons au panier et délais des rappels envoyés aux clients. Les règles du programme de fidélité se règlent dans Odoo." },
   cloud: { libelle: "Accès Cloud", description: "Plateforme Cloud, délai de grâce et rappels. Les durées incluses et les prix se règlent dans Odoo." },
@@ -61,7 +64,15 @@ export const PARAMETRES: DefinitionParametre[] = [
   { cle: "contact.fermetures", libelle: "Fermetures exceptionnelles", theme: "contact", type: "fermetures", aide: "Une par ligne : AAAA-MM-JJ AAAA-MM-JJ motif ; par exemple 2026-12-24 2027-01-03 Congés." },
   { cle: "contact.destinataire_messages", libelle: "Adresse qui reçoit les messages de contact", theme: "contact", type: "email", aide: "En démonstration, les messages arrivent dans la boîte de démonstration." },
 
-  { cle: "comptes.validation_auto", libelle: "Valider automatiquement un compte dès la confirmation de son email", theme: "comptes", type: "booleen", defaut: "false", aide: "Le contrôle du format du numéro RPPS ou SIRET ne prouve pas qu'il appartient au demandeur." },
+  {
+    cle: "comptes.numero_exige",
+    libelle: "SIRET ou SIREN exigé",
+    theme: "comptes",
+    type: "choix",
+    defaut: "premiere_commande",
+    choix: { premiere_commande: "À la première commande", inscription: "Dès l'inscription" },
+    aide: "Le compte peut commander dès la confirmation de son email ; l'équipe vérifie ensuite le numéro (À traiter). En attente de l'avis de la comptabilité et du juridique.",
+  },
   { cle: "comptes.specialites", libelle: "Spécialités proposées à l'inscription", theme: "comptes", type: "liste", defaut: "[]", aide: "Une par ligne, sans doublon." },
 
   { cle: "virement.titulaire", libelle: "Titulaire du compte", theme: "virement", type: "texte", max: 100 },

@@ -94,6 +94,8 @@ export async function creerComptesDemo(db: PrismaClient): Promise<IdentifiantsDe
                   type: "medecin",
                   rpps: c.rpps ?? null,
                   valideLe: c.statut === "valide" ? new Date() : null,
+                  // F16 : numéro des comptes validés de démonstration déjà vérifié par l'équipe.
+                  ...(c.statut === "valide" ? { numeroVerification: "verifie" as const, numeroVerifieLe: new Date(), numeroVerifiePar: "démonstration" } : {}),
                   statut: c.statut,
                   odooPartnerRef: c.partenaireRef,
                   nomCabinet: c.nom,

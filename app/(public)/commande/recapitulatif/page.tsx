@@ -187,10 +187,10 @@ export default async function Recapitulatif({ searchParams }: { searchParams: Pr
           </dl>
         </section>
       ))}
-      {codesMad.length && compte.statut !== "valide" ? (
+      {codesMad.length && compte.numeroVerification !== "verifie" ? (
         <p role="status" className="ec-box--info p-4">
-          Votre compte est en cours de vérification. Vous pouvez payer dès maintenant ; l’appareil sera expédié dès la validation de votre compte, et la date
-          de livraison annoncée en dépend. Nous vous prévenons si elle change.
+          Notre équipe vérifie le numéro d’entreprise de votre cabinet. Vous pouvez payer dès maintenant ; l’appareil sera expédié dès cette vérification,
+          et la date de livraison annoncée en dépend. Nous vous prévenons si elle change.
         </p>
       ) : null}
       <FormulairePayer refCommande={commande.ref} libelle={libelle} conditionsLocation={conditions} />

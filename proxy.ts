@@ -6,8 +6,18 @@ import { COOKIE_ACTIVITE, COOKIES_SESSION, delaiInactivite, derniereActivite, es
 // passe de démonstration, et aucune réponse n'est indexable.
 // Restent accessibles sans mot de passe : la page d'accès, le gestionnaire des événements de
 // paiement (protégé par sa signature), les logos servis aux emails, robots.txt et les polices.
+// F16 : les photos du back-office aussi (nom aléatoire de 24 caractères, images seulement) :
+// l'optimiseur d'images de Next.js les lit par une requête interne, sans le cookie d'accès.
+// Les documents PDF et les vidéos restent protégés.
 
-const LIBRES = [/^\/demo\/acces$/, /^\/api\/evenements\/paiement$/, /^\/marque\//, /^\/robots\.txt$/, /^\/fonts\//];
+const LIBRES = [
+  /^\/demo\/acces$/,
+  /^\/api\/evenements\/paiement$/,
+  /^\/marque\//,
+  /^\/robots\.txt$/,
+  /^\/fonts\//,
+  /^\/stockage\/(produits|vignettes|marques|actualites|aide)\/[0-9a-f]{24}\.(png|jpg|webp)$/,
+];
 
 /**
  * Back-office (F13, D5) : une session de l'équipe inactive au-delà du délai est fermée ; sinon

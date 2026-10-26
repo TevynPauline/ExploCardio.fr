@@ -5,19 +5,19 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import { actionInscription, type EtatInscription } from "@/actions/comptes";
 import { Button } from "../Button";
 import { Champ } from "../Champ";
-import { ChampsAdresse } from "./ChampsAdresse";
+import { MESSAGE_HORS_METROPOLE } from "@/domaine/comptes/adresses";
+import { ChampsAdresse, ContactHorsMetropole } from "./ChampsAdresse";
 import { ReglesMotDePasse } from "./ReglesMotDePasse";
 
-type Props = { specialites: string[]; offreBienvenue: string | null; jeton: string; retour?: string | null };
+type Props = { specialites: string[]; offreBienvenue: string | null; jeton: string; retour?: string | null; numeroObligatoire?: boolean };
 
 const classeSelect = "min-h-11 rounded-sm border border-muted bg-surface px-3 text-ink";
 
 /** Formulaire d'inscription (US1, FR-001 à FR-009) : erreurs sur les champs, saisie conservée. */
-export function FormulaireInscription({ specialites, offreBienvenue, jeton, retour = null }: Props) {
+export function FormulaireInscription({ specialites, offreBienvenue, jeton, retour = null, numeroObligatoire = false }: Props) {
   const [etat, action, enCours] = useActionState<EtatInscription, FormData>(actionInscription, { erreurs: {}, saisie: {} });
   const s = etat.saisie;
   const e = etat.erreurs;
-  const [type, setType] = useState<"medecin" | "structure">(s.type === "structure" ? "structure" : "medecin");
   const [livraisonIdentique, setLivraisonIdentique] = useState(s.livraisonIdentique ? s.livraisonIdentique === "oui" : true);
   const [facturationIdentique, setFacturationIdentique] = useState(s.facturationIdentique ? s.facturationIdentique === "oui" : true);
   const [motDePasse, setMotDePasse] = useState("");
@@ -76,22 +76,12 @@ export function FormulaireInscription({ specialites, offreBienvenue, jeton, reto
 
       <fieldset className="grid gap-4">
         <legend className="mb-2 text-h3 font-semibold">Votre exercice</legend>
-        <div role="radiogroup" aria-label="Vous vous inscrivez" className="flex flex-wrap gap-x-6">
-          <label className="flex min-h-11 items-center gap-3">
-            <input type="radio" name="type" value="medecin" checked={type === "medecin"} onChange={() => setType("medecin")} className="size-5" />
-            En tant que médecin (numéro RPPS)
-          </label>
-          <label className="flex min-h-11 items-center gap-3">
-            <input type="radio" name="type" value="structure" checked={type === "structure"} onChange={() => setType("structure")} className="size-5" />
-            Au nom d’une structure (numéro SIRET)
-          </label>
-        </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <Champ
             id="numero"
             name="numero"
-            libelle={type === "medecin" ? "Numéro RPPS" : "Numéro SIRET"}
-            aide={type === "medecin" ? "11 chiffres" : "14 chiffres"}
+            libelle={numeroObligatoire ? "SIRET ou SIREN" : "SIRET ou SIREN (facultatif)"}
+            aide={numeroObligatoire ? "14 ou 9 chiffres." : "14 ou 9 chiffres. Sinon, il vous sera demandé à votre première commande."}
             inputMode="numeric"
             defaultValue={s.numero}
             erreur={e.numero}
@@ -108,16 +98,19 @@ export function FormulaireInscription({ specialites, offreBienvenue, jeton, reto
 
       <div className="flex flex-col gap-6">
         <h2 className="text-h3 font-semibold">Adresses</h2>
-        <ChampsAdresse prefixe="adresseCabinet" legende="Adresse du cabinet" valeurs={s} erreurs={e} />
+        <ChampsAdresse prefixe="adresseCabinet" legende="Adresse du cabinet" valeurs={s} erreurs={e} pays={livraisonIdentique} />
         <label className="flex min-h-11 items-center gap-3">
           <input type="checkbox" name="livraisonIdentique" value="oui" checked={livraisonIdentique} onChange={(ev) => setLivraisonIdentique(ev.target.checked)} className="size-5" />
           Adresse de livraison identique à celle du cabinet
         </label>
-        {e["adresseLivraison.codePostal"] && livraisonIdentique ? (
-          <p className="text-small font-medium text-ink">{e["adresseLivraison.codePostal"]}</p>
+        {(e["adresseLivraison.codePostal"] || e["adresseLivraison.pays"]) && livraisonIdentique ? (
+          <>
+            <p className="text-small font-medium text-ink">{e["adresseLivraison.codePostal"] ?? e["adresseLivraison.pays"]}</p>
+            {(e["adresseLivraison.codePostal"] ?? e["adresseLivraison.pays"]) === MESSAGE_HORS_METROPOLE ? <ContactHorsMetropole /> : null}
+          </>
         ) : null}
         {!livraisonIdentique ? (
-          <ChampsAdresse prefixe="adresseLivraison" legende="Adresse de livraison" valeurs={s} erreurs={e} aideCodePostal="Livraison en France métropolitaine (Corse comprise)." />
+          <ChampsAdresse prefixe="adresseLivraison" legende="Adresse de livraison" valeurs={s} erreurs={e} aideCodePostal="Livraison en France métropolitaine (Corse comprise)." pays />
         ) : null}
         <label className="flex min-h-11 items-center gap-3">
           <input type="checkbox" name="facturationIdentique" value="oui" checked={facturationIdentique} onChange={(ev) => setFacturationIdentique(ev.target.checked)} className="size-5" />

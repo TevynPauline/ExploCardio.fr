@@ -91,23 +91,23 @@ test("changement d'email : confirmation de la nouvelle adresse, ancienne préven
   expect(journal.map((j) => j.action)).toEqual(expect.arrayContaining(["securite.email_change_demande", "securite.email_modifie"]));
 });
 
-test("changement de RPPS : demande transmise, visible par l'équipe, non appliquée", async ({ page, browser, baseURL }) => {
+// F16 : le numéro d'entreprise est enregistré aussitôt et repasse « à vérifier » par l'équipe.
+test("changement de SIRET ou de SIREN : enregistré, à vérifier, visible par l'équipe", async ({ page, browser, baseURL }) => {
   test.setTimeout(120_000);
   const c = await creerCompteValide(page);
   await connecterCompte(page.context(), c.email);
-  const nouveau = `99${String(Date.now()).slice(-9)}`;
   await page.goto("/mon-compte/informations");
-  await page.locator("main").getByLabel("Nouveau numéro RPPS").fill(nouveau);
-  await page.getByRole("button", { name: "Demander le changement" }).click();
-  await expect(page.getByText(/Votre demande est transmise/)).toBeVisible();
-  expect(await requete("site", `SELECT 1 FROM compte_client WHERE id = $1 AND rpps = $2`, [c.id, c.rpps])).toHaveLength(1);
+  await page.locator("main").getByLabel("Nouveau SIRET ou SIREN").fill("732 829 320");
+  await page.getByRole("button", { name: "Changer de numéro" }).click();
+  await expect(page.getByText("Numéro enregistré : notre équipe le vérifiera prochainement.")).toBeVisible();
+  expect(await requete("site", `SELECT 1 FROM compte_client WHERE id = $1 AND siret = '732829320' AND "numeroVerification" = 'a_verifier'`, [c.id])).toHaveLength(1);
 
   const equipe = await browser.newContext({ baseURL, storageState: "playwright/.auth/acces-demo.json" });
   await connecterNavigateur(equipe, COMPTES.admin);
   const admin = await equipe.newPage();
-  await admin.goto("/admin/comptes/demandes");
+  await admin.goto("/admin/clients?statut=tous&numero=a_verifier");
   await verifierAccessibilite(admin);
-  await expect(admin.getByText(nouveau)).toBeVisible();
+  await expect(admin.getByRole("row").filter({ hasText: c.email })).toContainText("732829320 (à vérifier)");
   await equipe.close();
 });
 

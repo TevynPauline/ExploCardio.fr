@@ -214,6 +214,7 @@ export async function lancerPaiement(commande: CommandeSite, cgvAcceptees: boole
           codePromo: commande.codePromo ?? undefined,
           bonsUtilisesHt: devis.achat?.bonsHt ?? 0,
           reservationCle: cle,
+          devisRef: commande.devisRef ?? undefined,
         },
         `commande:${commande.ref}`,
       );

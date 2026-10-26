@@ -28,6 +28,8 @@ export async function compteValide(options: { statut?: "valide" | "en_attente" |
       type: "medecin",
       rpps,
       statut: options.statut ?? "valide",
+      // F16 : numéro vérifié pour un compte validé (expéditions de location non bloquées).
+      ...((options.statut ?? "valide") === "valide" ? { siret: "73282932000074", numeroVerification: "verifie" as const } : {}),
       odooPartnerRef: ref,
       adresses: {
         create: [

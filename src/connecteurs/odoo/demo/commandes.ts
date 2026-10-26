@@ -11,6 +11,7 @@ import type {
   StatutCommande,
 } from "../interfaces";
 import { calculerDevis } from "./devis";
+import { devisEnregistresDemo } from "./devis-enregistres";
 import { ajouterJours, db, prochaineReference, prochainNumeroFacture, type Tx } from "./outils";
 import { appliquerReglesTx, ARTICLE_ASSISTANCE_ACTE, utiliserBons } from "./fidelite";
 import { decompterStock } from "./stock";
@@ -87,9 +88,11 @@ export async function creerCommande(tx: Tx, c: NouvelleCommande, cle: string, da
     codePromo: c.codePromo ?? null,
     bonsDemandesHt: c.bonsUtilisesHt ?? 0,
     modeLivraison: c.livraison.mode ?? null,
+    devisRef: c.devisRef ?? null,
   };
   const devis = await calculerDevis(demande, tx, {
     maintenant: date,
+    devisMemeExpire: true,
     ...(c.livraison.mode ? {} : { fraisPortImposeHt: c.livraison.fraisPortHt ?? 0 }),
   });
   const achat = devis.achat!;
@@ -97,11 +100,14 @@ export async function creerCommande(tx: Tx, c: NouvelleCommande, cle: string, da
   await sortirStock(tx, c);
 
   const variantes = await tx.variante.findMany({ where: { defaultCode: { in: devis.lignes.map((l) => l.defaultCode) } } });
-  const ref = await prochaineReference(tx, "SO");
+  // F16 : « Commander » un devis le confirme (comme dans Odoo) : même référence, lignes et
+  // montants de la commande payée ; un devis déjà confirmé ou d'un autre client est ignoré.
+  const confirme = c.devisRef ? await tx.commandeVente.findUnique({ where: { ref: c.devisRef } }) : null;
+  const devisAConfirmer = confirme?.statut === "devis" && confirme.partenaireId === partenaire.id ? confirme : null;
+  if (devisAConfirmer) await tx.ligneCommande.deleteMany({ where: { commandeId: devisAConfirmer.id } });
+  const ref = devisAConfirmer?.ref ?? (await prochaineReference(tx, "SO"));
   const financee = c.paiement.mode === "financement";
-  const commande = await tx.commandeVente.create({
-    data: {
-      ref,
+  const donnees = {
       cle,
       partenaireId: partenaire.id,
       date,
@@ -110,13 +116,20 @@ export async function creerCommande(tx: Tx, c: NouvelleCommande, cle: string, da
       montantTtcCentimes: achat.totalTtc,
       fraisPortCentimes: achat.fraisPortHt + achat.fraisSpecifiquesHt,
       bonsUtilisesCentimes: achat.bonsHt,
-      codePromo: devis.codePromo?.applique ? devis.codePromo.code : null,
+      codePromo: devis.codePromo?.applique ? devis.codePromo.code : (devisAConfirmer?.codePromo ?? null),
       modePaiement: c.paiement.mode,
       referencePaiement: c.paiement.reference,
       statut: creation.statut,
       echeancePaiement: creation.echeance,
       financee,
-      livraison: { ...c.livraison, mode: devis.modeLivraison, fraisPortHt: achat.fraisPortHt, fraisSpecifiquesHt: achat.fraisSpecifiquesHt },
+      livraison: {
+        ...c.livraison,
+        mode: devis.modeLivraison,
+        fraisPortHt: achat.fraisPortHt,
+        fraisSpecifiquesHt: achat.fraisSpecifiquesHt,
+        // F16 : le devis confirmé garde son contenu d'origine (PDF, Mon compte → Devis).
+        ...(devisAConfirmer ? { devis: (devisAConfirmer.livraison as { devis?: object }).devis } : {}),
+      },
       lignes: {
         create: devis.lignes.map((l) => ({
           varianteId: variantes.find((v) => v.defaultCode === l.defaultCode)!.id,
@@ -125,8 +138,11 @@ export async function creerCommande(tx: Tx, c: NouvelleCommande, cle: string, da
           remiseCentimes: l.remiseHt,
         })),
       },
-    },
-  });
+      ...(devisAConfirmer ? { devisRef: devisAConfirmer.ref } : {}),
+  };
+  const commande = devisAConfirmer
+    ? await tx.commandeVente.update({ where: { id: devisAConfirmer.id }, data: donnees })
+    : await tx.commandeVente.create({ data: { ref, ...donnees } });
 
   // F06 : bons utilisés, consommés dans l'ordre de leur expiration (FR-012).
   if (achat.bonsHt > 0) await utiliserBons(tx, partenaire.id, commande.id, ref, achat.bonsHt);
@@ -237,7 +253,7 @@ export const commandesDemo: CommandesOdoo = {
 
   async listerCommandes(partenaireRef: string): Promise<ResumeCommande[]> {
     const commandes = await db().commandeVente.findMany({
-      where: { partenaire: { ref: partenaireRef } },
+      where: { partenaire: { ref: partenaireRef }, statut: { not: "devis" } },
       orderBy: { date: "desc" },
     });
     return commandes.map((c) => ({
@@ -255,7 +271,7 @@ export const commandesDemo: CommandesOdoo = {
       where: { ref },
       include: { partenaire: true, lignes: { include: { variante: { include: { modele: true } } } }, remboursements: { where: { etat: "execute" } } },
     });
-    if (!c) throw new NotFound("Commande", ref);
+    if (!c || c.statut === "devis") throw new NotFound("Commande", ref);
     return {
       ref: c.ref,
       date: c.date,
@@ -286,7 +302,7 @@ export const commandesDemo: CommandesOdoo = {
 
   async listerChangements(depuis: Date): Promise<ChangementCommande[]> {
     const commandes = await db().commandeVente.findMany({
-      where: { modifieLe: { gt: depuis } },
+      where: { modifieLe: { gt: depuis }, statut: { not: "devis" } },
       include: { partenaire: true, remboursements: { where: { etat: "execute" } } },
       orderBy: { modifieLe: "asc" },
     });
@@ -317,4 +333,6 @@ export const commandesDemo: CommandesOdoo = {
   async enregistrerRemboursement(r: EnregistrementRemboursement, cle: string) {
     return db().$transaction((tx) => enregistrerRemboursementTx(tx, r, cle));
   },
+
+  ...devisEnregistresDemo,
 };

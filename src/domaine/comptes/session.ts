@@ -17,9 +17,9 @@ export async function compteCourant(chemin = "/mon-compte") {
 }
 
 /** Compte client du visiteur connecté, sans redirection ; `null` pour un visiteur ou l'équipe. */
-export async function compteConnecte(): Promise<{ id: string; statut: string } | null> {
+export async function compteConnecte(): Promise<{ id: string; statut: string; siret: string | null } | null> {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) return null;
-  const compte = await dbSite().compteClient.findUnique({ where: { utilisateurId: session.user.id }, select: { id: true, statut: true } });
+  const compte = await dbSite().compteClient.findUnique({ where: { utilisateurId: session.user.id }, select: { id: true, statut: true, siret: true } });
   return compte && compte.statut !== "supprime" ? compte : null;
 }

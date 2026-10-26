@@ -70,7 +70,9 @@ test("vignette : image légèrement transparente sous le texte, texte foncé lis
     expect(Number(await img.evaluate((e) => getComputedStyle(e).opacity))).toBeLessThan(0.5);
     const vignette = accueil.locator("[data-vignette]", { hasText: titre });
     const couleur = await vignette.getByRole("heading", { level: 2 }).evaluate((e) => getComputedStyle(e).color);
-    expect(couleur).not.toBe("rgb(255, 255, 255)");
+    // Texte foncé (encre), pas blanc : la somme des composantes reste loin du maximum.
+    const composantes = (couleur.match(/\d+/g) ?? []).slice(0, 3).map(Number);
+    expect(composantes.reduce((a, b) => a + b, 0)).toBeLessThan(400);
     await visiteur.close();
   } finally {
     await requete("site", `DELETE FROM contenu WHERE type = 'vignette' AND titre = $1`, [titre]);

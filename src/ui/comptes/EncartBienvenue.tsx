@@ -3,8 +3,8 @@ import type { EtatBienvenue } from "@/domaine/comptes/bienvenue";
 
 /** Offre de bienvenue dans « Mon compte » (US4-1, US4-5, US4-7, FR-018). */
 export function EncartBienvenue({ etat, texte }: { etat: EtatBienvenue; texte: string }) {
-  if (etat.etat === "inactive") return null;
-  const contenu: Record<Exclude<EtatBienvenue["etat"], "inactive">, React.ReactNode> = {
+  if (etat.etat === "inactive" || etat.etat === "deja_servi") return null;
+  const contenu: Record<Exclude<EtatBienvenue["etat"], "inactive" | "deja_servi">, React.ReactNode> = {
     beneficiaire: <>Votre tensiomètre de bienvenue sera joint gratuitement à votre première commande.</>,
     en_attente_stock: <>Votre tensiomètre de bienvenue est momentanément en rupture : il vous sera expédié dès son retour en stock.</>,
     recu: <>Vous avez reçu votre tensiomètre de bienvenue. Merci de votre confiance.</>,
@@ -14,6 +14,7 @@ export function EncartBienvenue({ etat, texte }: { etat: EtatBienvenue; texte: s
       </>
     ),
     non_valide: <>{texte} Votre droit sera ouvert dès la validation de votre compte, si vous êtes abonné à la newsletter.</>,
+    sans_numero: <>{texte} Votre droit sera ouvert à votre première commande, quand vous indiquerez le SIRET ou le SIREN de votre cabinet.</>,
   };
   return (
     <section aria-labelledby="titre-bienvenue" className="ec-box--promo p-5">

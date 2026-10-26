@@ -22,7 +22,7 @@ async function Location({ l, compteId }: { l: LocationDuCompte; compteId: string
         <p>{LIBELLES_LOCATION[l.etat]}</p>
       </div>
       {l.impaye ? <p role="status" className="ec-box--promo p-3">Le dernier prélèvement n’a pas abouti : merci de vérifier votre moyen de paiement.</p> : null}
-      {l.expeditionBloquee ? <p className="ec-box--info p-3">L’appareil sera expédié dès la validation de votre compte.</p> : null}
+      {l.expeditionBloquee ? <p className="ec-box--info p-3">L’appareil sera expédié dès la vérification du numéro d’entreprise de votre cabinet.</p> : null}
       {l.attenteChoixClient ? (
         <p role="status" className="ec-box--promo p-3">L’appareil prévu s’est révélé défectueux : choisissez une nouvelle date de livraison, ou annulez sans frais.</p>
       ) : null}

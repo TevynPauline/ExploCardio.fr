@@ -52,6 +52,9 @@ export function valider(p: DefinitionParametre, saisie: Saisie): string {
     }
     case "booleen":
       return v === "oui" || v === "true" ? "true" : "false";
+    case "choix":
+      if (!p.choix || !(v in p.choix)) refuser("choisissez une des valeurs proposées.");
+      return v;
     case "texte":
       if (v.length > (p.max ?? 1000)) refuser(`${p.max ?? 1000} caractères au plus (actuellement ${v.length}).`);
       return v;
@@ -149,6 +152,7 @@ export function versSaisie(p: DefinitionParametre, valeur: string): Record<strin
 export function afficher(p: DefinitionParametre, valeur: string | null): string {
   if (valeur === null || valeur === "") return "(vide)";
   if (p.type === "booleen") return valeur === "true" ? "Oui" : "Non";
+  if (p.type === "choix") return p.choix?.[valeur] ?? valeur;
   if (p.type === "horaires") {
     const s = versSaisie(p, valeur);
     return JOURS_SEMAINE.map(([j, nom]) => `${nom} ${s[`valeur-${j}`] || "fermé"}`).join(" ; ");

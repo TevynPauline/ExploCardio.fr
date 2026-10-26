@@ -14,7 +14,9 @@ export async function messageDuVisiteur(): Promise<string> {
   if (!session) return messagePrerempli(null);
   const c = await dbSite().compteClient.findUnique({ where: { id: session.id }, include: { utilisateur: true } });
   if (!c) return messagePrerempli(null);
-  return messagePrerempli({ nom: c.utilisateur.name, cabinet: c.nomCabinet, civilite: c.utilisateur.civilite, type: c.type === "structure" ? "cabinet" : "medecin" });
+  // F16 : tous les comptes sont des structures, ouverts par une personne : son nom est donné
+  // dès qu'il est connu (message « cabinet » seulement sans nom).
+  return messagePrerempli({ nom: c.utilisateur.name, cabinet: c.nomCabinet, civilite: c.utilisateur.civilite, type: c.utilisateur.name?.trim() ? "medecin" : "cabinet" });
 }
 
 export async function contactAffiche(maintenant = new Date()): Promise<Contact> {
