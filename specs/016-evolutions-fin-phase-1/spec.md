@@ -475,6 +475,16 @@ facture de démonstration ; afficher le bloc contact et la page Qui sommes-nous.
 - **FR-031** : Le bloc contact DOIT afficher les coordonnées sans « Régis Andrieu, fondateur » ;
   la page « Qui sommes-nous » DOIT continuer de le présenter.
 
+**Images de l'accueil (évolution validée le 2026-10-26)**
+
+- **FR-036** : Chacune des six tuiles d'accès rapide DOIT pouvoir recevoir une image
+  facultative (avec texte de remplacement obligatoire), affichée en haut de la tuile et fondue
+  progressivement vers le texte ; sans image, la tuile reste inchangée. Le design de la tuile
+  (fond, trois points, badge, titre, phrase, « Découvrir ») ne change pas.
+- **FR-037** : L'image d'une vignette du carrousel DOIT couvrir toute la vignette, légèrement
+  transparente sur le fond pastel, sous le texte, qui reste foncé et lisible (contraste
+  WCAG AA) ; pas de voile sombre ni de texte blanc.
+
 **Transverse**
 
 - **FR-032** : Toutes les pages et tous les écrans modifiés DOIVENT respecter la charte

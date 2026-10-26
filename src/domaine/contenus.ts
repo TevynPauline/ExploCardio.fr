@@ -7,7 +7,16 @@ import { ETIQUETTES } from "@/lib/cache";
 // « contenus », invalidée à chaque enregistrement du mini back-office (SC-003 : < 1 minute).
 
 export type MessageBandeau = { id: string; texte: string; lien: string | null };
-export type Tuile = { id: string; titre: string; phrase: string; lien: string; badge: string | null; fond: string | null };
+export type Tuile = {
+  id: string;
+  titre: string;
+  phrase: string;
+  lien: string;
+  badge: string | null;
+  fond: string | null;
+  /** F16 : image facultative, fondue au-dessus du texte. */
+  image: { url: string; texteRemplacement: string } | null;
+};
 export type MarqueAffichee = { id: string; nom: string; logo: string | null; familles: string[] };
 
 type ContenuBandeau = { etat: string; debut: Date | null; fin: Date | null };
@@ -53,7 +62,15 @@ export async function lireBandeau(maintenant = new Date()): Promise<MessageBande
 
 export const lireTuiles = enCache("tuiles", async (): Promise<Tuile[]> => {
   const tuiles = await dbSite().contenu.findMany({ where: { type: "tuile" }, orderBy: { ordre: "asc" }, take: 6 });
-  return tuiles.map((t) => ({ id: t.id, titre: t.titre, phrase: t.corps, lien: t.lien ?? "/", badge: t.badge, fond: t.fond }));
+  return tuiles.map((t) => ({
+    id: t.id,
+    titre: t.titre,
+    phrase: t.corps,
+    lien: t.lien ?? "/",
+    badge: t.badge,
+    fond: t.fond,
+    image: ((t.images as { url: string; texteRemplacement: string }[] | null) ?? [])[0] ?? null,
+  }));
 });
 
 export const lireMarques = enCache("marques", async (): Promise<MarqueAffichee[]> => {

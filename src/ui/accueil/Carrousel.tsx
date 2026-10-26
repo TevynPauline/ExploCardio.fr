@@ -77,13 +77,13 @@ export function Carrousel({ vignettes }: { vignettes: Vignette[] }) {
                 aria-hidden={visible ? undefined : true}
                 inert={!visible}
                 data-vignette
-                className={`relative flex h-[440px] w-full shrink-0 items-end lg:h-[420px] lg:items-center ${v.image ? "bg-dark" : FONDS[v.fond ?? "pale"] ?? "bg-pale"}`}
+                className={`relative flex h-[440px] w-full shrink-0 items-end overflow-hidden lg:h-[420px] lg:items-center ${FONDS[v.fond ?? "pale"] ?? "bg-pale"}`}
               >
                 {v.image ? (
                   <>
-                    <Image src={v.image.url} alt={v.image.texteRemplacement} fill sizes="(min-width: 1180px) 1180px, 100vw" priority={i === 0} className="object-cover" unoptimized />
-                    {/* Voile sombre : texte blanc lisible quelle que soit l'image (contraste ≥ 4,5:1). */}
-                    <span aria-hidden="true" className="absolute inset-0 bg-dark/60 lg:bg-transparent lg:bg-linear-to-r lg:from-dark/80 lg:via-dark/50 lg:to-transparent" />
+                    {/* F16 (choix du 2026-10-26) : image légèrement transparente sur toute la vignette,
+                        sur le fond pastel, sous le texte (encre) qui reste lisible. */}
+                    <Image src={v.image.url} alt={v.image.texteRemplacement} fill sizes="(min-width: 1180px) 1180px, 100vw" priority={i === 0} className="object-cover opacity-30" unoptimized />
                   </>
                 ) : (
                   <span aria-hidden="true" className="pointer-events-none absolute -right-8 top-8 hidden items-end gap-5 md:flex">
@@ -92,11 +92,11 @@ export function Carrousel({ vignettes }: { vignettes: Vignette[] }) {
                     <span className="block size-36 rounded-full bg-blue" />
                   </span>
                 )}
-                <div className={`relative flex max-w-xl flex-col items-start gap-4 p-8 lg:p-12 ${v.image ? "text-white" : "text-ink"}`}>
+                <div className="relative flex max-w-xl flex-col items-start gap-4 p-8 text-ink lg:p-12">
                   <h2 className="break-words text-display font-light">{v.titre}</h2>
                   <p className="break-words text-lead">{v.phrase}</p>
                   {v.lien && v.libelleLien ? (
-                    <Link href={v.lien} className={`ec-btn ${v.image ? "ec-btn--secondary bg-surface" : "ec-btn--primary"}`}>
+                    <Link href={v.lien} className="ec-btn ec-btn--primary">
                       {v.libelleLien}
                     </Link>
                   ) : null}

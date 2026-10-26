@@ -101,8 +101,20 @@ export async function enregistrerTuile(d: FormData) {
       ordre: Number.parseInt(t(d, "ordre") || "0", 10) || 0,
     };
     const avant = await dbSite().contenu.findUniqueOrThrow({ where: { id } });
-    await dbSite().contenu.update({ where: { id }, data: donnees });
-    await journaliser(a, "contenus.tuile.modifiee", id, avant, donnees);
+    // F16 : image facultative, fondue au-dessus du texte ; texte de remplacement obligatoire.
+    const image = d.get("image");
+    const texteRemplacement = t(d, "texteRemplacement").trim();
+    let images: { url: string; texteRemplacement: string }[] | undefined;
+    if (image instanceof File && image.size > 0) {
+      images = [{ url: await deposerImage(image, "vignettes"), texteRemplacement: exigerTexteRemplacement(texteRemplacement) }];
+    } else if (texteRemplacement) {
+      const actuelles = (avant.images as { url: string; texteRemplacement: string }[]) ?? [];
+      if (actuelles[0]) images = [{ ...actuelles[0], texteRemplacement: exigerTexteRemplacement(texteRemplacement) }];
+    }
+    if (d.get("retirerImage") === "oui") images = [];
+    const donneesImage = { ...donnees, ...(images !== undefined ? { images } : {}) };
+    await dbSite().contenu.update({ where: { id }, data: donneesImage });
+    await journaliser(a, "contenus.tuile.modifiee", id, avant, donneesImage);
   });
 }
 
