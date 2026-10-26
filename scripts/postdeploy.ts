@@ -8,6 +8,8 @@ import nextEnv from "@next/env";
 // Un échec arrête le déploiement (l'ancienne version continue de tourner).
 // 1. Migrations des deux bases (site, démonstration).
 // 2. Site de démonstration : jeu de départ créé au PREMIER déploiement seulement (base vide).
+// 3. À chaque déploiement : contenus de départ manquants ajoutés (nouveaux types de contenus d'un
+//    module, par exemple les vignettes du carrousel de F16), sans rien modifier de l'existant.
 // Rien de secret n'est jamais écrit dans les journaux (mots de passe, clé de double authentification).
 
 nextEnv.loadEnvConfig(process.cwd(), false);
@@ -39,7 +41,9 @@ async function principal() {
   const { dbDemo } = await import("@/lib/db/demo");
   const { dbSite } = await import("@/lib/db/site");
   if ((await dbDemo().partenaire.count()) > 0) {
-    console.log("✓ Base de démonstration déjà remplie : rien à faire.");
+    const { remplirContenusInitiaux } = await import("../prisma/site/seed/contenus-initiaux");
+    await remplirContenusInitiaux(dbSite());
+    console.log("✓ Base de démonstration déjà remplie ; contenus de départ manquants ajoutés.");
     return;
   }
   const { verifierModeDemonstration } = await import("@/lib/demo/garde");
