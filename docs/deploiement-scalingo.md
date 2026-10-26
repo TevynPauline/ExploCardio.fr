@@ -56,10 +56,11 @@ supprimée.
 
 Ne collez jamais ces valeurs ailleurs que dans Scalingo et votre `.env.local`.
 
-## Limite connue : fichiers téléversés
+## Fichiers téléversés
 
 Le disque d'un conteneur Scalingo est **effacé à chaque déploiement et redémarrage**. Les
-fichiers téléversés au back-office (photos, logos, PDF, vidéos de l'aide) disparaissent alors.
-Les fichiers fournis avec le site (illustrations, notice de démonstration) ne sont pas
-concernés. Pour le site de démonstration, c'est acceptable ; avant la mise en ligne réelle, il
-faudra un stockage objet (S3 compatible, hébergé en France) — à prévoir dans F14.
+fichiers téléversés au back-office (photos, logos, PDF, vidéos de l'aide) sont donc gardés
+**dans la base du site** (table `fichier_stocke`) et survivent aux déploiements. Les fichiers
+déposés avant ce changement sont perdus : déposez-les à nouveau. `STORAGE_DIR` ne sert plus
+qu'à relire d'anciens fichiers en local. Avant la mise en ligne réelle, un stockage objet (S3
+compatible, hébergé en France) prendra le relais — à prévoir dans F14.

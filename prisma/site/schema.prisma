@@ -1126,3 +1126,17 @@ model Campagne {
 
   @@map("campagne")
 }
+
+/// Fichiers téléversés au back-office (images, PDF, vidéos, sous-titres), gardés dans la base :
+/// le disque des serveurs de Scalingo est vidé à chaque déploiement ou redémarrage. Servis par
+/// /stockage/… ; un stockage objet les remplacera au branchement (F14).
+model FichierStocke {
+  /// Chemin public : « /stockage/<dossier>/<nom aléatoire>.<extension> ».
+  chemin String   @id
+  type   String
+  octets Bytes
+  taille Int
+  creeLe DateTime @default(now())
+
+  @@map("fichier_stocke")
+}

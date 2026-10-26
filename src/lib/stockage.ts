@@ -1,11 +1,14 @@
 import { randomBytes } from "node:crypto";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { extname, join, resolve, sep } from "node:path";
+import { readFile } from "node:fs/promises";
+import { extname, resolve, sep } from "node:path";
 import DOMPurify from "isomorphic-dompurify";
+import { dbSite } from "./db/site";
 
 // Fichiers téléversés dans le back-office (F01, T009, R8) : images d'actualités, logos de
-// marques, photos et documents PDF des produits (F03). Stockés hors du code, dans STORAGE_DIR
-// (sauvegardé chez l'hébergeur).
+// marques, photos et documents PDF des produits (F03). Gardés dans la base du site (table
+// fichier_stocke) : le disque de Scalingo est vidé à chaque déploiement ou redémarrage. Les
+// fichiers plus anciens restés dans STORAGE_DIR sont encore lus. Un stockage objet prendra le
+// relais au branchement (F14).
 
 export const TAILLE_MAX = 2 * 1024 * 1024;
 
@@ -52,11 +55,7 @@ export async function deposerImage(fichier: File, dossier: "actualites" | "vigne
     if (!propre.includes("<svg")) throw new FichierRefuse("Ce fichier SVG n'est pas valide.");
     octets = Buffer.from(propre, "utf8");
   }
-  const nom = `${randomBytes(12).toString("hex")}${TYPES_AUTORISES[type]}`;
-  const repertoire = join(racine(), dossier);
-  await mkdir(repertoire, { recursive: true });
-  await writeFile(join(repertoire, nom), octets);
-  return `/stockage/${dossier}/${nom}`;
+  return ecrire(dossier, TYPES_AUTORISES[type]!, octets);
 }
 
 /** Enregistre un document PDF (type réel vérifié) et renvoie son chemin public et sa taille. */
@@ -65,11 +64,7 @@ export async function deposerDocument(fichier: File): Promise<{ chemin: string; 
   if (fichier.size > TAILLE_MAX_DOCUMENT) throw new FichierRefuse("Le document dépasse 10 Mo.");
   const octets = Buffer.from(await fichier.arrayBuffer());
   if (octets.subarray(0, 5).toString("latin1") !== "%PDF-") throw new FichierRefuse("Format refusé : PDF uniquement.");
-  const nom = `${randomBytes(12).toString("hex")}.pdf`;
-  const repertoire = join(racine(), "documents");
-  await mkdir(repertoire, { recursive: true });
-  await writeFile(join(repertoire, nom), octets);
-  return { chemin: `/stockage/documents/${nom}`, octets: octets.length };
+  return { chemin: await ecrire("documents", ".pdf", octets), octets: octets.length };
 }
 
 /** Vidéos du centre d'aide (F09, D4) : MP4 de 50 Mo au plus ; sous-titres WebVTT de 1 Mo au plus. */
@@ -77,11 +72,11 @@ export const TAILLE_MAX_VIDEO = 50 * 1024 * 1024;
 export const TAILLE_MAX_SOUS_TITRES = 1024 * 1024;
 
 async function ecrire(dossier: string, extension: string, octets: Buffer): Promise<string> {
-  const nom = `${randomBytes(12).toString("hex")}${extension}`;
-  const repertoire = join(racine(), dossier);
-  await mkdir(repertoire, { recursive: true });
-  await writeFile(join(repertoire, nom), octets);
-  return `/stockage/${dossier}/${nom}`;
+  const chemin = `/stockage/${dossier}/${randomBytes(12).toString("hex")}${extension}`;
+  await dbSite().fichierStocke.create({
+    data: { chemin, type: TYPES_PAR_EXTENSION[extension]!, octets: new Uint8Array(octets), taille: octets.length },
+  });
+  return chemin;
 }
 
 /** Vidéo MP4 (signature « ftyp » vérifiée) ; renvoie son chemin public. */
@@ -111,6 +106,8 @@ const TYPES_PAR_EXTENSION: Record<string, string> = {
 
 /** Lit un fichier du stockage ; null s'il n'existe pas ou sort du dossier. */
 export async function lireFichier(segments: string[]): Promise<{ octets: Buffer; type: string } | null> {
+  const enBase = await dbSite().fichierStocke.findUnique({ where: { chemin: `/stockage/${segments.join("/")}` } });
+  if (enBase) return { octets: Buffer.from(enBase.octets), type: enBase.type };
   const base = racine();
   const chemin = resolve(base, ...segments);
   if (!chemin.startsWith(base + sep)) return null;
