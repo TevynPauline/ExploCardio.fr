@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { COOKIE_ACCES, cookieValide } from "@/lib/demo/acces";
+import { CHEMIN_PAGE_ATTENTE, estHotePageAttente, estRessourcePageAttente } from "@/lib/page-attente";
 import { COOKIE_ACTIVITE, COOKIES_SESSION, delaiInactivite, derniereActivite, estInactive, valeurActivite } from "@/lib/inactivite";
 
 // Site de démonstration (US8, FR-034, FR-035) : aucune page n'est accessible sans le mot de
@@ -40,7 +41,26 @@ async function activiteEquipe(requete: NextRequest, reponse: NextResponse): Prom
   return reponse;
 }
 
+/**
+ * Page d'attente (F17) : sur les adresses déclarées, « / » affiche la page d'attente, sans mot
+ * de passe ; toute autre adresse y renvoie. Ni la démonstration, ni le back-office, ni l'API.
+ */
+function pageAttente(requete: NextRequest): NextResponse {
+  const { pathname } = requete.nextUrl;
+  let reponse: NextResponse;
+  if (estRessourcePageAttente(pathname)) {
+    reponse = NextResponse.next();
+  } else if (pathname === "/") {
+    reponse = NextResponse.rewrite(new URL(CHEMIN_PAGE_ATTENTE, requete.url));
+  } else {
+    reponse = NextResponse.redirect(new URL("/", requete.url));
+  }
+  reponse.headers.set("X-Robots-Tag", "noindex, nofollow");
+  return reponse;
+}
+
 export async function proxy(requete: NextRequest) {
+  if (estHotePageAttente(requete.headers.get("host"))) return pageAttente(requete);
   if (process.env.SITE_MODE === "prod") return activiteEquipe(requete, NextResponse.next());
 
   const { pathname, search } = requete.nextUrl;

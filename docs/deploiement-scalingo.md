@@ -53,6 +53,7 @@ supprimée.
 | `SITE_URL` | `https://explocardio.osc-fr1.scalingo.io` (votre domaine plus tard) |
 | `TRUSTED_PROXY` | `1` (le site est derrière le routeur de Scalingo) |
 | `STORAGE_DIR` | `/app/stockage` |
+| `DOMAINES_PAGE_ATTENTE` | `www.explocardio.fr` (adresses qui n'affichent que la page d'attente, F17) |
 
 Ne collez jamais ces valeurs ailleurs que dans Scalingo et votre `.env.local`.
 
@@ -64,3 +65,26 @@ fichiers téléversés au back-office (photos, logos, PDF, vidéos de l'aide) so
 déposés avant ce changement sont perdus : déposez-les à nouveau. `STORAGE_DIR` ne sert plus
 qu'à relire d'anciens fichiers en local. Avant la mise en ligne réelle, un stockage objet (S3
 compatible, hébergé en France) prendra le relais — à prévoir dans F14.
+
+## Page d'attente sur www.explocardio.fr (F17)
+
+Tant que le site n'est pas ouvert, `www.explocardio.fr` (adresse des brochures et de leur QR
+code) n'affiche que la page d'attente : annonce de l'ouverture et formulaire « Être prévenu de
+l'ouverture ». Toute autre adresse de ce domaine y renvoie ; la démonstration, le back-office et
+l'API n'y sont pas accessibles. La démonstration reste sur `explocardio.osc-fr1.scalingo.io`,
+protégée par son mot de passe. Les inscriptions sont dans le back-office : Demandes →
+« Inscriptions à l'ouverture » (liste, export CSV, suppression).
+
+Réglages (faits le 2026-10-27) :
+
+1. **o2switch** (domaine et DNS) : le domaine `explocardio.fr` est ajouté à l'hébergement
+   (cPanel → Domaines). Dans l'éditeur de zone, `www.explocardio.fr` est un **CNAME** vers
+   `explocardio.osc-fr1.scalingo.io.` ; une redirection permanente (cPanel → Redirections)
+   envoie `explocardio.fr` vers `https://www.explocardio.fr`.
+2. **Scalingo** : Settings → Domains / SSL → `www.explocardio.fr` ajouté, **sans** le marquer
+   comme domaine principal (sinon l'adresse de la démonstration serait redirigée). Le certificat
+   HTTPS est créé automatiquement.
+3. **Variable** `DOMAINES_PAGE_ATTENTE=www.explocardio.fr` (Environment).
+
+À l'ouverture du site : retirer la variable, puis faire de `www.explocardio.fr` l'adresse du
+site (`SITE_URL`).

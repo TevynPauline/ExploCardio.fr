@@ -345,6 +345,19 @@ model InscriptionNewsletter {
   @@map("inscription_newsletter")
 }
 
+/// Demande à être prévenu de l'ouverture du site (F17, page d'attente). Donnée réelle : la
+/// réinitialisation de la démonstration ne l'efface pas.
+model InscriptionOuverture {
+  id            String   @id @default(cuid())
+  nom           String
+  email         String   @unique
+  textePresente String
+  creeLe        DateTime @default(now())
+  modifieLe     DateTime @updatedAt
+
+  @@map("inscription_ouverture")
+}
+
 /// Limite d'envois par empreinte d'adresse (FR-032), fenêtre d'une heure.
 model LimiteEnvoi {
   cle          String   @id

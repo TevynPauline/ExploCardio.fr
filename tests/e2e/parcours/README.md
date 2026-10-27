@@ -20,6 +20,7 @@ SC-001 est atteint quand tous les parcours ci-dessous existent et passent.
 | Demande de financement (F04) ou de devis (F03), copie en opportunité | F04 / F03 | `../f04/financement.spec.ts`, `../f04/back-office-financement.spec.ts`, `../f03/*.spec.ts` | ✅ |
 | Back-office : droits par rôle, clients et fiche, contenus (aperçu, textes des pages, verrou), catalogue, paramètres et historique, demandes, journal, inactivité | F13 | `../f13/*.spec.ts` | ✅ |
 | Fin de phase 1 : navigation et fil d'Ariane, carrousel et accueil (images), prix du panier en direct, numéro d'entreprise à la première commande et vérification, devis depuis le panier, hors métropole | F16 | `../f16/*.spec.ts` | ✅ |
+| Page d'attente sur www.explocardio.fr : formulaire « Être prévenu de l'ouverture », aucune autre page, démonstration protégée, liste et export CSV au back-office | F17 | `../f17/*.spec.ts` | ✅ |
 
 ## Règles communes
 

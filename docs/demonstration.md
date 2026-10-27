@@ -214,6 +214,16 @@ Le parcours « consommables → bons d'achat → assistance offerte » : tout es
   règlent dans **Démonstration → Paramètres commerciaux** ; une modification ne touche que les
   commandes suivantes.
 
+## Page d'attente (F17)
+
+`www.explocardio.fr` affiche une page d'attente publique (sans mot de passe ni bandeau de
+démonstration) avec un formulaire « Être prévenu de l'ouverture » : nom, adresse email,
+consentement. Après chaque inscription, le formulaire se vide : on peut inscrire plusieurs
+visiteurs à la suite sur une tablette. Aucun email n'est envoyé. Les inscriptions sont réelles
+et ne sont pas effacées par la réinitialisation ; elles se consultent dans Demandes →
+« Inscriptions à l'ouverture » (export CSV, suppression sur demande). En local, la page
+d'attente s'affiche sur `http://127.0.0.1:3000` (et la démonstration sur `localhost`).
+
 ## Évolutions de fin de phase 1 (F16)
 
 - **Accueil** : carrousel (actualités, opérations, produits phares, offre de bienvenue) défilant

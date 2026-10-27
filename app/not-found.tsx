@@ -1,3 +1,4 @@
+import { BandeauDemo } from "@/ui/BandeauDemo";
 import { EnTete } from "@/ui/en-tete/EnTete";
 import { PageIntrouvable } from "@/ui/PageIntrouvable";
 import { PiedDePage } from "@/ui/PiedDePage";
@@ -6,6 +7,7 @@ import { PiedDePage } from "@/ui/PiedDePage";
 export default function Introuvable() {
   return (
     <>
+      <BandeauDemo />
       <EnTete />
       <main id="contenu">
         <PageIntrouvable />

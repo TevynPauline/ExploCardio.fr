@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { modeDuSite } from "@/lib/config";
-import { BandeauDemo } from "@/ui/BandeauDemo";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -10,7 +8,6 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
-  const demonstration = modeDuSite() === "demo";
   return (
     <html lang="fr" suppressHydrationWarning>
       <head>
@@ -27,7 +24,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         />
       </head>
       <body>
-        {demonstration ? <BandeauDemo /> : null}
         {children}
       </body>
     </html>

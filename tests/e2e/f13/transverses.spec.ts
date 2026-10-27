@@ -12,6 +12,7 @@ const PAGES = [
   "/admin/clients?statut=tous",
   "/admin/demandes",
   "/admin/demandes/messages?etat=tous",
+  "/admin/demandes/ouverture",
   "/admin/devis?etat=tous",
   "/admin/financements",
   "/admin/catalogue",

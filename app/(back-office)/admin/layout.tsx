@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { rubriquesVisibles } from "@/lib/droits";
 import { exigerEquipe } from "@/lib/roles";
 import { Logo } from "@/ui";
+import { BandeauDemo } from "@/ui/BandeauDemo";
 import { BoutonDeconnexion } from "./BoutonDeconnexion";
 
 export const metadata: Metadata = {
@@ -18,6 +19,7 @@ export default async function MiseEnPageBackOffice({ children }: { children: Rea
   const liens = rubriquesVisibles(role);
   return (
     <div className="min-h-screen">
+      <BandeauDemo />
       <header className="border-b border-line bg-surface">
         <div className="mx-auto flex max-w-page flex-wrap items-center justify-between gap-4 px-4 py-3">
           <Link href="/admin" aria-label="Back-office ExploCardio.fr, tableau de bord" className="inline-flex min-h-11 items-center">
