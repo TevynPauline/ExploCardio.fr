@@ -345,12 +345,16 @@ model InscriptionNewsletter {
   @@map("inscription_newsletter")
 }
 
-/// Demande à être prévenu de l'ouverture du site (F17, page d'attente). Donnée réelle : la
+/// Demande à être prévenu de l'ouverture du site ou à être recontacté (F17, page d'attente). Donnée réelle : la
 /// réinitialisation de la démonstration ne l'efface pas.
 model InscriptionOuverture {
   id            String   @id @default(cuid())
   nom           String
   email         String   @unique
+  /// Facultatif.
+  telephone     String?
+  /// Commentaire facultatif ; un nouvel envoi avec la même adresse s'ajoute à la suite, daté.
+  commentaire   String?
   textePresente String
   creeLe        DateTime @default(now())
   modifieLe     DateTime @updatedAt

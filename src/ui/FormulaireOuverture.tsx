@@ -5,11 +5,12 @@ import { inscrireOuvertureAction, type EtatOuverture } from "@/actions/ouverture
 import { Button } from "./Button";
 import { Champ } from "./Champ";
 
-const initial: EtatOuverture = { statut: "initial", erreurs: {}, saisie: { nom: "", email: "" } };
+const initial: EtatOuverture = { statut: "initial", erreurs: {}, saisie: { nom: "", email: "", telephone: "", commentaire: "" } };
 
 /**
- * « Être prévenu de l'ouverture » (F17) : nom, email, consentement explicite. Après une
- * inscription, le formulaire est vidé pour la personne suivante et un message le confirme.
+ * Page d'attente (F17) : nom et email obligatoires, téléphone et commentaire facultatifs,
+ * consentement explicite. Après un envoi, le formulaire est vidé pour la personne suivante et
+ * un message le confirme.
  */
 export function FormulaireOuverture({ jeton, texteConsentement }: { jeton: string; texteConsentement: string }) {
   const [etat, action, enCours] = useActionState(inscrireOuvertureAction, initial);
@@ -33,15 +34,36 @@ export function FormulaireOuverture({ jeton, texteConsentement }: { jeton: strin
 
       {etat.statut !== "initial" ? (
         <p ref={message} tabIndex={-1} role={etat.statut === "inscrit" ? "status" : "alert"} className={etat.statut === "inscrit" ? "ec-box--info p-4" : "ec-box--promo p-4 font-medium"}>
-          {etat.statut === "inscrit" && "Merci, c’est noté : nous vous préviendrons dès l’ouverture du site."}
-          {etat.statut === "erreurs" && "L’inscription n’a pas été enregistrée : corrigez les champs signalés."}
-          {etat.statut === "limite" && "Trop d’inscriptions depuis cet appareil. Réessayez dans une heure."}
-          {etat.statut === "refuse" && "L’inscription n’a pas pu être enregistrée. Patientez quelques secondes puis réessayez."}
+          {etat.statut === "inscrit" && "Message bien envoyé, nous revenons vers vous rapidement."}
+          {etat.statut === "erreurs" && "Votre message n’a pas été envoyé : corrigez les champs signalés."}
+          {etat.statut === "limite" && "Trop d’envois depuis cet appareil. Réessayez dans une heure."}
+          {etat.statut === "refuse" && "Votre message n’a pas pu être envoyé. Patientez quelques secondes puis réessayez."}
         </p>
       ) : null}
 
       <Champ id="ouverture-nom" name="nom" libelle="Nom et prénom" autoComplete="name" required maxLength={120} defaultValue={etat.saisie.nom} erreur={e.nom} />
       <Champ id="ouverture-email" name="email" type="email" libelle="Adresse email" autoComplete="email" required defaultValue={etat.saisie.email} erreur={e.email} />
+      <Champ id="ouverture-telephone" name="telephone" type="tel" libelle="Numéro de téléphone (facultatif)" autoComplete="tel" defaultValue={etat.saisie.telephone} erreur={e.telephone} />
+
+      <div className="flex flex-col gap-1">
+        <label htmlFor="ouverture-commentaire" className="text-small font-medium text-ink">Commentaires (facultatif)</label>
+        <p id="ouverture-commentaire-aide" className="text-small text-muted">N’indiquez aucune donnée concernant vos patients.</p>
+        <textarea
+          id="ouverture-commentaire"
+          name="commentaire"
+          rows={4}
+          maxLength={2000}
+          defaultValue={etat.saisie.commentaire}
+          aria-invalid={e.commentaire ? true : undefined}
+          aria-describedby={["ouverture-commentaire-aide", e.commentaire ? "ouverture-commentaire-erreur" : null].filter(Boolean).join(" ")}
+          className="w-full min-w-0 rounded-sm border border-muted bg-surface p-3 text-ink focus-visible:border-action focus-visible:outline-2 focus-visible:outline-action"
+        />
+        {e.commentaire ? (
+          <p id="ouverture-commentaire-erreur" role="alert" className="text-small font-medium text-ink">
+            {e.commentaire}
+          </p>
+        ) : null}
+      </div>
 
       <div className="flex flex-col gap-1">
         <label className="flex min-h-11 items-start gap-3 text-small text-ink">
@@ -65,7 +87,7 @@ export function FormulaireOuverture({ jeton, texteConsentement }: { jeton: strin
 
       <div>
         <Button type="submit" disabled={enCours}>
-          {enCours ? "Envoi…" : "Être prévenu de l’ouverture"}
+          {enCours ? "Envoi…" : "Envoyer"}
         </Button>
       </div>
     </form>

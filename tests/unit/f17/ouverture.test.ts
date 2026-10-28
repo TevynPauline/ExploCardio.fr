@@ -3,7 +3,8 @@ import { dbSite } from "@/lib/db/site";
 import { csvOuverture, inscrireOuverture, supprimerInscriptionOuverture, TEXTE_CONSENTEMENT_OUVERTURE, validerOuverture } from "@/domaine/ouverture";
 import { estHotePageAttente, estRessourcePageAttente } from "@/lib/page-attente";
 
-// T006 — page d'attente (F17) : validation, doublon, consentement, CSV, suppression, adresses.
+// T006 — page d'attente (F17) : validation, doublon, commentaires, consentement, CSV,
+// suppression, adresses.
 
 describe("inscriptions à l'ouverture", () => {
   const email = `ouverture-${Date.now()}@demo.explocardio.test`;
@@ -13,22 +14,30 @@ describe("inscriptions à l'ouverture", () => {
     await dbSite().journalAction.deleteMany({ where: { objet: email } });
   });
 
-  it("refuse un nom vide ou trop long, une adresse invalide et l'absence de consentement", () => {
-    expect(validerOuverture({ nom: " ", email: "pas-une-adresse", consentement: false })).toEqual({
+  it("refuse un nom vide ou trop long, une adresse ou un téléphone invalides, un commentaire trop long et l'absence de consentement", () => {
+    expect(validerOuverture({ nom: " ", email: "pas-une-adresse", telephone: "abc", commentaire: "x".repeat(2001), consentement: false })).toEqual({
       nom: "Indiquez votre nom.",
       email: expect.stringContaining("adresse email valide"),
+      telephone: "Ce numéro de téléphone n’est pas valide.",
+      commentaire: expect.stringContaining("2 000"),
       consentement: expect.stringContaining("Cochez la case"),
     });
-    expect(validerOuverture({ nom: "x".repeat(121), email: "a@b.fr", consentement: true }).nom).toContain("120");
-    expect(validerOuverture({ nom: "Dr Martin", email: "martin@cabinet.fr", consentement: true })).toEqual({});
+    expect(validerOuverture({ nom: "x".repeat(121), email: "a@b.fr", telephone: "", commentaire: "", consentement: true }).nom).toContain("120");
+    expect(validerOuverture({ nom: "Dr Martin", email: "martin@cabinet.fr", telephone: "+33 6 12 34 56 78", commentaire: "", consentement: true })).toEqual({});
   });
 
-  it("n'inscrit une adresse qu'une fois, garde le texte du consentement, supprime avec journal", async () => {
-    await inscrireOuverture({ nom: "Dr Premier", email: email.toUpperCase(), consentement: true });
-    await inscrireOuverture({ nom: " Dr Second ", email, consentement: true });
+  it("n'inscrit une adresse qu'une fois, garde chaque commentaire et le texte du consentement, supprime avec journal", async () => {
+    await inscrireOuverture({ nom: "Dr Premier", email: email.toUpperCase(), telephone: "06 00 00 00 01", commentaire: "Premier message.", consentement: true });
+    await inscrireOuverture({ nom: " Dr Second ", email, telephone: "", commentaire: " Second message. ", consentement: true }, new Date("2026-10-28T09:05:00Z"));
     const lignes = await dbSite().inscriptionOuverture.findMany({ where: { email } });
     expect(lignes).toHaveLength(1);
-    expect(lignes[0]).toMatchObject({ nom: "Dr Second", textePresente: TEXTE_CONSENTEMENT_OUVERTURE });
+    // Nom remplacé, téléphone gardé (non redonné), commentaires mis bout à bout et datés.
+    expect(lignes[0]).toMatchObject({
+      nom: "Dr Second",
+      telephone: "06 00 00 00 01",
+      commentaire: "Premier message.\n\n[28/10/2026 10:05] Second message.",
+      textePresente: TEXTE_CONSENTEMENT_OUVERTURE,
+    });
     expect(await dbSite().consentement.count({ where: { email, objet: "ouverture", etat: true } })).toBe(2);
 
     expect(await supprimerInscriptionOuverture(lignes[0]!.id, { id: "essai", libelle: "essai" })).toBe(true);
@@ -39,9 +48,9 @@ describe("inscriptions à l'ouverture", () => {
   });
 
   it("exporte un CSV lisible par Excel (BOM, point-virgule, guillemets si besoin)", () => {
-    const csv = csvOuverture([{ nom: 'Dr "Doc"; Martin', email: "martin@cabinet.fr", creeLe: new Date("2026-10-28T09:05:00Z") }]);
-    expect(csv.startsWith("﻿Date d'inscription;Nom;Email\r\n")).toBe(true);
-    expect(csv).toContain('28/10/2026 10:05:00;"Dr ""Doc""; Martin";martin@cabinet.fr\r\n');
+    const csv = csvOuverture([{ nom: 'Dr "Doc"; Martin', email: "martin@cabinet.fr", telephone: null, commentaire: "Ligne 1\nLigne 2", creeLe: new Date("2026-10-28T09:05:00Z") }]);
+    expect(csv.startsWith("﻿Date d'inscription;Nom;Email;Téléphone;Commentaires\r\n")).toBe(true);
+    expect(csv).toContain('28/10/2026 10:05:00;"Dr ""Doc""; Martin";martin@cabinet.fr;;"Ligne 1\nLigne 2"\r\n');
   });
 });
 

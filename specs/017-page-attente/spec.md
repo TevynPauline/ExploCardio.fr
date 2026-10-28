@@ -29,10 +29,12 @@ mener à une page publique qui annonce l'ouverture prochaine et permet aux cardi
   démonstration », conforme à la charte, accessible (WCAG 2.2 AA) et lisible sur mobile. Elle
   n'est pas indexée par les moteurs de recherche.
 - **FR-003** Le formulaire demande le nom (obligatoire, 120 caractères au plus), l'adresse email
-  (obligatoire, valide) et le consentement explicite (case non cochée par défaut). Le texte du
+  (obligatoire, valide), le téléphone (facultatif), un commentaire (facultatif, 2 000 caractères
+  au plus, sans donnée de patient) et le consentement explicite (case non cochée par défaut). Le texte du
   consentement est conservé avec l'inscription et dans le registre des consentements.
-- **FR-004** Une même adresse email n'est inscrite qu'une fois ; une nouvelle inscription met à
-  jour le nom. La réponse est la même dans tous les cas.
+- **FR-004** Une même adresse email n'est inscrite qu'une fois ; un nouvel envoi met à jour le nom
+  et le téléphone et ajoute le commentaire, daté, à la suite des précédents. La réponse est la
+  même dans tous les cas.
 - **FR-005** Protection contre les robots identique aux autres formulaires publics (champ piège,
   délai minimal). La limite d'envois est relevée (30 par heure) pour permettre les inscriptions à
   la suite depuis un même appareil.
@@ -59,3 +61,11 @@ mener à une page publique qui annonce l'ouverture prochaine et permet aux cardi
 
 Email de confirmation, double consentement, référencement de la page, envoi de l'annonce
 d'ouverture (fait plus tard depuis l'outil d'emailing avec l'export).
+
+## Révision du 2026-10-28 (retours de Pauline)
+
+Titre « Plus que quelques jours avant le lancement officiel du site ExploCardio.fr », nouvelle
+accroche, téléphone et commentaire facultatifs, bouton « Envoyer », confirmation « Message bien
+envoyé, nous revenons vers vous rapidement. », consentement et mention de confidentialité
+étendus à la réponse aux demandes. Back-office : téléphone et commentaires dans la liste
+(cartes) et dans l'export CSV.

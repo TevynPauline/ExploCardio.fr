@@ -18,7 +18,7 @@ export default async function InscriptionsOuverture({ searchParams }: { searchPa
       <Kicker>Demandes</Kicker>
       <h1 className="text-h2 font-light">Inscriptions à l’ouverture</h1>
       <p className="text-muted">
-        Personnes inscrites depuis la page d’attente de www.explocardio.fr pour être prévenues de l’ouverture du site. Aucun email ne leur a encore été envoyé.
+        Messages laissés sur la page d’attente de www.explocardio.fr : à prévenir de l’ouverture du site et, s’il y a un commentaire, à recontacter. Aucun email ne leur a été envoyé automatiquement.
       </p>
       <Retour {...r} />
       <p className="flex flex-wrap items-center gap-4">
@@ -32,41 +32,34 @@ export default async function InscriptionsOuverture({ searchParams }: { searchPa
         ) : null}
       </p>
       {!inscriptions.length ? <p className="text-muted">Aucune inscription pour le moment.</p> : null}
-      {inscriptions.length ? (
-        <div role="region" aria-label="Tableau des inscriptions" tabIndex={0} className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="border-b border-line">
-                <th scope="col" className="py-2 pr-4">Date</th>
-                <th scope="col" className="py-2 pr-4">Nom</th>
-                <th scope="col" className="py-2 pr-4">Email</th>
-                {modifiable ? <th scope="col" className="py-2"><span className="sr-only">Actions</span></th> : null}
-              </tr>
-            </thead>
-            <tbody>
-              {inscriptions.map((i) => (
-                <tr key={i.id} className="border-b border-line">
-                  <td className="py-2 pr-4 whitespace-nowrap">{i.creeLe.toLocaleString("fr-FR", { timeZone: "Europe/Paris", dateStyle: "short", timeStyle: "short" })}</td>
-                  <td className="py-2 pr-4">{i.nom}</td>
-                  <td className="py-2 pr-4 break-all">
-                    <a href={`mailto:${i.email}`}>{i.email}</a>
-                  </td>
-                  {modifiable ? (
-                    <td className="py-2">
-                      <form action={actionSupprimerInscriptionOuverture}>
-                        <input type="hidden" name="id" value={i.id} />
-                        <button type="submit" className="ec-btn ec-btn--secondary" aria-label={`Supprimer l’inscription de ${i.email}`}>
-                          Supprimer
-                        </button>
-                      </form>
-                    </td>
-                  ) : null}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : null}
+      <ul className="flex list-none flex-col gap-3 p-0">
+        {inscriptions.map((i) => (
+          <li key={i.id} aria-label={`Inscription de ${i.email}`} className="ec-card flex flex-col gap-1">
+            <p className="font-semibold">{i.nom}</p>
+            <p className="text-small text-muted">
+              Dernier envoi le {i.modifieLe.toLocaleString("fr-FR", { timeZone: "Europe/Paris", dateStyle: "short", timeStyle: "short" })}
+            </p>
+            <p className="break-all">
+              <a href={`mailto:${i.email}`}>{i.email}</a>
+              {i.telephone ? (
+                <>
+                  {" · "}
+                  <a href={`tel:${i.telephone.replace(/\s/g, "")}`}>{i.telephone}</a>
+                </>
+              ) : null}
+            </p>
+            {i.commentaire ? <p className="whitespace-pre-line break-words">{i.commentaire}</p> : null}
+            {modifiable ? (
+              <form action={actionSupprimerInscriptionOuverture} className="mt-2">
+                <input type="hidden" name="id" value={i.id} />
+                <button type="submit" className="ec-btn ec-btn--secondary" aria-label={`Supprimer l’inscription de ${i.email}`}>
+                  Supprimer
+                </button>
+              </form>
+            ) : null}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

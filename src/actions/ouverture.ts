@@ -6,12 +6,12 @@ import { CHAMP_PIEGE, verifierEnvoi } from "@/domaine/anti-robots";
 import { adresseVisiteur, autoriserEnvoi } from "@/domaine/limites";
 import { inscrireOuverture, validerOuverture, type ErreursOuverture } from "@/domaine/ouverture";
 
-// Page d'attente (F17) : « Être prévenu de l'ouverture ».
+// Page d'attente (F17) : être prévenu de l'ouverture et, si besoin, être recontacté.
 
 export type EtatOuverture = {
   statut: "initial" | "inscrit" | "erreurs" | "limite" | "refuse";
   erreurs: ErreursOuverture;
-  saisie: { nom: string; email: string };
+  saisie: { nom: string; email: string; telephone: string; commentaire: string };
 };
 
 /** Inscriptions à la suite depuis un même appareil (tablette au salon) : limite relevée. */
@@ -31,7 +31,7 @@ async function identifiantSession(): Promise<string> {
 const texte = (d: FormData, cle: string) => String(d.get(cle) ?? "");
 
 export async function inscrireOuvertureAction(_precedent: EtatOuverture, donnees: FormData): Promise<EtatOuverture> {
-  const saisie = { nom: texte(donnees, "nom"), email: texte(donnees, "email") };
+  const saisie = { nom: texte(donnees, "nom"), email: texte(donnees, "email"), telephone: texte(donnees, "telephone"), commentaire: texte(donnees, "commentaire") };
   if (verifierEnvoi(texte(donnees, "jeton"), texte(donnees, CHAMP_PIEGE), 1500) !== "ok") {
     return { statut: "refuse", erreurs: {}, saisie };
   }
@@ -42,5 +42,5 @@ export async function inscrireOuvertureAction(_precedent: EtatOuverture, donnees
   }
   await inscrireOuverture({ ...saisie, consentement: true });
   // Formulaire vidé : la personne suivante peut s'inscrire depuis le même appareil.
-  return { statut: "inscrit", erreurs: {}, saisie: { nom: "", email: "" } };
+  return { statut: "inscrit", erreurs: {}, saisie: { nom: "", email: "", telephone: "", commentaire: "" } };
 }

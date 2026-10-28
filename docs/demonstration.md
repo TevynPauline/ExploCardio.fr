@@ -218,7 +218,7 @@ Le parcours « consommables → bons d'achat → assistance offerte » : tout es
 
 `www.explocardio.fr` affiche une page d'attente publique (sans mot de passe ni bandeau de
 démonstration) avec un formulaire « Être prévenu de l'ouverture » : nom, adresse email,
-consentement. Après chaque inscription, le formulaire se vide : on peut inscrire plusieurs
+téléphone et commentaire facultatifs, consentement. Après chaque inscription, le formulaire se vide : on peut inscrire plusieurs
 visiteurs à la suite sur une tablette. Aucun email n'est envoyé. Les inscriptions sont réelles
 et ne sont pas effacées par la réinitialisation ; elles se consultent dans Demandes →
 « Inscriptions à l'ouverture » (export CSV, suppression sur demande). En local, la page

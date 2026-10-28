@@ -37,7 +37,7 @@ export default async function Demandes() {
         <li>
           <Link href="/admin/demandes/ouverture" className="ec-card block h-full no-underline hover:border-action">
             <span className="block text-h3 font-semibold text-action">Inscriptions à l’ouverture</span>
-            <span className="mt-1 block text-muted">Page d’attente de www.explocardio.fr : liste et export CSV.</span>
+            <span className="mt-1 block text-muted">Page d’attente de www.explocardio.fr : coordonnées, commentaires, export CSV.</span>
             <span className="mt-2 block font-medium text-ink">{inscrits}</span>
           </Link>
         </li>
