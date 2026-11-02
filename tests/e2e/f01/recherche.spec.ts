@@ -8,10 +8,12 @@ test.beforeEach(async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
 });
 
+// F18 (US4) : sur ordinateur, le champ est visible en permanence dans l'en-tête.
 async function ouvrir(page: import("@playwright/test").Page) {
   await page.goto("/");
-  await page.getByRole("button", { name: "Rechercher" }).click();
-  return page.getByRole("combobox", { name: /Rechercher un produit/ });
+  const champ = page.getByRole("combobox", { name: /Rechercher un produit/ });
+  await champ.click();
+  return champ;
 }
 
 test("suggestions groupées dès 2 caractères, en moins d'une seconde", async ({ page }) => {
@@ -54,8 +56,22 @@ test("aucun résultat : message et chemins alternatifs sur la page de résultats
   await expect(page.getByRole("link", { name: "Holter ECG" }).last()).toBeVisible();
 });
 
-test("Échap ferme la recherche et rend le focus au bouton", async ({ page }) => {
+test("Échap ferme les suggestions ; le focus reste dans le champ (ordinateur)", async ({ page }) => {
   const champ = await ouvrir(page);
+  await champ.fill("dms");
+  await expect(page.getByRole("option").first()).toBeVisible();
+  await champ.press("Escape");
+  await expect(page.getByRole("option")).toHaveCount(0);
+  await expect(page.getByRole("listbox", { name: "Suggestions" })).toBeHidden();
+  await expect(champ).toBeFocused();
+});
+
+test("téléphone : la loupe ouvre la recherche ; Échap la ferme et rend le focus à la loupe", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Rechercher" }).click();
+  const champ = page.getByRole("combobox", { name: /Rechercher un produit/ });
+  await expect(champ).toBeFocused();
   await champ.fill("dms");
   await champ.press("Escape");
   await expect(page.getByRole("button", { name: "Rechercher" })).toBeFocused();

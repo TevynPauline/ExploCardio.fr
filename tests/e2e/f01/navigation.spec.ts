@@ -13,9 +13,9 @@ test.describe("ordinateur", () => {
     await page.goto("/holter-ecg");
     const nav = page.getByRole("navigation", { name: "Navigation principale" });
     await expect(nav.getByRole("button")).toHaveText(ENTREES);
-    await expect(page.getByRole("button", { name: "Rechercher" })).toBeVisible();
+    await expect(page.getByRole("combobox", { name: /Rechercher un produit/ })).toBeVisible();
     await expect(page.getByRole("link", { name: "Panier, vide" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Mon compte / Connexion" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Mon compte" })).toBeVisible();
     await page.mouse.wheel(0, 2000);
     await expect(nav).toBeInViewport();
     await page.getByRole("link", { name: "ExploCardio.fr, accueil" }).click();

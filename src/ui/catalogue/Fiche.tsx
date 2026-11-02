@@ -111,7 +111,7 @@ export async function Fiche({ cle, slug, parametres }: Props) {
             />
           ) : (
             <>
-              <FicheConsommable variantes={f.variantes} configInitiale={un(parametres.config) ?? null} />
+              <FicheConsommable nom={f.nom} variantes={f.variantes} configInitiale={un(parametres.config) ?? null} />
               <GainsAchat compteId={compte?.id ?? null} defaultCode={f.variantes[0]!.defaultCode} />
             </>
           )}

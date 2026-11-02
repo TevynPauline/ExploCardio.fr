@@ -4,6 +4,7 @@ import { type FormEvent, startTransition, useActionState } from "react";
 import { actionAdresses, actionEmail, actionInformations, actionNumero, type EtatFormulaire } from "@/actions/mon-compte";
 import { Button } from "../Button";
 import { Champ } from "../Champ";
+import { AIDE_CODE_POSTAL_LIVRAISON } from "@/domaine/comptes/adresses";
 import { ChampsAdresse } from "./ChampsAdresse";
 
 const initial: EtatFormulaire = { statut: "initial", erreurs: {}, saisie: {} };
@@ -89,7 +90,7 @@ export function FormulaireAdresses({ valeurs }: { valeurs: Record<string, string
     <form onSubmit={sansRemiseAZero(action)} noValidate className="flex flex-col gap-6">
       <Message etat={etat} />
       <ChampsAdresse prefixe="cabinet" legende="Adresse du cabinet" valeurs={v} erreurs={etat.erreurs} />
-      <ChampsAdresse prefixe="livraison" legende="Adresse de livraison" valeurs={v} erreurs={etat.erreurs} aideCodePostal="Livraison en France métropolitaine (Corse comprise)." pays />
+      <ChampsAdresse prefixe="livraison" legende="Adresse de livraison" valeurs={v} erreurs={etat.erreurs} aideCodePostal={AIDE_CODE_POSTAL_LIVRAISON} pays />
       <ChampsAdresse prefixe="facturation" legende="Adresse de facturation" valeurs={v} erreurs={etat.erreurs} />
       <div><Button type="submit" disabled={enCours}>Enregistrer les adresses</Button></div>
     </form>

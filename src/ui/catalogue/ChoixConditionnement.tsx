@@ -5,6 +5,7 @@ import { useState } from "react";
 import type { VarianteFiche } from "@/domaine/catalogue/fiches";
 import { prixPourQuantite } from "@/domaine/catalogue/prix";
 import { euros } from "@/lib/montants";
+import { ChampQuantite } from "../ChampQuantite";
 import { AjoutPanier } from "./AjoutPanier";
 import { Disponibilite } from "./Disponibilite";
 import { Prix } from "./Prix";
@@ -15,7 +16,7 @@ import { Prix } from "./Prix";
 const classePilule =
   "flex min-h-11 cursor-pointer items-center rounded-pill border border-line bg-surface px-4 text-ink has-[:checked]:border-action has-[:checked]:bg-pale has-[:checked]:font-semibold has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-action";
 
-export function ChoixConditionnement({ variantes, configInitiale }: { variantes: VarianteFiche[]; configInitiale: string | null }) {
+export function ChoixConditionnement({ nom, variantes, configInitiale }: { nom: string; variantes: VarianteFiche[]; configInitiale: string | null }) {
   const [code, setCode] = useState(variantes.some((v) => v.defaultCode === configInitiale) ? configInitiale! : variantes[0]!.defaultCode);
   const [saisie, setSaisie] = useState("1");
   const variante = variantes.find((v) => v.defaultCode === code) ?? variantes[0]!;
@@ -57,18 +58,14 @@ export function ChoixConditionnement({ variantes, configInitiale }: { variantes:
           </div>
         ) : null}
 
-        <label className="flex max-w-40 flex-col gap-1 text-small font-medium">
-          Quantité{parLot ? " (lots)" : ""}
-          <input
-            type="number"
-            inputMode="numeric"
-            min={1}
-            max={999}
-            value={saisie}
-            onChange={(e) => setSaisie(e.target.value)}
-            className="min-h-11 rounded-sm border border-muted bg-surface px-3 text-ink"
-          />
-        </label>
+        <ChampQuantite
+          id={`quantite-${variante.defaultCode}`}
+          libelle={`Quantité${parLot ? " (lots)" : ""}`}
+          libelleArticle={variante.configuration ? `${nom} (${variante.configuration})` : nom}
+          valeur={saisie}
+          max={999}
+          onChange={setSaisie}
+        />
         <div aria-live="polite" className="flex flex-col gap-1" data-testid="total-consommable">
           <p className="text-ink">
             Prix appliqué : <span className="font-semibold">{euros(prix.prixLotHt)} HT</span> {parLot ? "le lot" : "l’unité"}

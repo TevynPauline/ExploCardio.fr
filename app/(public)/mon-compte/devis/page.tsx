@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { actionCommanderDevis } from "@/actions/devis-panier";
 import { devisDuCompte, REFUS_COMMANDE_DEVIS } from "@/domaine/commande/devis-client";
+import { LIEN_CONTACT_HORS_METROPOLE } from "@/domaine/comptes/adresses";
 import { compteCourant } from "@/domaine/comptes/session";
 import { euros } from "@/lib/montants";
 import { Card, Kicker } from "@/ui";
@@ -22,7 +23,14 @@ export default async function MesDevis({ searchParams }: { searchParams: Promise
       <Kicker>Mon compte</Kicker>
       <h1 className="text-h2 font-light">Mes devis</h1>
       <NavMonCompte actif="/mon-compte" />
-      {message ? <p role="alert" className="ec-box--info p-4">{message}</p> : null}
+      {message ? (
+        <div role="alert" className="ec-box--info flex flex-col items-start gap-3 p-4">
+          <p>{message}</p>
+          {refus === "hors_metropole" ? (
+            <Link href={LIEN_CONTACT_HORS_METROPOLE} className="ec-btn ec-btn--secondary">Nous contacter</Link>
+          ) : null}
+        </div>
+      ) : null}
       {liste === null ? <p role="status" className="ec-box--info p-4">Vos devis sont momentanément indisponibles. Réessayez dans quelques instants.</p> : null}
       {liste && !liste.length ? (
         <Card className="flex flex-col gap-2">

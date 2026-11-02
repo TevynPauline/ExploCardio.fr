@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { compteConnecte } from "@/domaine/comptes/session";
 import { cheminDeRetour } from "@/lib/retour";
 import { Card } from "@/ui";
 import { FormulaireConnexion } from "./FormulaireConnexion";
@@ -12,6 +14,8 @@ export const metadata: Metadata = { title: "Connexion" };
 export default async function Connexion({ searchParams }: { searchParams: Promise<{ retour?: string; raison?: string }> }) {
   const p = await searchParams;
   const retour = cheminDeRetour(p.retour);
+  // F18 (cas limite) : un client déjà connecté (ancien favori, lien « Mon compte ») va à destination.
+  if (await compteConnecte()) redirect(retour ?? "/mon-compte");
   return (
     <div className="mx-auto flex max-w-md flex-col gap-6 px-4 py-12">
       <FilAriane etapes={[{ libelle: "Connexion" }]} />

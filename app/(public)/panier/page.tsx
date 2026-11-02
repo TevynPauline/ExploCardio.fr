@@ -17,6 +17,7 @@ import { lireNoms } from "@/domaine/catalogue/lecture";
 import { modeDuSite } from "@/lib/config";
 import { Card, Kicker } from "@/ui";
 import { CodePromo } from "@/ui/commande/CodePromo";
+import { AnnonceRetrait, ID_TITRE_PANIER } from "@/ui/commande/AnnonceRetrait";
 import { LignePanier } from "@/ui/commande/LignePanier";
 import { TotauxEnDirect } from "@/ui/commande/TotauxEnDirect";
 import { TotauxAbonnement, TotauxAchat } from "@/ui/commande/Totaux";
@@ -43,7 +44,8 @@ export default async function Panier({ searchParams }: { searchParams: Promise<{
       <div className="mx-auto flex max-w-page flex-col gap-4 px-4 py-10">
         <FilAriane etapes={[{ libelle: "Panier" }]} />
         <Kicker>Panier</Kicker>
-        <h1 className="text-display font-light">Votre panier est vide</h1>
+        <h1 id={ID_TITRE_PANIER} tabIndex={-1} className="text-display font-light">Votre panier est vide</h1>
+        <AnnonceRetrait />
         {avis ? <p role="status" className="ec-box--info p-4">{avis}</p> : null}
         <p><Link href="/catalogue" className="ec-btn ec-btn--primary">Découvrir le catalogue</Link></p>
       </div>
@@ -103,7 +105,8 @@ export default async function Panier({ searchParams }: { searchParams: Promise<{
       <FilAriane etapes={[{ libelle: "Panier" }]} />
       <div className="flex flex-col gap-2">
         <Kicker>Panier</Kicker>
-        <h1 className="text-display font-light">Votre panier</h1>
+        <h1 id={ID_TITRE_PANIER} tabIndex={-1} className="text-display font-light">Votre panier</h1>
+        <AnnonceRetrait />
         {modeDuSite() === "demo" ? <p className="text-small text-muted">Version de démonstration : aucun paiement réel.</p> : null}
       </div>
       {avis ? <p role="status" className="ec-box--info p-4">{avis}</p> : null}

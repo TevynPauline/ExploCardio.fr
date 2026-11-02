@@ -14,14 +14,14 @@ test("tunnel : 97400 puis « Autre pays » refusés ; « Nous contacter » prér
   const main = page.locator("main");
   await main.getByLabel("Code postal").first().fill("97400");
   await main.getByRole("button", { name: "Continuer" }).click();
-  await expect(main.getByText("livre uniquement en France métropolitaine").first()).toBeVisible();
+  await expect(main.getByText("livre en ligne en France métropolitaine continentale").first()).toBeVisible();
   await expect(main.getByRole("link", { name: "Nous contacter" })).toBeVisible();
   await verifierAccessibilite(page);
 
   await main.getByLabel("Code postal").first().fill("1000");
   await main.getByLabel("Pays").first().selectOption("autre");
   await main.getByRole("button", { name: "Continuer" }).click();
-  await expect(page.locator("[id='livraison.pays-erreur']")).toContainText("livre uniquement en France métropolitaine");
+  await expect(page.locator("[id='livraison.pays-erreur']")).toContainText("livre en ligne en France métropolitaine continentale");
   await expect(page).toHaveURL(/\/commande\/adresses/);
 
   await main.getByRole("link", { name: "Nous contacter" }).click();
@@ -39,16 +39,8 @@ test("Mon compte : adresse de livraison à La Réunion refusée, avec « Nous co
   const livraison = page.getByRole("group", { name: "Adresse de livraison" });
   await livraison.getByLabel("Code postal").fill("97400");
   await page.getByRole("button", { name: "Enregistrer les adresses" }).click();
-  await expect(livraison.getByRole("alert")).toContainText("livre uniquement en France métropolitaine");
+  await expect(livraison.getByRole("alert")).toContainText("livre en ligne en France métropolitaine continentale");
   await expect(livraison.getByRole("link", { name: "Nous contacter" })).toHaveAttribute("href", "/qui-sommes-nous?motif=hors-metropole#contact");
 });
 
-test("Corse acceptée dans le tunnel", async ({ page, browser, baseURL }) => {
-  await clientConnecte(browser, baseURL, page);
-  await ajouterDepuisFiche(page, ELECTRODES);
-  await page.goto("/commande/adresses");
-  await page.locator("main").getByLabel("Code postal").first().fill("20000");
-  await page.locator("main").getByLabel("Ville").first().fill("Ajaccio");
-  await page.locator("main").getByRole("button", { name: "Continuer" }).click();
-  await page.waitForURL(/\/commande\/livraison/);
-});
+// F18 : la Corse est désormais refusée (tests/e2e/f18/corse.spec.ts).

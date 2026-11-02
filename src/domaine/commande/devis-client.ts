@@ -4,7 +4,7 @@ import { estErreurConnecteur, NotFound } from "@/connecteurs/erreurs";
 import type { DevisEnregistre, ResumeDevisEnregistre } from "@/connecteurs/odoo/interfaces";
 import { dbSite } from "@/lib/db/site";
 import { emailsCommandes } from "@/emails/modeles-commandes";
-import { codePostalMetropole } from "../comptes/adresses";
+import { codePostalLivrable, MESSAGE_HORS_METROPOLE } from "../comptes/adresses";
 import { panierPour } from "../catalogue/panier";
 import { alerterEquipe, envoyer } from "./notifications";
 import { panierDetaille } from "./devis";
@@ -23,8 +23,7 @@ export const MESSAGES_DEVIS = {
   panier_vide: "Votre panier est vide.",
   indisponible: "Un article de votre panier n'est pas disponible : retirez-le avant de demander un devis.",
   adresse: "Indiquez d'abord l'adresse de votre cabinet dans votre compte, pour calculer les frais de livraison.",
-  hors_metropole:
-    "ExploCardio.fr livre uniquement en France métropolitaine (Corse comprise). Pour une livraison ailleurs, contactez-nous : nous étudierons votre demande.",
+  hors_metropole: MESSAGE_HORS_METROPOLE,
   odoo: "Le devis n'a pas pu être créé pour le moment. Votre panier est conservé : réessayez dans quelques minutes ou contactez-nous.",
 } as const;
 
@@ -41,7 +40,7 @@ export async function demanderDevis(compteId: string): Promise<ResultatDevis> {
   if (detail.lignes.some((l) => l.indisponible)) return refus("indisponible");
   const adresse = adresseDuCompte(compte, "livraison") ?? adresseDuCompte(compte, "cabinet");
   if (!adresse) return refus("adresse");
-  if (!codePostalMetropole(adresse.codePostal)) return refus("hors_metropole");
+  if (!codePostalLivrable(adresse.codePostal)) return refus("hors_metropole");
 
   let devis: DevisEnregistre;
   try {
@@ -112,6 +111,7 @@ export const REFUS_COMMANDE_DEVIS = {
   compte: MESSAGES_DEVIS.compte,
   introuvable: "Ce devis est introuvable.",
   deja_commande: "Ce devis a déjà été commandé.",
+  hors_metropole: MESSAGE_HORS_METROPOLE,
   odoo: "Vos devis sont momentanément indisponibles. Réessayez dans quelques minutes.",
 } as const;
 
@@ -123,8 +123,12 @@ export type ResultatCommanderDevis = { ok: true; expire: boolean } | { ok: false
  * Devis expiré : panier aux prix du jour, avec un message.
  */
 export async function commanderDevis(compteId: string, ref: string): Promise<ResultatCommanderDevis> {
-  const compte = await dbSite().compteClient.findUniqueOrThrow({ where: { id: compteId } });
+  const compte = await dbSite().compteClient.findUniqueOrThrow({ where: { id: compteId }, include: { adresses: true } });
   if (compte.statut !== "valide" || !compte.odooPartnerRef) return { ok: false, code: "compte" };
+  // F18 (FR-005) : un devis émis vers une adresse devenue non livrable (Corse) n'est plus
+  // commandé en ligne ; l'équipe le traite.
+  const adresse = adresseDuCompte(compte, "livraison") ?? adresseDuCompte(compte, "cabinet");
+  if (adresse && !codePostalLivrable(adresse.codePostal)) return { ok: false, code: "hors_metropole" };
   let devis: DevisEnregistre;
   try {
     devis = await registre.odoo().commandes.lireDevis(compte.odooPartnerRef, ref);

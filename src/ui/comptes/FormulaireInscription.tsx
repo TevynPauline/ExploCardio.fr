@@ -5,7 +5,7 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import { actionInscription, type EtatInscription } from "@/actions/comptes";
 import { Button } from "../Button";
 import { Champ } from "../Champ";
-import { MESSAGE_HORS_METROPOLE } from "@/domaine/comptes/adresses";
+import { AIDE_CODE_POSTAL_LIVRAISON, MESSAGE_HORS_METROPOLE } from "@/domaine/comptes/adresses";
 import { ChampsAdresse, ContactHorsMetropole } from "./ChampsAdresse";
 import { ReglesMotDePasse } from "./ReglesMotDePasse";
 
@@ -110,7 +110,7 @@ export function FormulaireInscription({ specialites, offreBienvenue, jeton, reto
           </>
         ) : null}
         {!livraisonIdentique ? (
-          <ChampsAdresse prefixe="adresseLivraison" legende="Adresse de livraison" valeurs={s} erreurs={e} aideCodePostal="Livraison en France métropolitaine (Corse comprise)." pays />
+          <ChampsAdresse prefixe="adresseLivraison" legende="Adresse de livraison" valeurs={s} erreurs={e} aideCodePostal={AIDE_CODE_POSTAL_LIVRAISON} pays />
         ) : null}
         <label className="flex min-h-11 items-center gap-3">
           <input type="checkbox" name="facturationIdentique" value="oui" checked={facturationIdentique} onChange={(ev) => setFacturationIdentique(ev.target.checked)} className="size-5" />

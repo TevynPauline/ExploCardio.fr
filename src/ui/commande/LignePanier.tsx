@@ -6,6 +6,9 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { actionModifierLigne, actionSupprimerLigne } from "@/actions/panier";
 import { prixLigne, type Bareme } from "@/domaine/commande/prix-ligne";
 import { euros } from "@/lib/montants";
+import { ChampQuantite } from "../ChampQuantite";
+import { FenetreConfirmation } from "../FenetreConfirmation";
+import { signalerRetrait } from "./AnnonceRetrait";
 
 type Props = {
   id: string;
@@ -44,6 +47,9 @@ export function LignePanier(p: Props) {
   const [avis, setAvis] = useState<string | null>(null);
   const minuteur = useRef<number | null>(null);
   const enregistree = useRef(p.quantite);
+  const [confirmation, setConfirmation] = useState(false);
+  const [retiree, setRetiree] = useState(false);
+  const ligne = useRef<HTMLLIElement>(null);
 
   // Le serveur a recalculé le panier : la quantité enregistrée devient la référence.
   useEffect(() => {
@@ -97,12 +103,30 @@ export function LignePanier(p: Props) {
     minuteur.current = window.setTimeout(() => enregistrer(q), DELAI_MS);
   }
 
+  /** Retrait confirmé (F18, FR-012 à FR-014) : annonce, puis focus sur l'article suivant. */
+  function retirer() {
+    const voisin = ligne.current?.nextElementSibling ?? ligne.current?.previousElementSibling;
+    const cible = voisin instanceof HTMLElement && voisin.id ? voisin.id : null;
+    setRetiree(true);
+    demarrer(async () => {
+      let ok = false;
+      try {
+        ok = await actionSupprimerLigne(p.id);
+      } catch {
+        ok = false;
+      }
+      if (ok) signalerRetrait(`${p.libelle} a été retiré du panier.`, cible);
+      else setRetiree(false);
+      apres(ok, "Cette ligne n'a pas pu être retirée.");
+    });
+  }
+
   const q = Number(quantite);
   const totalAffiche = p.bareme && quantite !== "" && Number.isInteger(q) && q >= 1 ? prixLigne(p.bareme, q) : p.totalHt;
 
   const idQuantite = `quantite-${p.id}`;
   return (
-    <li className="ec-card flex flex-wrap items-start justify-between gap-4" aria-busy={enCours}>
+    <li ref={ligne} id={`ligne-${p.id}`} tabIndex={-1} data-ligne-retiree={retiree ? "true" : undefined} className="ec-card flex flex-wrap items-start justify-between gap-4" aria-busy={enCours}>
       <div className="min-w-0 flex-1">
         <p className="font-semibold">{p.chemin ? <Link href={p.chemin}>{p.libelle}</Link> : p.libelle}</p>
         <p className="text-small text-muted">Réf. {p.defaultCode}</p>
@@ -130,41 +154,43 @@ export function LignePanier(p: Props) {
         {avis ? <p role="status" className="text-small font-medium text-ink">{avis}</p> : null}
       </div>
       <div className="flex flex-wrap items-end gap-2">
-        <div className="flex flex-col gap-1">
-          <label htmlFor={idQuantite} className="text-small font-medium">Quantité</label>
-          <input
-            id={idQuantite}
-            type="number"
-            inputMode="numeric"
-            min={1}
-            max={999}
-            value={quantite}
-            onChange={(e) => changer(e.target.value)}
-            onBlur={() => {
-              // Champ laissé vide ou invalide : retour à la quantité enregistrée.
-              if (quantite === "" || !Number.isInteger(q) || q < 1) setQuantite(String(enregistree.current));
-              else if (minuteur.current) enregistrer(q);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                if (Number.isInteger(q) && q >= 1) enregistrer(q);
-              }
-            }}
-            className="min-h-11 w-24 rounded-sm border border-muted bg-surface px-3 text-ink"
-          />
-        </div>
+        <ChampQuantite
+          id={idQuantite}
+          libelleArticle={p.libelle}
+          valeur={quantite}
+          max={QUANTITE_MAX}
+          onChange={changer}
+          onBlur={() => {
+            // Champ laissé vide ou invalide : retour à la quantité enregistrée.
+            if (quantite === "" || !Number.isInteger(q) || q < 1) setQuantite(String(enregistree.current));
+            else if (minuteur.current) enregistrer(q);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              if (Number.isInteger(q) && q >= 1) enregistrer(q);
+            }
+          }}
+        />
         {p.obligatoire ? null : (
           <button
             type="button"
             className="ec-btn ec-btn--secondary"
             disabled={enCours}
             aria-label={`Retirer ${p.libelle} du panier`}
-            onClick={() => demarrer(async () => apres(await actionSupprimerLigne(p.id), "Cette ligne n'a pas pu être retirée."))}
+            onClick={() => setConfirmation(true)}
           >
             Retirer
           </button>
         )}
+        <FenetreConfirmation
+          ouverte={confirmation}
+          titre="Retirer cet article du panier ?"
+          texte={p.libelle}
+          libelleConfirmer="Retirer"
+          onConfirmer={retirer}
+          onFermer={() => setConfirmation(false)}
+        />
         {totalAffiche !== null ? (
           <p data-total-ligne className="min-w-28 text-right font-semibold text-ink">
             {euros(totalAffiche)} HT{p.formule === "mise_a_disposition" ? " / 1er mois" : ""}

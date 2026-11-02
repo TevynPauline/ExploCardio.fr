@@ -18,7 +18,7 @@ test("fiche consommable : prix unitaire et par lot, conditionnements, paliers ; 
   await expect(main).toContainText("À partir de 5");
 
   const total = page.getByTestId("total-consommable");
-  const quantite = main.getByLabel(/Quantité/);
+  const quantite = main.getByRole("spinbutton", { name: /Quantité/ });
   await quantite.fill("4");
   await expect(total).toContainText("72,00 € HT"); // 4 × 18,00
   await quantite.fill("10");
@@ -31,7 +31,7 @@ test("fiche consommable : prix unitaire et par lot, conditionnements, paliers ; 
 
 test("quantité supérieure au stock : quantité disponible et délai pour le reste", async ({ page }) => {
   await page.goto(`${ELECTRODES}?config=EC-ELEC-HOLTER-500`);
-  await page.locator("main").getByLabel(/Quantité/).fill("999");
+  await page.locator("main").getByRole("spinbutton", { name: /Quantité/ }).fill("999");
   await expect(page.locator("main")).toContainText(/\d+ disponibles immédiatement ; le reste sous \d+ jours\./);
 });
 

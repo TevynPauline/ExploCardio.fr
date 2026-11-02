@@ -16,10 +16,9 @@ describe("refusLivraison", () => {
     expect(refusLivraison({ codePostal: "75001", pays: PAYS_AUTRE }, "livraison")).toEqual({ "livraison.pays": MESSAGE_HORS_METROPOLE });
   });
 
-  it("accepte la métropole et la Corse", () => {
+  it("accepte la France continentale ; refuse la Corse (F18)", () => {
     expect(refusLivraison({ codePostal: "75001", pays: "france" }, "livraison")).toBeNull();
-    expect(refusLivraison({ codePostal: "20000" }, "livraison")).toBeNull();
-    expect(refusLivraison({ codePostal: "20200" }, "livraison")).toBeNull();
+    expect(refusLivraison({ codePostal: "20000" }, "livraison")).toEqual({ "livraison.codePostal": MESSAGE_HORS_METROPOLE });
   });
 });
 

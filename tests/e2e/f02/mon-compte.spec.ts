@@ -61,14 +61,14 @@ test("téléphone et adresse de livraison : enregistrés et reportés sur la fic
   await page.getByRole("button", { name: "Enregistrer les adresses" }).click();
   await expect(page.getByText(/France métropolitaine/).first()).toBeVisible();
   await page.locator("#livraison\\.ligne1").fill("8 avenue de la Livraison");
-  await page.locator("#livraison\\.codePostal").fill("20000");
-  await page.locator("#livraison\\.ville").fill("Ajaccio");
+  await page.locator("#livraison\\.codePostal").fill("38000");
+  await page.locator("#livraison\\.ville").fill("Grenoble");
   await page.getByRole("button", { name: "Enregistrer les adresses" }).click();
   await expect(page.getByText("Vos adresses sont enregistrées.")).toBeVisible();
 
   await expect
     .poll(async () => (await requete<{ telephone: string; adresses: unknown }>("demo", `SELECT telephone, adresses FROM res_partner WHERE ref = $1`, [ref]))[0])
-    .toMatchObject({ telephone: "+33 6 11 22 33 44", adresses: expect.arrayContaining([expect.objectContaining({ ville: "Ajaccio" })]) });
+    .toMatchObject({ telephone: "+33 6 11 22 33 44", adresses: expect.arrayContaining([expect.objectContaining({ ville: "Grenoble" })]) });
 });
 
 test("changement d'email : confirmation de la nouvelle adresse, ancienne prévenue, journal", async ({ page }) => {

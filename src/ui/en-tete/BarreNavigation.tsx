@@ -41,7 +41,8 @@ export function BarreNavigation({ entrees, articlesPanier: initial }: Props) {
   const [ouvert, setOuvert] = useState<string | null>(null);
   // Lu dans le navigateur : les pages restent statiques (rapides) pour tous les visiteurs.
   const { data: session } = authClient.useSession();
-  const lienCompte = session ? "/mon-compte" : "/connexion";
+  // F18 (FR-018) : « Mon compte » seul ; non connecté, la connexion ramène ensuite à Mon compte.
+  const lienCompte = session ? "/mon-compte" : "/connexion?retour=/mon-compte";
   const zone = useRef<HTMLDivElement>(null);
   const boutons = useRef<Record<string, HTMLButtonElement | null>>({});
   const minuteur = useRef<number | null>(null);
@@ -120,23 +121,29 @@ export function BarreNavigation({ entrees, articlesPanier: initial }: Props) {
             <Recherche />
             <Link
               href="/panier"
-              aria-label={articlesPanier > 0 ? `Panier, ${articlesPanier} article${articlesPanier > 1 ? "s" : ""}` : "Panier, vide"}
-              className="relative inline-flex size-11 items-center justify-center rounded-pill text-ink hover:bg-pale"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-pill px-2 text-small font-medium text-ink hover:bg-pale"
             >
-              <IconePanier />
-              {articlesPanier > 0 ? (
-                <span aria-hidden="true" className="absolute right-0.5 top-0.5 min-w-5 rounded-pill bg-action px-1 text-center text-kicker font-semibold text-white">
-                  {articlesPanier}
-                </span>
-              ) : null}
+              {/* F18 (FR-017) : libellé « Panier » à côté de l'icône dès 1 024 px, comme « Mon compte ». */}
+              <span className="relative inline-flex">
+                <IconePanier />
+                {articlesPanier > 0 ? (
+                  <span aria-hidden="true" className="absolute -right-2.5 -top-2 min-w-5 rounded-pill bg-action px-1 text-center text-kicker font-semibold text-white">
+                    {articlesPanier}
+                  </span>
+                ) : null}
+              </span>
+              {/* Nom accessible « Panier, N articles » ou « Panier, vide », tiré du texte et non d'un
+                  aria-label, qui masquerait le libellé visible (WCAG 2.5.3). */}
+              <span aria-hidden="true" className="hidden lg:inline">Panier</span>
+              <span className="sr-only">{articlesPanier > 0 ? `Panier, ${articlesPanier} article${articlesPanier > 1 ? "s" : ""}` : "Panier, vide"}</span>
             </Link>
             <Link
               href={lienCompte}
               className="inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-pill px-2 text-small font-medium text-ink hover:bg-pale"
             >
               <IconeCompte />
-              <span className="hidden lg:inline">Mon compte / Connexion</span>
-              <span className="sr-only lg:hidden">Mon compte / Connexion</span>
+              <span className="hidden lg:inline">Mon compte</span>
+              <span className="sr-only lg:hidden">Mon compte</span>
             </Link>
           </div>
         </div>

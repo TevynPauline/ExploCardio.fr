@@ -26,7 +26,7 @@ test("les emails envoyés n'ont plus « hors imagerie » dans leur signature", a
 
 test("mention « France métropolitaine » avec contact : fiche, panier, conditions de vente", async ({ page }) => {
   await page.goto(HOLTER);
-  const mention = (p = page) => p.locator("main").getByText(/Livraison en France métropolitaine \(Corse comprise\)/);
+  const mention = (p = page) => p.locator("main").getByText(/Livraison en France métropolitaine continentale\. Corse, outre-mer et étranger/);
   await expect(mention()).toBeVisible();
   await expect(page.locator("main").getByRole("link", { name: "contactez-nous" }).first()).toHaveAttribute("href", /qui-sommes-nous.*#contact/);
   await ajouterDepuisFiche(page, ELECTRODES);

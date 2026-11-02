@@ -21,6 +21,7 @@ SC-001 est atteint quand tous les parcours ci-dessous existent et passent.
 | Back-office : droits par rôle, clients et fiche, contenus (aperçu, textes des pages, verrou), catalogue, paramètres et historique, demandes, journal, inactivité | F13 | `../f13/*.spec.ts` | ✅ |
 | Fin de phase 1 : navigation et fil d'Ariane, carrousel et accueil (images), prix du panier en direct, numéro d'entreprise à la première commande et vérification, devis depuis le panier, hors métropole | F16 | `../f16/*.spec.ts` | ✅ |
 | Page d'attente sur www.explocardio.fr : formulaire « Être prévenu de l'ouverture », aucune autre page, démonstration protégée, liste et export CSV au back-office | F17 | `../f17/*.spec.ts` | ✅ |
+| Ajustements (lot A) : livraison en France continentale (Corse orientée vers l'équipe), quantités « − / + » visibles, confirmation du retrait, barre de recherche, libellés « Panier » et « Mon compte » | F18 | `../f18/*.spec.ts` | ✅ |
 
 ## Règles communes
 

@@ -22,6 +22,17 @@
   min-width: 44px;
 }
 
+/* F18 (FR-007) : les boutons « − » et « + » de ChampQuantite remplacent les flèches natives. */
+.ec-quantite {
+  appearance: textfield;
+}
+
+.ec-quantite::-webkit-inner-spin-button,
+.ec-quantite::-webkit-outer-spin-button {
+  appearance: none;
+  margin: 0;
+}
+
 /* Le texte des emplacements photo de la charte (--ec-ph-text) n'atteint pas 4,5:1 :
    on utilise la couleur de texte principale (scripts/check-contrast.ts). */
 .ec-placeholder {

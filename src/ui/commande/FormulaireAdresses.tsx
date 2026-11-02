@@ -3,6 +3,7 @@
 import { startTransition, useActionState, useState, type FormEvent } from "react";
 import { actionAdresses, type EtatEtape } from "@/actions/commande";
 import { Champ } from "../Champ";
+import { AIDE_CODE_POSTAL_LIVRAISON } from "@/domaine/comptes/adresses";
 import { ChampsAdresse } from "../comptes/ChampsAdresse";
 
 /** Étape « Adresses » (FR-009) : préremplies, modifiables ; la saisie reste affichée en cas d'erreur. */
@@ -34,7 +35,7 @@ export function FormulaireAdresses({ refCommande, valeurs, identique, demanderNu
           />
         </fieldset>
       ) : null}
-      <ChampsAdresse prefixe="livraison" legende="Adresse de livraison" valeurs={v} erreurs={etat.erreurs} aideCodePostal="Livraison en France métropolitaine (Corse comprise)." pays />
+      <ChampsAdresse prefixe="livraison" legende="Adresse de livraison" valeurs={v} erreurs={etat.erreurs} aideCodePostal={AIDE_CODE_POSTAL_LIVRAISON} pays />
       <label className="flex min-h-11 items-center gap-3">
         <input type="checkbox" name="identique" value="oui" checked={meme} onChange={(e) => setMeme(e.target.checked)} className="size-5" />
         Adresse de facturation identique

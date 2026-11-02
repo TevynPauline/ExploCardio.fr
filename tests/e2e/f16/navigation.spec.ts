@@ -19,7 +19,7 @@ for (const largeur of [320, 390]) {
     const logo = await boite(page, entete.getByRole("link", { name: "ExploCardio.fr, accueil" }));
     const recherche = await boite(page, entete.getByRole("button", { name: /Rechercher/ }));
     const panier = await boite(page, entete.getByRole("link", { name: /^Panier/ }));
-    const compte = await boite(page, entete.getByRole("link", { name: "Mon compte / Connexion" }));
+    const compte = await boite(page, entete.getByRole("link", { name: "Mon compte" }));
     expect(menu.x + menu.width).toBeLessThanOrEqual(logo.x);
     expect(Math.abs(logo.x + logo.width / 2 - largeur / 2)).toBeLessThan(24);
     expect(logo.x + logo.width).toBeLessThanOrEqual(recherche.x);

@@ -102,7 +102,7 @@ test("adresse du cabinet hors métropole : devis refusé avec « Nous contacter 
   await page.goto("/panier");
   await page.locator("main").getByRole("button", { name: "Recevoir un devis" }).click();
   const statut = page.locator("#resultat-devis");
-  await expect(statut).toContainText("uniquement en France métropolitaine");
+  await expect(statut).toContainText("en France métropolitaine continentale");
   await expect(statut.getByRole("link", { name: "Nous contacter" })).toHaveAttribute("href", "/qui-sommes-nous?motif=hors-metropole#contact");
   await page.evaluate(() => window.scrollTo(0, 0));
   await verifierAccessibilite(page);

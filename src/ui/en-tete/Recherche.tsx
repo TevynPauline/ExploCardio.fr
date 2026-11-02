@@ -8,6 +8,8 @@ import { IconeFermer, IconeRecherche } from "./icones";
 // Recherche instantanée de l'en-tête (US4, contracts/recherche.md) : champ en « combobox »
 // WAI-ARIA, suggestions groupées par type dès 2 caractères, prix HT, Entrée pour la page
 // de résultats. Attente de 150 ms après la frappe ; la requête précédente est annulée.
+// F18 (US4, FR-015) : dès 1 024 px, le champ est visible en permanence dans l'en-tête et les
+// suggestions s'ouvrent dessous ; en dessous, la loupe ouvre le panneau comme avant.
 
 type Suggestion = { code: string; titre: string; sousTitre: string; destination: string; prixHt: number | null };
 type Groupe = { type: string; libelle: string; elements: Suggestion[] };
@@ -39,7 +41,9 @@ export function Recherche() {
     const minuteur = window.setTimeout(async () => {
       try {
         const r = await fetch(`/api/recherche?q=${encodeURIComponent(q)}`, { signal: controle.signal });
-        setReponse((await r.json()) as Reponse);
+        const corps = r.ok ? ((await r.json()) as Partial<Reponse>) : null;
+        // Réponse inattendue (accès à la démonstration expiré, erreur) : recherche indisponible.
+        setReponse(Array.isArray(corps?.groupes) ? (corps as Reponse) : { groupes: [], indisponible: true });
         setActif(-1);
       } catch (e) {
         if ((e as Error).name !== "AbortError") setReponse({ groupes: [], indisponible: true });
@@ -101,22 +105,25 @@ export function Recherche() {
 
   let rang = -1;
   return (
-    <div ref={zone}>
+    <div ref={zone} className="lg:relative">
       <button
         ref={bouton}
         type="button"
         onClick={() => setOuvert(!ouvert)}
         aria-expanded={ouvert}
         aria-controls={`${id}-panneau`}
-        className="inline-flex size-11 items-center justify-center rounded-pill text-ink hover:bg-pale"
+        className="inline-flex size-11 items-center justify-center rounded-pill text-ink hover:bg-pale lg:hidden"
       >
         <IconeRecherche />
         <span className="sr-only">Rechercher</span>
       </button>
-      <div id={`${id}-panneau`} hidden={!ouvert} className="absolute inset-x-0 top-full z-50">
-        <div className="mx-auto max-w-page px-4">
-          <div className="mt-2 rounded-lg border border-line bg-surface p-4 shadow">
-            <div className="flex items-center gap-2">
+      <div id={`${id}-panneau`} className={`${ouvert ? "" : "hidden"} absolute inset-x-0 top-full z-50 lg:static lg:block`}>
+        <div className="mx-auto max-w-page px-4 lg:max-w-none lg:px-0">
+          <div className="mt-2 rounded-lg border border-line bg-surface p-4 shadow lg:mt-0 lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
+            <div className="relative flex items-center gap-2">
+              <span aria-hidden="true" className="pointer-events-none absolute left-3 hidden text-muted lg:block">
+                <IconeRecherche />
+              </span>
               <label htmlFor={`${id}-champ`} className="sr-only">
                 Rechercher un produit, une référence ou un service
               </label>
@@ -130,13 +137,17 @@ export function Recherche() {
                 aria-autocomplete="list"
                 aria-activedescendant={actif >= 0 ? `${id}-option-${actif}` : undefined}
                 autoComplete="off"
-                placeholder="Produit, référence, service…"
+                placeholder="Rechercher un produit…"
                 value={saisie}
-                onChange={(e) => setSaisie(e.target.value)}
+                onChange={(e) => {
+                  setSaisie(e.target.value);
+                  setOuvert(true);
+                }}
+                onFocus={() => setOuvert(true)}
                 onKeyDown={auClavier}
-                className="min-h-11 w-full rounded-sm border border-muted bg-surface px-3 text-body text-ink"
+                className="min-h-11 w-full rounded-sm border border-muted bg-surface px-3 text-body text-ink lg:w-64 lg:rounded-pill lg:pl-11 xl:w-80"
               />
-              <button type="button" onClick={fermer} className="inline-flex size-11 shrink-0 items-center justify-center rounded-pill hover:bg-pale">
+              <button type="button" onClick={fermer} className="inline-flex size-11 shrink-0 items-center justify-center rounded-pill hover:bg-pale lg:hidden">
                 <IconeFermer />
                 <span className="sr-only">Fermer la recherche</span>
               </button>
@@ -144,7 +155,13 @@ export function Recherche() {
             <p role="status" className="sr-only">
               {annonce}
             </p>
-            <div id={`${id}-liste`} role="listbox" aria-label="Suggestions" className="mt-3 max-h-[60vh] overflow-y-auto">
+            {/* Ordinateur : suggestions dans un panneau sous le champ, seulement quand il y a à montrer. */}
+            <div
+              className={`lg:absolute lg:right-0 lg:top-full lg:z-50 lg:mt-2 lg:w-[28rem] lg:max-w-[calc(100vw-2rem)] lg:rounded-lg lg:border lg:border-line lg:bg-surface lg:p-4 lg:shadow ${
+                ouvert && saisie.trim().length >= 2 && reponse ? "" : "lg:hidden"
+              }`}
+            >
+            <div id={`${id}-liste`} role="listbox" aria-label="Suggestions" className="mt-3 max-h-[60vh] overflow-y-auto lg:mt-0">
               {reponse?.groupes.map((g) => (
                 <div key={g.type} role="group" aria-labelledby={`${id}-g-${g.type}`} className="mb-3">
                   <p id={`${id}-g-${g.type}`} className="mb-1 text-small font-semibold text-muted">
@@ -183,6 +200,7 @@ export function Recherche() {
                   : "Aucun résultat. Appuyez sur Entrée pour voir les familles de produits et nous contacter."}
               </p>
             ) : null}
+            </div>
           </div>
         </div>
       </div>

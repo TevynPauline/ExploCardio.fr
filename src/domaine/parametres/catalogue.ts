@@ -56,7 +56,7 @@ const ADMIN_COMMERCIAL: RoleEquipe[] = ["admin", "commercial"];
 export const PARAMETRES: DefinitionParametre[] = [
   { cle: "commande.heure_limite_express", libelle: "Heure limite d'expédition", theme: "livraison", type: "heure", defaut: "14:00", aide: "Après cette heure, la livraison express et la livraison au lendemain d'une mise à disposition partent le jour ouvré suivant." },
   { cle: "livraison.jours_non_livres", libelle: "Jours non livrés", theme: "livraison", type: "dates", aide: "Une date par ligne (AAAA-MM-JJ), en plus des week-ends et des jours fériés." },
-  { cle: "livraison.zones_sans_lendemain", libelle: "Zones sans livraison au lendemain", theme: "livraison", type: "zones", aide: "Débuts de codes postaux, séparés par des virgules ; 20 = Corse." },
+  { cle: "livraison.zones_sans_lendemain", libelle: "Zones sans livraison au lendemain", theme: "livraison", type: "zones", aide: "Débuts de codes postaux, séparés par des virgules (par exemple 29 pour le Finistère)." },
   { cle: "livraison.delai_zones_jours", libelle: "Délai supplémentaire de ces zones (jours ouvrés)", theme: "livraison", type: "entier", min: 0, max: 10 },
 
   { cle: "contact.whatsapp", libelle: "Numéro WhatsApp", theme: "contact", type: "telephone", aide: "Format international, par exemple +33 6 12 34 56 78. Vide : aucun bouton WhatsApp, le formulaire de contact est proposé." },

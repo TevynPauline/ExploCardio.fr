@@ -28,7 +28,7 @@ test("erreurs sur les champs, saisie conservée : numéro mal formé, livraison 
   await page.getByRole("button", { name: "Créer mon compte" }).click();
   await expect(page.getByRole("alert").filter({ hasText: "à corriger" })).toBeVisible();
   await expect(page.getByText(/indiquez un SIRET \(14 chiffres\) ou un SIREN/)).toBeVisible();
-  await expect(page.getByText(/livre uniquement en France métropolitaine/)).toBeVisible();
+  await expect(page.getByText(/livre en ligne en France métropolitaine continentale/)).toBeVisible();
   await expect(page.getByLabel("Nom du cabinet ou de la structure")).toHaveValue("Cabinet de test");
   await expect(page.getByLabel("SIRET ou SIREN (facultatif)")).toHaveAttribute("aria-invalid", "true");
 });

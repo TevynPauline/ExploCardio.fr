@@ -139,7 +139,7 @@ Dans le back-office, rubrique **Démonstration** :
 - **Dépannage express** : `/mise-a-disposition` (menu Services). Chaque équipement proposé
   affiche le premier mois et les mois suivants (HT puis TTC) et la date de livraison la plus
   proche : « Livraison demain » un jour ouvré avant l'heure limite, sinon la première date
-  possible (week-ends, jours fériés, jours non livrés et Corse pris en compte). « Choisir »
+  possible (week-ends, jours fériés et jours non livrés pris en compte). « Choisir »
   ouvre la fiche sur la formule de mise à disposition.
 - **Commander** : l'étape « Livraison » propose les jours ouvrés possibles ; la location
   commence le jour de la livraison. Le récapitulatif détaille le pack, la prochaine échéance,
@@ -239,10 +239,22 @@ d'attente s'affiche sur `http://127.0.0.1:3000` (et la démonstration sur `local
   les devis (valable, expiré, commandé) : « Commander » remplace le panier par les articles du
   devis, à ses prix, jusqu'au paiement qui confirme ce même devis ; un devis expiré revient au
   panier aux prix du jour.
-- **Hors France métropolitaine** : une adresse de livraison en outre-mer (97, 98) ou dans un
-  autre pays est refusée à l'inscription, dans Mon compte, dans le tunnel et pour un devis ;
+- **Hors France métropolitaine continentale** : une adresse de livraison en Corse (20), en
+  outre-mer (97, 98) ou dans un autre pays est refusée à l'inscription, dans Mon compte, dans le tunnel et pour un devis ;
   « Nous contacter » ouvre le formulaire de contact avec le motif « Commande hors métropole » et
-  le contenu du panier. La Corse est acceptée.
+  le contenu du panier (F18 : la Corse est refusée depuis le 2026-11-02). Un devis déjà émis vers
+  la Corse ne peut plus être commandé en ligne.
+
+## Ajustements du site (F18, lot A)
+
+- **Livraison** : seule la France métropolitaine continentale est livrée en ligne ; la Corse
+  rejoint l'outre-mer et l'étranger (voir ci-dessus, « Hors France métropolitaine continentale »).
+- **Panier et fiches consommables** : boutons « − » et « + » toujours visibles autour de la
+  quantité ; « Retirer » ouvre une fenêtre « Retirer cet article du panier ? » (Annuler, Échap ou
+  un clic à côté ne retirent rien).
+- **En-tête** : sur ordinateur (dès 1 024 px), barre de recherche toujours visible et libellés
+  « Panier » et « Mon compte » ; sur téléphone, la loupe ouvre la barre. « Connexion » a disparu :
+  sans être connecté, « Mon compte » mène à la page de connexion, puis à Mon compte.
 
 ## Logiciels Cloud et plateforme HDS (F12)
 
