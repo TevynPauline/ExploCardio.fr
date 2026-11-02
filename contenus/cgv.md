@@ -10,7 +10,7 @@ Les présentes conditions générales de vente (CGV) régissent les ventes de ma
 consommables et logiciels, les mises à disposition (location) et les abonnements conclus sur
 le site ExploCardio.fr entre [Raison sociale], [forme juridique] au capital de [capital] €,
 dont le siège est situé [adresse du siège], immatriculée au RCS de [ville] sous le numéro
-[SIRET] (ci-après « ExploCardio.fr »), et ses clients.
+[SIRET], TVA intracommunautaire FR46132194101 (ci-après « ExploCardio.fr »), et ses clients.
 
 Le site est réservé aux **professionnels de santé** et à leurs structures d'exercice (cabinets,
 centres, sociétés) installés en France, agissant pour les besoins de leur activité
@@ -38,10 +38,19 @@ factures sont consultables dans « Mon compte ».
 ExploCardio.fr peut refuser ou annuler une commande en cas de litige de paiement antérieur, de
 demande anormale ou de numéro d'entreprise refusé.
 
+**Article indisponible après la commande.** Si un article commandé se révèle indisponible,
+ExploCardio.fr en informe le Client dans les meilleurs délais et lui propose, au choix : un
+article équivalent, l'attente du réapprovisionnement, ou l'annulation de l'article concerné et
+son remboursement. Sans réponse du Client, l'article est annulé et remboursé.
+
+**Preuve.** La validation de la commande en ligne vaut signature et acceptation du Client.
+Les enregistrements conservés par le site et par ExploCardio.fr (commandes, emails, paiements)
+font foi entre les parties, sauf preuve contraire.
+
 ## Devis {#devis}
 
 Le Client peut obtenir un devis depuis son panier. Le devis est valable **30 jours** à compter
-de sa date d'émission. Pendant cette durée, il peut être transformé en commande depuis « Mon
+de sa date d'émission, sauf durée différente indiquée sur le devis. Pendant cette durée, il peut être transformé en commande depuis « Mon
 compte », aux prix et conditions qu'il mentionne, sous réserve de disponibilité des articles.
 
 ## Prix {#prix}
@@ -52,6 +61,10 @@ validation de la commande. Les prix applicables sont ceux affichés au moment de
 
 Les promotions, remises par quantité et codes promo s'appliquent selon les conditions
 indiquées sur le site. Sauf mention contraire, un seul code promo est utilisable par commande.
+
+**Erreur de prix manifeste.** En cas d'erreur grossière sur un prix affiché (prix dérisoire ou
+sans rapport avec la valeur de l'article), ExploCardio.fr peut annuler la commande concernée,
+même après sa confirmation. Le Client en est informé et intégralement remboursé.
 
 ## Paiement {#paiement}
 
@@ -69,10 +82,12 @@ automatiquement, par carte ou prélèvement SEPA, selon le moyen choisi à la so
 
 **Retard de paiement.** Conformément à l'article L. 441-10 du Code de commerce, toute somme
 non payée à son échéance entraîne de plein droit, sans rappel préalable, des pénalités de
-retard au taux de [trois fois le taux d'intérêt légal / taux à préciser], ainsi qu'une
+retard au taux de **trois fois le taux d'intérêt légal**, ainsi qu'une
 indemnité forfaitaire pour frais de recouvrement de **40 €**. ExploCardio.fr peut en outre
 suspendre les livraisons, la mise à disposition et l'accès aux logiciels Cloud jusqu'au
 paiement complet.
+
+Aucun escompte n'est accordé pour paiement anticipé.
 
 ## Financement {#financement}
 
@@ -84,8 +99,8 @@ contrat conclu avec lui.
 
 ## Livraison {#livraison}
 
-La commande en ligne est réservée aux livraisons en France métropolitaine (Corse comprise).
-Pour une livraison en outre-mer ou à l'étranger, [contactez-nous](/qui-sommes-nous?motif=hors-metropole#contact) : notre équipe
+La commande en ligne est réservée aux livraisons en France métropolitaine continentale.
+Pour une livraison en Corse, en outre-mer ou à l'étranger, [contactez-nous](/qui-sommes-nous?motif=hors-metropole#contact) : notre équipe
 vous adresse une offre.
 
 Les frais de livraison sont des forfaits HT (standard ou express), indiqués avant la validation
@@ -94,14 +109,19 @@ de la commande, avec un franco de port au-delà du seuil affiché sur le site. C
 
 La livraison **express** est proposée lorsque tous les articles sont en stock et que la commande
 est passée avant l'heure limite indiquée sur le site, un jour ouvré. Elle est assurée le
-lendemain en France continentale, du lundi au vendredi hors jours fériés ; pour la Corse et
-les zones où le transporteur ne la garantit pas, le délai réel est affiché. Les autres délais
+lendemain, du lundi au vendredi hors jours fériés ; pour les zones où le transporteur ne la
+garantit pas, le délai réel est affiché. Les autres délais
 sont donnés à titre indicatif ; un retard ne peut donner lieu à l'annulation de la commande ni à
 des dommages et intérêts, sauf faute d'ExploCardio.fr.
 
 Le Client vérifie l'état du colis à la réception. Toute avarie, tout manquant ou toute erreur
 doit être signalé par des réserves précises sur le bon du transporteur, puis confirmé à
-ExploCardio.fr dans les **[3] jours ouvrés** suivant la réception.
+ExploCardio.fr dans les **3 jours ouvrés** suivant la réception.
+
+**Colis refusé, non retiré ou mal adressé.** Si le colis revient à ExploCardio.fr parce que le
+Client l'a refusé sans motif valable, ne l'a pas retiré dans le délai du transporteur ou a
+indiqué une adresse erronée ou incomplète, les frais de réexpédition sont à sa charge. Si
+l'erreur vient d'ExploCardio.fr ou du transporteur, la réexpédition est gratuite.
 
 ## Transfert des risques et réserve de propriété {#propriete}
 
@@ -114,7 +134,7 @@ d'ExploCardio.fr pendant toute la durée de la mise à disposition et après cel
 ## Annulation, retours et remboursements {#retours}
 
 S'agissant d'une vente entre professionnels, aucun droit de rétractation ne s'applique. Le
-Client qui souhaite annuler une commande contacte l'équipe :
+Client qui souhaite annuler une commande ou retourner un article contacte l'équipe :
 
 - **avant l'expédition**, l'annulation est gratuite et la commande intégralement remboursée ;
 - **après l'expédition**, un retour peut être accepté, à la discrétion d'ExploCardio.fr, pour un
@@ -122,6 +142,10 @@ Client qui souhaite annuler une commande contacte l'équipe :
   livraison. Les frais de retour sont à la charge du Client, sauf erreur d'ExploCardio.fr. Les
   consommables entamés, les articles configurés à la demande et les logiciels activés ne sont
   ni repris ni échangés.
+
+Tout retour doit faire l'objet d'un **accord préalable** d'ExploCardio.fr, qui communique au
+Client un numéro de retour à indiquer sur le colis. Un colis retourné sans accord peut être
+refusé. Une réclamation ou une demande de retour ne suspend pas le paiement des sommes dues.
 
 Les remboursements sont effectués par le moyen de paiement utilisé, ou par virement pour une
 commande payée par virement.
@@ -195,8 +219,13 @@ dommages dus à une mauvaise utilisation, à un choc, à une intervention non au
 non-respect de la notice.
 
 Le Client bénéficie en outre de la garantie légale des vices cachés (articles 1641 et suivants
-du Code civil). Pour toute demande, le Client contacte l'équipe, qui organise la prise en
-charge.
+du Code civil).
+
+**Service après-vente.** Pour toute panne, le Client contacte l'équipe, qui organise la prise
+en charge et lui communique un numéro de retour. L'envoi de l'appareil à ExploCardio.fr est à
+la charge du Client. Sous garantie, la réparation et le renvoi de l'appareil au Client sont à la
+charge d'ExploCardio.fr. Hors garantie, la réparation fait l'objet d'un devis préalable ; une
+fois le devis accepté, le renvoi est facturé avec la réparation.
 
 ## Responsabilité {#responsabilite}
 
@@ -222,10 +251,17 @@ Les données du Client sont traitées conformément à notre
 [politique de confidentialité](/confidentialite). Le site ne collecte aucune donnée concernant
 les patients.
 
+## Dispositions diverses {#dispositions}
+
+Si une clause des présentes CGV est déclarée nulle, les autres clauses restent applicables. Le
+fait pour ExploCardio.fr de ne pas se prévaloir d'une clause ne vaut pas renonciation à s'en
+prévaloir ultérieurement. Les CGV sont rédigées en français ; en cas de traduction, seule la
+version française fait foi.
+
 ## Droit applicable et litiges {#litiges}
 
 Les présentes CGV sont soumises au droit français. En cas de litige, les parties recherchent
-d'abord une solution amiable. À défaut, **le tribunal de commerce de [ville]** est seul
+d'abord une solution amiable. À défaut, **le tribunal de commerce d'Aix-en-Provence** est seul
 compétent, y compris en cas de pluralité de défendeurs ou d'appel en garantie.
 
 ## Contact {#contact}

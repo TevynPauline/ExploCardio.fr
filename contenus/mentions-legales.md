@@ -9,7 +9,7 @@ Le site ExploCardio.fr est édité par :
 - **[Raison sociale]**, [forme juridique] au capital de [capital] €
 - Siège social : [adresse du siège]
 - RCS [ville] — SIRET [SIRET]
-- TVA intracommunautaire : [numéro de TVA]
+- TVA intracommunautaire : FR46132194101
 - Email : [email de contact] — Téléphone : [téléphone]
 
 **Directeur ou directrice de la publication** : [nom], en qualité de [fonction].
