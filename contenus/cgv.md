@@ -8,9 +8,10 @@
 
 Les présentes conditions générales de vente (CGV) régissent les ventes de matériels,
 consommables et logiciels, les mises à disposition (location) et les abonnements conclus sur
-le site ExploCardio.fr entre [Raison sociale], [forme juridique] au capital de [capital] €,
-dont le siège est situé [adresse du siège], immatriculée au RCS de [ville] sous le numéro
-[SIRET], TVA intracommunautaire FR46132194101 (ci-après « ExploCardio.fr »), et ses clients.
+le site ExploCardio.fr entre la société ExploCardio.fr, société à responsabilité limitée à associé unique au capital de
+5 000 €, dont le siège est situé 13 chemin de Gontard, 13710 Fuveau, immatriculée au RCS
+d'Aix-en-Provence sous le numéro 132 194 101, TVA intracommunautaire FR46132194101
+(ci-après « ExploCardio.fr »), et ses clients.
 
 Le site est réservé aux **professionnels de santé** et à leurs structures d'exercice (cabinets,
 centres, sociétés) installés en France, agissant pour les besoins de leur activité
@@ -266,4 +267,4 @@ compétent, y compris en cas de pluralité de défendeurs ou d'appel en garantie
 
 ## Contact {#contact}
 
-[Raison sociale] — [adresse du siège] — [email de contact] — [téléphone].
+ExploCardio.fr — 13 chemin de Gontard, 13710 Fuveau — [email de contact] — [téléphone].

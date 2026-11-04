@@ -6,8 +6,8 @@
 
 ## Responsable du traitement {#responsable}
 
-Les données personnelles collectées sur ExploCardio.fr sont traitées par **[Raison sociale]**,
-[adresse du siège] (voir les [mentions légales](/mentions-legales)). Pour toute question sur vos
+Les données personnelles collectées sur ExploCardio.fr sont traitées par **la société ExploCardio.fr**,
+13 chemin de Gontard, 13710 Fuveau (voir les [mentions légales](/mentions-legales)). Pour toute question sur vos
 données : [email de contact].
 
 ## Aucune donnée de patient {#patients}
@@ -93,7 +93,7 @@ de portabilité de vos données, ainsi que du droit de retirer votre consentemen
 de définir des directives sur leur sort après votre décès. Vous pouvez modifier la plupart de
 vos informations et préférences dans « Mon compte ».
 
-Pour exercer vos droits, écrivez à [email de contact], ou à [adresse du siège]. Nous répondons
+Pour exercer vos droits, écrivez à [email de contact], ou à ExploCardio.fr, 13 chemin de Gontard, 13710 Fuveau. Nous répondons
 dans un délai d'un mois. Si vous estimez, après nous avoir contactés, que vos droits ne sont pas
 respectés, vous pouvez adresser une réclamation à la CNIL (cnil.fr).
 

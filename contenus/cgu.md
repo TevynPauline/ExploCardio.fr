@@ -7,7 +7,7 @@
 ## Objet {#objet}
 
 Les présentes conditions générales d'utilisation (CGU) définissent les conditions d'accès et
-d'utilisation du site ExploCardio.fr, édité par [Raison sociale] (voir les
+d'utilisation du site ExploCardio.fr, édité par la société ExploCardio.fr (voir les
 [mentions légales](/mentions-legales)). Les ventes, mises à disposition et abonnements sont
 régis par les [conditions générales de vente](/cgv).
 
@@ -100,7 +100,7 @@ les titulaires d'un compte sont informés de toute modification importante.
 ## Droit applicable {#droit}
 
 Les CGU sont soumises au droit français. En cas de litige, les parties recherchent d'abord une
-solution amiable ; à défaut, le tribunal de commerce de [ville] est compétent.
+solution amiable ; à défaut, le tribunal de commerce d'Aix-en-Provence est compétent.
 
 ## Contact {#contact}
 

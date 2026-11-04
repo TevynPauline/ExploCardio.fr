@@ -6,13 +6,13 @@
 
 Le site ExploCardio.fr est édité par :
 
-- **[Raison sociale]**, [forme juridique] au capital de [capital] €
-- Siège social : [adresse du siège]
-- RCS [ville] — SIRET [SIRET]
+- **ExploCardio.fr**, société à responsabilité limitée à associé unique au capital de 5 000 €
+- Siège social : 13 chemin de Gontard, 13710 Fuveau
+- RCS Aix-en-Provence 132 194 101
 - TVA intracommunautaire : FR46132194101
 - Email : [email de contact] — Téléphone : [téléphone]
 
-**Directeur ou directrice de la publication** : [nom], en qualité de [fonction].
+**Directeur de la publication** : Régis Andrieu, gérant.
 
 ## Hébergement {#hebergement}
 
@@ -27,7 +27,7 @@ partenaire Nelson (Patient Care Anywhere).
 ## Propriété intellectuelle {#propriete}
 
 L'ensemble des contenus du site (textes, photos, logos, marques, notices, tutoriels, structure)
-est protégé par le droit de la propriété intellectuelle. Ils appartiennent à [Raison sociale]
+est protégé par le droit de la propriété intellectuelle. Ils appartiennent à ExploCardio.fr
 ou à ses partenaires et fournisseurs. Toute reproduction, représentation ou adaptation, totale
 ou partielle, sans autorisation écrite préalable est interdite. Les marques des fabricants
 citées appartiennent à leurs titulaires respectifs.
