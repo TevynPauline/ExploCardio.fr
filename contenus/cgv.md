@@ -93,8 +93,8 @@ Aucun escompte n'est accordé pour paiement anticipé.
 ## Financement {#financement}
 
 Pour les équipements éligibles, le Client peut déposer une demande de financement. Les
-mensualités affichées sur le site sont indicatives et sous réserve d'acceptation par notre
-partenaire financier. La demande ne constitue pas une commande : la vente n'est conclue qu'après
+mensualités affichées sur le site sont données à titre indicatif, et sous réserve d'acceptation
+par notre partenaire financier. La demande ne constitue pas une commande : la vente n'est conclue qu'après
 accord du partenaire et signature des documents de financement, selon les conditions du
 contrat conclu avec lui.
 
@@ -104,16 +104,13 @@ La commande en ligne est réservée aux livraisons en France métropolitaine con
 Pour une livraison en Corse, en outre-mer ou à l'étranger, [contactez-nous](/qui-sommes-nous?motif=hors-metropole#contact) : notre équipe
 vous adresse une offre.
 
-Les frais de livraison sont des forfaits HT (standard ou express), indiqués avant la validation
-de la commande, avec un franco de port au-delà du seuil affiché sur le site. Certains
-équipements ont un tarif de livraison propre, indiqué sur leur fiche.
+Les frais de livraison sont un forfait HT, indiqué avant la validation de la commande, avec un
+franco de port au-delà du seuil affiché sur le site. Certains équipements ont un tarif de
+livraison propre, indiqué sur leur fiche.
 
-La livraison **express** est proposée lorsque tous les articles sont en stock et que la commande
-est passée avant l'heure limite indiquée sur le site, un jour ouvré. Elle est assurée le
-lendemain, du lundi au vendredi hors jours fériés ; pour les zones où le transporteur ne la
-garantit pas, le délai réel est affiché. Les autres délais
-sont donnés à titre indicatif ; un retard ne peut donner lieu à l'annulation de la commande ni à
-des dommages et intérêts, sauf faute d'ExploCardio.fr.
+Le délai de livraison indiqué avant la validation de la commande est donné à titre indicatif ;
+un retard ne peut donner lieu à l'annulation de la commande ni à des dommages et intérêts, sauf
+faute d'ExploCardio.fr.
 
 Le Client vérifie l'état du colis à la réception. Toute avarie, tout manquant ou toute erreur
 doit être signalé par des réserves précises sur le bon du transporteur, puis confirmé à
@@ -174,9 +171,8 @@ la formation à son utilisation, selon la description de l'offre.
   perte ou vol à ExploCardio.fr. Il lui appartient d'exporter ses enregistrements avant le
   retour.
 - **Perte, vol ou dégradation.** En cas de perte, de vol ou de dégradation au-delà de l'usure
-  normale, le Client est redevable de [la valeur de remplacement / des frais de remise en état]
-  [à préciser : montant par appareil, règle de calcul ou renvoi au contrat de mise à
-  disposition].
+  normale, le Client est redevable des sommes prévues par le contrat de mise à disposition
+  remis avec l'appareil (valeur de remplacement ou frais de remise en état).
 - **Impayé.** En cas d'échéance impayée, de nouvelles tentatives de prélèvement ont lieu.
   Faute de régularisation dans le délai indiqué, l'accès au logiciel Cloud est suspendu et le
   retour de l'appareil est demandé.
@@ -208,13 +204,13 @@ d'achat, selon les paliers, seuils et durées indiqués sur le site.
 - En cas de remboursement d'une commande, les bons et droits qu'elle avait ouverts sont
   retirés. Si les bons ont déjà été utilisés, leur montant est déduit du remboursement.
 
-L'assistance est assurée par la ligne WhatsApp Business d'ExploCardio.fr, aux horaires indiqués
+L'assistance est assurée par la ligne WhatsApp d'ExploCardio.fr, aux horaires indiqués
 sur le site. Hors droits ouverts, l'assistance est facturée à l'acte, au tarif affiché.
 
 ## Garanties {#garanties}
 
-Les matériels vendus bénéficient de [la garantie du constructeur, dont la durée est indiquée
-sur la fiche du produit / une garantie de [durée] assurée par ExploCardio.fr]. La garantie
+Les matériels vendus bénéficient de la garantie du constructeur, dont la durée est indiquée sur
+la fiche du produit. La garantie
 couvre les défauts de fabrication ; elle exclut l'usure normale, les consommables, et les
 dommages dus à une mauvaise utilisation, à un choc, à une intervention non autorisée ou au
 non-respect de la notice.
@@ -267,4 +263,4 @@ compétent, y compris en cas de pluralité de défendeurs ou d'appel en garantie
 
 ## Contact {#contact}
 
-ExploCardio.fr — 13 chemin de Gontard, 13710 Fuveau — [email de contact] — [téléphone].
+ExploCardio.fr — 13 chemin de Gontard, 13710 Fuveau — contact@explocardio.fr — [téléphone].

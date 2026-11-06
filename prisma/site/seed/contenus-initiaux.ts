@@ -53,7 +53,7 @@ export const PARAMETRES_INITIAUX: Record<string, string> = {
   "services.assistance.tarif": "",
   "services.financement.tarif": "",
   "services.installation.tarif": "",
-  "financement.mention": "Montant indicatif, sous réserve d'acceptation par notre partenaire financier.",
+  "financement.mention": "Mensualités à titre indicatif, et sous réserve d'acceptation par notre partenaire financier.",
   // F04 : heure limite de l'express (D2) ; coordonnées du virement (D4, fictives en démonstration) ;
   // rappel avant la fin de la réservation d'une commande en virement (D5).
   "commande.heure_limite_express": "14:00",
@@ -159,4 +159,14 @@ export async function remplirContenusInitiaux(db: PrismaClient) {
   for (const [cle, valeur] of Object.entries(PARAMETRES_INITIAUX)) {
     await db.parametre.upsert({ where: { cle }, create: { cle, valeur }, update: {} });
   }
+  // Valeurs par défaut remplacées : mises à jour seulement si elles n'ont pas été modifiées
+  // dans le back-office.
+  for (const [cle, ancienne] of Object.entries(ANCIENNES_VALEURS_PAR_DEFAUT)) {
+    await db.parametre.updateMany({ where: { cle, valeur: ancienne }, data: { valeur: PARAMETRES_INITIAUX[cle] } });
+  }
 }
+
+const ANCIENNES_VALEURS_PAR_DEFAUT: Record<string, string> = {
+  // 2026-11-04 : formulation validée par Régis.
+  "financement.mention": "Montant indicatif, sous réserve d'acceptation par notre partenaire financier.",
+};

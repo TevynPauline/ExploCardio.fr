@@ -1,7 +1,7 @@
 import { lireParametre } from "@/lib/parametres";
 import { modeDuSite } from "@/lib/config";
 
-// Liens de la hotline WhatsApp Business (FR-033 de F01, F09). Le numéro est un paramètre du
+// Liens de la hotline WhatsApp (FR-033 de F01, F09). Le numéro est un paramètre du
 // back-office. Le site n'a aucun lien technique avec WhatsApp (F09, FR-002) : il compose un lien
 // `tel:` et un lien `wa.me` avec un message pré-rempli. En démonstration, les boutons ouvrent
 // une page qui explique que personne n'est contacté : aucun lien vers un vrai numéro (FR-017).

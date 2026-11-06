@@ -42,7 +42,7 @@ export type DefinitionParametre = {
 
 export const THEMES: Record<Theme, { libelle: string; description: string }> = {
   livraison: { libelle: "Livraison", description: "Heure limite, jours non livrés et zones éloignées. Les tarifs de livraison se règlent dans Odoo." },
-  contact: { libelle: "Contact WhatsApp et horaires", description: "Ligne WhatsApp Business, horaires de réponse (jours fériés pris en compte automatiquement) et fermetures exceptionnelles." },
+  contact: { libelle: "Contact WhatsApp et horaires", description: "Ligne WhatsApp, horaires de réponse (jours fériés pris en compte automatiquement) et fermetures exceptionnelles." },
   comptes: { libelle: "Comptes", description: "Numéro d'entreprise (SIRET ou SIREN) et spécialités proposées à l'inscription." },
   virement: { libelle: "Virement", description: "Coordonnées bancaires indiquées aux clients qui paient par virement. Le virement n'est pas proposé tant que l'IBAN est vide." },
   rappels: { libelle: "Fidélité et rappels", description: "Utilisation des bons au panier et délais des rappels envoyés aux clients. Les règles du programme de fidélité se règlent dans Odoo." },
@@ -54,7 +54,7 @@ export const THEMES: Record<Theme, { libelle: string; description: string }> = {
 const ADMIN_COMMERCIAL: RoleEquipe[] = ["admin", "commercial"];
 
 export const PARAMETRES: DefinitionParametre[] = [
-  { cle: "commande.heure_limite_express", libelle: "Heure limite d'expédition", theme: "livraison", type: "heure", defaut: "14:00", aide: "Après cette heure, la livraison express et la livraison au lendemain d'une mise à disposition partent le jour ouvré suivant." },
+  { cle: "commande.heure_limite_express", libelle: "Heure limite d'expédition", theme: "livraison", type: "heure", defaut: "14:00", aide: "Après cette heure, un dépannage express (mise à disposition livrée le lendemain) part le jour ouvré suivant." },
   { cle: "livraison.jours_non_livres", libelle: "Jours non livrés", theme: "livraison", type: "dates", aide: "Une date par ligne (AAAA-MM-JJ), en plus des week-ends et des jours fériés." },
   { cle: "livraison.zones_sans_lendemain", libelle: "Zones sans livraison au lendemain", theme: "livraison", type: "zones", aide: "Débuts de codes postaux, séparés par des virgules (par exemple 29 pour le Finistère)." },
   { cle: "livraison.delai_zones_jours", libelle: "Délai supplémentaire de ces zones (jours ouvrés)", theme: "livraison", type: "entier", min: 0, max: 10 },

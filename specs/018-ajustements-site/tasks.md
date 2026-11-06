@@ -128,7 +128,15 @@ contacter » ; plus aucun « Corse comprise » dans le site.
 - [X] T026 Tests unitaires complets (`npx vitest run`) et e2e complets, mobile et ordinateur, contre le serveur de développement (rejouer les échecs mobiles tardifs dus au ralentissement du serveur)
 - [X] T027 Vérification visuelle (navigateur) : en-tête à 390, 1 024 et 1 280 px, panier avec quantités, fenêtre de retrait ; captures pour Pauline
 - [X] T028 [P] Mettre à jour `docs/demonstration.md` (barre de recherche, libellés, confirmation de retrait) et `tests/e2e/parcours/README.md` (ligne F18)
-- [ ] T029 Après accord de Pauline : contrôle des secrets, commit et push du lot A, puis surveillance de la CI
+- [X] T029 Après accord de Pauline : contrôle des secrets, commit et push du lot A, puis surveillance de la CI
+
+## Phase 9 : Lot C — un seul mode de livraison (FR-022, FR-023)
+
+- [X] T030 Retirer le mode « express » de la base de démonstration (`prisma/demo/seed/catalogue.ts`) et le désactiver dans les bases existantes au déploiement (`scripts/postdeploy.ts`)
+- [X] T031 Retirer la règle d'heure limite de l'express du tunnel (`src/domaine/commande/tunnel.ts`) ; mettre à jour l'aide du paramètre (`src/domaine/parametres/catalogue.ts`)
+- [X] T032 CGV : un forfait unique, plus de paragraphe sur l'express (`contenus/cgv.md`)
+- [X] T033 Tests : retirer le test unitaire de l'express (`tests/unit/commande/tunnel.test.ts`) ; test de contrat générique sur le mode retenu (`tests/contract/odoo/commandes.test.ts`)
+- [X] T034 Rejouer les tests unitaires, de contrat et e2e des commandes et du dépannage ; après accord de Pauline, commit et push avec les corrections des CGV
 
 ---
 

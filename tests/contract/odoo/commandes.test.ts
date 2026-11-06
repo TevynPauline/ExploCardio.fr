@@ -114,12 +114,10 @@ suiteDeContrat("odoo", "commandes : opérations ajoutées par F04", ({ registre 
     expect(d.abonnement!.moisSuivantsTtc).toBeGreaterThan(d.abonnement!.moisSuivantsHt);
   });
 
-  it("devis : express absent quand un article n'est pas en stock", async () => {
-    const d = await commandes().calculerDevis({ partenaireRef: null, lignes: [{ defaultCode: REF.enDelai, formule: "achat", quantite: 1 }], modeLivraison: "express" });
-    const express = d.modesLivraison.find((m) => m.code === "express")!;
-    expect(express.disponible).toBe(false);
-    expect(express.motif).toBeTruthy();
-    expect(d.modeLivraison).not.toBe("express");
+  it("devis : mode inconnu demandé, un mode disponible est retenu", async () => {
+    const d = await commandes().calculerDevis({ partenaireRef: null, lignes: [{ defaultCode: REF.enDelai, formule: "achat", quantite: 1 }], modeLivraison: "inexistant" });
+    expect(d.modesLivraison.length).toBeGreaterThan(0);
+    expect(d.modesLivraison.find((m) => m.code === d.modeLivraison)).toMatchObject({ disponible: true });
   });
 
   it("commande payée : montants identiques au devis, idempotente", async () => {

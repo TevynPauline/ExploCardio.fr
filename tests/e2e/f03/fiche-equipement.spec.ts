@@ -31,7 +31,7 @@ test("fiche : marque, nom, description, disponibilité, trois formules ; changem
   await main.getByText("Financement longue durée").click();
   await expect(panneau).toContainText("Sur 24 mois");
   await expect(panneau).toContainText("Sur 60 mois");
-  await expect(panneau).toContainText("Montant indicatif");
+  await expect(panneau).toContainText("Mensualités à titre indicatif");
   await expect(panneau.getByRole("link", { name: "Demander mon financement" })).toHaveAttribute("href", /\/financement\/demande\?article=/);
   expect(await page.evaluate(() => (window as unknown as { __marqueur?: number }).__marqueur)).toBe(1);
   await expect(page).toHaveURL(/formule=financement/);

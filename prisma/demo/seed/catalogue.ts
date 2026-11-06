@@ -661,12 +661,11 @@ export async function remplirCatalogue(db: PrismaClient): Promise<{ modeles: num
   }
   await db.baremeFinancement.createMany({ data: BAREMES });
 
-  // F04 : modes de livraison (forfaits, délais), franco, délai de réservation d'un virement,
+  // F04 : mode de livraison (un seul depuis F18 lot C : forfait, délai), franco, délai de réservation d'un virement,
   // frais de livraison et d'installation des équipements d'effort volumineux (valeurs inventées).
   await db.modeLivraison.createMany({
     data: [
       { code: "standard", libelle: "Livraison standard", forfaitCentimes: euros(15), delaiJours: 3, exigeStock: false, franco: true, ordre: 1 },
-      { code: "express", libelle: "Livraison express (le lendemain)", forfaitCentimes: euros(35), delaiJours: 1, exigeStock: true, franco: false, ordre: 2 },
     ],
   });
   await db.parametresVente.create({ data: { seuilFrancoCentimes: euros(300), delaiVirementJours: 7 } });

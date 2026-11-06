@@ -159,21 +159,12 @@ export async function enregistrerAdresses(commande: CommandeSite, a: Adresses): 
   });
 }
 
-/** Heure limite de l'express (paramètre du site, D2), à l'heure de Paris. */
-export async function avantHeureLimiteExpress(maintenant = new Date()): Promise<boolean> {
-  const limite = (await lireParametre("commande.heure_limite_express"))?.trim() || "14:00";
-  const [h, m] = limite.split(":").map(Number);
-  const paris = new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", hour: "2-digit", minute: "2-digit", hour12: false }).format(maintenant);
-  const [hp, mp] = paris.split(":").map(Number);
-  return hp! * 60 + mp! < (h ?? 14) * 60 + (m ?? 0);
-}
-
-/** Devis de la commande (lignes, cadeau de bienvenue, mode de livraison) ; express soumis à l'heure limite. */
+/** Devis de la commande (lignes, cadeau de bienvenue, mode de livraison). */
 export async function devisCommande(commande: CommandeSite, options: { cadeau?: boolean } = {}): Promise<Devis> {
   const compte = await dbSite().compteClient.findUniqueOrThrow({ where: { id: commande.compteId } });
   const lignes = lignesDe(commande);
   const cadeau = options.cadeau !== false && lignes.some((l) => l.formule === "achat") ? await cadeauPourCommande(compte) : null;
-  const devis = await registre.odoo().commandes.calculerDevis({
+  return registre.odoo().commandes.calculerDevis({
     partenaireRef: await partenaireDuCompte(commande.compteId),
     // F12 : abonnement logiciel différé à la fin d'une période incluse (rien n'est dû avant).
     lignes: [...(await avecPrisesEffet(commande.compteId, lignes)), ...(cadeau ? [{ ...cadeau, formule: "achat" as const }] : [])],
@@ -182,16 +173,6 @@ export async function devisCommande(commande: CommandeSite, options: { cadeau?: 
     modeLivraison: commande.modeLivraison,
     devisRef: commande.devisRef,
   });
-  if (!(await avantHeureLimiteExpress())) {
-    for (const m of devis.modesLivraison) {
-      if (m.code === "express" && m.disponible) {
-        m.disponible = false;
-        m.motif = "Commande passée après l'heure limite du jour pour l'express.";
-      }
-    }
-    if (devis.modeLivraison === "express") devis.modeLivraison = devis.modesLivraison.find((m) => m.disponible)?.code ?? null;
-  }
-  return devis;
 }
 
 export type DatesMiseADisposition = {

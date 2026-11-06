@@ -43,6 +43,8 @@ async function principal() {
   if ((await dbDemo().partenaire.count()) > 0) {
     const { remplirContenusInitiaux } = await import("../prisma/site/seed/contenus-initiaux");
     await remplirContenusInitiaux(dbSite());
+    // F18 lot C : un seul mode de livraison, la livraison express n'est plus proposée.
+    await dbDemo().modeLivraison.updateMany({ where: { code: "express" }, data: { actif: false } });
     console.log("✓ Base de démonstration déjà remplie ; contenus de départ manquants ajoutés.");
     return;
   }

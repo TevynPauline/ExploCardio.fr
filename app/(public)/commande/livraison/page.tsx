@@ -15,8 +15,8 @@ export const metadata: Metadata = { title: "Commande — livraison" };
 const classePilule =
   "flex min-h-11 cursor-pointer items-start gap-3 rounded border border-line bg-surface p-4 has-[:checked]:border-action has-[:checked]:bg-pale has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-action";
 
-// Étape « Livraison » (FR-010, FR-011, FR-046) : modes d'Odoo pour les achats (express soumis
-// au stock et à l'heure limite) ; date de livraison de chaque mise à disposition (F05, FR-007).
+// Étape « Livraison » (FR-010, FR-011, FR-046) : modes d'Odoo pour les achats (un seul depuis
+// F18 lot C, sans express) ; date de livraison de chaque mise à disposition (F05, FR-007).
 export default async function Livraison({ searchParams }: { searchParams: Promise<{ ref?: string; erreur?: string }> }) {
   const { ref, erreur } = await searchParams;
   const r = await chargerCommande("/commande/livraison", ref);

@@ -104,4 +104,4 @@ solution amiable ; à défaut, le tribunal de commerce d'Aix-en-Provence est com
 
 ## Contact {#contact}
 
-Pour toute question : [email de contact].
+Pour toute question : contact@explocardio.fr.

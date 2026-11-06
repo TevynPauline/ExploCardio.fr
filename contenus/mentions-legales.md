@@ -10,7 +10,7 @@ Le site ExploCardio.fr est édité par :
 - Siège social : 13 chemin de Gontard, 13710 Fuveau
 - RCS Aix-en-Provence 132 194 101
 - TVA intracommunautaire : FR46132194101
-- Email : [email de contact] — Téléphone : [téléphone]
+- Email : contact@explocardio.fr — Téléphone : [téléphone]
 
 **Directeur de la publication** : Régis Andrieu, gérant.
 

@@ -1,8 +1,6 @@
 import { afterAll, describe, expect, it } from "vitest";
-import { ouvrirCommande, enregistrerAdresses, choisirLivraison, choisirPaiement, devisCommande, TunnelRefuse, SaisieInvalide, avantHeureLimiteExpress } from "@/domaine/commande/tunnel";
+import { ouvrirCommande, enregistrerAdresses, choisirPaiement, TunnelRefuse, SaisieInvalide } from "@/domaine/commande/tunnel";
 import { lancerPaiement } from "@/domaine/commande/paiement";
-import { dbSite } from "@/lib/db/site";
-import { ecrireParametre } from "@/lib/parametres";
 import { compteValide, nettoyer, remplirPanier } from "./outils";
 
 // T014 — tunnel de commande (F04, US2, FR-007 à FR-014).
@@ -46,25 +44,6 @@ describe("tunnel", () => {
     await remplirPanier(compteId, [{ defaultCode: "EC-ELEC-HOLTER-50", formule: "achat", quantite: 1 }]);
     const c = await ouvrirCommande(compteId);
     await expect(enregistrerAdresses(c, { ...adresses, livraison: { ...adresses.livraison, codePostal: "97400" } })).rejects.toBeInstanceOf(SaisieInvalide);
-  });
-
-  it("express : proposé seulement avant l'heure limite et si tout est en stock", async () => {
-    const { compteId } = await compteValide();
-    await remplirPanier(compteId, [{ defaultCode: "EC-ELEC-HOLTER-50", formule: "achat", quantite: 1 }]);
-    const c = await enregistrerAdresses(await ouvrirCommande(compteId), adresses);
-    const avant = await dbSite().parametre.findUnique({ where: { cle: "commande.heure_limite_express" } });
-    try {
-      await ecrireParametre("commande.heure_limite_express", "00:00", null);
-      expect(await avantHeureLimiteExpress()).toBe(false);
-      const devis = await devisCommande(c);
-      expect(devis.modesLivraison.find((m) => m.code === "express")).toMatchObject({ disponible: false });
-      await expect(choisirLivraison(c, "express")).rejects.toBeInstanceOf(SaisieInvalide);
-      await ecrireParametre("commande.heure_limite_express", "23:59", null);
-      const ok = await choisirLivraison(c, "express");
-      expect(ok.modeLivraison).toBe("express");
-    } finally {
-      await ecrireParametre("commande.heure_limite_express", avant?.valeur ?? "14:00", null);
-    }
   });
 
   it("virement refusé pour un abonnement ; CGV obligatoires", async () => {

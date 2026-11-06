@@ -236,7 +236,7 @@ export async function lireFiche(cle: CleFamille, slug: string, compteId?: string
       compatibles: compatiblesEntrees.map((e) => ({ ...carteDe(e), variantes: variantesDe(e, client, parCode) })),
       associes,
       mentionFinancement:
-        (await lireParametre("financement.mention")) ?? "Montant indicatif, sous réserve d'acceptation par notre partenaire financier.",
+        (await lireParametre("financement.mention")) ?? "Mensualités à titre indicatif, et sous réserve d'acceptation par notre partenaire financier.",
       indisponible: false,
     },
   };

@@ -23,7 +23,7 @@ export const LIBELLES_STATUT_FINANCEMENT = {
   refusee: "Refusée",
 } as const;
 
-export const MENTION_PAR_DEFAUT = "Montant indicatif, sous réserve d'acceptation par notre partenaire financier.";
+export const MENTION_PAR_DEFAUT = "Mensualités à titre indicatif, et sous réserve d'acceptation par notre partenaire financier.";
 
 export class DemandeRefusee extends Error {
   constructor(

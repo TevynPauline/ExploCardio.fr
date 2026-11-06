@@ -294,6 +294,14 @@ de compte ; connecté, le même lien ouvre « Mon compte ».
   (contraste, focus visible, cibles de 44 px, clavier, réduction des animations).
 - **FR-021** : Aucun écran modifié NE DOIT collecter de donnée de patient.
 
+### Lot C — un seul mode de livraison (décision de Régis du 2026-11-06)
+
+- **FR-022** : Les commandes d'achat NE DOIVENT proposer qu'un seul mode de livraison, la
+  livraison standard (forfait, franco au-delà du seuil). La livraison express et sa règle
+  d'heure limite disparaissent du tunnel de commande et des CGV.
+- **FR-023** : Le « Dépannage express » (mise à disposition livrée le lendemain) DOIT rester
+  inchangé, avec son heure limite (paramètre « Heure limite d'expédition »).
+
 ## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
