@@ -16,8 +16,8 @@ export function estHotePageAttente(hote: string | null, env: Record<string, stri
   return domainesPageAttente(env).includes(nom);
 }
 
-/** Fichiers dont la page d'attente a besoin (polices, logos, robots.txt). */
-const RESSOURCES = [/^\/fonts\//, /^\/marque\//, /^\/robots\.txt$/];
+/** Fichiers dont la page d'attente a besoin (polices, logos, robots.txt, plan du site — F21). */
+const RESSOURCES = [/^\/fonts\//, /^\/marque\//, /^\/robots\.txt$/, /^\/sitemap\.xml$/];
 
 export function estRessourcePageAttente(chemin: string): boolean {
   return RESSOURCES.some((r) => r.test(chemin));

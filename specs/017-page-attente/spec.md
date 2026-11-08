@@ -69,3 +69,11 @@ accroche, téléphone et commentaire facultatifs, bouton « Envoyer », confirma
 envoyé, nous revenons vers vous rapidement. », consentement et mention de confidentialité
 étendus à la réponse aux demandes. Back-office : téléphone et commentaires dans la liste
 (cartes) et dans l'export CSV.
+
+## Révision du 2026-11-08 (F21, référencement naturel)
+
+FR-002 est modifiée par F21 (FR-001) : la page d'attente est désormais **indexable** par les
+moteurs de recherche, avec une adresse canonique, un aperçu de partage, la description
+structurée de l'entreprise, un `robots.txt` qui l'autorise et un plan du site d'une seule
+adresse. Les autres adresses du domaine renvoient vers `/` par une redirection définitive (308)
+et restent non indexées. La démonstration reste non indexée. Le reste de F17 est inchangé.

@@ -44,17 +44,14 @@ async function activiteEquipe(requete: NextRequest, reponse: NextResponse): Prom
 /**
  * Page d'attente (F17) : sur les adresses déclarées, « / » affiche la page d'attente, sans mot
  * de passe ; toute autre adresse y renvoie. Ni la démonstration, ni le back-office, ni l'API.
+ * F21 (FR-001, FR-002) : « / », robots.txt et le plan du site sont indexables ; les autres
+ * adresses renvoient définitivement (308) vers « / », sans être indexées.
  */
 function pageAttente(requete: NextRequest): NextResponse {
   const { pathname } = requete.nextUrl;
-  let reponse: NextResponse;
-  if (estRessourcePageAttente(pathname)) {
-    reponse = NextResponse.next();
-  } else if (pathname === "/") {
-    reponse = NextResponse.rewrite(new URL(CHEMIN_PAGE_ATTENTE, requete.url));
-  } else {
-    reponse = NextResponse.redirect(new URL("/", requete.url));
-  }
+  if (estRessourcePageAttente(pathname)) return NextResponse.next();
+  if (pathname === "/") return NextResponse.rewrite(new URL(CHEMIN_PAGE_ATTENTE, requete.url));
+  const reponse = NextResponse.redirect(new URL("/", requete.url), 308);
   reponse.headers.set("X-Robots-Tag", "noindex, nofollow");
   return reponse;
 }

@@ -1,27 +1,60 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { jetonAffichage } from "@/domaine/anti-robots";
 import { lireParametresPublics } from "@/domaine/contenus";
 import { TEXTE_CONSENTEMENT_OUVERTURE } from "@/domaine/ouverture";
+import { estIndexable, origineCanonique, politiqueIndexation } from "@/lib/referencement/politique";
+import { IDENTITE, organisation } from "@/lib/referencement/schema";
 import { Dots, Kicker, Logo } from "@/ui";
+import { DonneesStructurees } from "@/ui/DonneesStructurees";
 import { FormulaireOuverture } from "@/ui/FormulaireOuverture";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: { absolute: "ExploCardio.fr — ouverture prochaine" },
-  description: "Le spécialiste des explorations fonctionnelles cardiaques. Plus que quelques jours avant le lancement officiel du site : laissez vos coordonnées pour être prévenu.",
-  robots: { index: false, follow: false },
-};
+const TITRE = "ExploCardio.fr — ouverture prochaine";
+const DESCRIPTION = "Le spécialiste des explorations fonctionnelles cardiaques. Plus que quelques jours avant le lancement officiel du site : laissez vos coordonnées pour être prévenu.";
+
+async function politique() {
+  const p = politiqueIndexation((await headers()).get("host"));
+  return { politique: p, origine: origineCanonique(p) };
+}
+
+// F21 (FR-001 à FR-004) : indexable sur l'adresse de la page d'attente, avec adresse canonique,
+// aperçu de partage et codes de validation de la Search Console et de Bing (s'ils sont définis).
+export async function generateMetadata(): Promise<Metadata> {
+  const { politique: p, origine } = await politique();
+  const indexable = estIndexable(p);
+  const google = process.env.GOOGLE_SITE_VERIFICATION?.trim();
+  const bing = process.env.BING_SITE_VERIFICATION?.trim();
+  return {
+    title: { absolute: TITRE },
+    description: DESCRIPTION,
+    robots: indexable ? { index: true, follow: true } : { index: false, follow: false },
+    alternates: { canonical: `${origine}/` },
+    openGraph: {
+      title: TITRE,
+      description: DESCRIPTION,
+      url: `${origine}/`,
+      siteName: "ExploCardio.fr",
+      locale: "fr_FR",
+      type: "website",
+      images: [{ url: `${origine}${IDENTITE.logo}`, width: 3075, height: 1283, alt: "ExploCardio.fr" }],
+    },
+    ...(indexable && (google || bing) ? { verification: { ...(google ? { google } : {}), ...(bing ? { other: { "msvalidate.01": bing } } : {}) } } : {}),
+  };
+}
 
 const SERVICES = ["Vente, location, financement, mise à disposition", "Hébergement des données de santé", "Hotline dédiée, SAV"];
 const DOMAINES = ["Holter ECG", "Holter tensionnel", "Épreuve d’effort", "Échographie d’effort", "Consommables"];
 
 // Page d'attente (F17) : seule page servie sur l'adresse publique (www.explocardio.fr) tant que
-// le site n'est pas ouvert. Sans en-tête ni bandeau de démonstration ; non indexée.
+// le site n'est pas ouvert. Sans en-tête ni bandeau de démonstration ; indexable (F21).
 export default async function PageAttente() {
   const { email, telephone } = await lireParametresPublics();
+  const { origine } = await politique();
   return (
     <main id="contenu" className="mx-auto flex min-h-screen max-w-page flex-col gap-10 px-4 py-10 md:py-16">
+      <DonneesStructurees donnees={organisation(origine, { email, telephone })} />
       <Logo hauteur={36} priority />
 
       <div className="grid gap-10 lg:grid-cols-[1fr_minmax(0,28rem)] lg:items-start">

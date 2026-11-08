@@ -2,9 +2,18 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
 
+// F21 (R5, R8) : adresse de référence, aperçus de partage par défaut. Hors production, toute page
+// est déclarée non indexable (double sûreté avec l'en-tête du proxy) ; la page d'attente, seule
+// exception, déclare elle-même son indexation.
+const enProduction = process.env.SITE_MODE === "prod";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.SITE_URL ?? "http://localhost:3000"),
   title: { default: "ExploCardio.fr", template: "%s — ExploCardio.fr" },
   description: "Le spécialiste des explorations fonctionnelles cardiaques.",
+  openGraph: { siteName: "ExploCardio.fr", locale: "fr_FR", type: "website" },
+  twitter: { card: "summary_large_image" },
+  ...(enProduction ? {} : { robots: { index: false, follow: false } }),
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

@@ -88,3 +88,34 @@ Réglages (faits le 2026-10-27) :
 
 À l'ouverture du site : retirer la variable, puis faire de `www.explocardio.fr` l'adresse du
 site (`SITE_URL`).
+
+## Référencement de la page d'attente (F21)
+
+Depuis F21, la page d'attente de `www.explocardio.fr` est **indexable** par les moteurs de
+recherche, avec son `robots.txt` et un plan du site d'une seule adresse
+(`https://www.explocardio.fr/sitemap.xml`). La démonstration (adresse scalingo.io) reste
+fermée aux moteurs : en-tête `X-Robots-Tag: noindex`, balise `noindex`, `robots.txt`
+« Disallow: / ». La règle est dans `src/lib/referencement/politique.ts` ; en cas de
+configuration absente ou inconnue, rien n'est indexable.
+
+Vérification après déploiement :
+
+```bash
+curl -sI https://www.explocardio.fr | grep -i robots        # rien
+curl -s https://www.explocardio.fr/robots.txt               # Allow: / et Sitemap:
+curl -s https://www.explocardio.fr/sitemap.xml              # une seule <loc>
+curl -sI https://explocardio.osc-fr1.scalingo.io/demo/acces | grep -i robots   # noindex
+```
+
+**Search Console et Bing Webmaster Tools** : validation recommandée **par le DNS** (o2switch,
+enregistrement TXT donné par Google, propriété de domaine `explocardio.fr`), puis soumettre
+`https://www.explocardio.fr/sitemap.xml` et demander l'indexation de `/`. Bing importe le site
+depuis la Search Console. En secours, validation par balise : variables facultatives
+(onglet Environment), à saisir vous-même :
+
+| Variable | Valeur |
+|---|---|
+| `GOOGLE_SITE_VERIFICATION` | code de la balise `google-site-verification` donné par la Search Console |
+| `BING_SITE_VERIFICATION` | code de la balise `msvalidate.01` donné par Bing |
+
+Ces balises ne sont servies que sur la page d'attente et, plus tard, en production.

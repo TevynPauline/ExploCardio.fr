@@ -10,9 +10,16 @@ const nextConfig: NextConfig = {
   // Construction : 2 processus pour le pré-rendu (limite de connexions de la base, voir src/lib/db/pool.ts).
   experimental: { serverActions: { bodySizeLimit: "52mb" }, cpus: 2 },
   // Site de démonstration : aucune réponse indexable, fichiers statiques compris (FR-035).
+  // F21 (FR-001) : sauf sur les adresses de la page d'attente, dont le proxy règle l'indexation.
   async headers() {
     if (process.env.SITE_MODE === "prod") return [];
-    return [{ source: "/:chemin*", headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }] }];
+    const domaines = (process.env.DOMAINES_PAGE_ATTENTE ?? "")
+      .split(",")
+      .map((d) => d.trim().toLowerCase())
+      .filter(Boolean)
+      .map((d) => d.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+    const horsAttente = domaines.length ? [{ type: "host" as const, value: `(?:${domaines.join("|")})` }] : [];
+    return [{ source: "/:chemin*", missing: horsAttente, headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }] }];
   },
 };
 

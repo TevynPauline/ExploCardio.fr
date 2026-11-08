@@ -21,8 +21,9 @@ test("page d'attente publique : formulaire, aucune autre page, démonstration in
   const contexte = await browser.newContext({ storageState: { cookies: [], origins: [] } });
   const page = await contexte.newPage();
   try {
+    // F21 (FR-001) : la page d'attente est désormais indexable.
     const reponse = await page.goto(`${origine}/`);
-    expect(reponse?.headers()["x-robots-tag"]).toContain("noindex");
+    expect(reponse?.headers()["x-robots-tag"] ?? "").not.toContain("noindex");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Plus que quelques jours avant le lancement officiel du site ExploCardio.fr");
     await expect(page.getByText("Version de démonstration")).toHaveCount(0);
     await verifierAccessibilite(page);
