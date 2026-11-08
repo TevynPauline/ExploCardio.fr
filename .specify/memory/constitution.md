@@ -21,13 +21,17 @@ dilue le positionnement et ralentit le médecin.
 ### II. Simplicité et transparence
 
 - Un médecin DOIT trouver un produit ou un service en 3 clics maximum depuis l'accueil.
-- Les prix DOIVENT être affichés HT dès le départ.
+- Les prix DOIVENT être affichés dès le départ en TTC, en caractères principaux, avec le prix
+  HT juste en dessous. Les montants restent tenus HT dans Odoo ; le TTC est calculé avec le
+  taux de TVA de l'article.
 - Le « prix sur demande » est INTERDIT pour les modèles standards.
 - Chaque produit DOIT proposer des configurations standard prédéfinies plutôt que du
   sur-mesure.
 
-**Justification** : le médecin décide vite s'il voit le prix et le chemin. Le sur-mesure
-et les prix masqués imposent un échange commercial que le site veut éviter.
+**Justification** : le médecin décide vite s'il voit le prix et le chemin. La plupart des
+cardiologues libéraux ne récupèrent pas la TVA : le prix TTC est celui qu'ils paient
+réellement (amendement du 2026-11-08). Le sur-mesure et les prix masqués imposent un
+échange commercial que le site veut éviter.
 
 ### III. Trois phases et des connecteurs
 
@@ -246,4 +250,4 @@ Cette section rassemble les contraintes d'architecture qui découlent des princi
 - Les onze principes étant non négociables, aucune dérogation ponctuelle n'est admise : un
   écart durable passe par un amendement.
 
-**Version**: 2.2.0 | **Ratified**: 2026-10-12 | **Last Amended**: 2026-10-14
+**Version**: 2.3.0 | **Ratified**: 2026-10-12 | **Last Amended**: 2026-11-08
