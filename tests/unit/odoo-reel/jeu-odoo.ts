@@ -1,7 +1,7 @@
 import copie from "./fixtures/copie-odoo20.json";
 import { CORRESPONDANCE_PAR_DEFAUT } from "@/connecteurs/odoo/real/correspondance";
 import { creerOdooReel } from "@/connecteurs/odoo/real";
-import { fauxOdoo } from "./faux-odoo";
+import { CLE_TEST, fauxOdoo } from "./faux-odoo";
 
 // Jeu de test du mode réel : réponses d'Odoo 20 enregistrées sur la copie (catalogue seul,
 // aucune donnée personnelle), complétées des cas absents de la copie (T002).
@@ -63,7 +63,7 @@ const ENV = {
   ODOO_URL: "https://odoo.test",
   ODOO_DATABASE: "base-test",
   ODOO_USER: "site@test",
-  ODOO_API_KEY: "cle-secrete-de-test-0123456789",
+  ODOO_API_KEY: CLE_TEST,
   ODOO_ENVIRONNEMENT: "recette",
 };
 

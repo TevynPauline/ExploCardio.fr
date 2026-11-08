@@ -7,4 +7,4 @@ useDefault = true
 [allowlist]
 description = "Valeurs non sensibles de l'intégration continue et exemples sans valeur"
 paths = ['''\.env\.example''', '''package-lock\.json''']
-regexes = ['''integration-continue-[a-z0-9-]+''']
+regexes = ['''integration-continue-[a-z0-9-]+''', '''cle-secrete-de-test-[0-9]+''']

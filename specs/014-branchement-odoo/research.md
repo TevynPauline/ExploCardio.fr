@@ -165,3 +165,28 @@ avec la clé de Régis (scope RPC). Aucune écriture n'a été faite.
    d'Odoo 20, ou renoncer aux packs au démarrage ?
 5. Barème de financement : où le tenir dans Odoo tant que le partenaire n'est pas choisi ?
    Par défaut, aucun barème (mensualités non affichées).
+
+## Réponses de Régis (2026-11-08) et décisions de Pauline
+
+Document commenté reçu le 2026-11-08 (`donnees-test-odoo.docx`).
+
+| Sujet | Réponse | Effet |
+|---|---|---|
+| Références | seules les variantes ont une référence ; le parent n'en a pas et n'est jamais vendu | conforme au lot 1 (lecture par variante) |
+| Catégories | sous-catégories créées (ex. « Accessoires Holter ECG » sous « Holter ECG ») | déjà pris en compte : la sous-catégorie suit son parent, ou sa propre ligne de correspondance (la plus précise l'emporte) |
+| Correspondance (question 2) | validée | défaut inchangé ; ECG de repos toujours sans catégorie |
+| Prix TTC | les clients ne récupèrent pas la TVA | **décision de Pauline : TTC en caractères principaux, HT juste en dessous** ; constitution 2.3.0 (principe II) ; module d'affichage à spécifier à part. Odoo reste tenu en HT |
+| Produits non publiés | souhaite pouvoir ne pas publier un produit (composant de pack, produit interne) | **décision : masqué par défaut** ; un produit n'apparaît que si sa fiche est publiée dans le back-office (R4 inchangé) |
+| Location (question 1) | hésite entre références dédiées et variante achat/location | **décision : références dédiées à la location**, avec un parc dédié ; à détailler au lot 4 (les propriétés de mise à disposition portent sur ces références) |
+| Entrepôt | un seul pour l'instant | conforme à R6 |
+| TVA | 20 % seulement prévu | conforme |
+| Livraison | forfait sous un seuil de franco ; exceptions (table ULKE) | lot 3 : exclusion par produit (propriété « Hors forfait de livraison ») plutôt que des combos |
+| Packs (question 4) | module Fabrication installé, un combo créé | lire les combos et nomenclatures après la prochaine copie |
+| Financement (question 5) | barème d'au moins un financeur à venir, mention « à titre indicatif » | lot ultérieur |
+| Utilisateur dédié | une seule licence : compte de Régis pour les tests | clé API dédiée au site, révocable ; à revoir avant l'ouverture |
+| CRM | demandes vers contact@explocardio.fr | lot 2 |
+| Factures, relances | modèles à adapter (Studio ou code, intégrateur) ; relances non prioritaires | lot 4 |
+| À expliquer de vive voix | catégorie et type de produit, journal « Carte », question 3 (prix client) | — |
+
+Prochaine étape : nouvelle copie neutralisée après la saisie de Régis (location, liste de prix,
+propriétés Marque et Type d'article), puis nouveau rapport de contrôle.
