@@ -1,8 +1,9 @@
 import { expect, it } from "vitest";
 import { suiteDeContrat } from "../harness";
-import { REF } from "./outils";
+import { REF, itDemo } from "./outils";
+import { references } from "./references";
 
-suiteDeContrat("odoo", "catalogue (contracts/odoo.md §1)", ({ registre }) => {
+suiteDeContrat("odoo", "catalogue (contracts/odoo.md §1)", ({ registre, mode }) => {
   const catalogue = () => registre.odoo().catalogue;
 
   it("liste les cinq catégories du catalogue, dans l'ordre", async () => {
@@ -16,7 +17,7 @@ suiteDeContrat("odoo", "catalogue (contracts/odoo.md §1)", ({ registre }) => {
     ]);
   });
 
-  it("liste les articles d'une catégorie avec prix « à partir de », formules et disponibilité", async () => {
+  itDemo("liste les articles d'une catégorie avec prix « à partir de », formules et disponibilité", async () => {
     const articles = await catalogue().listerArticles("holter-ecg");
     expect(articles.length).toBeGreaterThan(0);
     for (const a of articles) {
@@ -28,7 +29,7 @@ suiteDeContrat("odoo", "catalogue (contracts/odoo.md §1)", ({ registre }) => {
     expect(dms?.formules).toEqual(expect.arrayContaining(["achat", "mise_a_disposition", "financement"]));
   });
 
-  it("filtre par marque, par type et par disponibilité", async () => {
+  itDemo("filtre par marque, par type et par disponibilité", async () => {
     const suntech = await catalogue().listerArticles("mapa", { marque: "SunTech" });
     expect(suntech.length).toBeGreaterThan(0);
     expect(suntech.every((a) => a.marque === "SunTech")).toBe(true);
@@ -38,7 +39,7 @@ suiteDeContrat("odoo", "catalogue (contracts/odoo.md §1)", ({ registre }) => {
     expect(indisponibles.map((a) => a.reference)).toContain(REF.enRupture);
   });
 
-  it("lit un article : variantes, prix HT, TVA, offre de mise à disposition et barème", async () => {
+  itDemo("lit un article : variantes, prix HT, TVA, offre de mise à disposition et barème", async () => {
     const a = await catalogue().lireArticle(REF.equipementMad);
     expect(a.nom).toBe("DMS 300-4L");
     expect(a.variantes.length).toBeGreaterThanOrEqual(2);
@@ -53,10 +54,41 @@ suiteDeContrat("odoo", "catalogue (contracts/odoo.md §1)", ({ registre }) => {
   });
 
   it("lève NotFound pour une référence inconnue", async () => {
-    await expect(catalogue().lireArticle(REF.inconnue)).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await expect(catalogue().lireArticle(references(mode).inconnue!)).rejects.toMatchObject({ code: "NOT_FOUND" });
   });
 
-  it("donne les prix applicables à un client", async () => {
+  it("chaque article listé se lit, avec des variantes à prix HT et TVA, sans marque fictive en mode réel", async () => {
+    const tous = (await Promise.all((await catalogue().listerCategories()).map((c) => catalogue().listerArticles(c.code)))).flat();
+    for (const resume of tous.slice(0, 10)) {
+      const a = await catalogue().lireArticle(resume.reference);
+      expect(a.variantes.length).toBeGreaterThan(0);
+      for (const v of a.variantes) {
+        expect(v.prixHt).toBeGreaterThan(0);
+        expect(v.tauxTva).toBeGreaterThanOrEqual(0);
+        expect(v.quantiteParLot).toBeGreaterThanOrEqual(1);
+      }
+      if (mode === "real") expect(a.estFictif).toBe(false);
+    }
+    const index = await catalogue().listerReferences();
+    const codes = index.map((r) => r.defaultCode);
+    expect(new Set(codes).size).toBe(codes.length);
+  });
+
+  it("rapport de contrôle : anomalies bien formées, bloquantes d'abord (F14)", async () => {
+    const anomalies = await catalogue().controlerDonnees();
+    const objets = ["article", "variante", "categorie", "regle_prix", "client"];
+    for (const a of anomalies) {
+      expect(objets).toContain(a.objet);
+      expect(typeof a.reference).toBe("string");
+      expect(typeof a.nom).toBe("string");
+      expect(a.code).toMatch(/^[A-Z_]+$/);
+      expect(typeof a.bloquant).toBe("boolean");
+    }
+    const i = anomalies.findIndex((a) => !a.bloquant);
+    if (i >= 0) expect(anomalies.slice(i).every((a) => !a.bloquant)).toBe(true);
+  });
+
+  itDemo("donne les prix applicables à un client", async () => {
     const prix = await catalogue().lirePrixClient(REF.partenaireDroitsActifs, [REF.consommable, REF.equipement]);
     expect(prix).toHaveLength(2);
     for (const p of prix) {
@@ -65,14 +97,14 @@ suiteDeContrat("odoo", "catalogue (contracts/odoo.md §1)", ({ registre }) => {
     }
   });
 
-  it("recherche par texte et par référence fabricant", async () => {
+  itDemo("recherche par texte et par référence fabricant", async () => {
     const parNom = await catalogue().rechercher("oscar");
     expect(parNom.some((a) => a.nom === "Oscar 2")).toBe(true);
     const parReference = await catalogue().rechercher("98-0239-22");
     expect(parReference.some((a) => a.nom === "Brassard MAPA Orbit")).toBe(true);
   });
 
-  it("liste une ligne par variante pour l'index de recherche (F01)", async () => {
+  itDemo("liste une ligne par variante pour l'index de recherche (F01)", async () => {
     const references = await catalogue().listerReferences();
     expect(references.length).toBeGreaterThan(40);
     const orbit = references.find((r) => r.referenceFabricant === "98-0239-22");
@@ -96,7 +128,7 @@ suiteDeContrat("odoo", "catalogue (contracts/odoo.md §1)", ({ registre }) => {
 suiteDeContrat("odoo", "catalogue : champs ajoutés par F03", ({ registre }) => {
   const catalogue = () => registre.odoo().catalogue;
 
-  it("chaque variante a une quantité par lot d'au moins 1 ; les électrodes en ont 50 et 500", async () => {
+  itDemo("chaque variante a une quantité par lot d'au moins 1 ; les électrodes en ont 50 et 500", async () => {
     const a = await catalogue().lireArticle(REF.consommableParLot);
     for (const v of a.variantes) expect(v.quantiteParLot).toBeGreaterThanOrEqual(1);
     expect(a.variantes.map((v) => v.quantiteParLot).sort((x, y) => x - y)).toEqual([50, 500]);
@@ -104,7 +136,7 @@ suiteDeContrat("odoo", "catalogue : champs ajoutés par F03", ({ registre }) => 
     expect(equipement.variantes.every((v) => v.quantiteParLot === 1)).toBe(true);
   });
 
-  it("les paliers dégressifs sont triés par quantité croissante et prix décroissant, sous le prix de base", async () => {
+  itDemo("les paliers dégressifs sont triés par quantité croissante et prix décroissant, sous le prix de base", async () => {
     const a = await catalogue().lireArticle(REF.consommableParLot);
     const v = a.variantes.find((x) => x.defaultCode === REF.consommableParLot)!;
     expect(v.paliers.length).toBeGreaterThan(0);
@@ -119,7 +151,7 @@ suiteDeContrat("odoo", "catalogue : champs ajoutés par F03", ({ registre }) => 
     }
   });
 
-  it("les mensualités forcées pour tous portent une durée du barème", async () => {
+  itDemo("les mensualités forcées pour tous portent une durée du barème", async () => {
     const references = await catalogue().listerReferences();
     let trouvees = 0;
     for (const ref of new Set(references.filter((r) => r.type === "equipement").map((r) => r.referenceArticle))) {
@@ -136,7 +168,7 @@ suiteDeContrat("odoo", "catalogue : champs ajoutés par F03", ({ registre }) => 
     expect(trouvees).toBeGreaterThan(0);
   });
 
-  it("donne les mensualités forcées propres à un client, vides sinon", async () => {
+  itDemo("donne les mensualités forcées propres à un client, vides sinon", async () => {
     const [force] = await catalogue().lirePrixClient(REF.partenaireMensualiteForcee, [REF.equipementMad]);
     expect(force!.mensualitesForcees.length).toBeGreaterThan(0);
     const a = await catalogue().lireArticle(REF.equipementMad);
@@ -146,11 +178,11 @@ suiteDeContrat("odoo", "catalogue : champs ajoutés par F03", ({ registre }) => 
     expect(autre!.mensualitesForcees).toEqual([]);
   });
 
-  it("lève NotFound pour un client inconnu", async () => {
+  itDemo("lève NotFound pour un client inconnu", async () => {
     await expect(catalogue().lirePrixClient("FICT-P-INCONNU", [REF.equipement])).rejects.toMatchObject({ code: "NOT_FOUND" });
   });
 
-  it("donne la quantité en stock et le délai de réassort (consommables)", async () => {
+  itDemo("donne la quantité en stock et le délai de réassort (consommables)", async () => {
     const [d] = await registre.odoo().stock.lireDisponibilite([REF.consommableParLot]);
     expect(d!.quantiteDisponible).toEqual(expect.any(Number));
     expect(d!.quantiteDisponible).toBeGreaterThanOrEqual(0);
@@ -159,7 +191,7 @@ suiteDeContrat("odoo", "catalogue : champs ajoutés par F03", ({ registre }) => 
     expect(rupture!.delaiReassortJours).toBeNull();
   });
 
-  it("un pack n'est pas plus disponible que ses composants", async () => {
+  itDemo("un pack n'est pas plus disponible que ses composants", async () => {
     const a = await catalogue().lireArticle(REF.pack);
     const pack = a.variantes.find((v) => v.defaultCode === REF.pack)!;
     expect(pack.composants.length).toBeGreaterThan(0);

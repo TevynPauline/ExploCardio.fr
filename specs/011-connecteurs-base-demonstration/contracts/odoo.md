@@ -14,6 +14,7 @@ vocabulaire d'Odoo (voir [../data-model.md](../data-model.md)).
 | Lire les prix d'un client | client, références | prix applicables (liste de prix, remises) et mensualités de financement forcées pour ce client, par durée (F03) | `NotFound` | F03, F04 |
 | Rechercher | texte, référence | articles correspondants | `ServiceUnavailable` | F01 |
 | Lister les références | — | une ligne par variante : référence interne, référence fabricant, référence de l'article, nom, marque, type, catégorie, configuration, prix HT, disponibilité, marque « fictif » | `ServiceUnavailable` | F01 (index de recherche), F03 |
+| Contrôler les données | — | anomalies (objet, référence, nom, code, détail, bloquant), bloquantes d'abord : ce qui manque dans Odoo pour le site | `ServiceUnavailable` | F14 (back-office, rapport de contrôle) |
 
 Détail des champs ajoutés par F03 : [../../003-catalogue-fiches-produit/contracts/odoo.md](../../003-catalogue-fiches-produit/contracts/odoo.md).
 

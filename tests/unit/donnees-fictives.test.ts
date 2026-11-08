@@ -23,6 +23,7 @@ describe("refus des données fictives par les implémentations réelles", () => 
       ODOO_DATABASE: "test",
       ODOO_USER: "test",
       ODOO_API_KEY: "valeur-de-test",
+      ODOO_ENVIRONNEMENT: "recette",
     });
     await expect(registre.odoo().clients.lireSituation("FICT-P-00001")).rejects.toMatchObject({
       code: "DEMO_DATA_REJECTED",

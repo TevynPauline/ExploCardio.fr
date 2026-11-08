@@ -1,6 +1,7 @@
 import type { Prisma } from "@generated/demo/client";
 import { NotFound } from "../../erreurs";
 import type {
+  Anomalie,
   Article,
   CatalogueOdoo,
   Categorie,
@@ -12,6 +13,7 @@ import type {
 import type { EtatDisponibilite, MensualiteForcee, Palier } from "../interfaces";
 import { INCLURE_DISPONIBILITE, etatsAchat } from "./disponibilite";
 import { db } from "./outils";
+import { trierAnomalies } from "../anomalies";
 
 // Domaine « Catalogue » en démonstration (contracts/odoo.md §1).
 
@@ -171,6 +173,30 @@ export const catalogueDemo: CatalogueOdoo = {
     });
     const dispo = await etatsDesModeles(modeles);
     return modeles.map((m) => resumer(m, dispo)).filter(nonNul);
+  },
+
+  /** Rapport de contrôle (F14, FR-027), calculé sur la base fictive avec les mêmes codes. */
+  async controlerDonnees(): Promise<Anomalie[]> {
+    const modeles = await db().modeleArticle.findMany({
+      include: { variantes: { include: { offreMad: true, numerosSerie: true }, orderBy: { id: "asc" } } },
+      orderBy: { nom: "asc" },
+    });
+    const anomalies: Anomalie[] = [];
+    for (const m of modeles) {
+      for (const v of m.variantes) {
+        if (v.prixHtCentimes <= 0 && m.type !== "logiciel") {
+          anomalies.push({ objet: "variante", reference: v.defaultCode, nom: m.nom, code: "SANS_PRIX", detail: null, bloquant: true });
+        }
+        if (m.suiviNumeroSerie && v.offreMad && v.numerosSerie.length === 0) {
+          anomalies.push({ objet: "article", reference: v.defaultCode, nom: m.nom, code: "SANS_NUMERO_SERIE", detail: "aucun appareil du parc", bloquant: false });
+        }
+      }
+    }
+    const societes = await db().partenaire.findMany({ where: { estSociete: true, archive: false, siret: null }, orderBy: { nom: "asc" } });
+    for (const p of societes) {
+      anomalies.push({ objet: "client", reference: p.ref, nom: p.nom, code: "CLIENT_SANS_SIRET", detail: null, bloquant: false });
+    }
+    return trierAnomalies(anomalies);
   },
 
   async listerReferences(): Promise<ReferenceArticle[]> {

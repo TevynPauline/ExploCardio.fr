@@ -6,25 +6,18 @@ import { cleDeTest } from "../harness";
 
 export type Registre = ReturnType<typeof creerRegistre>;
 
-/** Références attendues dans la base de démonstration (et dans la copie de test d'Odoo en phase 3). */
-export const REF = {
-  equipementMad: "EC-DMS-3004L-CLOUD",
-  equipement: "EC-SUN-OSCAR2",
-  consommable: "EC-ELEC-HOLTER-500",
-  accessoire: "EC-DMS-SD-8GO",
-  enRupture: "EC-IEM-MOBILOGRAPH",
-  enDelai: "EC-KOCH-ULTRA",
-  logiciel: "EC-DMS-CS-HOLTER-CLOUD",
-  inconnue: "EC-REFERENCE-INCONNUE",
-  partenaireDroitsActifs: "FICT-P-00001",
-  partenaireSansDroits: "FICT-P-00002",
-  /** Client avec une mensualité de financement forcée sur `equipementMad` (F03). */
-  partenaireMensualiteForcee: "FICT-P-00007",
-  /** Consommable vendu par boîte et par carton, avec des prix dégressifs (F03). */
-  consommableParLot: "EC-ELEC-HOLTER-50",
-  /** Configuration en pack, dont la disponibilité suit celle de ses composants (F03). */
-  pack: "EC-DMS-3004L-PACK",
-} as const;
+import { it } from "vitest";
+import { modeDuConnecteur } from "@/lib/config";
+import { REFERENCES_DEMO } from "./references";
+
+/** Références du jeu de démonstration (voir references.ts pour la copie de test d'Odoo). */
+export const REF = REFERENCES_DEMO;
+
+/**
+ * Test propre au jeu de démonstration (noms, quantités, écritures des lots non livrés) : en
+ * mode réel, il est ignoré. Les tests communs aux deux modes utilisent `it`.
+ */
+export const itDemo = modeDuConnecteur("odoo") === "demo" ? it : it.skip;
 
 export async function nouveauPartenaire(registre: Registre) {
   const rpps = `99${String(Math.floor(Math.random() * 1e9)).padStart(9, "0")}`;

@@ -45,7 +45,7 @@ function construire<K extends NomConnecteur>(nom: K, env: Env): Connecteurs[K] {
   const options = { connecteur: nom, mode, controles: controles(nom, mode) };
 
   if (nom === "odoo") {
-    const brut = mode === "demo" ? creerOdooDemo() : creerOdooReel(manquantes);
+    const brut = mode === "demo" ? creerOdooDemo() : creerOdooReel(manquantes, env);
     const enveloppe = Object.fromEntries(
       DOMAINES_ODOO.map((domaine) => [
         domaine,

@@ -19,7 +19,7 @@ Une variable d'environnement par connecteur, valeur `demo` (par défaut) ou `rea
 
 | Variable | Connecteur | Variables exigées en mode `real` |
 |---|---|---|
-| `CONNECTOR_ODOO` | Odoo (8 domaines) | `ODOO_URL`, `ODOO_DATABASE`, `ODOO_USER`, `ODOO_API_KEY` |
+| `CONNECTOR_ODOO` | Odoo (8 domaines) | `ODOO_URL`, `ODOO_DATABASE`, `ODOO_USER`, `ODOO_API_KEY`, `ODOO_ENVIRONNEMENT` (`recette` ou `production`) |
 | `CONNECTOR_STRIPE` | Stripe | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` |
 | `CONNECTOR_PCA` | Plateforme Cloud PCA | `PCA_API_URL`, `PCA_API_KEY` |
 | `CONNECTOR_EMAILING` | Emailing | `EMAILING_API_KEY` |
@@ -45,3 +45,26 @@ phase 3 (F15).
   (`DemoDataRejected`, `garde-donnees-fictives.ts`).
 - **Garde réseau** (mode démonstration) : aucune requête sortante vers le service
   (`garde-reseau.ts`, activée au démarrage par `instrumentation.ts`).
+
+## Mode réel d'Odoo (F14)
+
+Livré par lots. **Lot 1** : catalogue et lecture du stock (lecture seule) ; les autres domaines
+et les écritures lèvent `ConfigurationIncomplete` jusqu'à leur lot.
+
+- **Accès** : API externe JSON-RPC d'Odoo (`odoo/real/client.ts`), clé API au scope RPC. La clé
+  n'apparaît jamais dans un message, un détail d'erreur ni le journal.
+- **`ODOO_ENVIRONNEMENT`** : `recette` (copie neutralisée) ou `production`. Avant toute écriture,
+  le site lit `database.is_neutralized` : en recette, il refuse d'écrire dans une base non
+  neutralisée ; en production, dans une base neutralisée (`OperationRefused`).
+- **Propriétés produit attendues dans Odoo** (définies sur chaque catégorie, sans Studio) :
+  Marque ; Type d'article (Équipement, Consommable, Accessoire, Logiciel, Service) ; Quantité
+  par lot ; Mise à disposition – premier mois HT ; Mise à disposition – mois suivants HT ;
+  Valeur de remplacement HT ; Kit requis ; Logiciel Cloud ; Éligible aux bons d'achat.
+- **Rubriques du site** : paramètre « Rubrique de chaque catégorie Odoo » (back-office,
+  Paramètres › Catalogue Odoo).
+- **Prix client** : le site applique les règles simples des listes de prix (prix fixe, remise
+  en %, quantité minimale) pour l'affichage ; les autres sont signalées. Le montant d'une
+  commande est toujours calculé par Odoo.
+- **Rapport de contrôle** : back-office › Catalogue › Contrôle des données Odoo (export CSV).
+- **Tests** : `tests/unit/odoo-reel/` (sans réseau) ; tests de contrat en mode réel sur la copie :
+  `CONNECTOR_ODOO=real npm run test:contract -- tests/contract/odoo/catalogue.test.ts tests/contract/odoo/stock.test.ts`.

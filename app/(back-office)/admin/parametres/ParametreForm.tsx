@@ -39,6 +39,7 @@ function Saisie({ p, id }: { p: ParametreLu; id: string }) {
     case "dates":
     case "liste":
     case "fermetures":
+    case "correspondance":
       return <textarea id={id} name="valeur" rows={4} defaultValue={s.valeur} aria-describedby={aide} className={`${classeChamp} py-2`} />;
     case "texte":
       return (p.max ?? 0) > 120 ? (

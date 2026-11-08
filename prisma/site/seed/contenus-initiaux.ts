@@ -85,12 +85,13 @@ export const PARAMETRES_INITIAUX: Record<string, string> = {
   "cloud.delai_grace_jours": "30",
   "cloud.rappel_periode_jours": "30",
   "cloud.rappel_fin_jours": "7",
+  // F14 : rubrique du site de chaque catégorie Odoo (utilisé en mode réel seulement).
+  "catalogue.correspondance_categories": '{"Holter ECG":"holter-ecg","MAPA":"mapa","ERGOS":"effort","Consommables":"accessoires"}',
   "cloud.aide_premiere_connexion":
     "Votre accès est ouvert : utilisez le lien « Accéder à la plateforme ». Lors de votre première connexion, la plateforme vous envoie une invitation par email pour créer votre mot de passe ; ExploCardio.fr ne le connaît jamais. Besoin d'aide pour le paramétrage ? Écrivez-nous sur WhatsApp.",
 };
 
-// F16 : vignettes de départ du carrousel (l'équipe les remplace au back-office) et arguments
-// « Pourquoi préférer ExploCardio.fr » (textes à valider par Régis).
+// F16 : vignettes de départ du carrousel (l'équipe les remplace au back-office).
 export const VIGNETTES_INITIALES = [
   {
     cle: "offre-bienvenue",

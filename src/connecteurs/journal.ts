@@ -57,6 +57,17 @@ async function inscrire(entree: EntreeJournal) {
 
 type Fonction = (...args: unknown[]) => unknown;
 
+/**
+ * Motif inscrit au journal : le code de l'erreur, suivi de sa cause quand le connecteur en donne
+ * une (F14 : « SERVICE_UNAVAILABLE (acces_refuse) »). Jamais le message, qui pourrait contenir
+ * une donnée de l'appel.
+ */
+export function motifDe(e: unknown): string {
+  if (!estErreurConnecteur(e)) return e instanceof Error ? e.name : "inconnu";
+  const cause = e.details?.cause;
+  return typeof cause === "string" && /^[a-z0-9_]{1,40}$/.test(cause) ? `${e.code} (${cause})` : e.code;
+}
+
 /** Contrôle exécuté avant chaque appel (panne simulée, refus des données fictives). */
 export type ControleAvantAppel = (operation: string, args: unknown[]) => Promise<void> | void;
 
@@ -102,7 +113,7 @@ export function envelopper<T extends object>(
             operation,
             objet: objetDeLAppel(args),
             resultat: "erreur",
-            motifErreur: estErreurConnecteur(e) ? e.code : e instanceof Error ? e.name : "inconnu",
+            motifErreur: motifDe(e),
             dureeMs: Math.round(performance.now() - debut),
           });
           throw e;

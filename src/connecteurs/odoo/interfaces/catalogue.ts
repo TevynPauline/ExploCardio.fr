@@ -112,6 +112,31 @@ export type ReferenceArticle = MarqueFictive & {
   disponibilite: EtatDisponibilite;
 };
 
+/** Anomalie du rapport de contrôle des données (F14, FR-027). */
+export type CodeAnomalie =
+  | "SANS_REFERENCE"
+  | "REFERENCE_EN_DOUBLE"
+  | "SANS_PRIX"
+  | "SANS_TVA"
+  | "CATEGORIE_NON_RELIEE"
+  | "PROPRIETE_MANQUANTE"
+  | "OFFRE_INCOMPLETE"
+  | "SANS_NUMERO_SERIE"
+  | "REGLE_PRIX_NON_GEREE"
+  | "CLIENT_SANS_SIRET"
+  | "SIRET_EN_DOUBLE";
+
+export type Anomalie = {
+  objet: "article" | "variante" | "categorie" | "regle_prix" | "client";
+  /** Référence Odoo ou identifiant lisible. */
+  reference: string;
+  nom: string;
+  code: CodeAnomalie;
+  detail: string | null;
+  /** Vrai si l'article concerné ne peut pas être affiché. */
+  bloquant: boolean;
+};
+
 export interface CatalogueOdoo {
   listerCategories(): Promise<Categorie[]>;
   listerArticles(categorie: string, filtres?: FiltresArticles): Promise<ResumeArticle[]>;
@@ -119,4 +144,6 @@ export interface CatalogueOdoo {
   lirePrixClient(partenaireRef: string, references: string[]): Promise<PrixClient[]>;
   rechercher(texte: string): Promise<ResumeArticle[]>;
   listerReferences(): Promise<ReferenceArticle[]>;
+  /** Rapport de contrôle : ce qui manque dans Odoo pour le site, bloquant d'abord (F14). */
+  controlerDonnees(): Promise<Anomalie[]>;
 }

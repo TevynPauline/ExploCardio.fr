@@ -14,9 +14,10 @@ const variableDeMode: Record<NomConnecteur, string> = {
   emailing: "CONNECTOR_EMAILING",
 };
 
-/** Variables exigées par chaque connecteur en mode réel (F14 les utilisera). */
+/** Variables exigées par chaque connecteur en mode réel. */
 export const VARIABLES_MODE_REEL: Record<NomConnecteur, readonly string[]> = {
-  odoo: ["ODOO_URL", "ODOO_DATABASE", "ODOO_USER", "ODOO_API_KEY"],
+  // F14 : ODOO_ENVIRONNEMENT vaut « recette » (copie neutralisée) ou « production ».
+  odoo: ["ODOO_URL", "ODOO_DATABASE", "ODOO_USER", "ODOO_API_KEY", "ODOO_ENVIRONNEMENT"],
   stripe: ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET"],
   pca: ["PCA_API_URL", "PCA_API_KEY"],
   emailing: ["EMAILING_API_KEY"],
@@ -33,8 +34,26 @@ export function modeDuConnecteur(nom: NomConnecteur, env: Env = process.env): Mo
   return env[variableDeMode[nom]] === "real" ? "real" : "demo";
 }
 
+/** Valeurs admises de certaines variables : une autre valeur compte comme manquante. */
+const VALEURS_ADMISES: Record<string, readonly string[]> = {
+  ODOO_ENVIRONNEMENT: ["recette", "production"],
+};
+
 export function variablesManquantes(nom: NomConnecteur, env: Env = process.env): string[] {
-  return VARIABLES_MODE_REEL[nom].filter((v) => !env[v]);
+  return VARIABLES_MODE_REEL[nom].filter((v) => {
+    const valeur = env[v];
+    if (!valeur) return true;
+    const admises = VALEURS_ADMISES[v];
+    return admises ? !admises.includes(valeur) : false;
+  });
+}
+
+export type EnvironnementOdoo = "recette" | "production";
+
+/** Environnement d'Odoo déclaré (F14, R8) ; `null` s'il est absent ou invalide. */
+export function environnementOdoo(env: Env = process.env): EnvironnementOdoo | null {
+  const v = env.ODOO_ENVIRONNEMENT;
+  return v === "recette" || v === "production" ? v : null;
 }
 
 export function sousModePcaDemo(env: Env = process.env): "auto" | "manual" {

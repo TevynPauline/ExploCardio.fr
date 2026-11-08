@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { registre } from "@/connecteurs/registre";
 import { listerClients } from "@/domaine/clients";
-import { modeDuSite } from "@/lib/config";
+import { environnementOdoo, modeDuSite } from "@/lib/config";
 import { dbSite } from "@/lib/db/site";
 import { exigerDroit, peut } from "@/lib/droits";
 import { Card, Kicker } from "@/ui";
@@ -80,6 +80,14 @@ export default async function TableauDeBord({ searchParams }: { searchParams: Pr
             {Object.entries(modes).map(([nom, mode]) => (
               <li key={nom}>
                 <span className="font-medium">{nom}</span> : {mode === "demo" ? "démonstration" : "réel"}
+                {/* F14 : base Odoo branchée (jamais la clé). */}
+                {nom === "odoo" && mode === "real" ? (
+                  <span className="text-muted">
+                    {" "}
+                    — {environnementOdoo() === "production" ? "production" : environnementOdoo() === "recette" ? "recette" : "environnement non déclaré"}, base{" "}
+                    {process.env.ODOO_DATABASE || "non renseignée"}
+                  </span>
+                ) : null}
               </li>
             ))}
           </ul>

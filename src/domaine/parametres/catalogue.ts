@@ -20,9 +20,10 @@ export type TypeParametre =
   | "liste"
   | "horaires"
   | "fermetures"
-  | "choix";
+  | "choix"
+  | "correspondance";
 
-export type Theme = "livraison" | "contact" | "comptes" | "virement" | "rappels" | "cloud" | "securite" | "bienvenue";
+export type Theme = "livraison" | "contact" | "comptes" | "virement" | "rappels" | "cloud" | "securite" | "bienvenue" | "catalogue";
 
 export type DefinitionParametre = {
   cle: string;
@@ -49,6 +50,7 @@ export const THEMES: Record<Theme, { libelle: string; description: string }> = {
   cloud: { libelle: "Accès Cloud", description: "Plateforme Cloud, délai de grâce et rappels. Les durées incluses et les prix se règlent dans Odoo." },
   securite: { libelle: "Sécurité et alertes", description: "Fermeture des sessions de l'équipe et alertes en cas de panne." },
   bienvenue: { libelle: "Offre de bienvenue", description: "L'article offert et son stock sont gérés dans Odoo. Les professionnels déjà bénéficiaires gardent leur droit." },
+  catalogue: { libelle: "Catalogue Odoo", description: "Rubrique du site où apparaît chaque catégorie d'Odoo. Utilisé quand le site est branché sur Odoo ; sans effet en démonstration." },
 };
 
 const ADMIN_COMMERCIAL: RoleEquipe[] = ["admin", "commercial"];
@@ -97,6 +99,15 @@ export const PARAMETRES: DefinitionParametre[] = [
 
   { cle: "bienvenue.active", libelle: "Offre de bienvenue active", theme: "bienvenue", type: "booleen", defaut: "true", roles: ADMIN_COMMERCIAL },
   { cle: "accueil.offre_bienvenue", libelle: "Texte de l'offre de bienvenue (accueil)", theme: "bienvenue", type: "texte", max: 300, roles: ADMIN_COMMERCIAL },
+  {
+    cle: "catalogue.correspondance_categories",
+    libelle: "Rubrique de chaque catégorie Odoo",
+    theme: "catalogue",
+    type: "correspondance",
+    defaut: '{"Holter ECG":"holter-ecg","MAPA":"mapa","ERGOS":"effort","Consommables":"accessoires"}',
+    aide: "Une ligne par catégorie : chemin de la catégorie dans Odoo = rubrique (holter-ecg, mapa, effort, ecg-repos ou accessoires). Une catégorie inclut ses sous-catégories ; la plus précise l'emporte. Par exemple : MAPA / Accessoires MAPA = accessoires",
+    roles: ADMIN_COMMERCIAL,
+  },
 ];
 
 export function definition(cle: string): DefinitionParametre | undefined {

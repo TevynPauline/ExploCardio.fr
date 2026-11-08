@@ -25,6 +25,18 @@ function lignes(texte: string): string[] {
   return texte.split("\n").map((l) => l.trim()).filter(Boolean);
 }
 
+/** Rubriques du site (F14) : codes acceptés par la correspondance des catégories Odoo. */
+const RUBRIQUES_SITE = ["holter-ecg", "mapa", "effort", "ecg-repos", "accessoires"];
+
+function objetJson(valeur: string): Record<string, string> {
+  try {
+    const o = JSON.parse(valeur || "{}") as unknown;
+    return o && typeof o === "object" && !Array.isArray(o) ? (o as Record<string, string>) : {};
+  } catch {
+    return {};
+  }
+}
+
 function listeJson(valeur: string): string[] {
   try {
     const l = JSON.parse(valeur || "[]") as unknown;
@@ -118,6 +130,17 @@ export function valider(p: DefinitionParametre, saisie: Saisie): string {
       }
       return JSON.stringify(horaires);
     }
+    case "correspondance": {
+      const correspondance: Record<string, string> = {};
+      for (const l of lignes(brut)) {
+        const m = /^(.+?)\s*(?:=|→|->)\s*([a-z-]+)$/.exec(l);
+        if (!m || !RUBRIQUES_SITE.includes(m[2]!)) refuser(`« ${l} » attendu sous la forme « Catégorie Odoo = rubrique », rubrique parmi ${RUBRIQUES_SITE.join(", ")}.`);
+        const chemin = m![1]!.split("/").map((x) => x.trim()).filter(Boolean).join(" / ");
+        if (correspondance[chemin]) refuser(`« ${chemin} » figure deux fois.`);
+        correspondance[chemin] = m![2]!;
+      }
+      return JSON.stringify(correspondance);
+    }
     case "fermetures":
       return JSON.stringify(
         lignes(brut).map((l) => {
@@ -141,6 +164,8 @@ export function versSaisie(p: DefinitionParametre, valeur: string): Record<strin
       const h = lireHorairesJson(valeur || null);
       return Object.fromEntries(JOURS_SEMAINE.map(([j]) => [`valeur-${j}`, h[j].map(([d, f]) => `${d}-${f}`).join(", ")]));
     }
+    case "correspondance":
+      return { valeur: Object.entries(objetJson(valeur)).map(([k, v]) => `${k} = ${v}`).join("\n") };
     case "fermetures":
       return { valeur: lireFermeturesJson(valeur || "[]").map((f) => `${f.du} ${f.au}${f.motif ? ` ${f.motif}` : ""}`).join("\n") };
     default:
