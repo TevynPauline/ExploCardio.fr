@@ -15,21 +15,27 @@ describe("organisation", () => {
 describe("produit", () => {
   const base = { nom: "DMS 300-4L", reference: "DMS-300-4L", marque: "DMS", images: ["/stockage/produits/a.webp"], chemin: "/holter-ecg/dms-300-4l" };
 
-  it("une variante : Offer HT en euros", () => {
-    const p = produit(O, { ...base, variantes: [{ prixHt: 1290.5, disponibilite: "en_stock" }] });
+  it("une variante : Offer au prix TTC affiché, HT en spécification", () => {
+    const p = produit(O, { ...base, variantes: [{ prixTtc: 1548.6, prixHt: 1290.5, disponibilite: "en_stock" }] });
     expect(p.image).toEqual([`${O}/stockage/produits/a.webp`]);
     expect(p.brand).toEqual({ "@type": "Brand", name: "DMS" });
-    expect(p.offers).toMatchObject({ "@type": "Offer", price: 1290.5, priceCurrency: "EUR", availability: "https://schema.org/InStock", priceSpecification: { valueAddedTaxIncluded: false } });
+    expect(p.offers).toMatchObject({ "@type": "Offer", price: 1548.6, priceCurrency: "EUR", availability: "https://schema.org/InStock" });
+    expect(p.offers).toMatchObject({
+      priceSpecification: [
+        { price: 1548.6, priceCurrency: "EUR", valueAddedTaxIncluded: true },
+        { price: 1290.5, priceCurrency: "EUR", valueAddedTaxIncluded: false },
+      ],
+    });
   });
 
   it("plusieurs variantes : AggregateOffer", () => {
-    const p = produit(O, { ...base, variantes: [{ prixHt: 100, disponibilite: "rupture" }, { prixHt: 150, disponibilite: "sur_commande" }] });
-    expect(p.offers).toMatchObject({ "@type": "AggregateOffer", lowPrice: 100, highPrice: 150, offerCount: 2, availability: "https://schema.org/BackOrder" });
+    const p = produit(O, { ...base, variantes: [{ prixTtc: 120, prixHt: 100, disponibilite: "rupture" }, { prixTtc: 180, prixHt: 150, disponibilite: "sur_commande" }] });
+    expect(p.offers).toMatchObject({ "@type": "AggregateOffer", lowPrice: 120, highPrice: 180, offerCount: 2, priceSpecification: { valueAddedTaxIncluded: true }, availability: "https://schema.org/BackOrder" });
   });
 
   it("sans prix public, ou prix nul : aucune offre", () => {
     expect(produit(O, { ...base, variantes: [] })).not.toHaveProperty("offers");
-    expect(produit(O, { ...base, variantes: [{ prixHt: 0, disponibilite: "en_stock" }, { prixHt: null, disponibilite: "en_stock" }] })).not.toHaveProperty("offers");
+    expect(produit(O, { ...base, variantes: [{ prixTtc: 0, prixHt: 0, disponibilite: "en_stock" }, { prixTtc: null, prixHt: 100, disponibilite: "en_stock" }] })).not.toHaveProperty("offers");
   });
 });
 

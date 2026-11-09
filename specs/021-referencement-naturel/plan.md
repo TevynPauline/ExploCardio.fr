@@ -36,7 +36,7 @@ Les lots 2 (mots-clés, textes) et 3 (guides, liens, suivi) sont esquissés en f
 
 **Performance Goals**: mobile : LCP ≤ 2,5 s, CLS ≤ 0,1, TBT ≤ 200 ms, score ≥ 90 (accueil, catégorie, fiche)
 
-**Constraints**: la démonstration n'est jamais indexable (constitution V) ; prix publics HT seulement dans les données structurées ; aucun traceur ajouté ; secrets et codes de validation hors du code
+**Constraints**: la démonstration n'est jamais indexable (constitution V) ; prix publics seulement dans les données structurées, en TTC comme à l'affichage (HT en spécification ; TTC calculé par F22) ; aucun traceur ajouté ; secrets et codes de validation hors du code
 
 **Scale/Scope**: environ 10 types de pages, quelques centaines d'adresses dans le plan du site
 
@@ -47,7 +47,7 @@ Les lots 2 (mots-clés, textes) et 3 (guides, liens, suivi) sont esquissés en f
 | Principe | Vérification | État |
 |---|---|---|
 | I. Spécialisation | Le référencement porte sur la niche ; pas de pages générées en masse | ✅ |
-| II. Simplicité et transparence | Prix HT publics exposés aux moteurs ; textes ajoutés aux catégories sans gêner l'accès aux produits en 3 clics (FR-025) | ✅ |
+| II. Simplicité et transparence | Prix publics exposés aux moteurs, TTC comme à l'affichage, HT précisé (2.3.0) ; textes ajoutés aux catégories sans gêner l'accès aux produits en 3 clics (FR-025) | ✅ |
 | III. Connecteurs | Prix et stock du JSON-LD lus par le registre (`registre.odoo()`), comme la fiche ; le plan du site lit seulement la base du site ; les titres sont des contenus du site, pas des données Odoo | ✅ |
 | IV. Aucune donnée patient | Aucune collecte ; les guides (lot 3) excluent tout cas clinique | ✅ |
 | V. Sécurité et conformité | La démonstration reste protégée et `noindex` (en-tête + balise), règle sûre par défaut ; aucun outil de mesure d'audience (FR-032) ; codes de validation en variables d'environnement | ✅ |

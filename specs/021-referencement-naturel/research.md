@@ -99,8 +99,8 @@ Date : 2026-11-06. Constat fait sur le code de `main` et sur `https://www.exploc
     `/marque/…`, adresse du siège, email, téléphone, `vatID` et identifiant RCS repris des
     mentions légales et des paramètres publics.
   - `Product` + `Offer` : fiches. `brand`, `sku` (= référence Odoo `default_code`), `image`,
-    `description`, `offers` avec `price` HT, `priceCurrency: EUR`,
-    `priceSpecification.valueAddedTaxIncluded: false`, `availability` (`InStock`, `BackOrder`
+    `description`, `offers` avec `price` TTC (le prix affiché en premier, constitution 2.3.0), `priceCurrency: EUR`,
+    `priceSpecification` TTC (`valueAddedTaxIncluded: true`) et HT (`false`), `availability` (`InStock`, `BackOrder`
     si délai fournisseur, `OutOfStock`), `seller` ExploCardio.fr. Fiche à variantes : une
     `AggregateOffer` (prix bas / haut). **Construit à partir des prix publics** (lecture de la
     fiche sans client), jamais des prix client F14. Odoo injoignable ou prix absent : pas

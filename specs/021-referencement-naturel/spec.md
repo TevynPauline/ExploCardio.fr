@@ -74,7 +74,7 @@ démonstration, rien ne change (tout reste interdit aux robots).
 À l'ouverture, un cardiologue cherche « holter tensionnel MAPA » ou le nom exact d'un modèle.
 Le moteur connaît toutes les pages publiques du site, sait laquelle est la bonne version de
 chaque page, affiche un titre et une description qui donnent envie de cliquer, et peut montrer
-le prix HT, la disponibilité et le fil d'Ariane directement dans le résultat.
+le prix TTC affiché, la disponibilité et le fil d'Ariane directement dans le résultat.
 
 **Why this priority**: sans ces fondations, aucun contenu, même excellent, ne sera bien
 positionné. C'est la condition de tout le reste et elle doit être prête le jour de l'ouverture.
@@ -92,8 +92,8 @@ description uniques, adresse canonique, données structurées valides, plan du s
    avec leur date de dernière modification, et aucune page privée.
 2. **Given** une fiche produit, **When** elle est affichée, **Then** elle porte un titre et une
    description propres au produit, une adresse canonique unique (sans paramètre d'option ni de
-   filtre) et une description structurée du produit : nom, marque, référence, image, prix HT
-   en euros, disponibilité issue du stock, vendeur ExploCardio.fr.
+   filtre) et une description structurée du produit : nom, marque, référence, image, prix TTC
+   affiché en euros (HT précisé à part), disponibilité issue du stock, vendeur ExploCardio.fr.
 3. **Given** une page catégorie ou une fiche, **When** elle est affichée, **Then** elle porte la
    description structurée de son fil d'Ariane, identique au fil d'Ariane visible.
 4. **Given** l'accueil, **When** il est affiché, **Then** il porte la description structurée de
@@ -267,8 +267,8 @@ liste de sites cibles pour les liens, avec un texte de présentation prêt à en
 - **Domaine sans « www »** : `explocardio.fr` renvoie définitivement vers
   `https://www.explocardio.fr` ; toutes les adresses canoniques utilisent cette forme.
 - **Produit en rupture ou sur commande** : la description structurée indique la disponibilité
-  réelle (en stock, sur commande avec délai, rupture) ; le prix affiché reste le prix HT
-  public, jamais un prix client personnalisé.
+  réelle (en stock, sur commande avec délai, rupture) ; le prix déclaré reste le prix public
+  affiché (TTC, HT précisé à part), jamais un prix client personnalisé.
 - **Produit sans prix public** (cas exceptionnel) : aucune donnée de prix n'est déclarée plutôt
   qu'un prix faux ou nul.
 - **Fiche avec options ou variantes** : une seule adresse canonique par produit ; les
@@ -319,7 +319,7 @@ liste de sites cibles pour les liens, avec un texte de présentation prêt à en
   complété du type d'appareil et de « ExploCardio.fr » ; description : premières phrases utiles
   du contenu ou résumé du produit), sans dépasser 60 et 160 caractères.
 - **FR-011**: Les fiches produit DOIVENT porter la description structurée d'un produit : nom,
-  marque, référence, image, description, prix HT public en euros, disponibilité issue du stock,
+  marque, référence, image, description, prix public TTC en euros (tel qu'affiché, HT précisé à part), disponibilité issue du stock,
   vendeur ExploCardio.fr. Aucun prix client personnalisé ni prix nul NE DOIT y figurer.
 - **FR-012**: Les pages ayant un fil d'Ariane DOIVENT porter sa description structurée,
   identique au fil d'Ariane affiché.
@@ -439,7 +439,8 @@ liste de sites cibles pour les liens, avec un texte de présentation prêt à en
 - L'adresse de référence du site est `https://www.explocardio.fr` (forme avec « www »).
 - Le mode « production » et le mode « page d'attente » existent déjà dans la configuration de
   l'hébergement (F17) ; F21 s'appuie sur eux pour décider de l'indexation.
-- Les prix déclarés aux moteurs sont les prix HT publics affichés à tous ; les prix clients
+- Les prix déclarés aux moteurs sont les prix publics affichés à tous, en TTC comme à
+  l'affichage (constitution 2.3.0), le HT étant précisé à part ; le calcul du TTC vient de F22 ; les prix clients
   (F14) ne sont jamais exposés aux robots.
 - Les données de l'entreprise (raison sociale, adresse, SIREN, coordonnées) viennent des
   contenus légaux déjà saisis (Kbis, mentions légales).

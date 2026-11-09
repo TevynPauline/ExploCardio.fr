@@ -52,10 +52,11 @@ Sur chaque page indexable : `<title>` et `<meta name="description">` non vides, 
   `email`, `telephone` si renseigné, `vatID`.
 - **Product** : `name`, `sku` (référence), `brand.name` si connue, `image` (≥ 1 adresse
   absolue), `description`, `url` = canonique ; `offers` **seulement** si le prix public est
-  connu : `Offer` (`price` HT en nombre, `priceCurrency = "EUR"`,
-  `priceSpecification.valueAddedTaxIncluded = false`, `availability` ∈ `InStock` / `BackOrder`
+  connu : `Offer` (`price` = prix TTC affiché, en nombre, `priceCurrency = "EUR"`,
+  `priceSpecification` = deux `PriceSpecification` : TTC avec `valueAddedTaxIncluded = true`, HT
+  avec `valueAddedTaxIncluded = false`, `availability` ∈ `InStock` / `BackOrder`
   / `OutOfStock`, `seller.name = "ExploCardio.fr"`, `url`) ou `AggregateOffer` (`lowPrice`,
-  `highPrice`, `offerCount`) pour une fiche à variantes. Jamais un prix client ni un prix nul.
+  `highPrice` en TTC, `offerCount`, `valueAddedTaxIncluded = true`) pour une fiche à variantes. Jamais un prix client ni un prix nul.
 - **BreadcrumbList** : `itemListElement` = étapes du fil d'Ariane affiché, `position` à partir
   de 1, `item` absolu sauf pour la dernière étape.
 - **FAQPage** : `mainEntity[]` de `Question` (`name`) / `acceptedAnswer.Answer` (`text` en

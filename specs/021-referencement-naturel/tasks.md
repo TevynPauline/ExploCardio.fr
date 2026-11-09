@@ -37,7 +37,7 @@ Lancer le contrôle des secrets avant chaque commit.
 - [X] T004 Implement `politiqueIndexation` and `origineCanonique` in `src/lib/referencement/politique.ts`. Reuse `estHotePageAttente` / `domainesPageAttente` from `src/lib/page-attente.ts`. Default to `ferme` (R1).
 - [X] T005 [P] Write `tests/unit/referencement/schema.test.ts` for the JSON-LD builders, per contracts/referencement.md §4:
   - Organization has the required fields;
-  - Product + Offer: price HT as a number, `priceCurrency=EUR`, `valueAddedTaxIncluded=false`, availability InStock/BackOrder/OutOfStock;
+  - Product + Offer: price = displayed TTC as a number, `priceCurrency=EUR`, `priceSpecification` TTC (`valueAddedTaxIncluded=true`) and HT (`false`) — revised 2026-11-09 for constitution 2.3.0; availability InStock/BackOrder/OutOfStock;
   - AggregateOffer for variants;
   - no `offers` when the price is missing or zero;
   - BreadcrumbList: positions from 1, `item` absolute except the last step;
@@ -106,6 +106,7 @@ Lancer le contrôle des secrets avant chaque commit.
 - [ ] T025 [US2] Edit `src/ui/catalogue/Fiche.tsx`:
   - `metadonneesFiche` adds the canonical `/<famille>/<slug>` with no query parameters, Open Graph with the first product photo, and goes through `metadonneesReferencement("produit:<defaultCode>", auto)`;
   - the page renders `<DonneesStructurees>` Product built from the **public** read (`lireFiche(cle, slug, null)`, never the client prices);
+  - prices: `prixTtc` and `prixHt` per variant, with the TTC computed by the F22 helper (VAT rate of the article) so the JSON-LD matches the displayed price. **Depends on F22**; do not edit the catalogue or cart price components in F21;
   - availability comes from the stock and the supplier lead time;
   - no `offers` when Odoo cannot be reached.
 - [ ] T026 [P] [US2] Add the canonical (no filter parameter) and `metadonneesReferencement("page:<nom>")` to the category pages: `app/(public)/holter-ecg/page.tsx`, `holter-ecg/ecg-de-repos/page.tsx`, `holter-tensionnel/page.tsx`, `epreuve-effort/page.tsx`, `accessoires-consommables/page.tsx` and `catalogue/page.tsx`.

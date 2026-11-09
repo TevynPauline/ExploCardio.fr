@@ -50,8 +50,12 @@ export type ProduitStructure = {
   description?: string | null;
   images: string[];
   chemin: string;
-  /** Prix HT publics des variantes ; jamais un prix client. */
-  variantes: { prixHt: number | null; disponibilite: Disponibilite }[];
+  /**
+   * Prix publics des variantes, tels qu'affichés à tous (constitution 2.3.0 : TTC en premier,
+   * HT en dessous). Le TTC est calculé par l'appelant avec le taux de TVA de l'article (F22),
+   * pour rester identique à l'affichage. Jamais un prix client.
+   */
+  variantes: { prixTtc: number | null; prixHt: number | null; disponibilite: Disponibilite }[];
 };
 
 const prixValide = (p: number | null): p is number => typeof p === "number" && Number.isFinite(p) && p > 0;
@@ -59,23 +63,32 @@ const arrondi = (n: number) => Math.round(n * 100) / 100;
 
 export function produit(origine: string, p: ProduitStructure): Objet {
   const url = absolue(origine, p.chemin);
-  const vendues = p.variantes.filter((v) => prixValide(v.prixHt)) as { prixHt: number; disponibilite: Disponibilite }[];
+  const vendues = p.variantes.filter((v) => prixValide(v.prixTtc) && prixValide(v.prixHt)) as {
+    prixTtc: number;
+    prixHt: number;
+    disponibilite: Disponibilite;
+  }[];
   const vendeur = { "@type": "Organization", name: IDENTITE.nom };
-  const ht = { "@type": "PriceSpecification", priceCurrency: "EUR", valueAddedTaxIncluded: false };
+  const specification = (prix: number, ttc: boolean) => ({
+    "@type": "PriceSpecification",
+    price: arrondi(prix),
+    priceCurrency: "EUR",
+    valueAddedTaxIncluded: ttc,
+  });
   let offers: Objet | undefined;
   if (vendues.length === 1) {
     const v = vendues[0]!;
     offers = {
       "@type": "Offer",
       url,
-      price: arrondi(v.prixHt),
+      price: arrondi(v.prixTtc),
       priceCurrency: "EUR",
-      priceSpecification: { ...ht, price: arrondi(v.prixHt) },
+      priceSpecification: [specification(v.prixTtc, true), specification(v.prixHt, false)],
       availability: DISPONIBILITE[v.disponibilite],
       seller: vendeur,
     };
   } else if (vendues.length > 1) {
-    const prix = vendues.map((v) => v.prixHt);
+    const prix = vendues.map((v) => v.prixTtc);
     const meilleure = (["en_stock", "sur_commande", "rupture"] as const).find((d) => vendues.some((v) => v.disponibilite === d))!;
     offers = {
       "@type": "AggregateOffer",
@@ -84,7 +97,7 @@ export function produit(origine: string, p: ProduitStructure): Objet {
       highPrice: arrondi(Math.max(...prix)),
       offerCount: vendues.length,
       priceCurrency: "EUR",
-      priceSpecification: ht,
+      priceSpecification: { "@type": "PriceSpecification", priceCurrency: "EUR", valueAddedTaxIncluded: true },
       availability: DISPONIBILITE[meilleure],
       seller: vendeur,
     };
