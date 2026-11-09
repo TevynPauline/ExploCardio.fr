@@ -205,7 +205,8 @@ export async function supprimerVignette(d: FormData) {
 export async function enregistrerAnimation(d: FormData) {
   await executer("/admin/contenus/accueil", "Animation enregistrée.", async (a) => {
     const { ARGUMENTS_ANIMATION, LONGUEURS_ANIMATION: L } = await import("@/domaine/textes-animation");
-    const lignes = await dbSite().contenu.findMany({ where: { type: "argument" } });
+    const cles = ["accroche", "mot-1", "mot-2", "mot-3", ...ARGUMENTS_ANIMATION.map((x) => x.cle)];
+    const lignes = await dbSite().contenu.findMany({ where: { type: "argument", cle: { in: cles } } });
     // Verrou (F13, D9) : la version lue est celle de la ligne modifiée le plus récemment.
     const lu = t(d, "modifieLe");
     const recente = lignes.reduce<Date | null>((m, l) => (!m || l.modifieLe > m ? l.modifieLe : m), null);
@@ -237,6 +238,59 @@ export async function enregistrerAnimation(d: FormData) {
   });
 }
 
+// ------------------------------------------------------------------ Cartes « Pourquoi choisir » (F23)
+
+export async function enregistrerRaisons(d: FormData) {
+  await executer("/admin/contenus/accueil", "Cartes « Pourquoi choisir » enregistrées.", async (a) => {
+    const { CLES_RAISONS, LONGUEURS_RAISONS: L } = await import("@/domaine/textes-raisons");
+    const lignes = await dbSite().contenu.findMany({ where: { type: "argument", cle: { in: [...CLES_RAISONS] } } });
+    const lu = t(d, "modifieLe");
+    const recente = lignes.reduce<Date | null>((m, l) => (!m || l.modifieLe > m ? l.modifieLe : m), null);
+    if (lu && recente && recente.toISOString() !== lu) {
+      const derniere = await dbSite().journalAction.findFirst({ where: { action: "contenus.raisons.modifiees" }, orderBy: { date: "desc" } });
+      throw new SaisieRefusee(`Ces cartes ont été modifiées${derniere ? ` par ${derniere.auteur}` : ""} depuis que vous avez ouvert la page : rien n'a été écrasé. Rechargez la page.`);
+    }
+    const saisies = CLES_RAISONS.map((cle, i) => ({
+      cle,
+      titre: exigerTexte(t(d, `${cle}-titre`), `Titre de la carte ${i + 1}`, 1, L.titre),
+      corps: exigerTexte(t(d, `${cle}-phrase`), `Phrase de la carte ${i + 1}`, 1, L.phrase),
+    }));
+    for (const [i, s] of saisies.entries()) {
+      const avant = lignes.find((l) => l.cle === s.cle);
+      if (avant && avant.titre === s.titre && avant.corps === s.corps) continue;
+      await dbSite().contenu.upsert({
+        where: { type_cle: { type: "argument", cle: s.cle } },
+        create: { type: "argument", cle: s.cle, titre: s.titre, corps: s.corps, ordre: 100 + i, etat: "publie" },
+        update: { titre: s.titre, corps: s.corps },
+      });
+      await journaliser(a, "contenus.raisons.modifiees", s.cle, avant ? { titre: avant.titre, corps: avant.corps } : null, { titre: s.titre, corps: s.corps });
+    }
+  });
+}
+
+// ------------------------------------------------------------------ Organisation de l'accueil (F23)
+
+export async function enregistrerOrganisation(d: FormData) {
+  await executer("/admin/contenus/organisation", "Organisation de l’accueil enregistrée.", async (a) => {
+    const { CLE_ORGANISATION, normaliserOrganisation, validerOrganisation } = await import("@/domaine/organisation-accueil");
+    const actuel = await dbSite().parametre.findUnique({ where: { cle: CLE_ORGANISATION } });
+    // Verrou (F13, D9) : refuse si l'organisation a changé depuis l'ouverture de la page.
+    if (actuel && actuel.modifieLe.toISOString() !== t(d, "modifieLe")) {
+      const derniere = await dbSite().journalAction.findFirst({ where: { action: "contenus.accueil.organisee" }, orderBy: { date: "desc" } });
+      throw new SaisieRefusee(`L’organisation a été modifiée${derniere ? ` par ${derniere.auteur}` : ""} depuis que vous avez ouvert la page : rien n'a été écrasé. Rechargez la page.`);
+    }
+    const blocs = d.getAll("bloc").map(String);
+    const affiches = new Set(d.getAll("affiche").map(String));
+    const r = validerOrganisation(blocs.map((bloc) => ({ bloc, affiche: affiches.has(bloc) })));
+    if (!r.ok) throw new SaisieRefusee(r.message);
+    const avant = normaliserOrganisation(actuel?.valeur);
+    const valeur = JSON.stringify(r.places);
+    if (JSON.stringify(avant) === valeur && actuel) return;
+    await ecrireParametre(CLE_ORGANISATION, valeur, a.id);
+    await journaliser(a, "contenus.accueil.organisee", CLE_ORGANISATION, avant, r.places);
+  });
+}
+
 // ------------------------------------------------------------------ Coordonnées et textes
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -259,6 +313,7 @@ export async function enregistrerCoordonnees(d: FormData) {
       "location.conditions": exigerTexte(t(d, "conditionsLocation"), "Conditions de location", 20, 4000),
       "cloud.aide_premiere_connexion": exigerTexte(t(d, "aideConnexion"), "Aide à la première connexion", 20, 1500),
       "accueil.badge_hebergement": exigerTexte(t(d, "badgeHebergement"), "Badge de l'hébergement", 0, 30),
+      "accueil.badge_logiciel_cloud": exigerTexte(t(d, "badgeLogicielCloud"), "Badge du logiciel Cloud", 0, 30),
     };
     for (const [cle, valeur] of Object.entries(valeurs)) {
       const avant = await dbSite().parametre.findUnique({ where: { cle } });

@@ -1,4 +1,5 @@
-import { lireBandeau } from "@/domaine/contenus";
+import { lireBandeau, lireOrganisation } from "@/domaine/contenus";
+import { lireVignettes } from "@/domaine/vignettes";
 import { messagesPromotions } from "@/domaine/fidelite/promotions";
 import { RotationBandeau } from "./RotationBandeau";
 
@@ -10,5 +11,8 @@ export async function BandeauPromo() {
   // F06 (FR-032) : messages éditoriaux, puis promotions en cours annoncées automatiquement.
   const messages = [...(await lireBandeau()), ...(await messagesPromotions())];
   if (messages.length === 0) return null;
-  return <RotationBandeau messages={messages} />;
+  // F23 (FR-003, FR-004) : lien vers le carrousel de l'accueil, s'il est affiché et a une offre.
+  const [organisation, vignettes] = await Promise.all([lireOrganisation(), lireVignettes()]);
+  const lienOffres = organisation.some((p) => p.bloc === "offres" && p.affiche) && vignettes.length > 0;
+  return <RotationBandeau messages={messages} lienOffres={lienOffres} />;
 }

@@ -20,7 +20,7 @@ export function Section({
   className?: string;
 }) {
   return (
-    <section id={id} data-section={id} aria-labelledby={`titre-${id}`} className={cx(surtitre ? "py-14" : "pb-14 pt-8", className)}>
+    <section id={id} data-section={id} aria-labelledby={`titre-${id}`} className={cx("scroll-mt-32", surtitre ? "py-14" : "pb-14 pt-8", className)}>
       <div className="mx-auto flex max-w-page flex-col gap-6 px-4">
         <div className="flex flex-col gap-2">
           {surtitre && <Kicker>{surtitre}</Kicker>}

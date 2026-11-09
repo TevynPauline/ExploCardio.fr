@@ -275,7 +275,7 @@ export function feuilleDeStyle(): string {
   // cartes, juste dessous, s'effacent.
   const compact = (p: string) =>
     `${p}{height:auto}${p} .tt-anime,${p} .tt-logo-final,${p} .tt-lien-final{display:none}` +
-    `${p} .tt-final{position:static;gap:.75rem;padding:1.75rem 1rem .75rem}${p} .tt-final h1{font-size:var(--ec-fs-h2)}` +
+    `${p} .tt-final{position:static;gap:.75rem;padding:1.75rem 1rem .75rem}${p} #titre-trois-temps{font-size:var(--ec-fs-h2)}` +
     `${p} .tt-arguments{display:flex;flex-wrap:wrap;justify-content:center;gap:.25rem 1.25rem;font-size:var(--ec-fs-small);max-width:none}` +
     `${p} .tt-controle{position:static;padding:0 1rem 1.5rem}${p} .tt-controle>div{justify-content:center}`;
   regles.push(compact(".tt-scene[data-compact]"));

@@ -63,10 +63,10 @@ test("vignette : image légèrement transparente sous le texte, texte foncé lis
     await expect
       .poll(async () => {
         await accueil.goto("/");
-        return accueil.getByRole("region", { name: "À la une" }).getByRole("img", { name: "Boîtes d'électrodes empilées" }).count();
+        return accueil.getByRole("region", { name: "Nos offres du moment" }).getByRole("img", { name: "Boîtes d'électrodes empilées" }).count();
       }, { timeout: 60_000 })
       .toBe(1);
-    const img = accueil.getByRole("region", { name: "À la une" }).getByRole("img", { name: "Boîtes d'électrodes empilées" });
+    const img = accueil.getByRole("region", { name: "Nos offres du moment" }).getByRole("img", { name: "Boîtes d'électrodes empilées" });
     expect(Number(await img.evaluate((e) => getComputedStyle(e).opacity))).toBeLessThan(0.5);
     const vignette = accueil.locator("[data-vignette]", { hasText: titre });
     const couleur = await vignette.getByRole("heading", { level: 2 }).evaluate((e) => getComputedStyle(e).color);

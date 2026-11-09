@@ -12,7 +12,7 @@ test("un mot modifié au back-office apparaît dans l'animation de l'accueil", a
   await connecterNavigateur(context, COMPTES.admin);
   try {
     await page.goto("/admin/contenus");
-    await page.getByRole("link", { name: /Animation de l.accueil/ }).click();
+    await page.getByRole("link", { name: /Textes de l.accueil/ }).click();
     await expect(page.getByLabel("Phrase d’accroche (80 caractères au plus)")).toHaveValue("Une offre pensée pour la cardiologie libérale");
     // Champ trop long refusé par le formulaire (16 caractères au plus).
     await expect(page.getByLabel("Mot 2 (16 caractères au plus)")).toHaveAttribute("maxlength", "16");
@@ -20,7 +20,7 @@ test("un mot modifié au back-office apparaît dans l'animation de l'accueil", a
     await expect(page.getByLabel(/^Argument \d — .+ \(30 caractères au plus\)$/)).toHaveCount(5);
     await expect(page.getByLabel("Argument 5 — Fidélité (30 caractères au plus)")).toHaveValue("Une fidélité récompensée");
     await page.getByLabel("Mot 2 (16 caractères au plus)").fill("Clé en main pro");
-    await page.getByRole("button", { name: "Enregistrer" }).click();
+    await page.getByRole("button", { name: "Enregistrer l’animation" }).click();
     // Premier enregistrement : l'action peut être compilée à la volée par le serveur de développement.
     await expect(page.locator("main").getByRole("status")).toContainText("Animation enregistrée", { timeout: 20_000 });
     const [journal] = await requete<{ n: number }>("site", `SELECT count(*)::int n FROM journal_action WHERE action = 'contenus.animation.modifiee'`);
@@ -38,7 +38,7 @@ test("un mot modifié au back-office apparaît dans l'animation de l'accueil", a
     // Remise en état par le formulaire : l'enregistrement vide aussi le cache de l'accueil.
     await page.goto("/admin/contenus/accueil");
     await page.getByLabel("Mot 2 (16 caractères au plus)").fill(avant?.titre ?? "Expertise");
-    await page.getByRole("button", { name: "Enregistrer" }).click();
+    await page.getByRole("button", { name: "Enregistrer l’animation" }).click();
     await expect(page.locator("main").getByRole("status")).toContainText("Animation enregistrée");
   }
 });

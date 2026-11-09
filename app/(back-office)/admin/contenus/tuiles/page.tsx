@@ -4,7 +4,7 @@ import { Button, Card, Kicker, Retour } from "@/ui";
 import { CaseAdmin, ChampAdmin, classeChamp, RappelPatient } from "@/ui/admin";
 import { enregistrerTuile } from "../actions";
 
-export const metadata: Metadata = { title: "Tuiles d'accès rapide" };
+export const metadata: Metadata = { title: "Gammes phares" };
 
 const FONDS = [
   { valeur: "pale", libelle: "Eucalyptus pâle" },
@@ -13,21 +13,22 @@ const FONDS = [
   { valeur: "mint", libelle: "Menthe" },
 ];
 
-// Les 6 tuiles se modifient ; elles ne s'ajoutent ni ne se suppriment (FR-017).
+// Les 3 cartes des gammes phares (F23, FR-007, anciennes tuiles d'accès rapide) se modifient ;
+// elles ne s'ajoutent ni ne se suppriment.
 export default async function Tuiles({ searchParams }: { searchParams: Promise<{ ok?: string; erreur?: string }> }) {
   const r = await searchParams;
-  const tuiles = await dbSite().contenu.findMany({ where: { type: "tuile" }, orderBy: { ordre: "asc" } });
+  const tuiles = await dbSite().contenu.findMany({ where: { type: "tuile" }, orderBy: { ordre: "asc" }, take: 3 });
   return (
     <div className="flex max-w-3xl flex-col gap-6">
       <Kicker>Contenus</Kicker>
-      <h1 className="text-h2 font-light">Tuiles d’accès rapide</h1>
+      <h1 className="text-h2 font-light">Gammes phares</h1>
       <Retour {...r} />
       <RappelPatient />
       {tuiles.map((tuile, i) => {
         const image = ((tuile.images as { url: string; texteRemplacement: string }[] | null) ?? [])[0];
         return (
         <Card key={tuile.id}>
-          <h2 className="mb-3 text-h3 font-semibold">Tuile {i + 1} : {tuile.titre}</h2>
+          <h2 className="mb-3 text-h3 font-semibold">Carte {i + 1} : {tuile.titre}</h2>
           <form action={enregistrerTuile} encType="multipart/form-data" className="grid gap-3 sm:grid-cols-2">
             <input type="hidden" name="id" value={tuile.id} />
             <ChampAdmin id={`titre-${tuile.id}`} libelle="Titre (40 caractères au plus)">

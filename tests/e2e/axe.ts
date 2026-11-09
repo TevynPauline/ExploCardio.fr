@@ -27,6 +27,14 @@ export async function verifierAccessibilite(page: Page) {
         .toBe(true);
     }
   }
+  // F23 : les schémas des cartes « Pourquoi choisir » apparaissent en fondu à l'entrée à l'écran ;
+  // on les amène à leur état final avant le contrôle.
+  await page.evaluate(() => {
+    for (const carte of document.querySelectorAll<HTMLElement>(".pq-carte")) {
+      carte.dataset.visible = "";
+      for (const a of carte.getAnimations({ subtree: true })) a.finish();
+    }
+  });
   const resultat = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
     .exclude("iframe[sandbox]")

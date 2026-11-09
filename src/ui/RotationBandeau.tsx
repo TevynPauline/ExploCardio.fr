@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
+import { useEffect, useState, type MouseEvent } from "react";
 import type { MessageBandeau } from "@/domaine/contenus";
 
 const INTERVALLE_MS = 6000;
@@ -11,7 +12,8 @@ const INTERVALLE_MS = 6000;
  * suspendue d'office si le visiteur a demandé la réduction des animations. Pas d'annonce
  * automatique aux lecteurs d'écran à chaque changement.
  */
-export function RotationBandeau({ messages }: { messages: MessageBandeau[] }) {
+export function RotationBandeau({ messages, lienOffres = false }: { messages: MessageBandeau[]; lienOffres?: boolean }) {
+  const chemin = usePathname();
   const [indice, setIndice] = useState(0);
   const [pause, setPause] = useState(false);
   const [mouvementReduit, setMouvementReduit] = useState(false);
@@ -34,8 +36,9 @@ export function RotationBandeau({ messages }: { messages: MessageBandeau[] }) {
   const message = messages[indice % messages.length]!;
   return (
     <div role="region" aria-label="Promotion en cours" className="ec-box--promo rounded-none">
-      <div className="mx-auto flex max-w-page items-center justify-center gap-3 px-4 py-2 text-small text-ink">
-        <p className="min-w-0 flex-1 text-center">
+      <div className="mx-auto flex max-w-page flex-wrap items-center justify-center gap-x-3 px-4 py-2 text-small text-ink">
+        {/* Sur téléphone, le message occupe sa ligne ; le lien et la pause passent dessous (F23). */}
+        <p className="w-full min-w-0 text-center sm:w-auto sm:flex-1">
           {message.lien ? (
             <Link href={message.lien} className="font-medium text-ink underline underline-offset-2">
               {message.texte}
@@ -50,6 +53,15 @@ export function RotationBandeau({ messages }: { messages: MessageBandeau[] }) {
             </span>
           ) : null}
         </p>
+        {lienOffres ? (
+          <Link
+            href="/#offres-du-moment"
+            onClick={(e) => allerAuxOffres(e, chemin)}
+            className="inline-flex min-h-11 shrink-0 items-center rounded-pill px-3 text-small font-semibold text-ink underline underline-offset-2"
+          >
+            Nos offres du moment
+          </Link>
+        ) : null}
         {messages.length > 1 ? (
           <button
             type="button"
@@ -64,4 +76,19 @@ export function RotationBandeau({ messages }: { messages: MessageBandeau[] }) {
       </div>
     </div>
   );
+}
+
+/**
+ * Lien « Nos offres du moment » (F23, FR-003) : sur l'accueil, défile jusqu'au carrousel et lui
+ * donne le focus ; depuis une autre page, la navigation mène à l'accueil, au carrousel.
+ */
+function allerAuxOffres(e: MouseEvent<HTMLAnchorElement>, chemin: string) {
+  if (chemin !== "/") return;
+  const cible = document.getElementById("offres-du-moment");
+  if (!cible) return;
+  e.preventDefault();
+  const reduit = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  cible.scrollIntoView({ behavior: reduit ? "auto" : "smooth", block: "start" });
+  cible.focus({ preventScroll: true });
+  history.replaceState(null, "", "#offres-du-moment");
 }

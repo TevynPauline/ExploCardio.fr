@@ -13,9 +13,10 @@ export default function Contenus() {
       <GrilleLiens
         cartes={[
           { titre: "Bandeau promotionnel", texte: "Messages, ordre, dates de début et de fin.", href: "/admin/contenus/bandeau" },
-          { titre: "Tuiles d'accès rapide", texte: "Titre, phrase, lien, badge, fond des 6 tuiles.", href: "/admin/contenus/tuiles" },
+          { titre: "Organisation de l'accueil", texte: "Ordre et affichage des blocs : animation, gammes phares, Pourquoi choisir, offre digitale, carrousel.", href: "/admin/contenus/organisation" },
+          { titre: "Gammes phares", texte: "Titre, phrase, lien, badge, fond et image des 3 cartes.", href: "/admin/contenus/tuiles" },
           { titre: "Carrousel de l'accueil", texte: "Vignettes : offres, informations du moment, produits phares ; ordre, dates, aperçu.", href: "/admin/contenus/carrousel" },
-          { titre: "Animation de l'accueil", texte: "Phrase d'accroche et trois mots de l'animation d'ouverture.", href: "/admin/contenus/accueil" },
+          { titre: "Textes de l'accueil", texte: "Animation d'ouverture et six cartes « Pourquoi choisir ExploCardio.fr ? ».", href: "/admin/contenus/accueil" },
           { titre: "Textes des pages", texte: "Services, financement, catégories, qui sommes-nous, pages légales : brouillon, aperçu, publication.", href: "/admin/contenus/pages" },
           { titre: "Coordonnées et textes", texte: "Coordonnées du bloc Contact, textes de l'accueil.", href: "/admin/contenus/coordonnees" },
           { titre: "Menus", texte: "Produits phares et liens rapides des méga-menus.", href: "/admin/contenus/menus" },

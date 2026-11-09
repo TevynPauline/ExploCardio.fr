@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: "Coordonnées et textes" };
 
 export default async function Coordonnees({ searchParams }: { searchParams: Promise<{ ok?: string; erreur?: string }> }) {
   const r = await searchParams;
-  const CLES = ["contact.email", "contact.telephone", "contact.adresse", "contact.motifs", "location.conditions", "cloud.aide_premiere_connexion", "accueil.badge_hebergement"];
+  const CLES = ["contact.email", "contact.telephone", "contact.adresse", "contact.motifs", "location.conditions", "cloud.aide_premiere_connexion", "accueil.badge_hebergement", "accueil.badge_logiciel_cloud"];
   const valeurs = new Map(await Promise.all(CLES.map(async (c) => [c, (await lireParametre(c)) ?? ""] as const)));
   const v = (cle: string) => valeurs.get(cle) ?? "";
   let motifs: string[] = [];
@@ -63,6 +63,9 @@ export default async function Coordonnees({ searchParams }: { searchParams: Prom
           <h2 className="text-h3 font-semibold sm:col-span-2">Textes de l’accueil</h2>
           <ChampAdmin id="badgeHebergement" libelle="Badge « Hébergement des données de santé »" aide="Videz le champ pour retirer le badge.">
             <input id="badgeHebergement" name="badgeHebergement" defaultValue={v("accueil.badge_hebergement")} className={classeChamp} />
+          </ChampAdmin>
+          <ChampAdmin id="badgeLogicielCloud" libelle="Badge « Logiciel Cloud » (offre digitale)" aide="Videz le champ pour retirer le badge.">
+            <input id="badgeLogicielCloud" name="badgeLogicielCloud" defaultValue={v("accueil.badge_logiciel_cloud")} className={classeChamp} />
           </ChampAdmin>
         </Card>
         <div><Button type="submit">Enregistrer</Button></div>

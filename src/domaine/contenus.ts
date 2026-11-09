@@ -3,6 +3,8 @@ import { enApercu } from "@/lib/apercu";
 import { dbSite } from "@/lib/db/site";
 import { ETIQUETTES } from "@/lib/cache";
 import { MOTIF_HORS_METROPOLE } from "./comptes/adresses";
+import { CLE_ORGANISATION, normaliserOrganisation, type PlaceBloc } from "./organisation-accueil";
+import { CLES_RAISONS, textesRaisons, type Raison } from "./textes-raisons";
 
 // Lecture des contenus éditoriaux publiés (F01, T007). Mis en cache avec l'étiquette
 // « contenus », invalidée à chaque enregistrement du mini back-office (SC-003 : < 1 minute).
@@ -61,8 +63,21 @@ export async function lireBandeau(maintenant = new Date()): Promise<MessageBande
     .map(({ id, texte, lien }) => ({ id, texte, lien }));
 }
 
+/** Organisation des blocs de l'accueil (F23, D1), lue avec tolérance (repli sur l'ordre de départ). */
+export const lireOrganisation = enCache("organisation", async (): Promise<PlaceBloc[]> => {
+  const p = await dbSite().parametre.findUnique({ where: { cle: CLE_ORGANISATION } });
+  return normaliserOrganisation(p?.valeur);
+});
+
+/** Textes des six cartes « Pourquoi choisir ExploCardio.fr ? » (F23, D8). */
+export const lireRaisons = enCache("raisons", async (): Promise<Raison[]> => {
+  const lignes = await dbSite().contenu.findMany({ where: { type: "argument", cle: { in: [...CLES_RAISONS] } } });
+  return textesRaisons(lignes);
+});
+
+/** Gammes phares (F23, FR-006) : trois cartes, autrefois six tuiles d'accès rapide. */
 export const lireTuiles = enCache("tuiles", async (): Promise<Tuile[]> => {
-  const tuiles = await dbSite().contenu.findMany({ where: { type: "tuile" }, orderBy: { ordre: "asc" }, take: 6 });
+  const tuiles = await dbSite().contenu.findMany({ where: { type: "tuile" }, orderBy: { ordre: "asc" }, take: 3 });
   return tuiles.map((t) => ({
     id: t.id,
     titre: t.titre,
@@ -87,6 +102,7 @@ const CLES_PARAMETRES = [
   "contact.whatsapp",
   "accueil.offre_bienvenue",
   "accueil.badge_hebergement",
+  "accueil.badge_logiciel_cloud",
 ] as const;
 
 export type ParametresPublics = {
@@ -96,6 +112,8 @@ export type ParametresPublics = {
   motifs: string[];
   offreBienvenue: string;
   badgeHebergement: string | null;
+  /** F23 (FR-013) : badge de l'élément « Logiciel Cloud » de l'offre digitale. */
+  badgeLogicielCloud: string | null;
 };
 
 /** F16 (FR-029) : le motif « Commande hors métropole » est toujours proposé, avant « Autre ». */
@@ -121,5 +139,6 @@ export const lireParametresPublics = enCache("parametres", async (): Promise<Par
     motifs: avecMotifHorsMetropole(motifs.length ? motifs : ["Autre"]),
     offreBienvenue: v("accueil.offre_bienvenue") ?? "",
     badgeHebergement: v("accueil.badge_hebergement"),
+    badgeLogicielCloud: v("accueil.badge_logiciel_cloud"),
   };
 });

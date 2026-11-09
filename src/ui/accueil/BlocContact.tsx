@@ -12,7 +12,7 @@ export function BlocContact({ parametres }: { parametres: ParametresPublics }) {
     parametres.adresse ? { libelle: "Adresse", valeur: parametres.adresse } : null,
   ].filter((l): l is NonNullable<typeof l> => l !== null);
   return (
-    <section data-section="contact" aria-labelledby="titre-contact" className="ec-dark py-14">
+    <section id="contact" data-section="contact" aria-labelledby="titre-contact" className="ec-dark scroll-mt-32 py-14">
       <div className="mx-auto flex max-w-page flex-col gap-4 px-4">
         <p className="ec-kicker ec-accent">Contact</p>
         <h2 id="titre-contact" className="text-h2 font-light text-white">

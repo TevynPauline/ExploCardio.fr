@@ -89,7 +89,7 @@ describe("FR-033 : actions sensibles journalisées", () => {
     for (const f of ["app/(back-office)/admin/catalogue/actions.ts", "app/(back-office)/admin/emails/actions.ts", "app/(back-office)/admin/contenus/actions.ts"]) {
       const source = readFileSync(f, "utf8");
       const ecritures = source.match(/ecrireParametre\(/g)?.length ?? 0;
-      const journal = (source.match(/journalAction\.create|journaliser\(a, "contenus\.parametre/g) ?? []).length;
+      const journal = (source.match(/journalAction\.create|journaliser\(a, "contenus\.(?:parametre|accueil\.organisee)/g) ?? []).length;
       expect(journal, f).toBeGreaterThanOrEqual(ecritures);
     }
   });

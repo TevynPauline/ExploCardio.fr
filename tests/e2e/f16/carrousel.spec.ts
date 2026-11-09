@@ -7,7 +7,7 @@ import { verifierAccessibilite } from "../axe";
 
 test.describe.configure({ timeout: 120_000 });
 
-const carrousel = (page: Page) => page.getByRole("region", { name: "À la une" });
+const carrousel = (page: Page) => page.getByRole("region", { name: "Nos offres du moment" });
 const visible = (page: Page) => carrousel(page).locator("[data-vignette]:not([aria-hidden])");
 
 test("défile toutes les 6 secondes ; la pause l'arrête ; flèches et points au clavier", async ({ page }) => {

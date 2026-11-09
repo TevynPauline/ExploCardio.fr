@@ -13,7 +13,8 @@ import { animation, feuilleDeStyle, LOGO, REDUCTION } from "./chronologie";
 // pour laisser la place au reste de la page ; bandeau d'emblée si le visiteur a demandé à réduire
 // les animations.
 
-const STYLE = feuilleDeStyle();
+// F23 (FR-019, D4) : placée plus bas que le premier bloc, l'animation attend d'entrer à l'écran.
+const STYLE = `${feuilleDeStyle()}@media (scripting:enabled){.tt-scene[data-differee]:not([data-vue]) *{animation-play-state:paused!important}}`;
 
 type Etat = "lecture" | "pause" | "fini";
 
@@ -30,7 +31,23 @@ function IconePause({ etat }: { etat: Etat }) {
   );
 }
 
-export function TroisTemps({ textes }: { textes: TextesAnimation }) {
+/**
+ * `titrePrincipal` : la phrase d'accroche est le `<h1>` de la page (animation en premier bloc) ;
+ * sinon, un `<p>` de même style (F23, FR-012). `differee` : lecture à l'entrée à l'écran.
+ * `cible` : ancre du bouton « Voir l'offre » (FR-018).
+ */
+export function TroisTemps({
+  textes,
+  titrePrincipal = true,
+  differee = false,
+  cible = "#acces-rapide",
+}: {
+  textes: TextesAnimation;
+  titrePrincipal?: boolean;
+  differee?: boolean;
+  cible?: string;
+}) {
+  const [vue, setVue] = useState(!differee);
   const [etat, setEtat] = useState<Etat>("lecture");
   const [cache, setCache] = useState(false);
   // Changer de clé remonte les formes : l'animation repart du début (« Lecture » après la fin).
@@ -43,6 +60,19 @@ export function TroisTemps({ textes }: { textes: TextesAnimation }) {
   const minuterie = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => () => clearTimeout(minuterie.current), []);
+
+  useEffect(() => {
+    const el = scene.current;
+    if (vue || !el) return;
+    const observateur = new IntersectionObserver((entrees) => {
+      if (entrees.some((e) => e.isIntersecting)) {
+        setVue(true);
+        observateur.disconnect();
+      }
+    }, { threshold: 0.5 });
+    observateur.observe(el);
+    return () => observateur.disconnect();
+  }, [vue]);
 
   useEffect(() => {
     const suivre = () => setCache(document.visibilityState === "hidden");
@@ -97,12 +127,16 @@ export function TroisTemps({ textes }: { textes: TextesAnimation }) {
     }
   };
 
+  const Accroche = titrePrincipal ? "h1" : "p";
   const enPause = etat === "pause" || (etat === "lecture" && cache);
 
   return (
     <section
       ref={scene}
+      id="trois-temps"
       data-section="trois-temps"
+      data-differee={differee ? "" : undefined}
+      data-vue={vue ? "" : undefined}
       aria-labelledby="titre-trois-temps"
       data-pause={enPause ? "" : undefined}
       data-etat={etat}
@@ -163,9 +197,9 @@ export function TroisTemps({ textes }: { textes: TextesAnimation }) {
             className="tt-logo-final h-auto"
             style={{ width: "var(--tt-logo-l)", animation: animation("tt-logo") }}
           />
-          <h1 id="titre-trois-temps" className="max-w-6xl text-balance text-display font-light text-ink" style={{ animation: animation("tt-accroche") }}>
+          <Accroche id="titre-trois-temps" className="max-w-6xl text-balance text-display font-light text-ink" style={{ animation: animation("tt-accroche") }}>
             {textes.accroche}
-          </h1>
+          </Accroche>
           <p className="sr-only">{textes.mots.join(", ")}.</p>
           <ul aria-hidden="true" className="tt-mots-fixes hidden flex-wrap items-center justify-center gap-x-6 gap-y-2 text-h3 font-light text-ink">
             {textes.mots.map((mot, i) => (
@@ -184,7 +218,7 @@ export function TroisTemps({ textes }: { textes: TextesAnimation }) {
               </li>
             ))}
           </ul>
-          <a href="#acces-rapide" className="tt-lien-final ec-btn ec-btn--primary" style={{ animation: animation("tt-lien") }}>
+          <a href={cible} className="tt-lien-final ec-btn ec-btn--primary" style={{ animation: animation("tt-lien") }}>
             Voir l’offre
             <svg aria-hidden="true" viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 5v14M6 13l6 6 6-6" />

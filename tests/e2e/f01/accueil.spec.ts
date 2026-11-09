@@ -2,9 +2,10 @@ import { expect, test } from "@playwright/test";
 import { verifierAccessibilite } from "../axe";
 import { requete } from "./outils";
 
-// T017 (US1, FR-015 à FR-025, SC-001) ; ordre et sections revus par F16 (FR-009) puis F20 (FR-015).
+// T017 (US1, FR-015 à FR-025, SC-001) ; ordre et sections revus par F16 (FR-009), F20 (FR-015)
+// puis F23 (ordre de départ des blocs, trois gammes phares).
 
-const ORDRE = ["trois-temps", "acces-rapide", "carrousel", "contact"];
+const ORDRE = ["trois-temps", "acces-rapide", "pourquoi-choisir", "carrousel", "contact"];
 
 test("les sections de l'accueil sont dans l'ordre, accessibles", async ({ page }) => {
   await page.goto("/");
@@ -15,10 +16,10 @@ test("les sections de l'accueil sont dans l'ordre, accessibles", async ({ page }
   await verifierAccessibilite(page);
 });
 
-test("SC-001 : chacune des 6 tuiles mène à sa page en un clic", async ({ page }) => {
+test("SC-001 : chacune des 3 gammes phares mène à sa page en un clic", async ({ page }) => {
   await page.goto("/");
   const tuiles = page.locator("[data-tuile]");
-  await expect(tuiles).toHaveCount(6);
+  await expect(tuiles).toHaveCount(3);
   const liens = await tuiles.evaluateAll((els) => els.map((e) => e.getAttribute("href")!));
   for (const [i, lien] of liens.entries()) {
     await page.goto("/");
@@ -28,8 +29,8 @@ test("SC-001 : chacune des 6 tuiles mène à sa page en un clic", async ({ page 
   }
 });
 
-test("grille de tuiles : 3 par ligne sur ordinateur, 2 sur tablette, 1 sur mobile", async ({ page }) => {
-  for (const [largeur, colonnes] of [[1280, 3], [820, 2], [390, 1]] as const) {
+test("gammes phares : 3 par ligne sur ordinateur et tablette, 1 sur mobile", async ({ page }) => {
+  for (const [largeur, colonnes] of [[1280, 3], [820, 3], [390, 1]] as const) {
     await page.setViewportSize({ width: largeur, height: 900 });
     await page.goto("/");
     const tops = await page.locator("[data-tuile]").evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().top)));
@@ -37,9 +38,8 @@ test("grille de tuiles : 3 par ligne sur ordinateur, 2 sur tablette, 1 sur mobil
   }
 });
 
-test("badges « En préparation » et bloc contact sans ligne vide", async ({ page }) => {
+test("bloc contact sans ligne vide", async ({ page }) => {
   await page.goto("/");
-  await expect(page.locator("[data-tuile]", { hasText: "Hébergement des données de santé" }).getByText("En préparation")).toBeVisible();
   const contact = page.locator("[data-section=contact]");
   await expect(contact.getByRole("heading")).toHaveText("Une question ? Écrivez-nous");
   const vides = await requete<{ n: number }>("site", `SELECT count(*)::int n FROM parametre WHERE cle IN ('contact.email','contact.telephone','contact.adresse') AND valeur <> ''`);

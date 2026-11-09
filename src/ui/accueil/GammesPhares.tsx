@@ -13,17 +13,21 @@ const FONDS: Record<string, string> = {
   mint: "bg-mint",
 };
 
-/** Accès rapide (FR-017, FR-018) : 6 tuiles carrées, 3 / 2 / 1 par ligne ; F16 : image facultative. */
-export function AccesRapide({ tuiles }: { tuiles: Tuile[] }) {
+/**
+ * Nos gammes phares (F23, FR-006, FR-007) : trois cartes carrées (anciennes tuiles d'accès rapide,
+ * F01 FR-017), une par ligne sur téléphone, trois sur ordinateur ; F16 : image facultative.
+ * L'ancre « acces-rapide » est conservée pour les liens existants.
+ */
+export function GammesPhares({ tuiles }: { tuiles: Tuile[] }) {
   return (
-    <Section id="acces-rapide" titre="Toute l'offre en un coup d'œil">
-      <ul className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+    <Section id="acces-rapide" titre="Nos gammes phares">
+      <ul className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {tuiles.map((t) => (
           <li key={t.id}>
             <Link
               href={t.lien}
               data-tuile
-              className={`relative flex aspect-square flex-col justify-between overflow-hidden rounded-lg p-8 no-underline ring-action hover:ring-2 ${FONDS[t.fond ?? "pale"] ?? "bg-pale"}`}
+              className={`relative flex aspect-square flex-col justify-between overflow-hidden rounded-lg p-8 no-underline md:aspect-auto md:min-h-72 md:p-6 lg:aspect-square lg:p-8 ring-action hover:ring-2 ${FONDS[t.fond ?? "pale"] ?? "bg-pale"}`}
             >
               {t.image ? (
                 // F16 : image en haut de la tuile, fondue vers le texte (masque en dégradé) ; la

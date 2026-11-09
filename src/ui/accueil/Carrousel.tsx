@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { sansOptimisation } from "../images";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Vignette } from "@/domaine/vignettes";
 
 // Carrousel de l'accueil (F16, US2, FR-005, FR-006) : remplace le grand bandeau. Une vignette à
@@ -32,6 +32,12 @@ export function Carrousel({ vignettes }: { vignettes: Vignette[] }) {
   const [focus, setFocus] = useState(false);
   const [mouvementReduit, setMouvementReduit] = useState(true);
   const total = vignettes.length;
+  const section = useRef<HTMLElement>(null);
+
+  // Arrivée depuis le lien du bandeau promotionnel d'une autre page (F23, FR-003) : focus de lecture.
+  useEffect(() => {
+    if (window.location.hash === "#offres-du-moment") section.current?.focus({ preventScroll: true });
+  }, []);
 
   useEffect(() => {
     const requete = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -54,10 +60,13 @@ export function Carrousel({ vignettes }: { vignettes: Vignette[] }) {
 
   return (
     <section
+      ref={section}
+      id="offres-du-moment"
+      tabIndex={-1}
       aria-roledescription="carrousel"
-      aria-label="À la une"
+      aria-labelledby="titre-offres-du-moment"
       data-section="carrousel"
-      className="mx-auto w-full max-w-page px-4 pt-6"
+      className="mx-auto flex w-full max-w-page scroll-mt-32 flex-col gap-6 px-4 pb-6 pt-8 outline-none"
       onMouseEnter={() => setSurvol(true)}
       onMouseLeave={() => setSurvol(false)}
       onFocus={() => setFocus(true)}
@@ -65,6 +74,15 @@ export function Carrousel({ vignettes }: { vignettes: Vignette[] }) {
         if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setFocus(false);
       }}
     >
+      {/* F23 : titre visible, cible du lien « Nos offres du moment » du bandeau promotionnel. */}
+      <h2 id="titre-offres-du-moment" className="flex items-baseline gap-3 text-h2 font-light">
+        <span aria-hidden="true" className="inline-flex shrink-0 items-end gap-1">
+          <i className="block size-2.5 rounded-full bg-euca" />
+          <i className="block size-3.5 rounded-full bg-sage" />
+          <i className="block size-[1.125rem] rounded-full bg-blue" />
+        </span>
+        <span>Nos offres du moment</span>
+      </h2>
       <div className="relative overflow-hidden rounded-lg">
         <div aria-live={defile ? "off" : "polite"} className="flex transition-transform duration-500 ease-out motion-reduce:transition-none" style={{ transform: `translateX(-${indice * 100}%)` }}>
           {vignettes.map((v, i) => {

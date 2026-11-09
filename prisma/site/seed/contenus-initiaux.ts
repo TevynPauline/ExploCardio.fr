@@ -1,5 +1,6 @@
 import type { PrismaClient } from "@generated/site/client";
 import { ARGUMENTS_ANIMATION, TEXTES_ANIMATION_DEFAUT } from "@/domaine/textes-animation";
+import { CLES_RAISONS, RAISONS_DEFAUT } from "@/domaine/textes-raisons";
 
 // Contenus initiaux de F01 (T005) : réels dès la phase 1, modifiables dans le back-office et
 // CONSERVÉS à la réinitialisation de la démonstration — ils ne sont créés que s'ils manquent.
@@ -8,10 +9,10 @@ export const TUILES_INITIALES = [
   { titre: "Holter ECG", corps: "Enregistreurs et analyse, à l'achat ou au mois.", lien: "/holter-ecg", fond: "pale", badge: null },
   { titre: "Holter tensionnel", corps: "MAPA, brassards et accessoires compatibles.", lien: "/holter-tensionnel", fond: "blue-soft", badge: null },
   { titre: "Épreuve d'effort", corps: "ECG d'effort, ergomètres et divans d'écho d'effort.", lien: "/epreuve-effort", fond: "lin", badge: null },
-  { titre: "Hébergement des données de santé", corps: "Vos logiciels sur une plateforme Cloud certifiée HDS.", lien: "/services/hebergement-donnees-sante", fond: "mint", badge: "En préparation" },
-  { titre: "Assistance et service", corps: "Vos consommables ouvrent votre assistance.", lien: "/services/assistance", fond: "pale", badge: null },
-  { titre: "Financement", corps: "Équipez-vous sans immobiliser votre trésorerie.", lien: "/financement", fond: "blue-soft", badge: null },
 ] as const;
+
+/** F23 (FR-006, D7) : seules les trois gammes phares restent ; les autres tuiles sont supprimées. */
+export const LIENS_GAMMES_PHARES = TUILES_INITIALES.map((t) => t.lien);
 
 export const MARQUES_INITIALES = [
   { nom: "DMS", familles: ["holter-ecg", "mapa", "effort"] },
@@ -161,6 +162,7 @@ export async function remplirContenusInitiaux(db: PrismaClient) {
       })),
     });
   }
+  await db.contenu.deleteMany({ where: { type: "tuile", NOT: { lien: { in: [...LIENS_GAMMES_PHARES] } } } });
   if ((await db.marque.count()) === 0) {
     await db.marque.createMany({ data: MARQUES_INITIALES.map((m, i) => ({ ...m, ordre: i + 1 })) });
   }
@@ -174,6 +176,15 @@ export async function remplirContenusInitiaux(db: PrismaClient) {
     await db.contenu.upsert({
       where: { type_cle: { type: "argument", cle: a.cle } },
       create: { type: "argument", cle: a.cle, titre: a.titre, corps: a.corps, ordre: i, etat: "publie" },
+      update: {},
+    });
+  }
+  // F23 (D8) : textes de départ des six cartes « Pourquoi choisir ExploCardio.fr ? ».
+  for (const [i, cle] of CLES_RAISONS.entries()) {
+    const r = RAISONS_DEFAUT[i]!;
+    await db.contenu.upsert({
+      where: { type_cle: { type: "argument", cle } },
+      create: { type: "argument", cle, titre: r.titre, corps: r.phrase, ordre: 100 + i, etat: "publie" },
       update: {},
     });
   }

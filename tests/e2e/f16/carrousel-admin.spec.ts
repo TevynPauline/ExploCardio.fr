@@ -38,7 +38,7 @@ async function surLAccueil(page: Page, texte: string) {
   const visiteur = await page.context().browser()!.newContext({ baseURL: test.info().project.use.baseURL, storageState: "playwright/.auth/acces-demo.json" });
   const p = await visiteur.newPage();
   await p.goto("/");
-  const n = await p.getByRole("region", { name: "À la une" }).getByText(texte).count();
+  const n = await p.getByRole("region", { name: "Nos offres du moment" }).getByText(texte).count();
   await visiteur.close();
   return n > 0;
 }
