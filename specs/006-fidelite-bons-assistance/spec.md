@@ -8,6 +8,8 @@
 
 **Input**: User description: "F06 — Fidélité, bons d'achat et droits d'assistance : droits d'assistance ouverts par les commandes, cagnotte de bons d'achat créditée par paliers (0 %, 5 %, 10 %), utilisation dans le panier, retrait en cas d'annulation ou de remboursement, consultation par l'équipe d'assistance, promotions. Objectif : remplacer le forfait annuel de hotline par un modèle gagnant-gagnant."
 
+> **Note F22 (2026-11-09)** : depuis la constitution 2.3.0, les prix sont affichés TTC en premier, avec le HT juste en dessous. Dans cette spec, les prix promotionnels affichés HT (les bons d'achat suivront le lot B de F18) sont remplacés par [F22 — Affichage des prix TTC](../022-affichage-ttc/spec.md).
+
 ## Contexte et objectif
 
 ExploCardio.fr ne vend pas de forfait annuel de hotline. À la place, F06 met en œuvre un

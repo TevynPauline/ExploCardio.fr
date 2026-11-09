@@ -8,6 +8,8 @@
 
 **Input**: User description: "F18 — Ajustements du site (retours de Pauline du 2026-11-02), lot A : 1) la commande en ligne n'est livrée automatiquement qu'en France métropolitaine continentale ; pour la Corse et l'outre-mer, le client nous contacte (comme pour l'étranger aujourd'hui) — mettre à jour les CGV en conséquence. 2) Dans le panier, les boutons de quantité (moins / plus) sont visibles en permanence, sans survol. 3) Retirer un article du panier demande une confirmation dans une fenêtre (« Retirer cet article du panier ? »). 4) La loupe de l'en-tête devient une barre de recherche avec loupe (toujours visible sur ordinateur ; sur téléphone, la loupe ouvre la barre). 5) Le libellé « Panier » s'affiche à côté de l'icône du panier, comme « Mon compte ». 6) Le lien « Connexion » disparaît de l'en-tête : seul « Mon compte » reste ; sans être connecté, il mène à la page de connexion (avec lien pour créer un compte). Lot B (cagnotte de points sur les services au trimestre, conversion en bons d'achat, parrainage « modèle Décathlon ») : hors de ce lot, en attente des réponses de Régis (docs/questions-cagnotte-parrainage.docx), à spécifier ensuite."
 
+> **Note F22 (2026-11-09)** : depuis la constitution 2.3.0, les prix sont affichés TTC en premier, avec le HT juste en dessous. Dans cette spec, les montants affichés HT en premier sont remplacés par [F22 — Affichage des prix TTC](../022-affichage-ttc/spec.md).
+
 ## Contexte et objectif
 
 Après la page d'attente (F17), Pauline a relevé des ajustements sur le site de démonstration.

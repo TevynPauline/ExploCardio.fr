@@ -2,16 +2,16 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
-import { euros } from "@/lib/montants";
+import { Prix } from "../catalogue/Prix";
 import { IconeFermer, IconeRecherche } from "./icones";
 
 // Recherche instantanée de l'en-tête (US4, contracts/recherche.md) : champ en « combobox »
-// WAI-ARIA, suggestions groupées par type dès 2 caractères, prix HT, Entrée pour la page
+// WAI-ARIA, suggestions groupées par type dès 2 caractères, prix TTC puis HT, Entrée pour la page
 // de résultats. Attente de 150 ms après la frappe ; la requête précédente est annulée.
 // F18 (US4, FR-015) : dès 1 024 px, le champ est visible en permanence dans l'en-tête et les
 // suggestions s'ouvrent dessous ; en dessous, la loupe ouvre le panneau comme avant.
 
-type Suggestion = { code: string; titre: string; sousTitre: string; destination: string; prixHt: number | null };
+type Suggestion = { code: string; titre: string; sousTitre: string; destination: string; prixHt: number | null; tauxTva: number };
 type Groupe = { type: string; libelle: string; elements: Suggestion[] };
 type Reponse = { groupes: Groupe[]; indisponible: boolean };
 
@@ -185,7 +185,7 @@ export function Recherche() {
                           {s.sousTitre ? <span className="block text-small text-muted">{s.sousTitre}</span> : null}
                         </span>
                         {s.prixHt !== null ? (
-                          <span className="shrink-0 text-small text-ink">{euros(s.prixHt)} HT</span>
+                          <Prix ht={s.prixHt} tauxTva={s.tauxTva} className="shrink-0 text-right text-small" />
                         ) : null}
                       </div>
                     );

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import type { VarianteFiche } from "@/domaine/catalogue/fiches";
-import { prixPourQuantite } from "@/domaine/catalogue/prix";
+import { prixPourQuantite, prixTexte, prixTtc } from "@/domaine/catalogue/prix";
 import { euros } from "@/lib/montants";
 import { ChampQuantite } from "../ChampQuantite";
 import { AjoutPanier } from "./AjoutPanier";
@@ -43,7 +43,7 @@ export function ChoixConditionnement({ nom, variantes, configInitiale }: { nom: 
 
       <div className="ec-card flex flex-col gap-3">
         <Prix ht={variante.prixHt} tauxTva={variante.tauxTva} taille="grand" periode={parLot ? `le lot de ${variante.quantiteParLot}` : undefined} />
-        {parLot ? <p className="text-small text-muted">Soit {euros(Math.round(variante.prixHt / variante.quantiteParLot))} HT l’unité.</p> : null}
+        {parLot ? <p className="text-small text-muted">Soit {prixTexte({ ht: Math.round(variante.prixHt / variante.quantiteParLot), tauxTva: variante.tauxTva }, { periode: "l’unité" })}.</p> : null}
         <p className="text-small text-muted">Réf. {variante.referenceFabricant ?? variante.defaultCode}</p>
         {variante.paliers.length ? (
           <div>
@@ -51,7 +51,7 @@ export function ChoixConditionnement({ nom, variantes, configInitiale }: { nom: 
             <ul className="list-none p-0 text-small">
               {variante.paliers.map((p) => (
                 <li key={p.quantiteMin}>
-                  À partir de {p.quantiteMin} : {euros(p.prixHt)} HT {parLot ? "le lot" : "l’unité"}
+                  À partir de {p.quantiteMin} : {prixTexte({ ht: p.prixHt, tauxTva: variante.tauxTva }, { periode: parLot ? "le lot" : "l’unité" })}
                 </li>
               ))}
             </ul>
@@ -68,7 +68,7 @@ export function ChoixConditionnement({ nom, variantes, configInitiale }: { nom: 
         />
         <div aria-live="polite" className="flex flex-col gap-1" data-testid="total-consommable">
           <p className="text-ink">
-            Prix appliqué : <span className="font-semibold">{euros(prix.prixLotHt)} HT</span> {parLot ? "le lot" : "l’unité"}
+            Prix appliqué : <span className="font-semibold">{euros(prixTtc(prix.prixLotHt, variante.tauxTva))} TTC</span> {parLot ? "le lot" : "l’unité"}, soit {euros(prix.prixLotHt)} HT
             {prix.palier ? ` (prix dégressif dès ${prix.palier.quantiteMin})` : ""}
           </p>
           <Prix ht={prix.totalHt} tauxTva={variante.tauxTva} className="text-ink" />

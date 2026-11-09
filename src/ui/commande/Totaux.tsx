@@ -1,5 +1,6 @@
 import type { Devis } from "@/connecteurs/odoo/interfaces";
 import { euros } from "@/lib/montants";
+import { Prix } from "../catalogue/Prix";
 
 function Ligne({
   libelle,
@@ -25,7 +26,7 @@ function Ligne({
   );
 }
 
-/** Bloc « Paiement unique » (FR-002) : HT, remises, bons, port, TVA, TTC. */
+/** Bloc « Paiement unique » (FR-002) : HT, remises, bons, port, TVA, puis « Total TTC à payer » en avant (F22). */
 export function TotauxAchat({
   achat,
   regleCumul,
@@ -53,7 +54,11 @@ export function TotauxAchat({
         ) : null}
         <Ligne libelle="Total HT" montant={achat.totalHt} fort />
         <Ligne libelle="TVA" montant={achat.tva} />
-        <Ligne libelle="Total TTC" montant={achat.totalTtc} fort />
+        {/* F22 : le montant réellement payé, mis en avant. */}
+        <div className="mt-2 flex items-baseline justify-between gap-4 border-t border-line pt-3 font-semibold text-ink" data-total-ttc>
+          <dt>Total TTC à payer</dt>
+          <dd className="text-h2">{euros(achat.totalTtc)}</dd>
+        </div>
       </dl>
       {achat.remisesAutomatiquesHt || achat.remiseCodePromoHt ? (
         <p className="mt-2 text-small text-muted">{regleCumul}</p>
@@ -62,7 +67,7 @@ export function TotauxAchat({
   );
 }
 
-/** Bloc « Abonnement mensuel » (FR-003) : premier mois et mois suivants, HT et TTC. */
+/** Bloc « Abonnement mensuel » (FR-003) : premier mois et mois suivants, TTC d'abord puis HT (F22). */
 /**
  * Montants de l'abonnement mensuel. `prochaineEcheance` (AAAA-MM-JJ) : première échéance après
  * la livraison, connue au récapitulatif (F05 : la location commence à la livraison).
@@ -72,10 +77,14 @@ export function TotauxAbonnement({ abonnement, prochaineEcheance = null }: { abo
   return (
     <div>
       <dl className="flex flex-col">
-        <Ligne libelle="Premier mois HT" montant={abonnement.premierMoisHt} />
-        <Ligne libelle="Premier mois TTC" montant={abonnement.premierMoisTtc} fort />
-        <Ligne libelle="Mois suivants HT" montant={abonnement.moisSuivantsHt} />
-        <Ligne libelle="Mois suivants TTC" montant={abonnement.moisSuivantsTtc} fort />
+        <div className="flex justify-between gap-4 py-1">
+          <dt>Premier mois</dt>
+          <dd className="text-right"><Prix ht={abonnement.premierMoisHt} ttc={abonnement.premierMoisTtc} /></dd>
+        </div>
+        <div className="flex justify-between gap-4 py-1">
+          <dt>Mois suivants</dt>
+          <dd className="text-right"><Prix ht={abonnement.moisSuivantsHt} ttc={abonnement.moisSuivantsTtc} periode="/ mois" /></dd>
+        </div>
       </dl>
       <p className="mt-2 text-small text-muted">
         {echeance

@@ -2,10 +2,11 @@
 
 import { startTransition, useActionState, useState, type FormEvent } from "react";
 import { actionDemandeFinancement, type EtatDemande } from "@/actions/financement";
+import { prixTtc } from "@/domaine/catalogue/prix";
 import { euros } from "@/lib/montants";
 import { Champ } from "../Champ";
 
-type Equipement = { defaultCode: string; nom: string; quantite: number; mensualites: { dureeMois: number; montantHt: number }[] };
+type Equipement = { defaultCode: string; nom: string; quantite: number; tauxTva: number; mensualites: { dureeMois: number; montantHt: number }[] };
 
 type Props = {
   source: "panier" | "fiche";
@@ -25,11 +26,13 @@ export function FormulaireFinancement({ source, equipements, durees, mention, ca
   const s = etat.saisie ?? {};
   const [quantites, setQuantites] = useState<Record<string, number>>(Object.fromEntries(equipements.map((e) => [e.defaultCode, e.quantite])));
   const [duree, setDuree] = useState<number>(Number(s.duree) || durees[durees.length - 1] || 0);
-  const total = equipements.reduce<number | null>((acc, e) => {
+  // F22 : mensualité TTC = somme des TTC de chaque équipement (taux de l'article), HT en complément.
+  const total = equipements.reduce<{ ht: number; ttc: number } | null>((acc, e) => {
     const m = e.mensualites.find((x) => x.dureeMois === duree);
     if (acc === null || !m) return null;
-    return acc + m.montantHt * (quantites[e.defaultCode] ?? 0);
-  }, 0);
+    const ht = m.montantHt * (quantites[e.defaultCode] ?? 0);
+    return { ht: acc.ht + ht, ttc: acc.ttc + prixTtc(ht, e.tauxTva) };
+  }, { ht: 0, ttc: 0 });
   function envoyer(ev: FormEvent<HTMLFormElement>) {
     ev.preventDefault();
     const d = new FormData(ev.currentTarget);
@@ -76,9 +79,9 @@ export function FormulaireFinancement({ source, equipements, durees, mention, ca
           ))}
         </div>
         <p aria-live="polite" className="ec-box--info p-3">
-          {total !== null && total > 0 ? (
+          {total !== null && total.ht > 0 ? (
             <>
-              Mensualité indicative : <strong className="text-ink">{euros(total)} HT / mois</strong> sur {duree} mois.{" "}
+              Mensualité indicative : <strong className="text-ink">{euros(total.ttc)} TTC / mois</strong> (soit {euros(total.ht)} HT / mois) sur {duree} mois.{" "}
             </>
           ) : null}
           <span className="text-small">{mention}</span>

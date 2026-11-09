@@ -1,3 +1,4 @@
+import { prixTexte, prixTtc } from "@/domaine/catalogue/prix";
 import { euros } from "@/lib/montants";
 import { urlDuSite } from "./charte";
 import { BoutonEmail, Paragraphe, type PiedPreferences } from "./Gabarit";
@@ -95,7 +96,7 @@ export const emailsEmailing = {
           {p.lignes.map((l, i) => (
             <Paragraphe key={i}>
               {l.quantite} × {l.libelle}
-              {l.prixUnitaireHt !== null ? ` — ${euros(l.prixUnitaireHt)} HT${l.miseADisposition ? " par mois" : " l’unité"}` : ""} ({l.disponibilite}).
+              {l.prixUnitaireHt !== null ? ` — ${prixTexte({ ht: l.prixUnitaireHt, tauxTva: 20 }, { periode: l.miseADisposition ? "par mois" : "l’unité" })}` : ""} ({l.disponibilite}).
             </Paragraphe>
           ))}
           {t.bloc("fin")}
@@ -140,7 +141,7 @@ export const emailsEmailing = {
           {p.articles.map((a) => (
             <div key={a.lien} style={{ margin: "0 0 16px" }}>
               <Paragraphe>
-                <strong>{a.nom}</strong> — {a.quantite} × {euros(a.prixHt)} HT, soit {euros(a.prixHt * a.quantite)} HT
+                <strong>{a.nom}</strong> — {a.quantite} × {euros(prixTtc(a.prixHt, 20))} TTC, soit {prixTexte({ ht: a.prixHt * a.quantite, tauxTva: 20 })}
                 {un ? "" : ` (vers le ${dateFr(a.prochaine)})`}.
               </Paragraphe>
               <BoutonEmail href={a.lien}>{un ? "Commander de nouveau" : `Commander de nouveau : ${a.nom}`}</BoutonEmail>

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { VarianteFiche } from "@/domaine/catalogue/fiches";
 import { SLUG_FORMULE, type FormuleFiche } from "@/domaine/catalogue/formules";
-import { euros } from "@/lib/montants";
+import { prixTexte } from "@/domaine/catalogue/prix";
 import { AjoutPanier } from "./AjoutPanier";
 import { Disponibilite } from "./Disponibilite";
 import { Prix } from "./Prix";
@@ -108,7 +108,7 @@ export function SelecteurFormule({ nom, formules, variantes, contenuPackMad, men
           <>
             <Prix ht={variante.prixHt} tauxTva={variante.tauxTva} taille="grand" />
             {variante.prixHt < variante.prixCatalogueHt ? (
-              <p className="text-small text-muted">Votre prix ; prix public : {euros(variante.prixCatalogueHt)} HT.</p>
+              <p className="text-small text-muted">Votre prix ; prix public : {prixTexte({ ht: variante.prixCatalogueHt, tauxTva: variante.tauxTva })}.</p>
             ) : null}
             <p className="text-small text-muted">Réf. {variante.referenceFabricant ?? variante.defaultCode}</p>
             <Disponibilite etat={dispo} />
@@ -135,7 +135,7 @@ export function SelecteurFormule({ nom, formules, variantes, contenuPackMad, men
               <p>
                 {variante.kitRequis.possede
                   ? `Vous possédez déjà le kit d’accessoires ${variante.kitRequis.nom} : il ne vous sera pas facturé.`
-                  : `Kit d’accessoires requis à la première location de ce type d’appareil : ${variante.kitRequis.nom} (${euros(variante.kitRequis.prixHt)} HT), ajouté à votre panier ; vous le conservez.`}
+                  : `Kit d’accessoires requis à la première location de ce type d’appareil : ${variante.kitRequis.nom} (${prixTexte({ ht: variante.kitRequis.prixHt, tauxTva: variante.tauxTva })}), ajouté à votre panier ; vous le conservez.`}
               </p>
             ) : null}
             {variante.livraisonMad ? (
@@ -146,7 +146,7 @@ export function SelecteurFormule({ nom, formules, variantes, contenuPackMad, men
               <Disponibilite etat={dispo} />
             )}
             <p className="text-small text-muted">
-              Aucun dépôt de garantie. Valeur de remplacement : {euros(variante.offreMad.valeurRemplacementHt)} HT, facturée seulement en cas de perte ou de non-retour.
+              Aucun dépôt de garantie. Valeur de remplacement : {prixTexte({ ht: variante.offreMad.valeurRemplacementHt, tauxTva: variante.tauxTva })}, facturée seulement en cas de perte ou de non-retour.
             </p>
             {dispo && dispo.etat !== "indisponible" ? (
               <AjoutPanier

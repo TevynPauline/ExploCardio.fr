@@ -8,6 +8,8 @@
 
 **Input**: User description: "F03 — Catalogue et fiches produit à onglets : catégories, pages services, pages catégorie avec cartes et filtres, fiche équipement avec sélecteur de formule (Acheter, Mise à disposition mensuelle, Financement longue durée), onglets d'information, fiche consommable, données saisies au back-office. Objectif : un catalogue court et clair, où chaque fiche permet de choisir entre acheter, louer ou financer."
 
+> **Note F22 (2026-11-09)** : depuis la constitution 2.3.0, les prix sont affichés TTC en premier, avec le HT juste en dessous. Dans cette spec, FR-006, FR-022, FR-027 et SC-001 (HT en premier) sont remplacés par [F22 — Affichage des prix TTC](../022-affichage-ttc/spec.md).
+
 ## Contexte et objectif
 
 ExploCardio.fr propose un catalogue volontairement court, limité aux explorations

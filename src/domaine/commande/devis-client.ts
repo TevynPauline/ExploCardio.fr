@@ -65,7 +65,7 @@ export async function demanderDevis(compteId: string): Promise<ResultatDevis> {
       compte.utilisateur.email,
       await emailsCommandes.devisEnvoye({
         ref: devis.ref,
-        lignes: devis.calcul.lignes.map((l) => ({ libelle: l.libelle, quantite: l.quantite, totalHt: l.totalHt })),
+        lignes: devis.calcul.lignes.map((l) => ({ libelle: l.libelle, quantite: l.quantite, totalHt: l.totalHt, tauxTva: l.tauxTva })),
         totalHt: devis.totalHt,
         totalTtc: devis.totalTtc,
         validiteLe: devis.validiteLe,

@@ -2,6 +2,7 @@ import { unstable_cache } from "next/cache";
 import { ETIQUETTES } from "@/lib/cache";
 import { dbSite } from "@/lib/db/site";
 import { lireCatalogue, type EntreeCatalogue } from "./catalogue/lecture";
+import { prixTtc } from "./catalogue/prix";
 import { FAMILLES, type Famille } from "./familles";
 
 // Contenu de la barre de navigation et des méga-menus (F01, T034, FR-003 à FR-009) :
@@ -10,7 +11,7 @@ import { FAMILLES, type Famille } from "./familles";
 // navigateur. En cas de panne du connecteur, les liens fixes restent disponibles.
 
 export type Lien = { libelle: string; href: string };
-export type ProduitPhare = { libelle: string; sousTitre: string; href: string; prixHt: number };
+export type ProduitPhare = { libelle: string; sousTitre: string; href: string; prixHt: number; tauxTva: number };
 
 export type EntreeNavigation = {
   cle: string;
@@ -62,8 +63,10 @@ function sousCategoriesDeFamille(famille: Famille, sousCategories: { categorie: 
   return liens.length ? liens : [{ libelle: `Tous les produits ${famille.libelle}`, href: famille.chemin }];
 }
 
-function prixAPartirDe(e: EntreeCatalogue): number {
-  return Math.min(...e.article.variantes.map((v) => v.prixHt));
+/** Variante la moins chère, avec son taux (F22 : « à partir de » en TTC). */
+function prixAPartirDe(e: EntreeCatalogue): { prixHt: number; tauxTva: number } {
+  const v = [...e.article.variantes].sort((a, b) => prixTtc(a.prixHt, a.tauxTva) - prixTtc(b.prixHt, b.tauxTva))[0]!;
+  return { prixHt: v.prixHt, tauxTva: v.tauxTva };
 }
 
 async function construire(): Promise<EntreeNavigation[]> {
@@ -81,7 +84,7 @@ async function construire(): Promise<EntreeNavigation[]> {
       .filter((a): a is EntreeCatalogue => Boolean(a));
     const produitsPhares = (phares.length ? phares : articles.filter((a) => a.article.type === "equipement").slice(0, 3))
       .slice(0, 4)
-      .map((a) => ({ libelle: a.article.nom, sousTitre: a.article.marque, href: a.chemin, prixHt: prixAPartirDe(a) }));
+      .map((a) => ({ libelle: a.article.nom, sousTitre: a.article.marque, href: a.chemin, ...prixAPartirDe(a) }));
     const liensRapides = choisis
       .filter((x) => x.type === "lien_rapide" && x.libelle && x.lien)
       .slice(0, 4)

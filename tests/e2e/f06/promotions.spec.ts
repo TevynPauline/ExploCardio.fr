@@ -15,7 +15,8 @@ test("vente flash : annoncée, appliquée, puis terminée", async ({ page, brows
   const fin = new Date(Date.now() + 2 * 24 * 3600_000);
   const local = (d: Date) => new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
   // La vente flash ne doit jamais survivre au test (elle fausserait les prix des autres parcours).
-  const terminer = () => requete("demo", `UPDATE loyalty_promotion SET fin = now() WHERE nom = $1 AND (fin IS NULL OR fin > now())`, [nom]);
+  // Dates tenues en UTC sans fuseau : now() seul écrirait l'heure de Paris (une heure de trop).
+  const terminer = () => requete("demo", `UPDATE loyalty_promotion SET fin = now() AT TIME ZONE 'UTC' WHERE nom = $1 AND (fin IS NULL OR fin > now() AT TIME ZONE 'UTC')`, [nom]);
   try {
   await ecranDemo(browser, baseURL, "/admin/demonstration/fidelite", async (admin) => {
     await admin.getByLabel("Nom", { exact: true }).fill(nom);
@@ -35,7 +36,8 @@ test("vente flash : annoncée, appliquée, puis terminée", async ({ page, brows
     await page.goto(FICHE_SD);
     const promo = page.getByRole("region", { name: "Promotion sur ce produit" });
     await expect(promo).toContainText(nom);
-    await expect(promo).toContainText(/25,00\s€\sHT\s+20,00\s€\sHT/);
+    // F22 : prix barré et prix remisé en TTC, puis le HT remisé.
+    await expect(promo).toContainText(/30,00\s€\sTTC\s+24,00\s€\sTTC\s+soit\s20,00\s€\sHT/);
     await expect(promo).toContainText("Jusqu’au");
     await expect(page.getByRole("region", { name: "Promotion en cours" })).toContainText(nom, { timeout: 60_000 }); // bandeau, en rotation
     await verifierAccessibilite(page);

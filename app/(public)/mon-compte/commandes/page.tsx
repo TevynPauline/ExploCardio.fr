@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { abonnementsARegler, commandesDuCompte, LIBELLES_STATUT } from "@/domaine/commande/mon-compte";
 import { compteCourant } from "@/domaine/comptes/session";
-import { euros } from "@/lib/montants";
+import { Prix } from "@/ui/catalogue/Prix";
 import { Card, Kicker } from "@/ui";
 import { NavMonCompte } from "@/ui/comptes/NavMonCompte";
 
@@ -40,7 +40,7 @@ export default async function Commandes() {
                 <p className="text-small text-muted">du {c.date.toLocaleDateString("fr-FR")}</p>
               </div>
               <p>{LIBELLES_STATUT[c.statut]}</p>
-              <p className="font-semibold text-ink">{euros(c.montantHt)} HT · {euros(c.montantTtc)} TTC</p>
+              <Prix ht={c.montantHt} ttc={c.montantTtc} />
             </li>
           ))}
         </ul>

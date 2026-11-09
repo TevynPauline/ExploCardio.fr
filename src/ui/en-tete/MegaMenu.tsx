@@ -1,11 +1,11 @@
 import Link from "next/link";
 import type { EntreeNavigation } from "@/domaine/navigation";
-import { euros } from "@/lib/montants";
+import { prixTexte } from "@/domaine/catalogue/prix";
 import { Dots } from "../Dots";
 
 /**
  * Méga-menu sobre (FR-004) : moins haut et moins large que la page ; sous-catégories,
- * produits phares, liens rapides. Prix affichés HT.
+ * produits phares, liens rapides. Prix affichés TTC d'abord, HT ensuite (F22).
  */
 export function MegaMenu({
   entree,
@@ -56,7 +56,7 @@ export function MegaMenu({
                       <Link href={p.href} onClick={surNavigation} className="flex min-h-11 flex-col justify-center rounded-sm px-2 py-1 hover:bg-pale">
                         <span className="font-medium text-ink">{p.libelle}</span>
                         <span className="text-small text-muted">
-                          {p.sousTitre} · à partir de {euros(p.prixHt)} HT
+                          {p.sousTitre} · {prixTexte({ ht: p.prixHt, tauxTva: p.tauxTva }, { aPartirDe: true }).replace(/^À/, "à")}
                         </span>
                       </Link>
                     </li>

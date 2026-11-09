@@ -7,6 +7,8 @@
 **Status**: Draft
 
 **Input**: User description: "F21 — Référencement naturel (SEO) d'explocardio.fr, sans publicité
+
+> **Note F22 (2026-11-09)** : depuis la constitution 2.3.0, les prix sont affichés TTC en premier, avec le HT juste en dessous. Dans cette spec, les prix HT déclarés aux moteurs (déjà alignés sur le TTC, commit 457c564) sont remplacés par [F22 — Affichage des prix TTC](../022-affichage-ttc/spec.md).
 payante. Lot 1 avant l'ouverture (indexation de la page d'attente, Search Console, titres et
 descriptions, plan du site, canoniques, données structurées, aperçus de partage, textes
 alternatifs, performance mobile, tests de non-régression) ; lot 2 (mots-clés, textes des

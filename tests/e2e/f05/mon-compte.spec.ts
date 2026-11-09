@@ -24,7 +24,7 @@ test("location commandée puis en cours : informations et actions selon l'état"
   carte = page.getByRole("listitem", { name: `Location ${ref}` });
   await expect(carte).toContainText("En cours");
   await expect(carte).toContainText("Numéro de série");
-  await expect(carte).toContainText(/Prochaine échéance.*HT.*TTC/);
+  await expect(carte).toContainText(/Prochaine échéance.*TTC.*HT/);
   await expect(carte).toContainText(/Facture FICT\//);
   await expect(carte.getByRole("link", { name: /Résilier la location/ })).toBeVisible();
   await expect(carte.getByRole("button", { name: /Passer à l’achat/ })).toBeVisible();

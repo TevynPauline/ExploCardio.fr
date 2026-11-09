@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { libelleJour } from "@/domaine/location/calendrier";
 import { offresDepannage } from "@/domaine/location/offre";
-import { euros } from "@/lib/montants";
+import { Prix } from "@/ui/catalogue/Prix";
 import { AppelContact } from "@/ui/AppelContact";
 import { PagePresentation } from "@/ui/PagePresentation";
 
@@ -48,13 +48,11 @@ export default async function MiseADisposition() {
                   <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1">
                     <dt>Premier mois</dt>
                     <dd className="text-right">
-                      <span className="font-semibold text-ink">{euros(o.premierMoisHt)} HT</span>
-                      <span className="block text-small text-muted">{euros(o.premierMoisTtc)} TTC</span>
+                      <Prix ht={o.premierMoisHt} ttc={o.premierMoisTtc} />
                     </dd>
                     <dt>Mois suivants</dt>
                     <dd className="text-right">
-                      <span className="font-semibold text-ink">{euros(o.moisSuivantsHt)} HT</span>
-                      <span className="block text-small text-muted">{euros(o.moisSuivantsTtc)} TTC</span>
+                      <Prix ht={o.moisSuivantsHt} ttc={o.moisSuivantsTtc} periode="/ mois" />
                     </dd>
                   </dl>
                   {o.contenuPack.length ? (

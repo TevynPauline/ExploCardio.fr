@@ -176,6 +176,8 @@ export type LigneCommande = {
   quantite: number;
   prixUnitaireHt: Centimes;
   remiseHt: Centimes;
+  /** Taux de TVA de la ligne, en % (F22 : montants TTC d'abord). */
+  tauxTva: number;
 };
 
 export type ResumeCommande = MarqueFictive & {

@@ -4,7 +4,7 @@ import { actionLivraison } from "@/actions/commande";
 import { datesMiseADisposition, devisCommande, lignesDe } from "@/domaine/commande/tunnel";
 import { estZoneEloignee, libelleJour } from "@/domaine/location/calendrier";
 import { lireReglesLivraison } from "@/domaine/location/offre";
-import { euros } from "@/lib/montants";
+import { prixTexte, TVA_FRAIS } from "@/domaine/catalogue/prix";
 import { Kicker, Retour } from "@/ui";
 import { Etapes } from "@/ui/commande/Etapes";
 import { RefusTunnel } from "@/ui/commande/RefusTunnel";
@@ -49,7 +49,7 @@ export default async function Livraison({ searchParams }: { searchParams: Promis
                 <span className="flex flex-col">
                   <span className="font-semibold text-ink">{m.libelle}</span>
                   <span>
-                    {m.francoAtteint ? "Offerte" : `${euros(m.forfaitHt)} HT`} · livraison estimée sous {m.delaiJours} jour{m.delaiJours > 1 ? "s" : ""} ouvré{m.delaiJours > 1 ? "s" : ""}
+                    {m.francoAtteint ? "Offerte" : prixTexte({ ht: m.forfaitHt, tauxTva: TVA_FRAIS })} · livraison estimée sous {m.delaiJours} jour{m.delaiJours > 1 ? "s" : ""} ouvré{m.delaiJours > 1 ? "s" : ""}
                   </span>
                   {m.motif ? <span className="text-small text-muted">{m.motif}</span> : null}
                 </span>
@@ -57,11 +57,11 @@ export default async function Livraison({ searchParams }: { searchParams: Promis
             ))}
             {devis.achat?.fraisSpecifiquesHt ? (
               <p className="ec-box--info p-3 text-small">
-                Livraison et installation des équipements volumineux : {euros(devis.achat.fraisSpecifiquesHt)} HT, en plus du mode choisi.
+                Livraison et installation des équipements volumineux : {prixTexte({ ht: devis.achat.fraisSpecifiquesHt, tauxTva: TVA_FRAIS })}, en plus du mode choisi.
               </p>
             ) : null}
             {devis.seuilFrancoHt > 0 && !devis.modesLivraison.some((m) => m.francoAtteint) ? (
-              <p className="text-small text-muted">Livraison standard offerte dès {euros(devis.seuilFrancoHt)} HT d’achats.</p>
+              <p className="text-small text-muted">Livraison standard offerte dès {prixTexte({ ht: devis.seuilFrancoHt, tauxTva: TVA_FRAIS })} d’achats.</p>
             ) : null}
           </fieldset>
         ) : null}

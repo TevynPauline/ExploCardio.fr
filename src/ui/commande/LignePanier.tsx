@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { actionModifierLigne, actionSupprimerLigne } from "@/actions/panier";
 import { prixLigne, type Bareme } from "@/domaine/commande/prix-ligne";
+import { prixTexte, prixTtc } from "@/domaine/catalogue/prix";
 import { euros } from "@/lib/montants";
+import { Prix } from "../catalogue/Prix";
 import { ChampQuantite } from "../ChampQuantite";
 import { FenetreConfirmation } from "../FenetreConfirmation";
 import { signalerRetrait } from "./AnnonceRetrait";
@@ -19,6 +21,8 @@ type Props = {
   quantite: number;
   prixUnitaireHt: number | null;
   totalHt: number | null;
+  /** Taux de TVA de l'article (F22 : montants TTC d'abord). */
+  tauxTva: number;
   remiseHt: number;
   promotion: string | null;
   prixAChange: boolean;
@@ -133,7 +137,7 @@ export function LignePanier(p: Props) {
         {p.obligatoire ? <p className="text-small font-medium text-ink">Kit obligatoire pour votre première mise à disposition de ce type d’appareil : vous le conservez.</p> : null}
         {p.prixUnitaireHt !== null ? (
           <p className="text-small text-muted">
-            {euros(p.prixUnitaireHt)} HT {p.formule === "mise_a_disposition" ? "le premier mois" : "l’unité"}
+            {prixTexte({ ht: p.prixUnitaireHt, tauxTva: p.tauxTva }, { periode: p.formule === "mise_a_disposition" ? "le premier mois" : "l’unité" })}
             {p.promotion ? ` · ${p.promotion}` : ""}
           </p>
         ) : null}
@@ -142,7 +146,7 @@ export function LignePanier(p: Props) {
         ) : null}
         {p.prixAChange && p.prixUnitaireHt !== null ? (
           <p className="text-small font-medium text-ink">
-            Le prix a changé depuis votre ajout : {euros(p.ancienPrixHt)} HT → {euros(p.prixUnitaireHt)} HT.
+            Le prix a changé depuis votre ajout : {euros(prixTtc(p.ancienPrixHt, p.tauxTva))} TTC → {prixTexte({ ht: p.prixUnitaireHt, tauxTva: p.tauxTva })}.
           </p>
         ) : null}
         {p.indisponible ? (
@@ -192,9 +196,9 @@ export function LignePanier(p: Props) {
           onFermer={() => setConfirmation(false)}
         />
         {totalAffiche !== null ? (
-          <p data-total-ligne className="min-w-28 text-right font-semibold text-ink">
-            {euros(totalAffiche)} HT{p.formule === "mise_a_disposition" ? " / 1er mois" : ""}
-          </p>
+          <div data-total-ligne className="min-w-28 text-right">
+            <Prix ht={totalAffiche} tauxTva={p.tauxTva} periode={p.formule === "mise_a_disposition" ? "/ 1er mois" : undefined} />
+          </div>
         ) : null}
       </div>
     </li>

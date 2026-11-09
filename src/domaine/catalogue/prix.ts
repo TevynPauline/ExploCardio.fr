@@ -1,4 +1,5 @@
 import type { BaremeFinancement, MensualiteForcee, Palier } from "@/connecteurs/odoo/interfaces";
+import { euros } from "@/lib/montants";
 
 // Règles de prix du catalogue (F03). Les prix, paliers, barèmes et montants forcés viennent
 // d'Odoo (principe VI) ; le site ne fait qu'appliquer leurs règles d'affichage. Centimes HT.
@@ -47,3 +48,31 @@ export function prixPourQuantite(
     palier,
   };
 }
+
+// F22 — Affichage des prix (constitution 2.3.0, principe II) : TTC en caractères principaux,
+// HT juste en dessous. Les montants restent tenus en HT ; le TTC est dérivé du taux de
+// l'article, ou repris tel quel quand il a déjà été calculé (totaux, commandes, factures).
+
+/** Montant à afficher : HT et taux, ou HT et TTC déjà calculés. */
+export type MontantAffichable = { ht: number; tauxTva: number; ttc?: undefined } | { ht: number; ttc: number; tauxTva?: undefined };
+
+/** Les deux montants à afficher, TTC d'abord (F22, FR-002). */
+export function montantsAffiches(m: MontantAffichable): { ttc: number; ht: number } {
+  return { ttc: m.ttc ?? prixTtc(m.ht, m.tauxTva!), ht: m.ht };
+}
+
+export type OptionsPrixTexte = { aPartirDe?: boolean; periode?: string };
+
+/**
+ * Prix en une ligne de texte (emails, messages) : « 2 388,00 € TTC (soit 1 990,00 € HT) » ;
+ * la période suit chacun des deux montants ; « Offert » pour un montant nul (F22, FR-014).
+ */
+export function prixTexte(m: MontantAffichable, { aPartirDe = false, periode }: OptionsPrixTexte = {}): string {
+  const { ttc, ht } = montantsAffiches(m);
+  if (ttc === 0 && ht === 0) return "Offert";
+  const p = periode ? ` ${periode}` : "";
+  return `${aPartirDe ? "À partir de " : ""}${euros(ttc)} TTC${p} (soit ${euros(ht)} HT${p})`;
+}
+
+/** Taux de TVA des frais de port, pour l'affichage TTC du port et du franco (F22, R4). */
+export const TVA_FRAIS = 20;

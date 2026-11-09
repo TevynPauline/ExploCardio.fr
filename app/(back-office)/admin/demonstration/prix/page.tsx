@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ecranDemonstration } from "@/connecteurs/demonstration";
-import { saisieDepuisCentimes } from "@/lib/montants";
+import { prixTtc } from "@/domaine/catalogue/prix";
+import { euros, saisieDepuisCentimes } from "@/lib/montants";
 import { Button, Kicker, Retour } from "@/ui";
 import { modifierOffreMad, modifierPrix } from "../actions";
 
@@ -15,7 +16,7 @@ export default async function Prix({ searchParams }: { searchParams: Promise<{ o
     <div className="flex flex-col gap-6">
       <Kicker>Démonstration</Kicker>
       <h1 className="text-h2 font-light">Prix</h1>
-      <p className="text-muted">Prix HT inventés. Une modification est visible sur le site dans les secondes qui suivent.</p>
+      <p className="text-muted">Prix HT inventés, saisis en HT ; le site les affiche en TTC d’abord. Une modification est visible sur le site dans les secondes qui suivent.</p>
       <Retour {...resultat} />
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-left">
@@ -39,9 +40,11 @@ export default async function Prix({ searchParams }: { searchParams: Promise<{ o
                     <form action={modifierPrix} className="flex items-center gap-2">
                       <input type="hidden" name="defaultCode" value={v.defaultCode} />
                       <label className="sr-only" htmlFor={`prix-${v.defaultCode}`}>Prix HT de {libelle}</label>
-                      <input id={`prix-${v.defaultCode}`} name="prix" inputMode="decimal" defaultValue={saisieDepuisCentimes(v.prixHtCentimes)} className={champ} />
+                      <input id={`prix-${v.defaultCode}`} name="prix" inputMode="decimal" defaultValue={saisieDepuisCentimes(v.prixHtCentimes)} aria-describedby={`ttc-${v.defaultCode}`} className={champ} />
                       <Button type="submit" variante="secondaire" aria-label={`Enregistrer le prix de ${libelle}`}>Enregistrer</Button>
                     </form>
+                    {/* F22 (FR-017) : l'équipe saisit en HT ; le site affiche le TTC en premier. */}
+                    <p id={`ttc-${v.defaultCode}`} className="mt-1 text-small text-muted">soit {euros(prixTtc(v.prixHtCentimes, Number(v.tauxTva)))} TTC sur le site</p>
                   </td>
                   <td className="py-2">
                     {v.offreMad ? (
@@ -52,6 +55,9 @@ export default async function Prix({ searchParams }: { searchParams: Promise<{ o
                         <label className="text-small" htmlFor={`ms-${v.defaultCode}`}>mois suivants</label>
                         <input id={`ms-${v.defaultCode}`} name="moisSuivants" inputMode="decimal" defaultValue={saisieDepuisCentimes(v.offreMad.moisSuivantsCentimes)} className={champ} />
                         <Button type="submit" variante="secondaire" aria-label={`Enregistrer la mise à disposition de ${libelle}`}>Enregistrer</Button>
+                        <p className="w-full text-small text-muted">
+                          soit {euros(prixTtc(v.offreMad.premierMoisCentimes, Number(v.tauxTva)))} TTC le 1er mois, {euros(prixTtc(v.offreMad.moisSuivantsCentimes, Number(v.tauxTva)))} TTC les mois suivants sur le site
+                        </p>
                       </form>
                     ) : (
                       <span className="text-small text-muted">—</span>

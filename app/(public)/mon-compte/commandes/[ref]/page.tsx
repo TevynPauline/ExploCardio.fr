@@ -3,7 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { commandeDetaillee, facturesDuCompte, LIBELLES_STATUT } from "@/domaine/commande/mon-compte";
 import { compteCourant } from "@/domaine/comptes/session";
+import { prixTexte, TVA_FRAIS } from "@/domaine/catalogue/prix";
 import { euros } from "@/lib/montants";
+import { Prix } from "@/ui/catalogue/Prix";
 import { Card, Kicker } from "@/ui";
 import { NavMonCompte } from "@/ui/comptes/NavMonCompte";
 
@@ -46,12 +48,12 @@ export default async function DetailCommande({ params }: { params: Promise<{ ref
           {c.lignes.map((l, i) => (
             <li key={i} className="flex flex-wrap justify-between gap-x-4 border-b border-line py-2">
               <span>{l.quantite} × {l.libelle}</span>
-              <span>{l.prixUnitaireHt === 0 ? "Offert" : `${euros(l.prixUnitaireHt * l.quantite - l.remiseHt)} HT`}</span>
+              {l.prixUnitaireHt === 0 ? <span>Offert</span> : <Prix ht={l.prixUnitaireHt * l.quantite - l.remiseHt} tauxTva={l.tauxTva} className="text-right" />}
             </li>
           ))}
         </ul>
         <p className="text-right">
-          Livraison : {euros(c.fraisPortHt)} HT · Total : <strong>{euros(c.montantHt)} HT</strong> · TVA {euros(c.tva)} · <strong>{euros(c.montantTtc)} TTC</strong>
+          Livraison : {prixTexte({ ht: c.fraisPortHt, tauxTva: TVA_FRAIS })} · Total HT {euros(c.montantHt)} · TVA {euros(c.tva)} · <strong className="text-h3">Total TTC {euros(c.montantTtc)}</strong>
         </p>
       </section>
       {liees.length ? (

@@ -8,6 +8,8 @@
 
 **Input**: User description: "F10 — Emailing automatisé : emails transactionnels toujours envoyés, scénarios automatisés paramétrables et désactivables par le client (réapprovisionnement, bons d'achat et droits d'assistance, fin de garantie, panier abandonné, promotions, factures impayées), respect du consentement, centre de préférences, modèles à la charte, outil d'envoi dédié. Objectif : faire revenir le client au bon moment et l'informer sans effort manuel."
 
+> **Note F22 (2026-11-09)** : depuis la constitution 2.3.0, les prix sont affichés TTC en premier, avec le HT juste en dessous. Dans cette spec, les montants des emails donnés HT en premier sont remplacés par [F22 — Affichage des prix TTC](../022-affichage-ttc/spec.md).
+
 ## Contexte et objectif
 
 F10 rassemble tous les emails que le site envoie. Il poursuit deux objectifs :

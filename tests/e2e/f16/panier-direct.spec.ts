@@ -6,7 +6,8 @@ import { ELECTRODES, ajouterDepuisFiche } from "../f04/outils";
 
 test.describe.configure({ timeout: 180_000 });
 
-const montant = (texte: string) => Number(texte.replace(/[^\d,]/g, "").replace(",", "."));
+// F22 : le total de ligne montre « … € TTC », puis « soit … € HT » ; on compare le TTC.
+const montant = (texte: string) => Number((texte.split("TTC")[0] ?? "").replace(/[^\d,]/g, "").replace(",", "."));
 
 test("le prix de la ligne suit la quantité aussitôt ; la quantité est enregistrée", async ({ page }) => {
   await ajouterDepuisFiche(page, ELECTRODES);

@@ -33,7 +33,7 @@ export async function alerterEquipe(objet: string, texte: string, cle: string) {
 /** Email de confirmation d'une commande (carte ou virement), à partir du devis enregistré. */
 export async function envoyerConfirmation(commande: CommandeSite, options: { virement?: { rib: Rib; echeance: Date } } = {}) {
   const devis = commande.devis as Devis | null;
-  const lignes = (devis?.lignes ?? []).filter((l) => l.formule === "achat").map((l) => ({ libelle: l.libelle, quantite: l.quantite, totalHt: l.totalHt }));
+  const lignes = (devis?.lignes ?? []).filter((l) => l.formule === "achat").map((l) => ({ libelle: l.libelle, quantite: l.quantite, totalHt: l.totalHt, tauxTva: l.tauxTva }));
   const email = await emailsCommandes.confirmation({
     ref: commande.odooCommandeRef ?? commande.ref,
     lignes,

@@ -15,7 +15,9 @@ test("deux blocs avec leurs totaux ; quantité et suppression mettent à jour le
   const unique = page.locator("section", { has: page.getByRole("heading", { name: "Paiement unique" }) });
   const mensuel = page.locator("section", { has: page.getByRole("heading", { name: "Abonnement mensuel" }) });
   for (const libelle of ["Sous-total HT", "Livraison HT", "Total HT", "TVA", "Total TTC"]) await expect(unique).toContainText(libelle);
-  for (const libelle of ["Premier mois HT", "Premier mois TTC", "Mois suivants HT", "Mois suivants TTC"]) await expect(mensuel).toContainText(libelle);
+  // F22 : chaque montant mensuel en TTC d'abord, puis HT.
+  await expect(mensuel).toContainText(/Premier mois.+ TTC soit .+ HT/);
+  await expect(mensuel).toContainText(/Mois suivants.+ TTC \/ mois soit .+ HT \/ mois/);
   await expect(page.getByRole("link", { name: /Panier, \d+ article/ })).toBeVisible();
 
   const totalAvant = await unique.getByText("Total TTC").locator("..").innerText();

@@ -29,8 +29,8 @@ test("mise à disposition par SEPA : récapitulatif mensuel, abonnement et maté
   await jusquAuRecapitulatif(page, { livraison: "aucune", abonnement: "sepa" });
   await verifierAccessibilite(page);
   const main = page.locator("main");
-  await expect(main).toContainText("Premier mois TTC");
-  await expect(main).toContainText("Mois suivants TTC");
+  await expect(main).toContainText(/Premier mois.+ TTC soit .+ HT/); // F22 : TTC d'abord
+  await expect(main).toContainText(/Mois suivants.+ TTC \/ mois soit .+ HT \/ mois/);
   await expect(main).toContainText(/prélèvement le \d+ de chaque mois/);
   await expect(main).toContainText("Sans engagement");
   await accepterConditions(page);

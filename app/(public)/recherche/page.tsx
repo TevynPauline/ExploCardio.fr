@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { rechercher } from "@/domaine/recherche/index";
 import { FAMILLES } from "@/domaine/familles";
-import { euros } from "@/lib/montants";
+import { Prix } from "@/ui/catalogue/Prix";
 import { Card, Kicker } from "@/ui";
 import { FilAriane } from "@/ui/FilAriane";
 
@@ -53,7 +53,7 @@ export default async function PageRecherche({ searchParams }: { searchParams: Pr
                     <span className="block font-medium text-ink">{s.titre}</span>
                     {s.sousTitre ? <span className="block text-small text-muted">{s.sousTitre}</span> : null}
                   </span>
-                  {s.prixHt !== null ? <span className="shrink-0 text-ink">{euros(s.prixHt)} HT</span> : null}
+                  {s.prixHt !== null ? <Prix ht={s.prixHt} tauxTva={s.tauxTva} className="shrink-0 text-right" /> : null}
                 </Link>
               </li>
             ))}

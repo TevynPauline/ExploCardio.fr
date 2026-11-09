@@ -79,6 +79,11 @@ Le contraste vient des graisses (titres Light, sous-titres Semibold) et non des 
 - **Liens :** couleur deep-strong, soulignés au survol.
 - **Formulaires :** champs blancs, bordure `--ec-line`, rayon 6 px. Au focus, bordure et halo deep-strong (2 px). Libellés au-dessus du champ, en 14 px et 500.
 - **Fiche produit :** photo sur fond ivoire, marque en kicker, nom en H3, prix en 600 ink. Les options d'acquisition (Achat, Financement, Mise à disposition) s'affichent en onglets ou pilules.
+- **Prix (F22, constitution 2.3.0) :** le montant **TTC** en premier, en Semibold (600) ink, en H2 sur la fiche ;
+  le montant **HT juste en dessous**, en petit texte atténué (`text-small`, `text-muted`), précédé de « soit ».
+  La période suit les deux montants (« 60,00 € TTC / mois », « soit 50,00 € HT / mois »). Dans le panier,
+  le détail HT et la TVA restent visibles et « Total TTC à payer » est mis en avant en H2. Au back-office, les
+  prix restent en HT, avec le TTC en aide. Un seul composant : `Prix` (`src/ui/catalogue/Prix.tsx`).
 - **Footer :** fond `--ec-dark`, logo blanc, liens blancs à 80 % d'opacité, accent euca.
 - **Rayons :** 6 px pour les champs, 12 px pour les cartes, 20 px pour les grands encarts et pilules boutons.
 - **Grille :** conteneur de 1180 px, 12 colonnes, gouttière de 24 px. Marges latérales de 16 px en mobile. Rythme vertical de 64 à 96 px entre sections.

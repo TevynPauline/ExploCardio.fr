@@ -17,6 +17,7 @@ export type Suggestion = {
   sousTitre: string;
   destination: string;
   prixHt: number | null;
+  tauxTva: number;
   correspondanceExacte: boolean;
 };
 
@@ -73,6 +74,7 @@ export function rechercherDans(
         sousTitre: e.sousTitre,
         destination: e.destination,
         prixHt: e.prixHt,
+        tauxTva: e.tauxTva,
         correspondanceExacte: s >= 1000,
       })),
   })).filter((g) => g.elements.length > 0);

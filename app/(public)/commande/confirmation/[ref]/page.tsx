@@ -33,7 +33,7 @@ export default async function Confirmation({ params }: { params: Promise<{ ref: 
       {virement && rib ? (
         <Card className="flex max-w-2xl flex-col gap-2">
           <h2 className="text-h3 font-semibold">Coordonnées du virement</h2>
-          <p>Montant : <strong>{euros(devis?.achat?.totalTtc ?? 0)} TTC</strong></p>
+          <p>Montant : <strong>{euros(devis?.achat?.totalTtc ?? 0)} TTC</strong> (soit {euros(devis?.achat?.totalHt ?? 0)} HT)</p>
           <p>Référence à rappeler : <strong>{c.odooCommandeRef ?? c.ref}</strong></p>
           {c.echeanceVirement ? <p>À régler avant le {c.echeanceVirement.toLocaleDateString("fr-FR")}.</p> : null}
           <p>Titulaire : {rib.titulaire}</p>

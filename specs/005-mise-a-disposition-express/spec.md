@@ -8,6 +8,8 @@
 
 **Input**: User description: "F05 — Mise à disposition (MAD) Express sans engagement : pack mensuel (enregistreur, accès logiciel Cloud, formation), renouvelable mois par mois, kit accessoires acheté une seule fois, livraison possible le lendemain, suivi et résiliation dans Mon compte, gestion du parc de location. Objectif : dépanner n'importe quel médecin (client ou non) du jour au lendemain, et permettre d'utiliser un équipement sans l'acheter."
 
+> **Note F22 (2026-11-09)** : depuis la constitution 2.3.0, les prix sont affichés TTC en premier, avec le HT juste en dessous. Dans cette spec, les tarifs mensuels affichés HT en premier sont remplacés par [F22 — Affichage des prix TTC](../022-affichage-ttc/spec.md).
+
 ## Contexte et objectif
 
 La mise à disposition (MAD) permet à un médecin d'utiliser un équipement sans l'acheter : un

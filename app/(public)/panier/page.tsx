@@ -6,6 +6,7 @@ import { cheminsDesFiches, lireCatalogue } from "@/domaine/catalogue/lecture";
 import type { Bareme } from "@/domaine/commande/prix-ligne";
 import { COOKIE_PANIER, panierPour } from "@/domaine/catalogue/panier";
 import { panierDetaille } from "@/domaine/commande/devis";
+import { prixTexte, TVA_FRAIS } from "@/domaine/catalogue/prix";
 import { codesFinancables } from "@/domaine/financement/demande";
 import { kitsDejaPossedes, kitsObligatoires } from "@/domaine/location/kit";
 import { cagnotteDuCompte, gainsDuPanier } from "@/domaine/fidelite/gains";
@@ -88,6 +89,7 @@ export default async function Panier({ searchParams }: { searchParams: Promise<{
       quantite={l.quantite}
       prixUnitaireHt={l.prixUnitaireHt}
       totalHt={l.totalHt}
+      tauxTva={l.tauxTva}
       remiseHt={l.remiseHt}
       promotion={l.promotion}
       prixAChange={l.prixAChange}
@@ -149,7 +151,7 @@ export default async function Panier({ searchParams }: { searchParams: Promise<{
                 <TotauxEnDirect>
                 <TotauxAchat achat={devis.achat} regleCumul={devis.regleCumul} />
                 {devis.achat.fraisPortHt > 0 && devis.seuilFrancoHt > 0 ? (
-                  <p className="mt-2 text-small text-muted">Livraison standard offerte dès {(devis.seuilFrancoHt / 100).toLocaleString("fr-FR")} € HT d’achats.</p>
+                  <p className="mt-2 text-small text-muted">Livraison standard offerte dès {prixTexte({ ht: devis.seuilFrancoHt, tauxTva: TVA_FRAIS })} d’achats.</p>
                 ) : null}
                 </TotauxEnDirect>
               </Card>

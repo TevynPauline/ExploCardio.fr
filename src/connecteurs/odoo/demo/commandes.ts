@@ -296,6 +296,7 @@ export const commandesDemo: CommandesOdoo = {
         quantite: l.quantite,
         prixUnitaireHt: l.prixUnitaireHtCentimes,
         remiseHt: l.remiseCentimes,
+        tauxTva: Number(l.variante.tauxTva),
       })),
     };
   },

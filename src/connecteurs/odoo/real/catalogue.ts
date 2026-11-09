@@ -154,6 +154,7 @@ export function creerCatalogueReel(client: ClientOdoo, instantane: () => Promise
             categorie: m.categorie,
             configuration: v.configuration,
             prixHt: v.prixHt,
+            tauxTva: m.tauxTva,
             disponibilite: v.achat,
             estFictif: false,
           })),

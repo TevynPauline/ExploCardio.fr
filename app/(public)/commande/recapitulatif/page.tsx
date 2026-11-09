@@ -8,7 +8,9 @@ import { adressesDe, devisCommande, lignesDe } from "@/domaine/commande/tunnel";
 import { libelleJour } from "@/domaine/location/calendrier";
 import { lireParametre } from "@/lib/parametres";
 import { dbSite } from "@/lib/db/site";
+import { prixTexte } from "@/domaine/catalogue/prix";
 import { euros } from "@/lib/montants";
+import { Prix } from "@/ui/catalogue/Prix";
 import { modeDuSite } from "@/lib/config";
 import { Card, Kicker, Retour } from "@/ui";
 import { Etapes } from "@/ui/commande/Etapes";
@@ -111,7 +113,7 @@ export default async function Recapitulatif({ searchParams }: { searchParams: Pr
                 {l.quantite} × {l.libelle}
                 {l.formule === "mise_a_disposition" ? " — mise à disposition mensuelle" : ""}
               </span>
-              <span className="font-semibold text-ink">{l.offerte ? "Offert (0,00 €)" : `${euros(l.totalHt)} HT`}</span>
+              {l.offerte ? <span className="font-semibold text-ink">Offert (0,00 €)</span> : <Prix ht={l.totalHt} tauxTva={l.tauxTva} className="text-right" />}
             </li>
           ))}
         </ul>
@@ -165,7 +167,7 @@ export default async function Recapitulatif({ searchParams }: { searchParams: Pr
             <dt className="text-muted">Engagement</dt>
             <dd>Aucun : résiliable à tout moment depuis votre compte, fin au terme du mois payé</dd>
             <dt className="text-muted">Valeur de remplacement</dt>
-            <dd>{euros(l.valeurRemplacementHt)} HT, facturée seulement en cas de perte ou de non-retour (aucun dépôt de garantie)</dd>
+            <dd>{prixTexte({ ht: l.valeurRemplacementHt, tauxTva: 20 /* taux des appareils, seul en usage (F22) */ })}, facturée seulement en cas de perte ou de non-retour (aucun dépôt de garantie)</dd>
           </dl>
         </section>
       ))}

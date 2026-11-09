@@ -32,7 +32,7 @@ afterAll(async () => {
 });
 
 describe("panier en attente", () => {
-  it("24 h sans modification : un rappel avec les articles, leur prix HT et leur disponibilité", async () => {
+  it("24 h sans modification : un rappel avec les articles, leur prix TTC puis HT et leur disponibilité", async () => {
     const c = await compteAvecPanier();
     await vieillir(c.compteId, 25);
     await programmerPaniers(T, { compteIds: [c.compteId] });
@@ -40,7 +40,8 @@ describe("panier en attente", () => {
     expect(e).toMatchObject({ famille: "service", etat: "envoye" });
     const m = await dbSite().messageDemonstration.findFirstOrThrow({ where: { cle: e!.cle } });
     expect(m.objet).toBe("Votre panier vous attend");
-    expect(m.texte).toMatch(/2 × .*HT l’unité \(disponible|expédié sous/);
+    // F22 : TTC d'abord, HT ensuite.
+    expect(m.texte).toMatch(/2 × .*TTC l’unité \(soit .* HT l’unité\) \((disponible|expédié sous)/);
     expect(m.texte).toMatch(/Voir mon panier/);
     expect(m.texte).toMatch(/Gérer mes préférences/);
   });

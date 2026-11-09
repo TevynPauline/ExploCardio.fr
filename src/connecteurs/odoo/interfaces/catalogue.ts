@@ -109,6 +109,8 @@ export type ReferenceArticle = MarqueFictive & {
   categorie: string;
   configuration: string | null;
   prixHt: Centimes;
+  /** Taux de TVA de la variante, en % (F22 : prix affichés TTC d'abord). */
+  tauxTva: number;
   disponibilite: EtatDisponibilite;
 };
 

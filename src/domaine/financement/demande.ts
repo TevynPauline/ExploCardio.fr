@@ -38,6 +38,8 @@ export type EquipementFinance = {
   defaultCode: string;
   nom: string;
   quantite: number;
+  /** Taux de TVA de l'équipement (F22 : mensualités TTC d'abord). */
+  tauxTva: number;
   /** Mensualité indicative HT d'un exemplaire, par durée du barème. */
   mensualites: { dureeMois: number; montantHt: number }[];
 };
@@ -110,6 +112,7 @@ async function equipementsDe(demandes: { defaultCode: string; quantite: number }
       defaultCode: d.defaultCode,
       nom: variante.configuration ? `${article.nom} (${variante.configuration})` : article.nom,
       quantite: d.quantite,
+      tauxTva: variante.tauxTva,
       mensualites: m.map(({ dureeMois, montantHt }) => ({ dureeMois, montantHt })),
     });
     const ici = m.map((x) => x.dureeMois);

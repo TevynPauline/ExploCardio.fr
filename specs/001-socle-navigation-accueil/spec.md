@@ -8,6 +8,8 @@
 
 **Input**: User description: "F01 — Socle, navigation et page d'accueil : en-tête commun (bandeau promotionnel, barre de navigation fixe, méga-menus), recherche instantanée, page d'accueil en 8 sections, pied de page, page Qui sommes-nous / Contact, bandeau cookies. Objectif : qu'un médecin voie en un coup d'œil tous les produits ET tous les services, et n'en manque aucun."
 
+> **Note F22 (2026-11-09)** : depuis la constitution 2.3.0, les prix sont affichés TTC en premier, avec le HT juste en dessous. Dans cette spec, les prix affichés HT sont remplacés par [F22 — Affichage des prix TTC](../022-affichage-ttc/spec.md).
+
 ## Contexte et objectif
 
 ExploCardio.fr est le site e-commerce et de services du spécialiste des explorations

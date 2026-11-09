@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { facturesDuCompte } from "@/domaine/commande/mon-compte";
 import { compteCourant } from "@/domaine/comptes/session";
-import { euros } from "@/lib/montants";
+import { Prix } from "@/ui/catalogue/Prix";
 import { Card, Kicker } from "@/ui";
 import { NavMonCompte } from "@/ui/comptes/NavMonCompte";
 
@@ -35,7 +35,7 @@ export default async function Factures() {
                 <tr key={f.numero} className="border-b border-line">
                   <th scope="row" className="py-2 pr-4 font-normal">{f.type === "avoir" ? "Avoir" : "Facture"} {f.numero}</th>
                   <td className="py-2 pr-4">{f.date.toLocaleDateString("fr-FR")}</td>
-                  <td className="py-2 pr-4">{euros(f.montantHt)} HT · {euros(f.montantTtc)} TTC</td>
+                  <td className="py-2 pr-4"><Prix ht={f.montantHt} ttc={f.montantTtc} /></td>
                   <td className="py-2">
                     <a href={`/mon-compte/factures/${encodeURIComponent(f.numero)}/pdf`} className="inline-flex min-h-11 items-center" aria-label={`Télécharger ${f.type === "avoir" ? "l'avoir" : "la facture"} ${f.numero}`}>
                       Télécharger

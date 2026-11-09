@@ -4,7 +4,7 @@ import { actionCommanderDevis } from "@/actions/devis-panier";
 import { devisDuCompte, REFUS_COMMANDE_DEVIS } from "@/domaine/commande/devis-client";
 import { LIEN_CONTACT_HORS_METROPOLE } from "@/domaine/comptes/adresses";
 import { compteCourant } from "@/domaine/comptes/session";
-import { euros } from "@/lib/montants";
+import { Prix } from "@/ui/catalogue/Prix";
 import { Card, Kicker } from "@/ui";
 import { NavMonCompte } from "@/ui/comptes/NavMonCompte";
 
@@ -57,7 +57,7 @@ export default async function MesDevis({ searchParams }: { searchParams: Promise
                 <tr key={d.ref} className="border-b border-line">
                   <th scope="row" className="py-2 pr-4 font-normal">Devis {d.ref}</th>
                   <td className="py-2 pr-4">{d.creeLe.toLocaleDateString("fr-FR", { timeZone: "Europe/Paris" })}</td>
-                  <td className="py-2 pr-4">{euros(d.totalHt)} HT · {euros(d.totalTtc)} TTC</td>
+                  <td className="py-2 pr-4"><Prix ht={d.totalHt} ttc={d.totalTtc} /></td>
                   <td className="py-2 pr-4">
                     <span className="ec-badge">{ETATS[d.etat]}</span>
                     <span className="block text-small text-muted">

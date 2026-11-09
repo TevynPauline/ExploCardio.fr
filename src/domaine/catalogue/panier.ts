@@ -21,7 +21,7 @@ export type LigneAAjouter = {
 };
 
 export type ResultatAjout =
-  | { ok: true; prixHt: number; prixAChange: boolean; delaiJours: number | null; kit?: { nom: string; ajoute: boolean; possede: boolean } | null }
+  | { ok: true; prixHt: number; tauxTva: number; prixAChange: boolean; delaiJours: number | null; kit?: { nom: string; ajoute: boolean; possede: boolean } | null }
   | { ok: false; motif: "quantite" | "introuvable" | "formule" | "indisponible" | "service" | "identite"; message: string };
 
 export const QUANTITE_MAX = 999;
@@ -74,12 +74,14 @@ export async function ajouterAuPanier(identite: IdentitePanier, ligne: LigneAAjo
   if (!Number.isInteger(ligne.quantite) || ligne.quantite < 1 || ligne.quantite > QUANTITE_MAX) return refus("quantite");
   if (!identite.compteId && !identite.jeton) return refus("identite");
   let prixHt: number;
+  let tauxTva = 20;
   let delaiJours: number | null = null;
   try {
     const odoo = registre.odoo();
     const article = await odoo.catalogue.lireArticle(ligne.defaultCode);
     const variante = article.variantes.find((v) => v.defaultCode === ligne.defaultCode);
     if (!variante) return refus("introuvable");
+    tauxTva = variante.tauxTva;
     if (ligne.formule === "achat" && !article.formules.includes("achat")) return refus("formule");
     if (ligne.formule === "mise_a_disposition" && (!article.formules.includes("mise_a_disposition") || !variante.offreMiseADisposition)) {
       return refus("formule");
@@ -119,7 +121,7 @@ export async function ajouterAuPanier(identite: IdentitePanier, ligne: LigneAAjo
       if (!estErreurConnecteur(e)) throw e;
     }
   }
-  return { ok: true, prixHt, prixAChange: ligne.prixAffiche !== undefined && ligne.prixAffiche !== prixHt, delaiJours, kit };
+  return { ok: true, prixHt, tauxTva, prixAChange: ligne.prixAffiche !== undefined && ligne.prixAffiche !== prixHt, delaiJours, kit };
 }
 
 export async function lignesPanier(panierId: string): Promise<LignePanier[]> {

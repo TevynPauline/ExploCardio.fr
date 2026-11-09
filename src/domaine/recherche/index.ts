@@ -21,6 +21,7 @@ export type ElementIndex = {
   references: string[];
   destination: string;
   prixHt: number | null;
+  tauxTva: number;
 };
 
 const GROUPE_PAR_TYPE: Record<ReferenceArticle["type"], TypeGroupe> = {
@@ -63,6 +64,7 @@ export function construireElements(references: ReferenceArticle[], chemins: Map<
       // La fiche s'ouvre sur la configuration trouvée (F03, US2-8).
       destination: r.defaultCode === r.referenceArticle ? chemins.get(r.defaultCode)! : `${chemins.get(r.defaultCode)!}?config=${encodeURIComponent(r.defaultCode)}`,
       prixHt: r.prixHt,
+      tauxTva: r.tauxTva,
     };
   });
   const pages: ElementIndex[] = PAGES.map((p) => ({
@@ -76,6 +78,7 @@ export function construireElements(references: ReferenceArticle[], chemins: Map<
     references: [],
     destination: p.destination,
     prixHt: null,
+    tauxTva: 20,
   }));
   // F09 : contenus publiés du centre d'aide (groupes Tutoriels et Questions fréquentes).
   const contenusAide: ElementIndex[] = aide.map((a) => ({
@@ -89,6 +92,7 @@ export function construireElements(references: ReferenceArticle[], chemins: Map<
     references: a.references.map(normaliserReference),
     destination: a.type === "faq" ? `/aide?q=${encodeURIComponent(a.titre)}` : `/aide/${a.slug}`,
     prixHt: null,
+    tauxTva: 20,
   }));
   return [...articles, ...pages, ...contenusAide];
 }

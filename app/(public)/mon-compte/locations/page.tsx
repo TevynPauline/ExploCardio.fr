@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { actionAnnuler, actionPasserAchat, actionProlonger, actionReporter } from "@/actions/locations";
-import { prixTtc } from "@/domaine/catalogue/prix";
+import { prixTexte } from "@/domaine/catalogue/prix";
 import { abonnementsARegler, LIBELLES_LOCATION } from "@/domaine/commande/mon-compte";
 import { compteCourant } from "@/domaine/comptes/session";
 import { datesDeReport, locationsDuCompte, type LocationDuCompte } from "@/domaine/location/gestion";
-import { euros } from "@/lib/montants";
 import { Card, Kicker, Retour } from "@/ui";
 import { NavMonCompte } from "@/ui/comptes/NavMonCompte";
 
@@ -56,7 +55,7 @@ async function Location({ l, compteId }: { l: LocationDuCompte; compteId: string
           <>
             <dt className="text-muted">Prochaine échéance</dt>
             <dd>
-              {date(l.prochaineEcheance)} : {euros(l.montantMensuelHt)} HT ({euros(prixTtc(l.montantMensuelHt, 20))} TTC)
+              {date(l.prochaineEcheance)} : {prixTexte({ ht: l.montantMensuelHt, tauxTva: 20 })}
             </dd>
           </>
         ) : null}

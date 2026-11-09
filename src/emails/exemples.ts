@@ -15,8 +15,8 @@ import type { PiedPreferences } from "./Gabarit";
 const J = (jours: number) => new Date(Date.UTC(2026, 10, 2 + jours, 11));
 const PIED_SERVICE = (raison: string): PiedPreferences => ({ raison, preferences: urlDuSite("/preferences/exemple") });
 const LIGNES = [
-  { libelle: "Électrodes Holter (carton de 500)", quantite: 2, totalHt: 32000 },
-  { libelle: "Carte SD 8 Go", quantite: 1, totalHt: 2500 },
+  { libelle: "Électrodes Holter (carton de 500)", quantite: 2, totalHt: 32000, tauxTva: 20 },
+  { libelle: "Carte SD 8 Go", quantite: 1, totalHt: 2500, tauxTva: 20 },
 ];
 
 export const EXEMPLES: Record<string, () => Promise<EmailRendu>> = {
@@ -39,7 +39,7 @@ export const EXEMPLES: Record<string, () => Promise<EmailRendu>> = {
   cadeau_en_attente: emailsComptes.cadeauEnAttente,
   commande_confirmee: () => emailsCommandes.confirmation({ ref: "FICT-SO-00042", lignes: LIGNES, totalHt: 34500, totalTtc: 41400, virement: null }),
   devis_envoye: () =>
-    emailsCommandes.devisEnvoye({ ref: "FICT-SO-00043", lignes: [{ libelle: "Électrodes Holter (boîte de 500)", quantite: 2, totalHt: 9800 }], totalHt: 11300, totalTtc: 13560, validiteLe: new Date("2026-11-25T12:00:00Z") }),
+    emailsCommandes.devisEnvoye({ ref: "FICT-SO-00043", lignes: [{ libelle: "Électrodes Holter (boîte de 500)", quantite: 2, totalHt: 9800, tauxTva: 20 }], totalHt: 11300, totalTtc: 13560, validiteLe: new Date("2026-11-25T12:00:00Z") }),
   commande_annulee: () => emailsCommandes.annulation({ ref: "FICT-SO-00042", motif: "virement non reçu à l’échéance" }),
   virement_recu: () => emailsCommandes.paiementRecu({ ref: "FICT-SO-00042" }),
   commande_expediee: () => emailsCommandes.expedition({ ref: "FICT-SO-00042", transporteur: "Colissimo", suivi: "FICT-COLIS-0042" }),

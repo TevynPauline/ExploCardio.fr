@@ -51,8 +51,8 @@ test("dépannage commandé : date au plus tôt, récapitulatif, paiement SEPA, l
     await page.getByRole("button", { name: "Continuer" }).click();
     await page.waitForURL(/\/commande\/recapitulatif/);
     await verifierAccessibilite(page);
-    await expect(main).toContainText("Premier mois TTC");
-    await expect(main).toContainText("Mois suivants TTC");
+    await expect(main).toContainText(/Premier mois.+ TTC soit .+ HT/); // F22 : TTC d'abord
+    await expect(main).toContainText(/Mois suivants.+ TTC \/ mois soit .+ HT \/ mois/);
     await expect(main).toContainText("L'enregistreur, prêt à l'emploi");
     await expect(main).toContainText("frais d'envoi et de retour");
     await expect(main).toContainText("Valeur de remplacement");

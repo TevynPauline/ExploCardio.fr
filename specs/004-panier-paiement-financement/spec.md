@@ -8,6 +8,8 @@
 
 **Input**: User description: "F04 — Panier, paiement Stripe et demandes de financement : panier mixte (achats et mises à disposition mensuelles), tunnel de commande en 5 étapes réservé aux clients validés, paiement par carte (dont American Express), virement ou abonnement mensuel, facture automatique, demande de financement longue durée avec suivi, cas d'erreur. Objectif : un passage de commande rapide pour un professionnel, avec trois modes d'acquisition."
 
+> **Note F22 (2026-11-09)** : depuis la constitution 2.3.0, les prix sont affichés TTC en premier, avec le HT juste en dessous. Dans cette spec, FR-002, FR-003 et FR-043 (HT en premier) sont remplacés par [F22 — Affichage des prix TTC](../022-affichage-ttc/spec.md).
+
 ## Contexte et objectif
 
 F04 permet à un professionnel de santé validé de passer commande rapidement sur

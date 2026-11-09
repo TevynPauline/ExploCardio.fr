@@ -130,7 +130,7 @@ export default async function Logiciels({ searchParams }: { searchParams: Promis
               <li key={o.defaultCode} className="ec-card flex flex-col gap-2">
                 <p className="font-semibold">{chemins.get(o.defaultCode) ? <Link href={chemins.get(o.defaultCode)!}>{o.nom}</Link> : o.nom}</p>
                 <p>
-                  <strong>{euros(o.prixHt)} HT par mois</strong> <span className="text-small text-muted">soit {euros(prixTtc(o.prixHt, 20))} TTC, sans engagement</span>
+                  <strong>{euros(prixTtc(o.prixHt, 20))} TTC par mois</strong> <span className="text-small text-muted">soit {euros(o.prixHt)} HT par mois, sans engagement</span>
                 </p>
                 {peutSouscrire ? (
                   <form action={actionSouscrireLogiciel}>

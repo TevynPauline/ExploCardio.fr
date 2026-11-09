@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { actionAjouterAuPanier } from "@/actions/panier";
-import { euros } from "@/lib/montants";
+import { prixTexte } from "@/domaine/catalogue/prix";
 import { cx } from "../cx";
 
 type Props = {
@@ -31,7 +31,7 @@ export function AjoutPanier({ defaultCode, formule = "achat", quantite = 1, prix
       if (!r.ok) return setMessage({ ok: false, texte: r.message });
       window.dispatchEvent(new Event("ec:panier"));
       const morceaux = [`Ajouté au panier${quantite > 1 ? ` (${quantite})` : ""}.`];
-      if (r.prixAChange) morceaux.push(`Le prix a changé : ${euros(r.prixHt)} HT.`);
+      if (r.prixAChange) morceaux.push(`Le prix a changé : ${prixTexte({ ht: r.prixHt, tauxTva: r.tauxTva })}.`);
       if (r.delaiJours) morceaux.push(`Délai : ${r.delaiJours} jours.`);
       if (r.kit?.ajoute) morceaux.push(`Le kit d’accessoires « ${r.kit.nom} », obligatoire à la première location, a été ajouté : vous le conservez.`);
       if (r.kit?.possede) morceaux.push(`Vous possédez déjà le kit d’accessoires « ${r.kit.nom} » : il ne vous est pas facturé.`);

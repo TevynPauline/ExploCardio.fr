@@ -1,10 +1,11 @@
+import { prixTtc } from "@/domaine/catalogue/prix";
 import { euros } from "@/lib/montants";
 import { urlDuSite } from "./charte";
 import { BoutonEmail } from "./Gabarit";
 import { rendreModele, type TextesModele, type TextesRemplis } from "./textes";
 
 // Emails de F05 (contracts/connecteurs.md) : gabarit de la charte, vouvoiement, ton sobre,
-// montants HT puis TTC. Aucune donnée de patient. F10 (D2) : textes modifiables au
+// montants TTC puis HT (F22). Aucune donnée de patient. F10 (D2) : textes modifiables au
 // back-office ; boutons fixes.
 
 export const TEXTES_LOCATIONS = {
@@ -46,7 +47,7 @@ export const TEXTES_LOCATIONS = {
     apercu: "Rappel avant prélèvement",
     blocs: {
       corps:
-        "Bonjour,\n\nLa prochaine échéance de votre location ({{appareil}}) sera prélevée le {{echeance}} : {{montant_ht}} HT, soit {{montant_ttc}} TTC.\n\nSans engagement : vous pouvez résilier avant cette date depuis votre compte.",
+        "Bonjour,\n\nLa prochaine échéance de votre location ({{appareil}}) sera prélevée le {{echeance}} : {{montant_ttc}} TTC, soit {{montant_ht}} HT.\n\nSans engagement : vous pouvez résilier avant cette date depuis votre compte.",
     },
   },
   location_prelevement_echoue: {
@@ -85,7 +86,7 @@ export const TEXTES_LOCATIONS = {
     apercu: "Rappel de retour",
     blocs: {
       corps:
-        "Bonjour,\n\nNous n'avons pas encore reçu votre {{appareil}}, qui était à retourner avant le {{date_limite_retour}}.\n\nSans retour, un mois supplémentaire de location ({{montant_ht}} HT) sera facturé à partir du {{facturation_le}}.",
+        "Bonjour,\n\nNous n'avons pas encore reçu votre {{appareil}}, qui était à retourner avant le {{date_limite_retour}}.\n\nSans retour, un mois supplémentaire de location ({{montant_ttc}} TTC, soit {{montant_ht}} HT) sera facturé à partir du {{facturation_le}}.",
     },
   },
   location_prelevement_ponctuel: {
@@ -98,7 +99,7 @@ export const TEXTES_LOCATIONS = {
     apercu: "Location terminée",
     blocs: {
       corps: "Bonjour,\n\nNous avons bien reçu votre {{appareil}}. Votre location est terminée. Merci de votre confiance.",
-      degradation: "À la réception, une dégradation a été constatée : {{degradation_ht}} HT vous sont facturés. La facture détaillée est dans votre compte.",
+      degradation: "À la réception, une dégradation a été constatée : {{degradation_ttc}} TTC (soit {{degradation_ht}} HT) vous sont facturés. La facture détaillée est dans votre compte.",
     },
   },
   location_inviter_resiliation: {
@@ -173,13 +174,13 @@ export const emailsLocations = {
   rappelRetour: (p: { appareil: string; dateLimiteRetour: Date; facturationLe: Date; montantHt: number }) =>
     simple(
       "location_rappel_retour",
-      { appareil: p.appareil, date_limite_retour: dateFr(p.dateLimiteRetour), facturation_le: dateFr(p.facturationLe), montant_ht: euros(p.montantHt) },
+      { appareil: p.appareil, date_limite_retour: dateFr(p.dateLimiteRetour), facturation_le: dateFr(p.facturationLe), montant_ht: euros(p.montantHt), montant_ttc: euros(prixTtc(p.montantHt, 20)) },
       { href: MES_LOCATIONS(), libelle: "Télécharger l’étiquette de retour" },
     ),
   prelevementPonctuel: (p: { libelle: string; montantTtc: number; facture: string }) =>
     simple("location_prelevement_ponctuel", { libelle: p.libelle, montant_ttc: euros(p.montantTtc), facture: p.facture }, { href: urlDuSite("/mon-compte/factures"), libelle: "Mes factures" }),
   retourRecu: (p: { appareil: string; degradationHt: number | null }) =>
-    email("location_retour_recu", { appareil: p.appareil, degradation_ht: p.degradationHt ? euros(p.degradationHt) : "" }, (t) => (
+    email("location_retour_recu", { appareil: p.appareil, degradation_ht: p.degradationHt ? euros(p.degradationHt) : "", degradation_ttc: p.degradationHt ? euros(prixTtc(p.degradationHt, 20)) : "" }, (t) => (
       <>
         {t.bloc("corps")}
         {p.degradationHt ? t.bloc("degradation") : null}

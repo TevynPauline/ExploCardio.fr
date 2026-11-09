@@ -8,6 +8,8 @@
 
 **Input**: User description: "F16 — Évolutions de fin de phase 1 : retours de Régis Andrieu sur le site de démonstration, validés par Pauline le 2026-10-25 : en-tête mobile (menu à gauche, logo au centre, loupe, panier et compte à droite) ; menu horizontal dès 1 024 px (Mac et Windows) ; fil d'Ariane ; « Régis Andrieu, fondateur » retiré du bloc contact ; « (hors imagerie) » retiré du slogan partout ; carrousel dynamique à la place du grand bandeau vert (news, opérations, produits phares, offre de bienvenue) ; section « Pourquoi préférer ExploCardio.fr » à la place de la section Équipement ; nouvel ordre de l'accueil ; prix du panier mis à jour en direct ; devis depuis le panier ; inscription sans RPPS, SIRET/SIREN demandé à la première commande ; commandes hors France métropolitaine orientées vers un contact. Reportés : particuliers, parrainage, Partenariats."
 
+> **Note F22 (2026-11-09)** : depuis la constitution 2.3.0, les prix sont affichés TTC en premier, avec le HT juste en dessous. Dans cette spec, les prix affichés HT en premier sont remplacés par [F22 — Affichage des prix TTC](../022-affichage-ttc/spec.md).
+
 ## Contexte et objectif
 
 La phase 1 (site complet en démonstration, F01 à F13) est terminée. Régis Andrieu, fondateur

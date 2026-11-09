@@ -21,7 +21,7 @@ test("depuis une fiche : préremplie, durées, mention indicative, confirmation,
   await expect(main.getByLabel(/^Quantité \(DMS 300-4L/)).toHaveValue("1");
   for (const d of [24, 36, 48, 60]) await expect(main.getByRole("radio", { name: `${d} mois` })).toBeVisible();
   await main.getByRole("radio", { name: "36 mois" }).check();
-  await expect(main).toContainText(/Mensualité indicative : .+ HT \/ mois sur 36 mois/);
+  await expect(main).toContainText(/Mensualité indicative : .+ TTC \/ mois \(soit .+ HT \/ mois\) sur 36 mois/);
   await expect(main).toContainText(/indicatif/i);
   await expect(main.getByLabel("Adresse du cabinet")).toHaveValue(/1 rue du Test/);
   await main.getByLabel("Nom du cabinet").fill("Cabinet de cardiologie du Test");

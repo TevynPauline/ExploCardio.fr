@@ -1,13 +1,14 @@
+import { prixTexte, prixTtc } from "@/domaine/catalogue/prix";
 import { euros } from "@/lib/montants";
 import { urlDuSite } from "./charte";
 import { BoutonEmail, Paragraphe } from "./Gabarit";
 import { rendreModele, type TextesModele, type TextesRemplis } from "./textes";
 
-// Emails de F04 (contracts/emails.md) : gabarit de la charte, vouvoiement, montants HT puis
-// TTC, aucun nom d'organisme de financement. F10 (D2) : textes modifiables au back-office ;
+// Emails de F04 (contracts/emails.md) : gabarit de la charte, vouvoiement, montants TTC puis
+// HT (F22), aucun nom d'organisme de financement. F10 (D2) : textes modifiables au back-office ;
 // lignes de commande, RIB et boutons fixes.
 
-export type LigneEmail = { libelle: string; quantite: number; totalHt: number };
+export type LigneEmail = { libelle: string; quantite: number; totalHt: number; tauxTva: number };
 export type Rib = { titulaire: string; iban: string; bic: string };
 
 export const TEXTES_COMMANDES = {
@@ -17,7 +18,7 @@ export const TEXTES_COMMANDES = {
     blocs: {
       intro_carte: "Bonjour,\n\nVotre commande est confirmée. Merci de votre confiance.",
       intro_virement: "Bonjour,\n\nVotre commande est enregistrée et attend votre virement.",
-      total: "Total : {{total_ht}} HT, soit {{total_ttc}} TTC.",
+      total: "Total : {{total_ttc}} TTC, soit {{total_ht}} HT.",
       virement: "Merci de régler {{total_ttc}} TTC avant le {{echeance}}, en rappelant la référence {{ref}}.",
       facture: "Votre facture est disponible dans votre compte, rubrique « Mes factures ».",
     },
@@ -27,7 +28,7 @@ export const TEXTES_COMMANDES = {
     apercu: "Votre devis est prêt",
     blocs: {
       corps: "Bonjour,\n\nVoici votre devis {{ref}}, comme demandé depuis votre panier.",
-      total: "Total : {{total_ht}} HT, soit {{total_ttc}} TTC.",
+      total: "Total : {{total_ttc}} TTC, soit {{total_ht}} HT.",
       validite: "Ces prix sont garantis jusqu'au {{validite}}. Vous pouvez télécharger le PDF et commander ce devis depuis votre compte, rubrique « Mes devis ».",
     },
   },
@@ -82,7 +83,7 @@ export const TEXTES_COMMANDES = {
     apercu: "Nous étudions votre demande",
     blocs: {
       corps: "Bonjour,\n\nNous avons bien reçu votre demande de financement sur {{duree_mois}} mois pour : {{equipements}}.",
-      mensualite: "Mensualité indicative : {{mensualite_ht}} HT par mois. {{mention}}",
+      mensualite: "Mensualité indicative : {{mensualite_ttc}} TTC par mois (soit {{mensualite_ht}} HT par mois). {{mention}}",
       suite: "Nous revenons vers vous rapidement. Vous suivez l’avancement de votre demande dans votre compte.",
     },
   },
@@ -100,7 +101,7 @@ function Lignes({ lignes }: { lignes: LigneEmail[] }) {
     <>
       {lignes.map((l, i) => (
         <Paragraphe key={i}>
-          {l.quantite} × {l.libelle} — {euros(l.totalHt)} HT
+          {l.quantite} × {l.libelle} — {prixTexte({ ht: l.totalHt, tauxTva: l.tauxTva })}
         </Paragraphe>
       ))}
     </>
@@ -213,7 +214,7 @@ export const emailsCommandes = {
   financementRecu: (p: { equipements: string[]; dureeMois: number; mensualiteHt: number | null; mention: string }) =>
     email(
       "financement_recu",
-      { duree_mois: p.dureeMois, equipements: p.equipements.join(", "), mensualite_ht: p.mensualiteHt ? euros(p.mensualiteHt) : "", mention: p.mention },
+      { duree_mois: p.dureeMois, equipements: p.equipements.join(", "), mensualite_ht: p.mensualiteHt ? euros(p.mensualiteHt) : "", mensualite_ttc: p.mensualiteHt ? euros(prixTtc(p.mensualiteHt, 20)) : "", mention: p.mention },
       (t) => (
         <>
           {t.bloc("corps")}

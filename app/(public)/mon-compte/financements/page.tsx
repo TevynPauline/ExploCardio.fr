@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { compteCourant } from "@/domaine/comptes/session";
 import { demandesDuCompte, LIBELLES_STATUT_FINANCEMENT } from "@/domaine/financement/demande";
-import { euros } from "@/lib/montants";
+import { prixTexte } from "@/domaine/catalogue/prix";
 import { Card, Kicker } from "@/ui";
 import { NavMonCompte } from "@/ui/comptes/NavMonCompte";
 
@@ -38,7 +38,7 @@ export default async function Financements({ searchParams }: { searchParams: Pro
               </div>
               <p>{d.equipements.map((e) => `${e.nom ?? e.defaultCode} × ${e.quantite}`).join(", ")}</p>
               <p className="text-small text-muted">
-                Sur {d.dureeMois} mois{d.mensualiteIndicativeHt ? ` · mensualité indicative ${euros(d.mensualiteIndicativeHt)} HT` : ""}
+                Sur {d.dureeMois} mois{d.mensualiteIndicativeHt ? ` · mensualité indicative ${prixTexte({ ht: d.mensualiteIndicativeHt, tauxTva: 20 }, { periode: "/ mois" })}` : ""}
               </p>
               {d.commandeRef ? (
                 <p>

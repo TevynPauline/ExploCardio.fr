@@ -216,6 +216,7 @@ export const catalogueDemo: CatalogueOdoo = {
         categorie: m.categorie.code,
         configuration: v.configuration,
         prixHt: v.prixHtCentimes,
+        tauxTva: Number(v.tauxTva),
         disponibilite: dispo.get(v.defaultCode)!,
         estFictif: v.estFictif,
       })),
