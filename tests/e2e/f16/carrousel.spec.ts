@@ -55,7 +55,9 @@ test("mouvement réduit : aucun défilement automatique", async ({ browser, base
 test("le bouton d'une vignette mène à sa page ; aucun grand logo ni signature", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("main").getByText("(hors imagerie)")).toHaveCount(0);
-  await expect(page.locator("main").getByRole("img", { name: "ExploCardio.fr" })).toHaveCount(0);
+  // F20 : le logo officiel apparaît dans l'image finale de l'animation ; le carrousel n'en porte pas.
+  await expect(carrousel(page).getByRole("img", { name: "ExploCardio.fr" })).toHaveCount(0);
+  await expect(page.locator("main").getByRole("img", { name: "ExploCardio.fr" })).toHaveCount(1);
   await carrousel(page).getByRole("button", { name: "Pause" }).click();
   await visible(page).getByRole("link", { name: "Créer mon compte" }).click();
   await expect(page).toHaveURL(/\/inscription$/, { timeout: 30_000 });

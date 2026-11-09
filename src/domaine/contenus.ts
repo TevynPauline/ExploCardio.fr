@@ -86,9 +86,7 @@ const CLES_PARAMETRES = [
   "contact.motifs",
   "contact.whatsapp",
   "accueil.offre_bienvenue",
-  "accueil.engagements_reactivite",
   "accueil.badge_hebergement",
-  "accueil.badge_logiciel_cloud",
 ] as const;
 
 export type ParametresPublics = {
@@ -97,9 +95,7 @@ export type ParametresPublics = {
   adresse: string | null;
   motifs: string[];
   offreBienvenue: string;
-  engagementsReactivite: string | null;
   badgeHebergement: string | null;
-  badgeLogicielCloud: string | null;
 };
 
 /** F16 (FR-029) : le motif « Commande hors métropole » est toujours proposé, avant « Autre ». */
@@ -124,8 +120,6 @@ export const lireParametresPublics = enCache("parametres", async (): Promise<Par
     adresse: v("contact.adresse"),
     motifs: avecMotifHorsMetropole(motifs.length ? motifs : ["Autre"]),
     offreBienvenue: v("accueil.offre_bienvenue") ?? "",
-    engagementsReactivite: v("accueil.engagements_reactivite"),
     badgeHebergement: v("accueil.badge_hebergement"),
-    badgeLogicielCloud: v("accueil.badge_logiciel_cloud"),
   };
 });

@@ -2,15 +2,16 @@ import { expect, test } from "@playwright/test";
 import { verifierAccessibilite } from "../axe";
 import { requete } from "./outils";
 
-// T017 (US1, FR-015 à FR-025, SC-001) ; ordre et sections revus par F16 (FR-009).
+// T017 (US1, FR-015 à FR-025, SC-001) ; ordre et sections revus par F16 (FR-009) puis F20 (FR-015).
 
-const ORDRE = ["carrousel", "acces-rapide", "pourquoi", "service-fidelite", "offre-digitale", "contact"];
+const ORDRE = ["trois-temps", "acces-rapide", "carrousel", "contact"];
 
 test("les sections de l'accueil sont dans l'ordre, accessibles", async ({ page }) => {
   await page.goto("/");
   const sections = await page.locator("[data-section]").evaluateAll((els) => els.map((e) => e.getAttribute("data-section")));
   expect(sections).toEqual(ORDRE);
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Le spécialiste des explorations fonctionnelles cardiaques");
+  // F20 (FR-005) : la phrase d'accroche de l'animation est le titre de la page.
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Une offre pensée pour la cardiologie libérale");
   await verifierAccessibilite(page);
 });
 
@@ -39,7 +40,6 @@ test("grille de tuiles : 3 par ligne sur ordinateur, 2 sur tablette, 1 sur mobil
 test("badges « En préparation » et bloc contact sans ligne vide", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("[data-tuile]", { hasText: "Hébergement des données de santé" }).getByText("En préparation")).toBeVisible();
-  await expect(page.locator("[data-section=offre-digitale]").getByText("En préparation")).toBeVisible();
   const contact = page.locator("[data-section=contact]");
   await expect(contact.getByRole("heading")).toHaveText("Une question ? Écrivez-nous");
   const vides = await requete<{ n: number }>("site", `SELECT count(*)::int n FROM parametre WHERE cle IN ('contact.email','contact.telephone','contact.adresse') AND valeur <> ''`);

@@ -1,4 +1,5 @@
 import type { PrismaClient } from "@generated/site/client";
+import { ARGUMENTS_ANIMATION, TEXTES_ANIMATION_DEFAUT } from "@/domaine/textes-animation";
 
 // Contenus initiaux de F01 (T005) : réels dès la phase 1, modifiables dans le back-office et
 // CONSERVÉS à la réinitialisation de la démonstration — ils ne sont créés que s'ils manquent.
@@ -119,13 +120,31 @@ export const VIGNETTES_INITIALES = [
   },
 ];
 
-export const ARGUMENTS_INITIAUX = [
-  { cle: "intro", titre: "Pourquoi préférer ExploCardio.fr", corps: "Un seul métier, le vôtre : les explorations fonctionnelles cardiaques. Tout est pensé pour vous faire gagner du temps." },
-  { cle: "1", titre: "Le spécialiste de votre seul métier", corps: "Holter, MAPA, épreuve d'effort, ECG : une sélection de matériels éprouvés, sans catalogue de 10 000 références." },
-  { cle: "2", titre: "Des prix HT clairs", corps: "Chaque modèle standard affiche son prix dès la première page, sans « prix sur demande »." },
-  { cle: "3", titre: "Une assistance offerte", corps: "Vos achats de consommables ouvrent vos droits d'assistance et créditent vos bons d'achat." },
-  { cle: "4", titre: "Du matériel au mois", corps: "Location sans engagement, dépannage express livré dès le lendemain." },
+// F20 : textes de l'animation « Les trois temps » de l'accueil (type « argument », qui portait
+// auparavant les arguments de « Pourquoi préférer ExploCardio.fr », retirés de l'accueil). Les
+// valeurs de départ viennent de src/domaine/textes-animation.ts.
+export const ANIMATION_INITIALE = [
+  { cle: "accroche", titre: TEXTES_ANIMATION_DEFAUT.accroche, corps: "" },
+  ...TEXTES_ANIMATION_DEFAUT.mots.map((titre, i) => ({ cle: `mot-${i + 1}`, titre, corps: "" })),
+  ...ARGUMENTS_ANIMATION.map((a, i) => ({ cle: a.cle, titre: TEXTES_ANIMATION_DEFAUT.arguments[i]!, corps: "" })),
 ];
+
+/**
+ * Clés des anciens arguments (F16), plus affichés ni modifiables depuis F20, et des arguments
+ * des versions intermédiaires de F20 (argument-1 à argument-6), remplacés par argument-a à -e.
+ */
+export const CLES_ARGUMENTS_RETIRES = ["intro", "1", "2", "3", "4", ...["1", "2", "3", "4", "5", "6"].map((n) => `argument-${n}`)];
+
+/**
+ * Textes de départ remplacés pendant la mise au point de F20 (2026-11-09) : mis à jour s'ils
+ * n'ont pas été modifiés au back-office.
+ */
+export const ANCIENS_TEXTES_ANIMATION: Record<string, string> = {
+  accroche: "Tout ce qu'il vous faut, au même endroit.",
+  "mot-1": "Spécialiste",
+  "mot-2": "Rapide",
+  "mot-3": "Complet",
+};
 
 export async function remplirContenusInitiaux(db: PrismaClient) {
   if ((await db.contenu.count({ where: { type: "tuile" } })) === 0) {
@@ -150,12 +169,17 @@ export async function remplirContenusInitiaux(db: PrismaClient) {
       data: VIGNETTES_INITIALES.map((v, i) => ({ type: "vignette" as const, ...v, ordre: i + 1, etat: "publie" as const })),
     });
   }
-  for (const [i, a] of ARGUMENTS_INITIAUX.entries()) {
+  await db.contenu.deleteMany({ where: { type: "argument", cle: { in: CLES_ARGUMENTS_RETIRES } } });
+  for (const [i, a] of ANIMATION_INITIALE.entries()) {
     await db.contenu.upsert({
       where: { type_cle: { type: "argument", cle: a.cle } },
       create: { type: "argument", cle: a.cle, titre: a.titre, corps: a.corps, ordre: i, etat: "publie" },
       update: {},
     });
+  }
+  for (const [cle, ancien] of Object.entries(ANCIENS_TEXTES_ANIMATION)) {
+    const nouveau = ANIMATION_INITIALE.find((a) => a.cle === cle)!.titre;
+    await db.contenu.updateMany({ where: { type: "argument", cle, titre: ancien }, data: { titre: nouveau } });
   }
   for (const [cle, valeur] of Object.entries(PARAMETRES_INITIAUX)) {
     await db.parametre.upsert({ where: { cle }, create: { cle, valeur }, update: {} });

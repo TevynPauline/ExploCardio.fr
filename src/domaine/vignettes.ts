@@ -3,6 +3,7 @@ import { enApercu } from "@/lib/apercu";
 import { ETIQUETTES } from "@/lib/cache";
 import { dbSite } from "@/lib/db/site";
 import { lireParametre } from "@/lib/parametres";
+import { textesAnimation, type TextesAnimation } from "./textes-animation";
 import { verifierLien } from "./liens";
 
 // Vignettes du carrousel de l'accueil (F16, US2, US3) : contenus réels du site, gérés au
@@ -83,25 +84,14 @@ export async function lireVignettes(maintenant = new Date()): Promise<Vignette[]
     .map((l) => enVignette(l, fiches));
 }
 
-// « Pourquoi préférer ExploCardio.fr » (F16, US4, FR-010, FR-014) : introduction et quatre
-// arguments, contenus réels modifiables au back-office (Contenus → Accueil).
+// Animation « Les trois temps » de l'accueil (F20, FR-017, FR-018) : phrase d'accroche et trois
+// mots, contenus réels modifiables au back-office (Contenus → Accueil). Un texte manquant ou vide
+// reprend sa valeur de départ.
 
-export type Arguments = { titre: string; intro: string; liste: { titre: string; phrase: string }[] };
+export { ARGUMENTS_ANIMATION, LONGUEURS_ANIMATION, TEXTES_ANIMATION_DEFAUT, textesAnimation, type CinqArguments, type TextesAnimation } from "./textes-animation";
 
-export const lireArguments = unstable_cache(
-  async (): Promise<Arguments> => {
-    const lignes = await dbSite().contenu.findMany({ where: { type: "argument" } });
-    const parCle = new Map(lignes.map((l) => [l.cle, l]));
-    const intro = parCle.get("intro");
-    return {
-      titre: intro?.titre || "Pourquoi préférer ExploCardio.fr",
-      intro: intro?.corps ?? "",
-      liste: ["1", "2", "3", "4"].flatMap((c) => {
-        const l = parCle.get(c);
-        return l && l.titre.trim() ? [{ titre: l.titre, phrase: l.corps }] : [];
-      }),
-    };
-  },
-  ["contenus:arguments"],
+export const lireAnimation = unstable_cache(
+  async (): Promise<TextesAnimation> => textesAnimation(await dbSite().contenu.findMany({ where: { type: "argument" } })),
+  ["contenus:animation"],
   { tags: [ETIQUETTES.contenus], revalidate: 300 },
 );

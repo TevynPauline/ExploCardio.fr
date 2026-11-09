@@ -93,12 +93,15 @@ Le contraste vient des graisses (titres Light, sous-titres Semibold) et non des 
 - Respect du WCAG 2.2 AA : contraste ≥ 4,5:1 pour le texte et ≥ 3:1 pour les composants. Les couleurs pastel ne servent jamais pour du texte.
 - Focus visible sur tous les éléments interactifs, et cibles tactiles d'au moins 44 × 44 px.
 - `prefers-reduced-motion` est respecté. Les animations restent sobres : fondu et translation de 8 px au maximum, 200 ms.
+- **Exception : l'animation d'ouverture de l'accueil « Les trois temps » (F20, décision du 2026-11-06, à confirmer avec Régis).** Les trois points du logo y arrivent avec un seul rebond amorti, s'écartent jusqu'à un même diamètre, portent les mots « Liberté », « Expertise », « Fidélité » avec, sous chacun, les titres de ses arguments commerciaux, puis se referment sur le logo et la phrase d'accroche, suivie du rappel des arguments (pastille de la couleur du point) et du bouton « Voir l'offre ». Elle dure environ 10 secondes, a un bouton « Pause », ne se joue qu'une fois puis se réduit en un bandeau compact (phrase d'accroche et « Revoir »), et s'affiche directement sous cette forme, sans mouvement, si le visiteur a demandé à réduire les animations. Elle n'utilise que les couleurs des points, l'encre pour le texte et le logo officiel. Cette exception ne s'étend à aucune autre animation du site.
 
 ## 8. Structure éditoriale (reprise de la brochure)
 
-1. **Carrousel (F16) :** vignettes d'offres, d'informations et de produits phares gérées au back-office, sans logo géant ni signature ; fonds pastel et grands points décoratifs en l'absence d'image.
-2. **L'équipement et les marques :** Holter ECG (DMS), Holter tensionnel / MAPA (DMS, SunTech, Microlife WatchBP 03, IEM Mobil-O-Graph), épreuve et écho d'effort (DMS, Norav, Ergoline, RAM, Koch Évolution, SunTech Tango M2), environnement de l'épreuve d'effort, accessoires et consommables.
-3. **Offre digitale et flexibilité :** achat direct, financement, mise à disposition au mois, pack dépannage express, logiciel Cloud (badge « En préparation »), outils en ligne (tutos, agenda partagé, garantie express, espace client).
-4. **Offre de bienvenue** (encart lin) : un tensiomètre offert à la création de compte.
-5. **Service et fidélité :** parcours en 3 étapes (consommables → points → hotline et SAV offerts) et engagements de réactivité.
-6. **Contact** (bloc sombre) : Régis Andrieu, fondateur. Email, téléphone et adresse restent à compléter.
+Accueil depuis F20 (2026-11-06) :
+
+1. **Animation « Les trois temps » :** les trois points du logo, les mots « Liberté », « Expertise », « Fidélité », puis le logo et la phrase d'accroche « Une offre pensée pour la cardiologie libérale », titre de la page, puis cinq arguments commerciaux rangés sous les trois mots (titres sous les bulles pendant l'animation, rappelés en ligne dans l'image finale), et le bouton « Voir l'offre ». Après une seule lecture, la scène se réduit en bandeau compact (phrase d'accroche, arguments et « Revoir »). Textes gérés au back-office.
+2. **Toute l'offre en un coup d'œil** (titre précédé des trois points du logo, sans surtitre) **:** les six cartes (Holter ECG, Holter tensionnel, épreuve d'effort, hébergement des données de santé, assistance et service, financement).
+3. **Carrousel (F16) :** vignettes d'offres, d'informations et de produits phares gérées au back-office, sans logo géant ni signature ; fonds pastel et grands points décoratifs en l'absence d'image. L'offre de bienvenue y a sa vignette.
+4. **Contact** (bloc sombre) : email, téléphone et adresse saisis au back-office.
+
+Les sections « Pourquoi préférer ExploCardio.fr », « Offre digitale et flexibilité » et « Service et fidélité » ont été retirées de l'accueil par F20 ; leurs contenus restent présentés sur les pages Services, Financement et Mise à disposition.

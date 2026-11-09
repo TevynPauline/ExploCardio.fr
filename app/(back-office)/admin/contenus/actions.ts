@@ -200,21 +200,23 @@ export async function supprimerVignette(d: FormData) {
   });
 }
 
-// ------------------------------------------------------------------ Pourquoi préférer ExploCardio.fr (F16)
+// ------------------------------------------------------------------ Animation de l'accueil (F20)
 
-export async function enregistrerArguments(d: FormData) {
-  await executer("/admin/contenus/accueil", "Arguments enregistrés.", async (a) => {
+export async function enregistrerAnimation(d: FormData) {
+  await executer("/admin/contenus/accueil", "Animation enregistrée.", async (a) => {
+    const { ARGUMENTS_ANIMATION, LONGUEURS_ANIMATION: L } = await import("@/domaine/textes-animation");
     const lignes = await dbSite().contenu.findMany({ where: { type: "argument" } });
     // Verrou (F13, D9) : la version lue est celle de la ligne modifiée le plus récemment.
     const lu = t(d, "modifieLe");
     const recente = lignes.reduce<Date | null>((m, l) => (!m || l.modifieLe > m ? l.modifieLe : m), null);
     if (lu && recente && recente.toISOString() !== lu) {
-      const derniere = await dbSite().journalAction.findFirst({ where: { action: "contenus.argument.modifie" }, orderBy: { date: "desc" } });
-      throw new SaisieRefusee(`Ces arguments ont été modifiés${derniere ? ` par ${derniere.auteur}` : ""} depuis que vous avez ouvert la page : rien n'a été écrasé. Rechargez la page.`);
+      const derniere = await dbSite().journalAction.findFirst({ where: { action: "contenus.animation.modifiee" }, orderBy: { date: "desc" } });
+      throw new SaisieRefusee(`Ces textes ont été modifiés${derniere ? ` par ${derniere.auteur}` : ""} depuis que vous avez ouvert la page : rien n'a été écrasé. Rechargez la page.`);
     }
     const saisies = [
-      { cle: "intro", titre: exigerTexte(t(d, "titre-intro"), "Titre de la section", 1, 60), corps: exigerTexte(t(d, "corps-intro"), "Introduction", 0, 200) },
-      ...["1", "2", "3", "4"].map((c) => ({ cle: c, titre: exigerTexte(t(d, `titre-${c}`), `Argument ${c} : titre`, 1, 60), corps: exigerTexte(t(d, `corps-${c}`), `Argument ${c} : phrase`, 1, 200) })),
+      { cle: "accroche", titre: exigerTexte(t(d, "accroche"), "Phrase d'accroche", 1, L.accroche), corps: "" },
+      ...["1", "2", "3"].map((c) => ({ cle: `mot-${c}`, titre: exigerTexte(t(d, `mot-${c}`), `Mot ${c}`, 1, L.mot), corps: "" })),
+      ...ARGUMENTS_ANIMATION.map((x, i) => ({ cle: x.cle, titre: exigerTexte(t(d, x.cle), `Argument ${i + 1}`, 1, L.argument), corps: "" })),
     ];
     for (const [i, s] of saisies.entries()) {
       const avant = lignes.find((l) => l.cle === s.cle);
@@ -224,7 +226,13 @@ export async function enregistrerArguments(d: FormData) {
         create: { type: "argument", cle: s.cle, titre: s.titre, corps: s.corps, ordre: i, etat: "publie" },
         update: { titre: s.titre, corps: s.corps },
       });
-      await journaliser(a, "contenus.argument.modifie", s.cle, avant ? { titre: avant.titre, corps: avant.corps } : null, { titre: s.titre, corps: s.corps });
+      await journaliser(
+        a,
+        "contenus.animation.modifiee",
+        s.cle,
+        avant ? { titre: avant.titre, corps: avant.corps } : null,
+        { titre: s.titre, corps: s.corps },
+      );
     }
   });
 }
@@ -250,9 +258,7 @@ export async function enregistrerCoordonnees(d: FormData) {
       "contact.motifs": JSON.stringify(motifs),
       "location.conditions": exigerTexte(t(d, "conditionsLocation"), "Conditions de location", 20, 4000),
       "cloud.aide_premiere_connexion": exigerTexte(t(d, "aideConnexion"), "Aide à la première connexion", 20, 1500),
-      "accueil.engagements_reactivite": exigerTexte(t(d, "engagements"), "Engagements de réactivité", 0, 400),
       "accueil.badge_hebergement": exigerTexte(t(d, "badgeHebergement"), "Badge de l'hébergement", 0, 30),
-      "accueil.badge_logiciel_cloud": exigerTexte(t(d, "badgeLogicielCloud"), "Badge du logiciel Cloud", 0, 30),
     };
     for (const [cle, valeur] of Object.entries(valeurs)) {
       const avant = await dbSite().parametre.findUnique({ where: { cle } });

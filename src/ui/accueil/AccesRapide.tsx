@@ -16,7 +16,7 @@ const FONDS: Record<string, string> = {
 /** Accès rapide (FR-017, FR-018) : 6 tuiles carrées, 3 / 2 / 1 par ligne ; F16 : image facultative. */
 export function AccesRapide({ tuiles }: { tuiles: Tuile[] }) {
   return (
-    <Section id="acces-rapide" surtitre="Accès rapide" titre="Toute l'offre en un coup d'œil">
+    <Section id="acces-rapide" titre="Toute l'offre en un coup d'œil">
       <ul className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {tuiles.map((t) => (
           <li key={t.id}>

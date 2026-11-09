@@ -7,6 +7,26 @@ import { expect, type Page } from "@playwright/test";
  * emails ont leur propre contrôle (tests/unit/emailing/modeles.test.ts).
  */
 export async function verifierAccessibilite(page: Page) {
+  // F20 : l'animation d'ouverture de l'accueil fait passer ses textes par des fondus ; un contrôle
+  // lancé en plein fondu les verrait à moitié transparents. On la mène à son terme (bandeau
+  // compact) avant le contrôle ; une animation figée par le test (en pause) n'est pas touchée.
+  const scene = page.locator("[data-section=trois-temps]");
+  if (await scene.count()) {
+    const enCours = await scene.evaluate((s) => {
+      const animations = s.getAnimations({ subtree: true }).filter((a) => a.playState === "running");
+      for (const a of animations) a.finish();
+      return animations.length > 0;
+    });
+    // Fin de l'animation : fondu de sortie, puis bandeau compact et son fondu d'apparition.
+    if (enCours) {
+      await expect
+        .poll(
+          () => scene.evaluate((s) => s.hasAttribute("data-compact") && s.getAnimations({ subtree: true }).every((a) => a.playState !== "running")),
+          { timeout: 5_000 },
+        )
+        .toBe(true);
+    }
+  }
   const resultat = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
     .exclude("iframe[sandbox]")
