@@ -33,26 +33,36 @@ export function RotationBandeau({ messages, lienOffres = false }: { messages: Me
     return () => window.clearInterval(minuteur);
   }, [tourne, messages.length]);
 
-  const message = messages[indice % messages.length]!;
+  const courant = indice % messages.length;
   return (
     <div role="region" aria-label="Promotion en cours" className="ec-box--promo rounded-none">
       <div className="mx-auto flex max-w-page flex-wrap items-center justify-center gap-x-3 px-4 py-2 text-small text-ink">
-        {/* Sur téléphone, le message occupe sa ligne ; le lien et la pause passent dessous (F23). */}
-        <p className="w-full min-w-0 text-center sm:w-auto sm:flex-1">
-          {message.lien ? (
-            <Link href={message.lien} className="font-medium text-ink underline underline-offset-2">
-              {message.texte}
-            </Link>
-          ) : (
-            message.texte
-          )}
-          {messages.length > 1 ? (
-            <span className="sr-only">
-              {" "}
-              (message {(indice % messages.length) + 1} sur {messages.length})
-            </span>
-          ) : null}
-        </p>
+        {/* Sur téléphone, le message occupe sa ligne ; le lien et la pause passent dessous (F23).
+            Tous les messages occupent la même case : le bandeau garde la hauteur du plus long et la
+            page ne bouge pas quand le message change (CLS) ; seul le message courant est visible. */}
+        <div className="grid w-full min-w-0 sm:w-auto sm:flex-1">
+          {messages.map((message, i) => (
+            <p
+              key={i}
+              aria-hidden={i === courant ? undefined : true}
+              className={`text-center [grid-area:1/1] ${i === courant ? "" : "invisible"}`}
+            >
+              {message.lien ? (
+                <Link href={message.lien} className="font-medium text-ink underline underline-offset-2">
+                  {message.texte}
+                </Link>
+              ) : (
+                message.texte
+              )}
+              {messages.length > 1 && i === courant ? (
+                <span className="sr-only">
+                  {" "}
+                  (message {courant + 1} sur {messages.length})
+                </span>
+              ) : null}
+            </p>
+          ))}
+        </div>
         {lienOffres ? (
           <Link
             href="/#offres-du-moment"

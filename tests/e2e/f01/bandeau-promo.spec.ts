@@ -44,12 +44,12 @@ test("deux messages actifs défilent, pause possible, non masquable", async ({ p
   const zone = await bandeau(page);
   await expect(zone).toBeVisible();
   await expect(zone.getByRole("button", { name: /fermer|masquer/i })).toHaveCount(0);
-  const premier = await zone.locator("p").innerText();
-  await expect(zone.locator("p")).not.toHaveText(premier, { timeout: 9_000 });
+  const premier = await zone.locator("p:not([aria-hidden])").innerText();
+  await expect(zone.locator("p:not([aria-hidden])")).not.toHaveText(premier, { timeout: 9_000 });
   await zone.getByRole("button", { name: "Mettre en pause" }).click();
-  const fige = await zone.locator("p").innerText();
+  const fige = await zone.locator("p:not([aria-hidden])").innerText();
   await page.waitForTimeout(7_000);
-  expect(await zone.locator("p").innerText()).toBe(fige);
+  expect(await zone.locator("p:not([aria-hidden])").innerText()).toBe(fige);
 });
 
 test("rotation suspendue d'office quand les animations sont réduites", async ({ browser, baseURL }) => {
@@ -57,9 +57,9 @@ test("rotation suspendue d'office quand les animations sont réduites", async ({
   const page = await contexte.newPage();
   const zone = await bandeau(page);
   await expect(zone.getByRole("button", { name: "Reprendre le défilement" })).toBeDisabled();
-  const texte = await zone.locator("p").innerText();
+  const texte = await zone.locator("p:not([aria-hidden])").innerText();
   await page.waitForTimeout(7_000);
-  expect(await zone.locator("p").innerText()).toBe(texte);
+  expect(await zone.locator("p:not([aria-hidden])").innerText()).toBe(texte);
   await contexte.close();
 });
 
