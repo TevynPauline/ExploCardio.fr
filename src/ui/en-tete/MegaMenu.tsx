@@ -11,10 +11,15 @@ export function MegaMenu({
   entree,
   visible,
   surNavigation,
+  surSurvol,
+  surSortie,
 }: {
   entree: EntreeNavigation;
   visible: boolean;
   surNavigation: () => void;
+  /** Souris sur le panneau : il reste ouvert ; dès qu'elle en sort, il se referme. */
+  surSurvol?: () => void;
+  surSortie?: () => void;
 }) {
   return (
     <div
@@ -23,7 +28,7 @@ export function MegaMenu({
       className={visible ? "absolute inset-x-0 top-full hidden lg:block" : "hidden"}
     >
       <div className="mx-auto max-w-page px-4">
-        <div className="mt-2 max-h-[70vh] overflow-y-auto rounded-lg border border-line bg-surface p-6 shadow">
+        <div onMouseEnter={surSurvol} onMouseLeave={surSortie} className="mt-2 max-h-[70vh] overflow-y-auto rounded-lg border border-line bg-surface p-6 shadow">
           <div className="grid grid-cols-3 gap-8">
             <section aria-labelledby={`mm-sc-${entree.cle}`}>
               <h2 id={`mm-sc-${entree.cle}`} className="ec-kicker mb-3">

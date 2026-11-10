@@ -14,10 +14,13 @@ import { Recherche } from "./Recherche";
 
 // Barre de navigation fixe (FR-001 à FR-007, R2). Chaque entrée est un bouton qui déplie son
 // méga-menu (modèle « bouton + panneau », aria-expanded), et non un menu d'application.
-// Ouverture : survol (après 150 ms), clic, toucher, clavier (Entrée, Espace, flèche bas).
-// Fermeture : Échap (focus rendu à l'entrée), clic à l'extérieur, sortie de la zone.
+// Ouverture : survol de l'entrée (après 150 ms ; aussitôt si un autre menu est déjà ouvert), clic,
+// toucher, clavier (Entrée, Espace, flèche bas).
+// Fermeture : Échap (focus rendu à l'entrée), clic à l'extérieur, et dès que la souris quitte
+// l'entrée ou son panneau (court répit pour descendre de l'une à l'autre).
 
 const DELAI_SURVOL_MS = 150;
+const DELAI_SORTIE_MS = 100;
 
 type Props = { entrees: EntreeNavigation[]; articlesPanier: number };
 
@@ -78,11 +81,12 @@ export function BarreNavigation({ entrees, articlesPanier: initial }: Props) {
 
   const surEntree = (cle: string) => {
     annulerMinuteur();
-    minuteur.current = window.setTimeout(() => setOuvert(cle), DELAI_SURVOL_MS);
+    if (ouvert) setOuvert(cle);
+    else minuteur.current = window.setTimeout(() => setOuvert(cle), DELAI_SURVOL_MS);
   };
   const surSortie = () => {
     annulerMinuteur();
-    minuteur.current = window.setTimeout(() => setOuvert(null), DELAI_SURVOL_MS);
+    minuteur.current = window.setTimeout(() => setOuvert(null), DELAI_SORTIE_MS);
   };
 
   const auClavierEntree = (e: KeyboardEvent<HTMLButtonElement>, cle: string) => {
@@ -99,7 +103,7 @@ export function BarreNavigation({ entrees, articlesPanier: initial }: Props) {
 
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-surface">
-      <div ref={zone} onMouseLeave={surSortie} onMouseEnter={annulerMinuteur} className="relative">
+      <div ref={zone} className="relative">
         {/* Téléphone et tablette (F16, D4) : menu à gauche, logo au centre, recherche, panier et
             compte à droite. Ordinateur (dès 1 024 px) : logo à gauche, menu sur la deuxième ligne. */}
         <div className="mx-auto grid max-w-page grid-cols-[1fr_auto_1fr] items-center gap-2 px-4 sm:gap-4 lg:flex">
@@ -153,7 +157,7 @@ export function BarreNavigation({ entrees, articlesPanier: initial }: Props) {
         <nav aria-label="Navigation principale" className="hidden border-t border-line lg:block">
           <ul className="mx-auto flex max-w-page flex-wrap items-center justify-center gap-x-0 px-0 xl:gap-x-2 xl:px-4">
             {entrees.map((e) => (
-              <li key={e.cle} onMouseEnter={() => surEntree(e.cle)}>
+              <li key={e.cle} onMouseEnter={() => surEntree(e.cle)} onMouseLeave={surSortie}>
                 <button
                   ref={(el) => {
                     boutons.current[e.cle] = el;
@@ -177,7 +181,14 @@ export function BarreNavigation({ entrees, articlesPanier: initial }: Props) {
         </nav>
 
         {entrees.map((e) => (
-          <MegaMenu key={e.cle} entree={e} visible={entreeOuverte?.cle === e.cle} surNavigation={() => setOuvert(null)} />
+          <MegaMenu
+            key={e.cle}
+            entree={e}
+            visible={entreeOuverte?.cle === e.cle}
+            surNavigation={() => setOuvert(null)}
+            surSurvol={annulerMinuteur}
+            surSortie={surSortie}
+          />
         ))}
       </div>
     </header>

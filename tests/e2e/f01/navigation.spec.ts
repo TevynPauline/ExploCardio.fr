@@ -51,6 +51,25 @@ test.describe("ordinateur", () => {
     await expect(page.locator("#megamenu-services")).toBeVisible();
     await expect(page.locator("#megamenu-services").getByRole("link", { name: "Hébergement des données de santé" })).toBeVisible();
   });
+
+  test("le méga-menu suit la souris : reste ouvert sur son panneau, se referme dès qu'elle en sort", async ({ page }) => {
+    await page.goto("/");
+    const nav = page.getByRole("navigation", { name: "Navigation principale" });
+    const panneau = page.locator("#megamenu-services");
+    await nav.getByRole("button", { name: "Services" }).hover();
+    await expect(panneau).toBeVisible();
+    // Descente dans le panneau : il reste ouvert.
+    await panneau.getByRole("link", { name: "Hébergement des données de santé" }).hover();
+    await page.waitForTimeout(400);
+    await expect(panneau).toBeVisible();
+    // Passage sur une autre entrée : son menu remplace aussitôt le premier.
+    await nav.getByRole("button", { name: "Financement" }).hover();
+    await expect(panneau).toBeHidden();
+    await expect(page.locator("#megamenu-financement")).toBeVisible();
+    // Souris sur le logo, toujours dans l'en-tête : le menu se referme.
+    await page.getByRole("link", { name: "ExploCardio.fr, accueil" }).hover();
+    await expect(page.locator("#megamenu-financement")).toBeHidden({ timeout: 1_000 });
+  });
 });
 
 test.describe("mobile", () => {
