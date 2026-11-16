@@ -1,4 +1,4 @@
-import { afterAll, afterEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { demanderEnvoi, MOTIF_BLOQUE_RECETTE, notifierEquipe } from "@/domaine/emailing/envoi";
 import { emailEssai } from "@/emails/modeles";
 import { dbSite } from "@/lib/db/site";
@@ -19,6 +19,12 @@ function recette() {
   process.env.EMAILING_ADRESSES_AUTORISEES = "@autorise.demo.explocardio.test";
 }
 
+// Le connecteur de démonstration est construit avant de passer en recette, pour chaque test
+// (sinon seul le premier test exécuté le construit, et les autres dépendent de l'ordre).
+beforeAll(async () => {
+  const { registre } = await import("@/connecteurs/registre");
+  registre.emailing();
+});
 afterEach(() => {
   for (const k of ["CONNECTOR_EMAILING", "EMAILING_ENVIRONNEMENT", "EMAILING_ADRESSES_AUTORISEES"]) {
     if (sauvegarde[k] === undefined) delete process.env[k];
@@ -32,8 +38,6 @@ afterAll(async () => {
 
 describe("garde de recette dans le point d'envoi", () => {
   it("hors liste : envoi annulé, motif exact, rendu conservé, rien d'envoyé, aucune alerte", async () => {
-    const { registre } = await import("@/connecteurs/registre");
-    registre.emailing();
     recette();
     const c = cle("hors-liste");
     const rendu = await emailEssai();
