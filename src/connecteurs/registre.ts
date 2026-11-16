@@ -57,7 +57,7 @@ function construire<K extends NomConnecteur>(nom: K, env: Env): Connecteurs[K] {
   const fabriques = {
     stripe: () => (mode === "demo" ? creerStripeDemo() : creerStripeReel(manquantes)),
     pca: () => (mode === "demo" ? creerPcaDemo() : creerPcaReel(manquantes)),
-    emailing: () => (mode === "demo" ? creerEmailingDemo() : creerEmailingReel(manquantes)),
+    emailing: () => (mode === "demo" ? creerEmailingDemo() : creerEmailingReel(manquantes, env)),
   } as const;
   const brut = fabriques[nom as Exclude<NomConnecteur, "odoo">]();
   return envelopper(brut as object, options) as Connecteurs[K];

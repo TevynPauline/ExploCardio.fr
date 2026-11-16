@@ -57,6 +57,18 @@ supprimée.
 
 Ne collez jamais ces valeurs ailleurs que dans Scalingo et votre `.env.local`.
 
+### Emails réels par Brevo (F25)
+
+Sur le site de recette, puis sur le site public, quand les emails doivent vraiment partir :
+
+| Variable | Valeur |
+|---|---|
+| `CONNECTOR_EMAILING` | `real` |
+| `EMAILING_API_KEY` | clé API créée dans Brevo (SMTP et API › Clés API), **une par site**, saisie directement ici |
+| `EMAILING_ENVIRONNEMENT` | `recette` sur le site de recette, `production` sur le site public |
+| `EMAILING_ADRESSES_AUTORISEES` | **recette uniquement** : adresses ou domaines autorisés, séparés par des virgules (par exemple `contact@explocardio.fr, @explocardio.fr`). Les autres emails ne partent pas et restent consultables au back-office. À laisser vide sur le site public. |
+| `EMAILING_TEST_DESTINATAIRE` | recette uniquement : boîte qui reçoit les tests de contrat (une adresse autorisée) |
+
 ## Fichiers téléversés
 
 Le disque d'un conteneur Scalingo est **effacé à chaque déploiement et redémarrage**. Les

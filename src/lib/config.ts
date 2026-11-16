@@ -20,7 +20,8 @@ export const VARIABLES_MODE_REEL: Record<NomConnecteur, readonly string[]> = {
   odoo: ["ODOO_URL", "ODOO_DATABASE", "ODOO_USER", "ODOO_API_KEY", "ODOO_ENVIRONNEMENT"],
   stripe: ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET"],
   pca: ["PCA_API_URL", "PCA_API_KEY"],
-  emailing: ["EMAILING_API_KEY"],
+  // F25 : EMAILING_ENVIRONNEMENT vaut « recette » (envois limités aux adresses autorisées) ou « production ».
+  emailing: ["EMAILING_API_KEY", "EMAILING_ENVIRONNEMENT"],
 };
 
 type Env = Record<string, string | undefined>;
@@ -37,15 +38,21 @@ export function modeDuConnecteur(nom: NomConnecteur, env: Env = process.env): Mo
 /** Valeurs admises de certaines variables : une autre valeur compte comme manquante. */
 const VALEURS_ADMISES: Record<string, readonly string[]> = {
   ODOO_ENVIRONNEMENT: ["recette", "production"],
+  EMAILING_ENVIRONNEMENT: ["recette", "production"],
 };
 
 export function variablesManquantes(nom: NomConnecteur, env: Env = process.env): string[] {
-  return VARIABLES_MODE_REEL[nom].filter((v) => {
+  const manquantes = VARIABLES_MODE_REEL[nom].filter((v) => {
     const valeur = env[v];
     if (!valeur) return true;
     const admises = VALEURS_ADMISES[v];
     return admises ? !admises.includes(valeur) : false;
   });
+  // F25 : en recette, la liste des adresses autorisées est obligatoire.
+  if (nom === "emailing" && environnementEmailing(env) === "recette" && !adressesAutorisees(env).length) {
+    manquantes.push("EMAILING_ADRESSES_AUTORISEES");
+  }
+  return manquantes;
 }
 
 export type EnvironnementOdoo = "recette" | "production";
@@ -63,4 +70,23 @@ export function sousModePcaDemo(env: Env = process.env): "auto" | "manual" {
 /** Sous-mode de la plateforme réelle (F12, FR-019), choisi au branchement (F14). */
 export function sousModePcaReel(env: Env = process.env): "auto" | "manual" {
   return env.PCA_SUBMODE === "manual" ? "manual" : "auto";
+}
+
+export type EnvironnementEmailing = "recette" | "production";
+
+/** Environnement de l'outil d'envoi déclaré (F25, R8) ; `null` s'il est absent ou invalide. */
+export function environnementEmailing(env: Env = process.env): EnvironnementEmailing | null {
+  const v = env.EMAILING_ENVIRONNEMENT;
+  return v === "recette" || v === "production" ? v : null;
+}
+
+/**
+ * Adresses autorisées sur le site de recette (F25, FR-016) : adresses exactes ou domaines
+ * (« @exemple.fr »), séparés par des virgules ; minuscules, espaces retirés.
+ */
+export function adressesAutorisees(env: Env = process.env): string[] {
+  return (env.EMAILING_ADRESSES_AUTORISEES ?? "")
+    .split(",")
+    .map((a) => a.trim().toLowerCase())
+    .filter(Boolean);
 }

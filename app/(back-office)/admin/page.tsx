@@ -4,6 +4,7 @@ import { registre } from "@/connecteurs/registre";
 import { listerClients } from "@/domaine/clients";
 import { environnementOdoo, modeDuSite } from "@/lib/config";
 import { dbSite } from "@/lib/db/site";
+import { listeIgnoreeEnProduction } from "@/lib/garde-recette-emailing";
 import { exigerDroit, peut } from "@/lib/droits";
 import { Card, Kicker } from "@/ui";
 
@@ -52,6 +53,12 @@ export default async function TableauDeBord({ searchParams }: { searchParams: Pr
     <div className="flex flex-col gap-6">
       <Kicker>Back-office</Kicker>
       <h1 className="text-h2 font-light">À traiter</h1>
+      {listeIgnoreeEnProduction() ? (
+        <p role="alert" className="ec-box--info p-4">
+          Liste d’adresses autorisées ignorée sur le site public : la variable EMAILING_ADRESSES_AUTORISEES est renseignée alors que
+          les emails sont en production. Retirez-la de la configuration Scalingo.
+        </p>
+      ) : null}
       {acces === "refuse" ? (
         <p role="alert" className="ec-box--info p-4">
           Cette page est réservée à un autre rôle.

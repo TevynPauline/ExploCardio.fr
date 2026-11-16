@@ -12,6 +12,8 @@ import type { ConnecteurEmailing, EmailClient, NotificationEquipe, SuiviEnvoi } 
 export const DOMAINE_REJET_DEMO = "@rejet.demo.explocardio.test";
 /** Adresses de test dont la remise est simulée en échec temporaire (boîte pleine). */
 export const DOMAINE_REJET_TEMPORAIRE_DEMO = "@temporaire.demo.explocardio.test";
+/** Adresses de test dont l'email est simulé « signalé comme indésirable » (F25). */
+export const DOMAINE_PLAINTE_DEMO = "@plainte.demo.explocardio.test";
 
 const ADRESSE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -72,9 +74,10 @@ export function creerEmailingDemo(): ConnecteurEmailing {
     async lireSuivi(envoiId: string): Promise<SuiviEnvoi> {
       const message = await dbSite().messageDemonstration.findUnique({ where: { id: envoiId } });
       if (!message) throw new NotFound("Envoi", envoiId);
-      if (message.etatRemise === "rejete") return { etat: "rejete", ouvertLe: null, motifRejet: "Adresse inexistante (simulation)", rejetDefinitif: true };
-      if (message.etatRemise === "rejete_temporaire") return { etat: "rejete", ouvertLe: null, motifRejet: "Boîte de réception pleine (simulation)", rejetDefinitif: false };
-      return { etat: "remis", ouvertLe: message.ouvertLe, motifRejet: null, rejetDefinitif: false };
+      if (message.etatRemise === "rejete") return { etat: "rejete", ouvertLe: null, motifRejet: "Adresse inexistante (simulation)", rejetDefinitif: true, plainte: false };
+      if (message.etatRemise === "rejete_temporaire") return { etat: "rejete", ouvertLe: null, motifRejet: "Boîte de réception pleine (simulation)", rejetDefinitif: false, plainte: false };
+      const plainte = message.destinataire.toLowerCase().endsWith(DOMAINE_PLAINTE_DEMO);
+      return { etat: "remis", ouvertLe: message.ouvertLe, motifRejet: null, rejetDefinitif: false, plainte };
     },
   };
 }

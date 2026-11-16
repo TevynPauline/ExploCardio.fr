@@ -83,7 +83,7 @@ src/connecteurs/emailing/
     ├── index.ts                          # creerEmailingReel(manquantes, env)
     ├── client.ts                         # appels HTTP Brevo, délai, masquage de la clé
     ├── correspondance.ts                 # événements Brevo → SuiviEnvoi ; erreurs → erreurs du contrat
-    └── garde-recette.ts                  # adresses autorisées (partagée avec le domaine)
+    (garde de recette : src/lib/garde-recette-emailing.ts, partagée avec le domaine)
 src/connecteurs/registre.ts               # passe env au mode réel emailing
 src/domaine/emailing/envoi.ts             # garde de recette avant envoi ; transactionnels d'abord
 src/domaine/emailing/suivi.ts             # plainte → consentement commercial retiré

@@ -6,7 +6,10 @@ import { cleDeTest, suiteDeContrat } from "./harness";
 
 // T065, F10 T003 — contrat du connecteur emailing (specs/010-emailing-automatise/contracts/emailing.md).
 
-const DESTINATAIRE = "contrat@demo.explocardio.test";
+// En mode réel (F25, R12), les envois vont à une boîte de l'équipe, autorisée sur la recette.
+const REEL = process.env.CONNECTOR_EMAILING === "real";
+const DESTINATAIRE = REEL ? (process.env.EMAILING_TEST_DESTINATAIRE ?? "") : "contrat@demo.explocardio.test";
+const EQUIPE = REEL ? DESTINATAIRE : "equipe@demo.explocardio.test";
 
 suiteDeContrat("emailing", "emails et notifications (contracts/emailing.md)", ({ registre, mode }) => {
   const emailing = () => registre.emailing();
@@ -29,6 +32,7 @@ suiteDeContrat("emailing", "emails et notifications (contracts/emailing.md)", ({
     const suivi = await emailing().lireSuivi(a.envoiId);
     expect(["envoye", "remis"]).toContain(suivi.etat);
     expect(suivi.motifRejet).toBeNull();
+    expect(typeof suivi.plainte).toBe("boolean");
   });
 
   it("transmet l'adresse de désinscription des emails de service et commerciaux", async () => {
@@ -42,7 +46,7 @@ suiteDeContrat("emailing", "emails et notifications (contracts/emailing.md)", ({
   it("envoie une notification d'équipe par email et par SMS", async () => {
     for (const canal of ["email", "sms"] as const) {
       const { envoiId } = await emailing().envoyerNotificationEquipe(
-        { canal, destinataires: ["equipe@demo.explocardio.test"], texte: "Nouvelle demande de financement.", declencheur: "test de contrat" },
+        { canal, destinataires: [EQUIPE], texte: "Nouvelle demande de financement.", declencheur: "test de contrat" },
         cleDeTest(`notif-${canal}`),
       );
       expect(envoiId).toBeTruthy();
@@ -66,6 +70,11 @@ suiteDeContrat("emailing", "emails et notifications (contracts/emailing.md)", ({
     expect(await emailing().lireSuivi(definitif.envoiId)).toMatchObject({ etat: "rejete", rejetDefinitif: true });
     const temporaire = await emailing().envoyerEmail(await email("pleine@temporaire.demo.explocardio.test"), cleDeTest("temporaire"));
     expect(await emailing().lireSuivi(temporaire.envoiId)).toMatchObject({ etat: "rejete", rejetDefinitif: false });
+  });
+
+  it.runIf(mode === "demo")("simule un signalement comme indésirable (F25)", async () => {
+    const { envoiId } = await emailing().envoyerEmail(await email("lecteur@plainte.demo.explocardio.test"), cleDeTest("plainte"));
+    expect(await emailing().lireSuivi(envoiId)).toMatchObject({ etat: "remis", plainte: true });
   });
 
   it.runIf(mode === "demo")("ne conserve que l'adresse, l'objet, le rendu et le texte (FR-039)", async () => {

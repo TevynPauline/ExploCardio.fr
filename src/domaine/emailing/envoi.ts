@@ -2,6 +2,7 @@ import { Prisma, type Envoi, type FamilleEmail, type ScenarioEmail } from "@gene
 import { registre } from "@/connecteurs/registre";
 import { estErreurConnecteur } from "@/connecteurs/erreurs";
 import type { NotificationEquipe } from "@/connecteurs/emailing/interfaces";
+import { creerGardeRecette, gardeRecetteActive } from "@/lib/garde-recette-emailing";
 import type { EmailRendu } from "@/emails/rendu";
 import { dbSite } from "@/lib/db/site";
 import { lireParametre, lireParametreEntier } from "@/lib/parametres";
@@ -33,6 +34,8 @@ export type DemandeEnvoi = {
 };
 
 const MINUTE = 60_000;
+/** F25 (FR-016) : motif d'un envoi retenu sur le site de recette. */
+export const MOTIF_BLOQUE_RECETTE = "Bloqué en recette : adresse non autorisée";
 const ATTENTES_MINUTES = [1, 2, 5, 10, 30, 60];
 
 const ACTIVATION: Partial<Record<ScenarioEmail, string>> = {
@@ -221,6 +224,16 @@ async function appliquer(envoi: Envoi, decision: Decision, maintenant: Date): Pr
     }
   }
 
+  // F25 (FR-016) : sur la recette, rien ne part hors des adresses autorisées ; l'email est
+  // conservé, consultable au back-office, sans alerte (ce n'est pas une anomalie).
+  if (gardeRecetteActive() && !creerGardeRecette().permet(envoi.destinataire)) {
+    await dbSite().envoi.update({
+      where: { id: envoi.id },
+      data: { etat: "annule", motif: MOTIF_BLOQUE_RECETTE, objet: rendu.objet, rendu: rendu.rendu, texte: rendu.texte, prochainEssai: null },
+    });
+    return "annule";
+  }
+
   try {
     const { envoiId } = await registre.emailing().envoyerEmail(
       {
@@ -280,7 +293,16 @@ async function bloquer(envoi: Envoi, motif: string) {
 }
 
 async function transmettreEquipe(envoi: Envoi, maintenant: Date): Promise<Envoi["etat"]> {
-  const n = envoi.variables as unknown as NotificationEquipe;
+  let n = envoi.variables as unknown as NotificationEquipe;
+  if (gardeRecetteActive()) {
+    const garde = creerGardeRecette();
+    const permis = n.destinataires.filter((d) => garde.permet(d));
+    if (!permis.length) {
+      await dbSite().envoi.update({ where: { id: envoi.id }, data: { etat: "annule", motif: MOTIF_BLOQUE_RECETTE, prochainEssai: null } });
+      return "annule";
+    }
+    n = { ...n, destinataires: permis };
+  }
   try {
     const { envoiId } = await registre.emailing().envoyerNotificationEquipe(n, envoi.cle);
     await dbSite().envoi.update({ where: { id: envoi.id }, data: { etat: "envoye", envoyeLe: maintenant, connecteurEnvoiId: envoiId, prochainEssai: null, motif: null } });

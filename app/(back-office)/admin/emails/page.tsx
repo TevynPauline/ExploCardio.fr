@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import type { EtatEnvoi, FamilleEmail, Prisma } from "@generated/site/client";
+import Link from "next/link";
+import { gardeRecetteActive } from "@/lib/garde-recette-emailing";
 import { CATALOGUE, TYPES_FACULTATIFS, type EntreeCatalogue } from "@/domaine/emailing/catalogue";
+import { MOTIF_BLOQUE_RECETTE } from "@/domaine/emailing/envoi";
 import { dbSite } from "@/lib/db/site";
 import { exigerAdministrateur } from "@/lib/roles";
 import { Button, Card, Kicker, Retour } from "@/ui";
@@ -40,6 +43,11 @@ export default async function SuiviEmails({ searchParams }: { searchParams: Prom
       <h1 className="text-h2 font-light">Suivi des envois</h1>
       <NavEmails actif="/admin/emails" />
       <Retour ok={r.ok} erreur={r.erreur} />
+      {gardeRecetteActive() ? (
+        <p role="status" className="ec-box--info p-4">
+          Site de recette : seuls les envois vers les adresses autorisées partent. Les autres sont « Non envoyé », avec leur contenu consultable.
+        </p>
+      ) : null}
 
       <form method="get" className="flex flex-wrap items-end gap-3" role="search">
         <label className="flex min-w-64 flex-1 flex-col gap-1 text-small font-medium">
@@ -120,6 +128,7 @@ export default async function SuiviEmails({ searchParams }: { searchParams: Prom
                     {ETATS[e.etat]}
                     {e.ouvertLe ? " · ouvert" : ""}
                     {e.motif && e.etat !== "envoye" && e.etat !== "remis" ? <span className="block text-muted">{e.motif}</span> : null}
+                    {e.motif === MOTIF_BLOQUE_RECETTE && e.rendu ? <Link href={`/admin/emails/envoi/${e.id}`} className="block">Voir le contenu</Link> : null}
                   </td>
                 </tr>
               ))}

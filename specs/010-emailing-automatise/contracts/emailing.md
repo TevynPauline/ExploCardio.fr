@@ -27,6 +27,8 @@ export type SuiviEnvoi = {
   motifRejet: string | null;
   /** Rejet définitif (adresse inexistante) plutôt que temporaire (boîte pleine). */
   rejetDefinitif: boolean;
+  /** F25 : signalé comme indésirable ou désinscrit chez l'outil (specs/025-branchement-brevo). */
+  plainte: boolean;
 };
 
 export interface ConnecteurEmailing {
