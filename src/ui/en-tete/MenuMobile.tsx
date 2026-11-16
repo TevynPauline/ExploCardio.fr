@@ -2,17 +2,18 @@
 
 import Link from "next/link";
 import { useRef, useState } from "react";
-import type { EntreeNavigation } from "@/domaine/navigation";
+import type { Colonne, EntreeNavigation, Lien } from "@/domaine/navigation";
 import { IconeChevron, IconeFermer, IconeMenu } from "./icones";
 
 /**
- * Menu replié pour mobile et tablette (FR-007) : même contenu que sur ordinateur, en
- * accordéons. Fenêtre modale native (<dialog>) : focus retenu, Échap pour fermer, fond inerte,
+ * Menu replié pour mobile et tablette (FR-007, F27) : même contenu que sur ordinateur, en
+ * listes dépliables (entrée, puis colonne ; le niveau 3 s'affiche sous son niveau 2). Fenêtre modale native (<dialog>) : focus retenu, Échap pour fermer, fond inerte,
  * défilement de la page bloqué.
  */
-export function MenuMobile({ entrees }: { entrees: EntreeNavigation[] }) {
+export function MenuMobile({ entrees, liensSecondaires }: { entrees: EntreeNavigation[]; liensSecondaires: Lien[] }) {
   const dialogue = useRef<HTMLDialogElement>(null);
   const [deplie, setDeplie] = useState<string | null>(null);
+  const [colonne, setColonne] = useState<string | null>(null);
 
   const ouvrir = () => {
     dialogue.current?.showModal();
@@ -63,25 +64,90 @@ export function MenuMobile({ entrees }: { entrees: EntreeNavigation[] }) {
                     <IconeChevron className={ouvert ? "rotate-180" : ""} />
                   </button>
                   <ul id={`mobile-${e.cle}`} hidden={!ouvert} className="pb-3 pl-3">
-                    {[...e.sousCategories, ...e.produitsPhares.map((p) => ({ libelle: p.libelle, href: p.href })), ...e.liensRapides].map((l) => (
-                      <li key={`${l.href}-${l.libelle}`}>
-                        <Link href={l.href} onClick={fermer} className="flex min-h-11 items-center text-ink">
-                          {l.libelle}
+                    {e.colonnes.map((c, i) => (
+                      <ColonneMobile
+                        key={c.titre}
+                        id={`mobile-${e.cle}-${i}`}
+                        colonne={c}
+                        ouverte={colonne === `${e.cle}-${i}`}
+                        basculer={() => setColonne(colonne === `${e.cle}-${i}` ? null : `${e.cle}-${i}`)}
+                        fermer={fermer}
+                      />
+                    ))}
+                    {e.carte ? (
+                      <li>
+                        <Link href={e.carte.bouton.href} onClick={fermer} className="flex min-h-11 items-center font-medium text-action">
+                          {e.carte.bouton.libelle}
                         </Link>
                       </li>
-                    ))}
+                    ) : null}
                     <li>
-                      <Link href={e.href} onClick={fermer} className="flex min-h-11 items-center font-medium text-action">
-                        Tout voir
+                      <Link href={e.lienFinal?.href ?? e.href} onClick={fermer} className="flex min-h-11 items-center font-medium text-action">
+                        {e.lienFinal?.libelle ?? "Tout voir"}
                       </Link>
                     </li>
                   </ul>
                 </li>
               );
             })}
+            {liensSecondaires.map((l) => (
+              <li key={l.href} className="border-b border-line">
+                <Link href={l.href} onClick={fermer} className="flex min-h-14 items-center font-medium">
+                  {l.libelle}
+                </Link>
+              </li>
+            ))}
           </ul>
         </nav>
       </dialog>
     </div>
+  );
+}
+
+/** Colonne d'un panneau : titre dépliable, liens de niveau 2 et, dessous, leurs niveaux 3. */
+function ColonneMobile({ id, colonne, ouverte, basculer, fermer }: { id: string; colonne: Colonne; ouverte: boolean; basculer: () => void; fermer: () => void }) {
+  if (!colonne.liens.length) {
+    return colonne.href ? (
+      <li>
+        <Link href={colonne.href} onClick={fermer} className="flex min-h-11 items-center text-ink">
+          {colonne.titre}
+        </Link>
+      </li>
+    ) : null;
+  }
+  return (
+    <li>
+      <button type="button" aria-expanded={ouverte} aria-controls={id} onClick={basculer} className="flex min-h-11 w-full items-center justify-between text-left text-ink">
+        {colonne.titre}
+        <IconeChevron className={ouverte ? "rotate-180" : ""} />
+      </button>
+      <ul id={id} hidden={!ouverte} className="pb-2 pl-3">
+        {colonne.liens.map((l) => (
+          <li key={l.href + l.libelle}>
+            <Link href={l.href} onClick={fermer} className={`flex min-h-11 items-center text-ink ${l.enGras ? "font-semibold" : ""}`}>
+              {l.libelle}
+            </Link>
+            {l.sousLiens.length ? (
+              <ul className="pl-3">
+                {l.sousLiens.map((s) => (
+                  <li key={s.href}>
+                    <Link href={s.href} onClick={fermer} className="flex min-h-11 items-center text-small text-muted">
+                      {s.libelle}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </li>
+        ))}
+        {colonne.href ? (
+          <li>
+            <Link href={colonne.href} onClick={fermer} className="flex min-h-11 items-center text-small font-medium text-action">
+              Tout voir : {colonne.titre}
+            </Link>
+          </li>
+        ) : null}
+      </ul>
+    </li>
   );
 }

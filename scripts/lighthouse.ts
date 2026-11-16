@@ -16,7 +16,7 @@ import { chromium } from "@playwright/test";
 if (existsSync(".env.local")) process.loadEnvFile(".env.local");
 
 const base = (process.argv[2] ?? process.env.LHCI_BASE_URL ?? "http://localhost:3000").replace(/\/$/, "");
-const PAGES = ["/", "/catalogue", "/holter-ecg", "/holter-ecg/dms-300-4l", "/accessoires-consommables/electrodes-holter"];
+const PAGES = ["/", "/catalogue", "/holter-ecg", "/holter-ecg/dms-300-4l", "/holter-ecg/electrodes-holter", "/informatique-medicale"];
 
 async function cookieAcces(): Promise<string> {
   const client = new pg.Client({ connectionString: process.env.DATABASE_URL });

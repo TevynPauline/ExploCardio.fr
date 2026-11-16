@@ -293,36 +293,6 @@ model Marque {
   @@map("marque")
 }
 
-enum EntreeMenu {
-  holter_ecg
-  holter_tensionnel
-  epreuve_effort
-  accessoires
-  services
-  financement
-  qui_sommes_nous
-}
-
-enum TypeElementMenu {
-  produit_phare
-  lien_rapide
-}
-
-/// Produit phare ou lien rapide d'un méga-menu, choisi par l'administrateur.
-model ElementMenu {
-  id          String          @id @default(cuid())
-  entree      EntreeMenu
-  type        TypeElementMenu
-  /// Référence d'article d'Odoo (produit phare).
-  defaultCode String?
-  libelle     String?
-  lien        String?
-  ordre       Int             @default(0)
-
-  @@index([entree, type])
-  @@map("element_menu")
-}
-
 enum EtatNewsletter {
   en_attente
   confirmee
@@ -379,8 +349,6 @@ model ContenuProduit {
   slug               String          @unique
   /// Anciens identifiants, redirigés vers l'adresse actuelle.
   anciensSlugs       String[]        @default([])
-  sousCategorieId    String?
-  sousCategorie      SousCategorie?  @relation(fields: [sousCategorieId], references: [id], onDelete: SetNull)
   publieLe           DateTime?
   textes             Json            @default("{}")
   photos             Json            @default("[]")
@@ -394,21 +362,6 @@ model ContenuProduit {
   modifieLe          DateTime        @updatedAt
 
   @@map("contenu_produit")
-}
-
-/// Sous-catégorie de filtre d'une catégorie du catalogue (F03, filtre « type »).
-model SousCategorie {
-  id        String           @id @default(cuid())
-  /// Code de la catégorie d'Odoo (holter-ecg, mapa, effort, ecg-repos, accessoires).
-  categorie String
-  libelle   String
-  slug      String
-  ordre     Int              @default(0)
-  contenus  ContenuProduit[]
-
-  @@unique([categorie, libelle])
-  @@unique([categorie, slug])
-  @@map("sous_categorie")
 }
 
 enum FormulePanier {
@@ -1156,4 +1109,45 @@ model FichierStocke {
   creeLe DateTime @default(now())
 
   @@map("fichier_stocke")
+}
+
+// ---------------------------------------------------------------------------
+// F27 — Demandes « Informatique médicale » (questionnaire public, suivi par l'équipe)
+// ---------------------------------------------------------------------------
+
+enum EtatDemandeInformatique {
+  nouvelle
+  en_cours
+  transmise
+  close
+}
+
+/// Questionnaire « Décrire mon besoin » de la page Informatique médicale : aucune donnée patient.
+model DemandeInformatique {
+  id                String                  @id @default(cuid())
+  /// acces_distance, materiel, prestataire, ne_sait_pas (au moins un).
+  interets          String[]
+  medecins          Int
+  postes            Int
+  secretariat       Boolean
+  /// { holter, mapa, effort } : valeur de liste fermée, « autre » (+ précision) ou « ne_sait_pas ».
+  logiciels         Json
+  /// oui_satisfait, oui_insatisfait, non.
+  prestataireActuel String
+  /// vite, trois_mois, information.
+  delai             String
+  /// nom, cabinet, codePostal, email, telephone.
+  coordonnees       Json
+  /// matin, midi, apres_midi.
+  creneau           String
+  consentementLe    DateTime
+  compteId          String?
+  etat              EtatDemandeInformatique @default(nouvelle)
+  notes             String?
+  traitePar         String?
+  creeLe            DateTime                @default(now())
+  modifieLe         DateTime                @default(now()) @updatedAt
+
+  @@index([etat, creeLe])
+  @@map("demande_informatique")
 }

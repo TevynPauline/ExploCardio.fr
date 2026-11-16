@@ -35,7 +35,9 @@ const GROUPE_PAR_TYPE: Record<ReferenceArticle["type"], TypeGroupe> = {
 /** Pages du site trouvables par la recherche (services et familles). */
 const PAGES: { titre: string; sousTitre: string; destination: string; motsCles: string }[] = [
   ...Object.values(FAMILLES).map((f) => ({ titre: f.libelle, sousTitre: "Famille de produits", destination: f.chemin, motsCles: "catalogue" })),
-  { titre: "Hébergement des données de santé", sousTitre: "Service · en préparation", destination: "/services/hebergement-donnees-sante", motsCles: "hds cloud logiciel plateforme" },
+  { titre: "Informatique médicale", sousTitre: "PCA · matériel et support informatique", destination: "/informatique-medicale", motsCles: "pca patient care anywhere acces distance informatique ordinateur prestataire 2i" },
+  { titre: "Hébergement des données de santé", sousTitre: "Informatique médicale", destination: "/informatique-medicale#hebergement", motsCles: "hds cloud logiciel plateforme" },
+  { titre: "Consommables", sousTitre: "Par examen", destination: "/consommables", motsCles: "electrodes protecteurs brassards piles papier" },
   { titre: "Assistance et service", sousTitre: "Service", destination: "/services/assistance", motsCles: "hotline aide sav whatsapp fidelite bons d'achat" },
   { titre: "Financement", sousTitre: "Service", destination: "/financement", motsCles: "leasing credit mensualite" },
   { titre: "Installation et formation", sousTitre: "Service", destination: "/services/installation-formation", motsCles: "installation formation parametrage mise en service" },

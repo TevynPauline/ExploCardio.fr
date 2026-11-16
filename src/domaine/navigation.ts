@@ -1,106 +1,160 @@
 import { unstable_cache } from "next/cache";
+import type { Categorie } from "@/connecteurs/odoo/interfaces";
 import { ETIQUETTES } from "@/lib/cache";
-import { dbSite } from "@/lib/db/site";
-import { lireCatalogue, type EntreeCatalogue } from "./catalogue/lecture";
-import { prixTtc } from "./catalogue/prix";
-import { FAMILLES, type Famille } from "./familles";
+import { grouperConsommables } from "./catalogue/consommables";
+import { lireCatalogue, lireCategories, type EntreeCatalogue } from "./catalogue/lecture";
+import { cheminDeCategorie } from "./familles";
 
-// Contenu de la barre de navigation et des méga-menus (F01, T034, FR-003 à FR-009) :
-// sous-catégories de filtre du catalogue (F03), produits phares et liens rapides
-// choisis par l'administrateur. Préparé côté serveur : aucun appel au connecteur depuis le
-// navigateur. En cas de panne du connecteur, les liens fixes restent disponibles.
+// Barre de navigation et méga-menus (F27, contracts/navigation.md) : cinq entrées et deux liens
+// discrets. « Produits » reprend l'arbre des catégories d'Odoo sur trois niveaux, « Consommables »
+// les articles de type « Consommable » par examen. Préparé côté serveur ; si le connecteur Odoo
+// est injoignable, la barre et les liens fixes restent disponibles.
 
 export type Lien = { libelle: string; href: string };
-export type ProduitPhare = { libelle: string; sousTitre: string; href: string; prixHt: number; tauxTva: number };
+export type LienNiveau2 = Lien & { enGras: boolean; sousLiens: Lien[] };
+export type Colonne = { titre: string; href: string | null; liens: LienNiveau2[] };
+export type CarteAppel = { titre: string; texte: string; bouton: Lien };
+
+export type CleEntree = "produits" | "consommables" | "informatique" | "location" | "services";
 
 export type EntreeNavigation = {
-  cle: string;
+  cle: CleEntree;
   libelle: string;
+  /** Page d'ensemble de l'entrée. */
   href: string;
-  sousCategories: Lien[];
-  produitsPhares: ProduitPhare[];
-  liensRapides: Lien[];
+  colonnes: Colonne[];
+  carte: CarteAppel | null;
+  /** Lien de fin de panneau (« Voir tous les produits »). */
+  lienFinal: Lien | null;
 };
 
-const ENTREES = [
-  { cle: "holter_ecg", libelle: "Holter ECG", href: "/holter-ecg", famille: FAMILLES["holter-ecg"] },
-  { cle: "holter_tensionnel", libelle: "Holter tensionnel", href: "/holter-tensionnel", famille: FAMILLES["holter-tensionnel"] },
-  { cle: "epreuve_effort", libelle: "Épreuve d'effort", href: "/epreuve-effort", famille: FAMILLES["epreuve-effort"] },
-  { cle: "accessoires", libelle: "Accessoires & consommables", href: "/accessoires-consommables", famille: FAMILLES["accessoires-consommables"] },
-  { cle: "services", libelle: "Services", href: "/services", famille: null },
-  { cle: "financement", libelle: "Financement", href: "/financement", famille: null },
-  { cle: "qui_sommes_nous", libelle: "Qui sommes-nous / Contact", href: "/qui-sommes-nous", famille: null },
-] as const;
+export type Navigation = { entrees: EntreeNavigation[]; liensSecondaires: Lien[] };
 
-/** Sous-catégories et liens fixes des entrées sans famille du catalogue. */
-const FIXES: Record<string, Lien[]> = {
-  services: [
-    { libelle: "Hébergement des données de santé", href: "/services/hebergement-donnees-sante" },
-    { libelle: "Assistance et service", href: "/services/assistance" },
-    { libelle: "Centre d’aide", href: "/aide" },
-    { libelle: "Financement", href: "/financement" },
-    { libelle: "Installation et formation", href: "/services/installation-formation" },
-    { libelle: "Mise à disposition", href: "/mise-a-disposition" },
-  ],
-  financement: [
-    { libelle: "Financement longue durée", href: "/financement" },
-    { libelle: "Mise à disposition au mois", href: "/mise-a-disposition" },
-    { libelle: "Dépannage express", href: "/mise-a-disposition#depannage-express" },
-  ],
-  qui_sommes_nous: [
-    { libelle: "Qui sommes-nous", href: "/qui-sommes-nous" },
-    { libelle: "Nous écrire", href: "/qui-sommes-nous#contact" },
-    { libelle: "Centre d’aide", href: "/aide" },
-  ],
+/** Colonnes du panneau « Produits », dans cet ordre (FR-005). */
+export const COLONNES_PRODUITS: readonly { rubrique: string; titre: string }[] = [
+  { rubrique: "holter-ecg", titre: "Holter ECG" },
+  { rubrique: "mapa", titre: "Holter tensionnel / MAPA" },
+  { rubrique: "effort", titre: "Épreuve d'effort" },
+  { rubrique: "ecg-repos", titre: "ECG de repos" },
+];
+
+const PAGE_IM = "/informatique-medicale";
+
+export const LIENS_SECONDAIRES: Lien[] = [
+  { libelle: "Qui sommes-nous", href: "/qui-sommes-nous" },
+  { libelle: "Contact", href: "/qui-sommes-nous#contact" },
+];
+
+const lien = (libelle: string, href: string): LienNiveau2 => ({ libelle, href, enGras: false, sousLiens: [] });
+
+/** Entrées sans catalogue (FR-014, FR-015, US2). */
+export const ENTREES_FIXES: Record<"informatique" | "location" | "services", EntreeNavigation> = {
+  informatique: {
+    cle: "informatique",
+    libelle: "Informatique médicale",
+    href: PAGE_IM,
+    colonnes: [
+      { titre: "Accès à distance", href: null, liens: [lien("PCA, votre cabinet accessible partout", `${PAGE_IM}#pca`)] },
+      { titre: "Équipement", href: null, liens: [lien("Matériel informatique", `${PAGE_IM}#prestataire`)] },
+      {
+        titre: "Accompagnement",
+        href: null,
+        liens: [lien("Support informatique du cabinet", `${PAGE_IM}#prestataire`), lien("Hébergement des données de santé", `${PAGE_IM}#hebergement`)],
+      },
+    ],
+    carte: {
+      titre: "Un projet informatique ?",
+      texte: "Décrivez votre besoin en 2 minutes, nous vous rappelons.",
+      bouton: { libelle: "Décrire mon besoin", href: `${PAGE_IM}#questionnaire` },
+    },
+    lienFinal: null,
+  },
+  location: {
+    cle: "location",
+    libelle: "Location et financement",
+    href: "/mise-a-disposition",
+    colonnes: [
+      {
+        titre: "Louer",
+        href: null,
+        liens: [lien("Mise à disposition au mois", "/mise-a-disposition"), lien("Dépannage express", "/mise-a-disposition#depannage-express")],
+      },
+      { titre: "Financer", href: null, liens: [lien("Financement longue durée", "/financement")] },
+    ],
+    carte: null,
+    lienFinal: null,
+  },
+  services: {
+    cle: "services",
+    libelle: "Services",
+    href: "/services",
+    colonnes: [
+      { titre: "Au quotidien", href: null, liens: [lien("Assistance et service", "/services/assistance"), lien("Centre d’aide", "/aide")] },
+      { titre: "À l’installation", href: null, liens: [lien("Installation et formation", "/services/installation-formation")] },
+    ],
+    carte: null,
+    lienFinal: null,
+  },
 };
 
-/** Sous-catégories de filtre de la catégorie (F03), menant à la page catégorie filtrée. */
-function sousCategoriesDeFamille(famille: Famille, sousCategories: { categorie: string; libelle: string; slug: string }[]): Lien[] {
-  const liens: Lien[] = sousCategories
-    .filter((sc) => sc.categorie === famille.categorie)
-    .map((sc) => ({ libelle: sc.libelle, href: `${famille.chemin}?type=${sc.slug}` }));
-  if (famille.cle === "holter-ecg") liens.push({ libelle: "ECG de repos", href: FAMILLES["ecg-de-repos"].chemin });
-  return liens.length ? liens : [{ libelle: `Tous les produits ${famille.libelle}`, href: famille.chemin }];
-}
+const dans = (detail: string, code: string) => detail === code || detail.startsWith(`${code}/`);
 
-/** Variante la moins chère, avec son taux (F22 : « à partir de » en TTC). */
-function prixAPartirDe(e: EntreeCatalogue): { prixHt: number; tauxTva: number } {
-  const v = [...e.article.variantes].sort((a, b) => prixTtc(a.prixHt, a.tauxTva) - prixTtc(b.prixHt, b.tauxTva))[0]!;
-  return { prixHt: v.prixHt, tauxTva: v.tauxTva };
-}
-
-async function construire(): Promise<EntreeNavigation[]> {
-  const [elements, sousCategories, catalogue] = await Promise.all([
-    dbSite().elementMenu.findMany({ orderBy: { ordre: "asc" } }),
-    dbSite().sousCategorie.findMany({ orderBy: { ordre: "asc" } }),
-    lireCatalogue(), // connecteur indisponible : liste vide, liens fixes seulement
-  ]);
-  return ENTREES.map((e) => {
-    const articles = e.famille ? catalogue.entrees.filter((x) => x.article.categorie === e.famille!.categorie) : [];
-    const choisis = elements.filter((x) => x.entree === e.cle);
-    const phares = choisis
-      .filter((x) => x.type === "produit_phare" && x.defaultCode)
-      .map((x) => articles.find((a) => a.article.variantes.some((v) => v.defaultCode === x.defaultCode)))
-      .filter((a): a is EntreeCatalogue => Boolean(a));
-    const produitsPhares = (phares.length ? phares : articles.filter((a) => a.article.type === "equipement").slice(0, 3))
-      .slice(0, 4)
-      .map((a) => ({ libelle: a.article.nom, sousTitre: a.article.marque, href: a.chemin, ...prixAPartirDe(a) }));
-    const liensRapides = choisis
-      .filter((x) => x.type === "lien_rapide" && x.libelle && x.lien)
-      .slice(0, 4)
-      .map((x) => ({ libelle: x.libelle!, href: x.lien! }));
+/** Panneau « Produits » (FR-005 à FR-009) : catégories sans article publié masquées. */
+export function entreeProduits(arbre: Categorie[], entrees: EntreeCatalogue[]): EntreeNavigation {
+  const details = entrees.map((e) => e.article.categorieDetail);
+  const nonVide = (c: Categorie) => details.some((d) => dans(d, c.code));
+  const colonnes = COLONNES_PRODUITS.map(({ rubrique, titre }): Colonne => {
+    const famille = cheminDeCategorie(rubrique);
+    const href = (code: string) => `${famille}?categorie=${encodeURIComponent(code)}`;
+    const niveau1 = arbre.filter((c) => c.niveau === 1 && c.parentCode === rubrique && nonVide(c));
     return {
-      cle: e.cle,
-      libelle: e.libelle,
-      href: e.href,
-      sousCategories: e.famille ? sousCategoriesDeFamille(e.famille, sousCategories) : (FIXES[e.cle] ?? []),
-      produitsPhares,
-      liensRapides,
+      titre,
+      href: famille,
+      liens: niveau1.map((c) => {
+        const sousLiens = arbre
+          .filter((x) => x.niveau === 2 && x.parentCode === c.code && nonVide(x))
+          .map((x) => ({ libelle: x.nom, href: href(x.code) }));
+        return { libelle: c.nom, href: href(c.code), enGras: sousLiens.length > 0, sousLiens };
+      }),
     };
   });
+  return { cle: "produits", libelle: "Produits", href: "/catalogue", colonnes, carte: null, lienFinal: { libelle: "Voir tous les produits", href: "/catalogue" } };
 }
 
-export const lireNavigation = unstable_cache(construire, ["navigation"], {
+/** Panneau « Consommables » (FR-011 à FR-013) : six fiches au plus par examen. */
+export function entreeConsommables(entrees: EntreeCatalogue[]): EntreeNavigation {
+  const colonnes = grouperConsommables(entrees).map((g) => ({
+    titre: g.titre,
+    href: `/consommables#${g.rubrique}`,
+    liens: g.entrees.slice(0, 6).map((e) => lien(e.article.nom, e.chemin)),
+  }));
+  return {
+    cle: "consommables",
+    libelle: "Consommables",
+    href: "/consommables",
+    colonnes,
+    carte: {
+      titre: "Vos consommables",
+      texte: "Retrouvez vos dernières commandes dans Mon compte pour les renouveler.",
+      bouton: { libelle: "Mon compte", href: "/mon-compte" },
+    },
+    lienFinal: { libelle: "Tous les consommables", href: "/consommables" },
+  };
+}
+
+export function construireNavigation(arbre: Categorie[], entrees: EntreeCatalogue[]): Navigation {
+  return {
+    entrees: [entreeProduits(arbre, entrees), entreeConsommables(entrees), ENTREES_FIXES.informatique, ENTREES_FIXES.location, ENTREES_FIXES.services],
+    liensSecondaires: LIENS_SECONDAIRES,
+  };
+}
+
+async function construire(): Promise<Navigation> {
+  const [arbre, catalogue] = await Promise.all([lireCategories(), lireCatalogue()]);
+  return construireNavigation(arbre, catalogue.entrees);
+}
+
+export const lireNavigation = unstable_cache(construire, ["navigation-f27"], {
   tags: [ETIQUETTES.catalogue, ETIQUETTES.contenus],
   revalidate: 300,
 });

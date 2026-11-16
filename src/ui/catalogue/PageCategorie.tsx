@@ -22,13 +22,21 @@ export async function PageCategorie({ cle, parametres, avant, apres }: Props) {
   const famille = FAMILLES[cle];
   const filtres = filtresDepuisAdresse(parametres);
   const [{ titre, html }, resultat] = await Promise.all([lireTexte(famille.texte), listerCategorie(famille.categorie, filtres)]);
-  const filtre = Boolean(filtres.marque || filtres.type || filtres.dispo);
+  const filtre = Boolean(filtres.marque || filtres.categorie || filtres.dispo);
+  const choisie = resultat.categorieChoisie;
+  // Fil d'Ariane : famille (ECG de repos sous Holter ECG), puis la catégorie d'Odoo choisie (F27).
+  const etapes = [
+    ...(cle === "ecg-de-repos" ? [{ libelle: FAMILLES["holter-ecg"].libelle, href: FAMILLES["holter-ecg"].chemin }] : []),
+    choisie ? { libelle: famille.libelle, href: famille.chemin } : { libelle: famille.libelle },
+    ...(choisie ? [{ libelle: choisie.nom }] : []),
+  ];
   return (
     <div className="mx-auto flex max-w-page flex-col gap-8 px-4 py-10">
-      <FilAriane etapes={cle === "ecg-de-repos" ? [{ libelle: FAMILLES["holter-ecg"].libelle, href: FAMILLES["holter-ecg"].chemin }, { libelle: famille.libelle }] : [{ libelle: famille.libelle }]} />
+      <FilAriane etapes={etapes} />
       <header className="flex flex-col gap-3">
         <Kicker>Catalogue</Kicker>
         <h1 className="text-display font-light">{titre}</h1>
+        {choisie ? <p className="text-h3 font-semibold">{choisie.nom}</p> : null}
         <TexteRiche html={html} />
       </header>
       {avant}
@@ -46,9 +54,9 @@ export async function PageCategorie({ cle, parametres, avant, apres }: Props) {
         <>
           <Filtres
             marques={resultat.filtresDisponibles.marques}
-            types={resultat.filtresDisponibles.types}
+            categories={resultat.filtresDisponibles.categories}
             dispos={resultat.filtresDisponibles.dispos}
-            valeurs={{ marque: filtres.marque, type: filtres.type, dispo: filtres.dispo, tri: filtres.tri }}
+            valeurs={{ marque: filtres.marque, categorie: filtres.categorie, dispo: filtres.dispo, tri: filtres.tri }}
             total={resultat.total}
           />
           {modeDuSite() === "demo" ? (

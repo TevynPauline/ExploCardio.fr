@@ -2,7 +2,6 @@
 
 import { exigerDroit } from "@/lib/droits";
 import { redirect } from "next/navigation";
-import { registre } from "@/connecteurs/registre";
 import { SaisieRefusee, dateFacultative, exigerLien, exigerTexte, exigerTexteRemplacement, journaliser, verifierVersionContenu } from "@/domaine/admin-contenus";
 import { invaliderDepuisAction } from "@/lib/cache";
 import { dbSite } from "@/lib/db/site";
@@ -268,6 +267,33 @@ export async function enregistrerRaisons(d: FormData) {
   });
 }
 
+// ------------------------------------------------------------------ Page Informatique médicale (F27)
+
+export async function enregistrerTextesInformatique(d: FormData) {
+  await executer("/admin/contenus/informatique-medicale", "Textes de la page Informatique médicale enregistrés.", async (a) => {
+    const { CLES_TEXTES_IM, LONGUEURS_IM: L } = await import("@/domaine/informatique/textes");
+    const lignes = await dbSite().contenu.findMany({ where: { type: "argument", cle: { in: CLES_TEXTES_IM } } });
+    const lu = t(d, "modifieLe");
+    const recente = lignes.reduce<Date | null>((m, l) => (!m || l.modifieLe > m ? l.modifieLe : m), null);
+    if (lu && recente && recente.toISOString() !== lu) {
+      const derniere = await dbSite().journalAction.findFirst({ where: { action: "contenus.informatique.modifies" }, orderBy: { date: "desc" } });
+      throw new SaisieRefusee(`Ces textes ont été modifiés${derniere ? ` par ${derniere.auteur}` : ""} depuis que vous avez ouvert la page : rien n'a été écrasé. Rechargez la page.`);
+    }
+    for (const [i, cle] of CLES_TEXTES_IM.entries()) {
+      const titre = exigerTexte(t(d, `${cle}-titre`), "Titre", 1, L.titre);
+      const corps = exigerTexte(t(d, `${cle}-corps`), "Phrase", 1, L.corps);
+      const avant = lignes.find((l) => l.cle === cle);
+      if (avant && avant.titre === titre && avant.corps === corps) continue;
+      await dbSite().contenu.upsert({
+        where: { type_cle: { type: "argument", cle } },
+        create: { type: "argument", cle, titre, corps, ordre: 200 + i, etat: "publie" },
+        update: { titre, corps },
+      });
+      await journaliser(a, "contenus.informatique.modifies", cle, avant ? { titre: avant.titre, corps: avant.corps } : null, { titre, corps });
+    }
+  });
+}
+
 // ------------------------------------------------------------------ Organisation de l'accueil (F23)
 
 export async function enregistrerOrganisation(d: FormData) {
@@ -321,41 +347,6 @@ export async function enregistrerCoordonnees(d: FormData) {
       await ecrireParametre(cle, valeur, a.id);
       await journaliser(a, "contenus.parametre.modifie", cle, avant?.valeur ?? null, valeur);
     }
-  });
-}
-
-// ------------------------------------------------------------------ Menus
-
-const ENTREES = ["holter_ecg", "holter_tensionnel", "epreuve_effort", "accessoires", "services", "financement", "qui_sommes_nous"] as const;
-
-export async function ajouterElementMenu(d: FormData) {
-  await executer("/admin/contenus/menus", "Élément ajouté au menu.", async (a) => {
-    const entree = t(d, "entree") as (typeof ENTREES)[number];
-    if (!ENTREES.includes(entree)) throw new SaisieRefusee("Entrée de menu inconnue.");
-    const type: "lien_rapide" | "produit_phare" = t(d, "type") === "lien_rapide" ? "lien_rapide" : "produit_phare";
-    const deja = await dbSite().elementMenu.count({ where: { entree, type } });
-    if (deja >= 4) throw new SaisieRefusee("4 éléments de ce type au plus par entrée.");
-    let donnees;
-    if (type === "produit_phare") {
-      const reference = t(d, "reference").trim();
-      const references = await registre.odoo().catalogue.listerReferences();
-      const article = references.find((r) => r.defaultCode === reference || r.referenceArticle === reference);
-      if (!article) throw new SaisieRefusee(`Référence inconnue dans le catalogue : ${reference || "(vide)"}.`);
-      donnees = { entree, type, defaultCode: article.referenceArticle, ordre: deja + 1 };
-    } else {
-      donnees = { entree, type, libelle: exigerTexte(t(d, "libelle"), "Libellé", 1, 50), lien: exigerLien(t(d, "lien"), true), ordre: deja + 1 };
-    }
-    const cree = await dbSite().elementMenu.create({ data: donnees });
-    await journaliser(a, "contenus.menu.ajoute", cree.id, null, donnees);
-    invaliderDepuisAction("catalogue");
-  });
-}
-
-export async function supprimerElementMenu(d: FormData) {
-  await executer("/admin/contenus/menus", "Élément retiré du menu.", async (a) => {
-    const avant = await dbSite().elementMenu.delete({ where: { id: t(d, "id") } });
-    await journaliser(a, "contenus.menu.retire", avant.id, avant, null);
-    invaliderDepuisAction("catalogue");
   });
 }
 

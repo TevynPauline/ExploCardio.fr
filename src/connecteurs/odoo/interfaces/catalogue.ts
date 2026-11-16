@@ -11,6 +11,10 @@ export type Categorie = MarqueFictive & {
   nom: string;
   ordre: number;
   parentCode: string | null;
+  /** Rubrique de la branche (code de la catégorie de niveau 0). */
+  rubrique: string;
+  /** 0 : rubrique ; 1 : sous-catégorie ; 2 : sous-sous-catégorie (F27, contracts/odoo-catalogue.md). */
+  niveau: 0 | 1 | 2;
 };
 
 export type FiltresArticles = {
@@ -26,6 +30,8 @@ export type ResumeArticle = MarqueFictive & {
   marque: string;
   type: TypeArticle;
   categorie: string;
+  /** Catégorie la plus précise de l'article (niveau ≤ 2), sinon la rubrique (F27). */
+  categorieDetail: string;
   prixAPartirDeHt: Centimes;
   formules: Formule[];
   disponibilite: EtatDisponibilite;
@@ -78,6 +84,8 @@ export type Article = MarqueFictive & {
   marque: string;
   type: TypeArticle;
   categorie: string;
+  /** Catégorie la plus précise de l'article (niveau ≤ 2), sinon la rubrique (F27). */
+  categorieDetail: string;
   description: string | null;
   formules: Formule[];
   eligibleBonsAchat: boolean;
@@ -107,6 +115,8 @@ export type ReferenceArticle = MarqueFictive & {
   marque: string;
   type: TypeArticle;
   categorie: string;
+  /** Catégorie la plus précise de l'article (niveau ≤ 2), sinon la rubrique (F27). */
+  categorieDetail: string;
   configuration: string | null;
   prixHt: Centimes;
   /** Taux de TVA de la variante, en % (F22 : prix affichés TTC d'abord). */

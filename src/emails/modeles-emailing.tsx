@@ -151,7 +151,7 @@ export const emailsEmailing = {
           {p.gains?.droitsJusquAu ? t.bloc("droits") : null}
           {t.bloc("fin")}
           <Paragraphe>
-            <a href={urlDuSite("/accessoires-consommables")}>Voir tous les consommables</a>
+            <a href={urlDuSite("/consommables")}>Voir tous les consommables</a>
           </Paragraphe>
         </>
       ),

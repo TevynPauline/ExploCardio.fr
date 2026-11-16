@@ -6,18 +6,20 @@ import { Kicker } from "@/ui";
 export const metadata: Metadata = { title: "Demandes" };
 
 // Demandes (F13, D1) : financements (F04), devis (F03), messages du formulaire de contact (F01)
-// et inscriptions de la page d'attente (F17).
+// questionnaire Informatique médicale (F27) et inscriptions de la page d'attente (F17).
 export default async function Demandes() {
-  const [financements, devis, messages, ouverture] = await Promise.all([
+  const [financements, devis, messages, informatique, ouverture] = await Promise.all([
     dbSite().demandeFinancement.count({ where: { statut: "recue" } }),
     dbSite().demandeDevis.count({ where: { statut: "recue" } }),
     dbSite().messageContact.count({ where: { etat: "nouveau" } }),
+    dbSite().demandeInformatique.count({ where: { etat: "nouvelle" } }),
     dbSite().inscriptionOuverture.count(),
   ]);
   const rubriques = [
     { href: "/admin/financements", titre: "Demandes de financement", texte: "Reçues, en étude, accordées ou refusées ; notes internes.", nouveaux: financements },
     { href: "/admin/devis", titre: "Demandes de devis", texte: "ECG de repos, hébergement : en cours, traitées ; notes internes.", nouveaux: devis },
     { href: "/admin/demandes/messages", titre: "Messages de contact", texte: "Formulaire de contact du site : nouveaux, en cours, traités.", nouveaux: messages },
+    { href: "/admin/demandes/informatique", titre: "Informatique médicale", texte: "Questionnaire « Décrire mon besoin » : à rappeler, puis transmettre à 2i.", nouveaux: informatique },
   ];
   const inscrits = `${ouverture} inscrit${ouverture > 1 ? "s" : ""}`;
   return (

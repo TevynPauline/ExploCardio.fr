@@ -5,6 +5,7 @@ import { ETIQUETTES } from "@/lib/cache";
 import { MOTIF_HORS_METROPOLE } from "./comptes/adresses";
 import { CLE_ORGANISATION, normaliserOrganisation, type PlaceBloc } from "./organisation-accueil";
 import { CLES_RAISONS, textesRaisons, type Raison } from "./textes-raisons";
+import { CLES_TEXTES_IM, textesInformatique, type TextesIM } from "./informatique/textes";
 
 // Lecture des contenus éditoriaux publiés (F01, T007). Mis en cache avec l'étiquette
 // « contenus », invalidée à chaque enregistrement du mini back-office (SC-003 : < 1 minute).
@@ -67,6 +68,12 @@ export async function lireBandeau(maintenant = new Date()): Promise<MessageBande
 export const lireOrganisation = enCache("organisation", async (): Promise<PlaceBloc[]> => {
   const p = await dbSite().parametre.findUnique({ where: { cle: CLE_ORGANISATION } });
   return normaliserOrganisation(p?.valeur);
+});
+
+/** Textes de la page Informatique médicale (F27, FR-023). */
+export const lireTextesInformatique = enCache("informatique", async (): Promise<TextesIM> => {
+  const lignes = await dbSite().contenu.findMany({ where: { type: "argument", cle: { in: CLES_TEXTES_IM } } });
+  return textesInformatique(lignes);
 });
 
 /** Textes des six cartes « Pourquoi choisir ExploCardio.fr ? » (F23, D8). */

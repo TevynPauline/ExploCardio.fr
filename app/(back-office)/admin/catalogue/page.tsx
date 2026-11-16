@@ -38,7 +38,6 @@ export default async function Catalogue({ searchParams }: { searchParams: Promis
         (textes, photos, documents, compatibilités) et vous les publiez.
       </p>
       <p className="flex flex-wrap gap-4">
-        <Link href="/admin/catalogue/sous-categories" className="ec-btn ec-btn--secondary">Types (filtres des catégories)</Link>
         <Link href="/admin/catalogue/services" className="ec-btn ec-btn--secondary">Pages services et financement</Link>
         <Link href="/admin/catalogue/controle" className="ec-btn ec-btn--secondary">Contrôle des données Odoo</Link>
       </p>

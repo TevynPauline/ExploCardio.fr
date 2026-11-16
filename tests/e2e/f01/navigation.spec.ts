@@ -1,15 +1,15 @@
 import { expect, test } from "@playwright/test";
 
-// T030 (US2, FR-001 à FR-009).
+// T030 (US2, FR-001 à FR-009), mis à jour par F27 : cinq entrées et deux liens discrets.
 
-const ENTREES = ["Holter ECG", "Holter tensionnel", "Épreuve d'effort", "Accessoires & consommables", "Services", "Financement", "Qui sommes-nous / Contact"];
+const ENTREES = ["Produits", "Consommables", "Informatique médicale", "Location et financement", "Services"];
 
 test.describe("ordinateur", () => {
   test.beforeEach(async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
   });
 
-  test("barre fixe, logo, sept entrées dans l'ordre, recherche, panier, compte", async ({ page }) => {
+  test("barre fixe, logo, cinq entrées dans l'ordre, recherche, panier, compte", async ({ page }) => {
     await page.goto("/holter-ecg");
     const nav = page.getByRole("navigation", { name: "Navigation principale" });
     await expect(nav.getByRole("button")).toHaveText(ENTREES);
@@ -35,21 +35,21 @@ test.describe("ordinateur", () => {
       await expect(bouton).toBeFocused();
     }
     // Clavier : flèche bas ouvre et place le focus dans le panneau
-    const holter = page.getByRole("navigation", { name: "Navigation principale" }).getByRole("button", { name: "Holter ECG" });
-    await holter.focus();
+    const produits = page.getByRole("navigation", { name: "Navigation principale" }).getByRole("button", { name: "Produits" });
+    await produits.focus();
     await page.keyboard.press("ArrowDown");
-    await expect(page.locator("#megamenu-holter_ecg a").first()).toBeFocused();
-    await expect(page.locator("#megamenu-holter_ecg").getByRole("link", { name: "ECG de repos" })).toBeVisible();
+    await expect(page.locator("#megamenu-produits a").first()).toBeFocused();
+    await expect(page.locator("#megamenu-produits").getByRole("link", { name: "Enregistreurs Holter ECG" })).toBeVisible();
     // Clic à l'extérieur
     await page.mouse.click(10, 700);
-    await expect(page.locator("#megamenu-holter_ecg")).toBeHidden();
+    await expect(page.locator("#megamenu-produits")).toBeHidden();
   });
 
   test("méga-menu ouvert au survol", async ({ page }) => {
     await page.goto("/");
     await page.getByRole("navigation", { name: "Navigation principale" }).getByRole("button", { name: "Services" }).hover();
     await expect(page.locator("#megamenu-services")).toBeVisible();
-    await expect(page.locator("#megamenu-services").getByRole("link", { name: "Hébergement des données de santé" })).toBeVisible();
+    await expect(page.locator("#megamenu-services").getByRole("link", { name: "Installation et formation" })).toBeVisible();
   });
 
   test("le méga-menu suit la souris : reste ouvert sur son panneau, se referme dès qu'elle en sort", async ({ page }) => {
@@ -59,16 +59,16 @@ test.describe("ordinateur", () => {
     await nav.getByRole("button", { name: "Services" }).hover();
     await expect(panneau).toBeVisible();
     // Descente dans le panneau : il reste ouvert.
-    await panneau.getByRole("link", { name: "Hébergement des données de santé" }).hover();
+    await panneau.getByRole("link", { name: "Installation et formation" }).hover();
     await page.waitForTimeout(400);
     await expect(panneau).toBeVisible();
     // Passage sur une autre entrée : son menu remplace aussitôt le premier.
-    await nav.getByRole("button", { name: "Financement" }).hover();
+    await nav.getByRole("button", { name: "Location et financement" }).hover();
     await expect(panneau).toBeHidden();
-    await expect(page.locator("#megamenu-financement")).toBeVisible();
+    await expect(page.locator("#megamenu-location")).toBeVisible();
     // Souris sur le logo, toujours dans l'en-tête : le menu se referme.
     await page.getByRole("link", { name: "ExploCardio.fr, accueil" }).hover();
-    await expect(page.locator("#megamenu-financement")).toBeHidden({ timeout: 1_000 });
+    await expect(page.locator("#megamenu-location")).toBeHidden({ timeout: 1_000 });
   });
 });
 
@@ -83,8 +83,9 @@ test.describe("mobile", () => {
     const menu = page.getByRole("dialog", { name: "Menu" });
     await expect(menu).toBeVisible();
     for (const libelle of ENTREES) await expect(menu.getByRole("button", { name: libelle })).toBeVisible();
-    await menu.getByRole("button", { name: "Holter ECG" }).click();
-    const lien = menu.getByRole("link", { name: "ECG de repos" });
+    await menu.getByRole("button", { name: "Produits" }).click();
+    await menu.getByRole("button", { name: "ECG de repos" }).click();
+    const lien = menu.getByRole("link", { name: "Électrocardiographes" });
     await expect(lien).toBeVisible();
     const boite = await lien.boundingBox();
     expect(boite!.height).toBeGreaterThanOrEqual(44);

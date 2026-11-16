@@ -4,11 +4,13 @@ import { odooReelDeTest } from "./jeu-odoo";
 // T015 (F14, contracts/odoo-reel.md) : catalogue réel assemblé depuis les réponses d'Odoo 20.
 
 describe("catalogue en mode réel", () => {
-  it("renvoie les cinq rubriques du site, sans marque fictive", async () => {
+  it("renvoie les cinq rubriques du site, puis les sous-catégories reliées (F27), sans marque fictive", async () => {
     const { odoo } = odooReelDeTest();
     const c = await odoo.catalogue.listerCategories();
-    expect(c.map((x) => x.code)).toEqual(["holter-ecg", "mapa", "effort", "ecg-repos", "accessoires"]);
-    expect(c.every((x) => !x.estFictif && x.parentCode === null)).toBe(true);
+    expect(c.filter((x) => x.niveau === 0).map((x) => x.code)).toEqual(["holter-ecg", "mapa", "effort", "ecg-repos", "accessoires"]);
+    expect(c.filter((x) => x.niveau === 0).every((x) => x.parentCode === null)).toBe(true);
+    expect(c.filter((x) => x.niveau > 0).map((x) => x.code)).toEqual(["accessoires/protecteurs-de-brassards", "mapa/accessoires-mapa"]);
+    expect(c.every((x) => !x.estFictif)).toBe(true);
   });
 
   it("liste les articles affichables d'une rubrique : référence = première variante, prix à partir de", async () => {

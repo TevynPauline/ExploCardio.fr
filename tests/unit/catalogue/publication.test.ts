@@ -10,6 +10,7 @@ const article = (modif: Partial<Article> = {}): Article => ({
   marque: "DMS",
   type: "equipement",
   categorie: "holter-ecg",
+  categorieDetail: "holter-ecg",
   description: null,
   formules: ["achat"],
   eligibleBonsAchat: false,

@@ -1,10 +1,10 @@
 import { unstable_cache } from "next/cache";
 import { registre } from "@/connecteurs/registre";
-import type { Article, Disponibilite } from "@/connecteurs/odoo/interfaces";
+import type { Article, Categorie, Disponibilite } from "@/connecteurs/odoo/interfaces";
 import { estErreurConnecteur } from "@/connecteurs/erreurs";
 import { ETIQUETTES } from "@/lib/cache";
 import { dbSite } from "@/lib/db/site";
-import type { ContenuProduit, SousCategorie } from "@generated/site/client";
+import type { ContenuProduit } from "@generated/site/client";
 import { cheminDeCategorie } from "../familles";
 import { estVisible } from "./publication";
 
@@ -47,6 +47,21 @@ const lireNomsOdoo = unstable_cache(
   { tags: ["catalogue-noms"], revalidate: 86_400 },
 );
 
+const lireCategoriesOdoo = unstable_cache(async (): Promise<Categorie[]> => registre.odoo().catalogue.listerCategories(), ["f27-categories"], {
+  tags: [ETIQUETTES.catalogue],
+  revalidate: 300,
+});
+
+/** Arbre des catégories d'Odoo (F27) : rubriques puis sous-catégories ; vide si Odoo est injoignable. */
+export async function lireCategories(): Promise<Categorie[]> {
+  try {
+    return await lireCategoriesOdoo();
+  } catch (e) {
+    if (estErreurConnecteur(e)) return [];
+    throw e;
+  }
+}
+
 export async function lireNoms(): Promise<Record<string, { nom: string; marque: string; categorie: string }>> {
   try {
     return await lireNomsOdoo();
@@ -56,7 +71,7 @@ export async function lireNoms(): Promise<Record<string, { nom: string; marque: 
   }
 }
 
-export type ContenuComplet = ContenuProduit & { sousCategorie: SousCategorie | null };
+export type ContenuComplet = ContenuProduit;
 
 export type EntreeCatalogue = {
   contenu: ContenuComplet;
@@ -79,7 +94,7 @@ export function cheminFicheDe(categorie: string, slug: string): string {
 }
 
 export async function lireContenus(): Promise<ContenuComplet[]> {
-  return dbSite().contenuProduit.findMany({ include: { sousCategorie: true }, orderBy: [{ ordre: "asc" }, { slug: "asc" }] });
+  return dbSite().contenuProduit.findMany({ orderBy: [{ ordre: "asc" }, { slug: "asc" }] });
 }
 
 /** Articles d'Odoo et disponibilités ; `null` si le connecteur est injoignable. */

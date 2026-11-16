@@ -61,8 +61,8 @@ Règles :
 - La base fictive DOIT reprendre le vocabulaire et les champs d'Odoo, et les références
   produits réelles de la brochure.
 - Le back-office du site NE DOIT gérer que les contenus, les paramètres, la validation des
-  comptes et les demandes (financement et devis). Ces données-là sont réelles dès la
-  phase 1.
+  comptes et les demandes (financement, devis et informatique médicale). Ces données-là
+  sont réelles dès la phase 1.
 - En phase 1, le connecteur Odoo de démonstration applique les mêmes règles qu'Odoo (prix,
   remises, bons d'achat, droits d'assistance) à partir des paramètres stockés dans la base
   fictive. Ce n'est pas une duplication : ce code ne sert qu'en mode démonstration ; en mode
@@ -83,7 +83,7 @@ mécanique et évitent toute double gestion des données avec Odoo.
 
 - Le site NE DOIT collecter, stocker ni transmettre aucune donnée de santé de patient.
 - Les données médicales restent exclusivement sur la plateforme Cloud hébergée HDS du
-  partenaire (Nelson / Patient Care Anywhere, « PCA »).
+  partenaire (Indoor Informatique (2i) / Patient Care Anywhere, « PCA »).
 - Le site gère uniquement les comptes des médecins et l'ouverture ou la fermeture de leurs
   droits d'accès.
 
@@ -250,4 +250,4 @@ Cette section rassemble les contraintes d'architecture qui découlent des princi
 - Les onze principes étant non négociables, aucune dérogation ponctuelle n'est admise : un
   écart durable passe par un amendement.
 
-**Version**: 2.3.0 | **Ratified**: 2026-10-12 | **Last Amended**: 2026-11-08
+**Version**: 2.3.1 | **Ratified**: 2026-10-12 | **Last Amended**: 2026-11-16

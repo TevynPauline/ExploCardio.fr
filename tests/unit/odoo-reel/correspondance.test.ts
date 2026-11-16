@@ -34,3 +34,23 @@ describe("correspondance des catégories", () => {
     expect(lireCorrespondance(null)).toEqual(CORRESPONDANCE_PAR_DEFAUT);
   });
 });
+
+describe("codes des sous-catégories (F27)", () => {
+  it("rubrique seule, puis segments sans accents ni ponctuation", async () => {
+    const { codeCategorie } = await import("@/connecteurs/odoo/categories");
+    expect(codeCategorie("holter-ecg", [])).toBe("holter-ecg");
+    expect(codeCategorie("holter-ecg", ["Accessoires Holter ECG", "Câbles pour Holter ECG"])).toBe("holter-ecg/accessoires-holter-ecg/cables-pour-holter-ecg");
+    expect(codeCategorie("effort", ["Épreuve d'effort / écho"])).toBe("effort/epreuve-d-effort-echo");
+  });
+
+  it("au-delà du niveau 2, rattaché à l'ancêtre de niveau 2", async () => {
+    const { codeCategorie } = await import("@/connecteurs/odoo/categories");
+    expect(codeCategorie("mapa", ["A", "B", "C", "D"])).toBe("mapa/a/b");
+  });
+
+  it("profondeur de la catégorie reliée", async () => {
+    const { rattachementDe } = await import("@/connecteurs/odoo/real/correspondance");
+    expect(rattachementDe("MAPA / Accessoires MAPA / Sacoches pour MAPA", CORRESPONDANCE_PAR_DEFAUT)).toEqual({ code: "mapa", profondeur: 1 });
+    expect(rattachementDe("Services", CORRESPONDANCE_PAR_DEFAUT)).toBeNull();
+  });
+});

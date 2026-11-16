@@ -87,6 +87,14 @@ export const PARAMETRES: DefinitionParametre[] = [
   { cle: "fidelite.rappel_droits_jours", libelle: "Rappel avant la fin des droits d'assistance (jours)", theme: "rappels", type: "entier", min: 1, max: 60 },
   { cle: "fidelite.rappel_expiration_jours", libelle: "Rappel avant l'expiration de bons d'achat (jours)", theme: "rappels", type: "entier", min: 1, max: 120 },
 
+  {
+    cle: "partenaire.pca.lien",
+    libelle: "Lien vers le site de PCA (lien suivi du partenaire)",
+    theme: "cloud",
+    type: "url",
+    defaut: "https://patient-care-anywhere.com/",
+    aide: "Collez ici le lien suivi fourni par Indoor Informatique (2i), code d'affiliation compris. Utilisé par la page Informatique médicale (F27).",
+  },
   { cle: "cloud.url_plateforme", libelle: "Adresse de la plateforme Cloud", theme: "cloud", type: "url", aide: "Adresse https:// de la plateforme, ou chemin du site (page simulée en démonstration)." },
   { cle: "cloud.delai_grace_jours", libelle: "Délai de grâce après la fin d'un accès (jours)", theme: "cloud", type: "entier", min: 0, max: 180, aide: "Le médecin peut seulement consulter et récupérer ses données." },
   { cle: "cloud.rappel_periode_jours", libelle: "Rappel avant la fin d'une période incluse (jours)", theme: "cloud", type: "entier", min: 1, max: 120 },

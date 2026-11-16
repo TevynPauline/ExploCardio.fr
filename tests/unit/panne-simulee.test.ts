@@ -22,7 +22,8 @@ describe("pannes simulées et verrou de réinitialisation", () => {
     });
     await expect(registre.pca().lireDroits("FICT-P-00001")).resolves.toBeInstanceOf(Array);
     await definirPanne("odoo", false);
-    await expect(registre.odoo().catalogue.listerCategories()).resolves.toHaveLength(5);
+    const categories = await registre.odoo().catalogue.listerCategories();
+    expect(categories.filter((c) => c.niveau === 0)).toHaveLength(5);
   });
 
   it("pendant la réinitialisation, un appel reçoit le message d'attente", async () => {

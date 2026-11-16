@@ -104,22 +104,6 @@ test("renseigner puis vider le téléphone : la ligne apparaît puis disparaît"
     .toBe(0);
 });
 
-test("produit phare : une référence inconnue est refusée, une référence connue apparaît dans le menu", async ({ page, context }) => {
-  await connecterNavigateur(context, COMPTES.admin);
-  await page.goto("/admin/contenus/menus");
-  await page.locator("#ref-holter_tensionnel").fill("EC-INCONNUE");
-  await page.locator("form", { has: page.locator("#ref-holter_tensionnel") }).getByRole("button", { name: "Ajouter le produit" }).click();
-  await expect(page.getByRole("alert").filter({ hasText: "Référence inconnue" })).toBeVisible();
-  await page.locator("#ref-holter_tensionnel").fill("EC-SUN-OSCAR2");
-  await page.locator("form", { has: page.locator("#ref-holter_tensionnel") }).getByRole("button", { name: "Ajouter le produit" }).click();
-  await expect(page.getByRole("status").filter({ hasText: "ajouté au menu" })).toBeVisible();
-  await page.setViewportSize({ width: 1280, height: 900 });
-  await page.goto("/");
-  await page.getByRole("navigation", { name: "Navigation principale" }).getByRole("button", { name: "Holter tensionnel" }).click();
-  await expect(page.locator("#megamenu-holter_tensionnel").getByRole("link", { name: /Oscar 2/ })).toBeVisible();
-  await requete("site", `DELETE FROM element_menu WHERE "defaultCode" = 'EC-SUN-OSCAR2'`);
-});
-
 test("le support n'a pas accès aux contenus", async ({ page, context }) => {
   await connecterNavigateur(context, COMPTES.support);
   await page.goto("/admin/contenus/tuiles");

@@ -9,8 +9,11 @@ type Auteur = { id: string; libelle: string };
 
 export const ETATS_MESSAGE = { nouveau: "Nouveau", en_cours: "En cours", traite: "Traité" } as const;
 export const ETATS_DEVIS = { recue: "Reçue", en_cours: "En cours", traitee: "Traitée" } as const;
+/** F27 (FR-035) : demandes Informatique médicale. */
+export const ETATS_INFORMATIQUE = { nouvelle: "Nouvelle", en_cours: "En cours", transmise: "Transmise à 2i", close: "Close" } as const;
 export type EtatMessage = keyof typeof ETATS_MESSAGE;
 export type EtatDevis = keyof typeof ETATS_DEVIS;
+export type EtatInformatique = keyof typeof ETATS_INFORMATIQUE;
 
 export type Suivi = { etat: string; notes: string; modifieLeLu: string };
 
@@ -59,6 +62,29 @@ export async function suivreDevis(id: string, s: Suivi, auteur: Auteur): Promise
   if (d.statut === statut && (d.notes ?? null) === notes) return;
   await dbSite().demandeDevis.update({ where: { id }, data: { statut, notes, traitePar: auteur.libelle } });
   await journal(auteur, "demandes.devis.suivi", id, { statut: d.statut, notes: d.notes }, { statut, notes });
+}
+
+export async function suivreDemandeInformatique(id: string, s: Suivi, auteur: Auteur): Promise<void> {
+  if (!(s.etat in ETATS_INFORMATIQUE)) throw new SuiviRefuse("État inconnu.");
+  const etat = s.etat as EtatInformatique;
+  const notes = notesValides(s.notes);
+  const d = await dbSite().demandeInformatique.findUnique({ where: { id } });
+  if (!d) throw new SuiviRefuse("Cette demande n'existe plus.");
+  if (d.modifieLe.toISOString() !== s.modifieLeLu) refusVersion(d.traitePar, d.modifieLe);
+  if (d.etat === etat && (d.notes ?? null) === notes) return;
+  await dbSite().demandeInformatique.update({ where: { id }, data: { etat, notes, traitePar: auteur.libelle } });
+  await journal(auteur, "demandes.informatique.suivi", id, { etat: d.etat, notes: d.notes }, { etat, notes });
+}
+
+/** « non_traitees » : nouvelles et en cours (FR, US5-3). */
+export async function listerDemandesInformatique(filtre: EtatInformatique | "tous" | "non_traitees") {
+  const where = filtre === "tous" ? {} : filtre === "non_traitees" ? { etat: { in: ["nouvelle", "en_cours"] as EtatInformatique[] } } : { etat: filtre };
+  return dbSite().demandeInformatique.findMany({ where, orderBy: { creeLe: "desc" }, take: 100 });
+}
+
+export async function compterDemandesInformatique() {
+  const g = await dbSite().demandeInformatique.groupBy({ by: ["etat"], _count: true });
+  return Object.fromEntries(g.map((x) => [x.etat, x._count])) as Partial<Record<EtatInformatique, number>>;
 }
 
 export async function listerMessages(etat: EtatMessage | "tous") {

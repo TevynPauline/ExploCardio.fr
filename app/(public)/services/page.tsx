@@ -14,7 +14,7 @@ export default async function Services() {
       avant={
         <GrilleLiens
           cartes={[
-            { titre: "Hébergement des données de santé", texte: "Vos logiciels sur une plateforme Cloud HDS.", href: "/services/hebergement-donnees-sante", badge: p.badgeHebergement },
+            { titre: "Hébergement des données de santé", texte: "Vos logiciels sur une plateforme Cloud HDS.", href: "/informatique-medicale#hebergement", badge: p.badgeHebergement },
             { titre: "Assistance et service", texte: "Vos consommables ouvrent votre assistance.", href: "/services/assistance" },
             { titre: "Financement", texte: "Étalez l'investissement de votre cabinet.", href: "/financement" },
             { titre: "Installation et formation", texte: "Installé, paramétré, et vos équipes formées.", href: "/services/installation-formation" },

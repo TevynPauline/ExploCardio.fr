@@ -15,25 +15,6 @@ const NON_PUBLIES = new Set(["EC-BIENVENUE-TENSIOMETRE"]);
 /** Contenu du pack de mise à disposition par défaut (FR-014). */
 const PACK_MAD = "Enregistreur, accès au logiciel Cloud et formation à la prise en main.";
 
-export const SOUS_CATEGORIES: Record<string, { libelle: string; slug: string; articles: string[] }[]> = {
-  "holter-ecg": [
-    { libelle: "Enregistreurs", slug: "enregistreurs", articles: ["DMS 300-2e", "DMS 300-3A", "DMS 300-4L", "DMS 300-2W"] },
-    { libelle: "Logiciels Cloud", slug: "logiciels-cloud", articles: ["CardioScan Holter ECG (logiciel Cloud)", "CardioVision / Cardiac Rehab (logiciel Cloud)"] },
-  ],
-  effort: [
-    { libelle: "Systèmes d'épreuve d'effort", slug: "systemes", articles: ["CardioScan Stress Test 12 dérivations", "ECG d'effort Norav (modèle à préciser)", "Tango M2"] },
-    { libelle: "Ergocycles et tapis", slug: "ergocycles-et-tapis", articles: ["ULTRA KOCH EXERCISE", "KORELE 8000", "KORELE 7000", "Banc de Koch PURE", "Ergocycle Ergoline (modèle à préciser)", "Matériel d'effort RAM (modèle à préciser)"] },
-    { libelle: "Environnement", slug: "environnement", articles: ["Chariot d'épreuve d'effort", "Défibrillateur automatisé externe"] },
-  ],
-  accessoires: [
-    { libelle: "Électrodes", slug: "electrodes", articles: ["Électrodes Holter", "Poires et pinces ECG", "Kit consommables Holter (mise à disposition)"] },
-    { libelle: "Brassards", slug: "brassards", articles: ["Brassard MAPA Orbit", "Brassard MAPA 12-19 cm"] },
-    { libelle: "Sacoches et pochettes", slug: "sacoches", articles: ["Pochette Oscar 2", "Ceinture Oscar 2", "Bandoulière Oscar 2", "Pochette d'enregistreur"] },
-    { libelle: "Câbles et alimentation", slug: "cables-et-alimentation", articles: ["Batterie rechargeable DMS 300-2W", "Chargeur pour batteries DMS 300-2W", "Câble patient Holter ECG", "Câble de transfert USB HDMI", "Câble patient ECG d'effort", "Câble patient ECG fiche banane", "Carte SD"] },
-    { libelle: "Garanties", slug: "garanties", articles: ["Extension de garantie Oscar 2"] },
-  ],
-};
-
 /**
  * Deux fiches complètes pour la démonstration (onglets d'information, documents) : textes
  * PROVISOIRES, à remplacer par ceux d'ExploCardio.fr et des fabricants.
@@ -75,17 +56,6 @@ async function notice(): Promise<{ chemin: string; octets: number }> {
 }
 
 export async function remplirContenusCatalogue(db: PrismaClient) {
-  const sousCategories = new Map<string, string>();
-  for (const [categorie, liste] of Object.entries(SOUS_CATEGORIES)) {
-    for (const [i, sc] of liste.entries()) {
-      const ligne = await db.sousCategorie.upsert({
-        where: { categorie_slug: { categorie, slug: sc.slug } },
-        create: { categorie, libelle: sc.libelle, slug: sc.slug, ordre: i + 1 },
-        update: {},
-      });
-      for (const nom of sc.articles) sousCategories.set(`${categorie}|${nom}`, ligne.id);
-    }
-  }
   const ordres = new Map<string, number>();
   for (const m of MODELES) {
     const defaultCode = m.variantes[0]!.defaultCode;
@@ -107,7 +77,6 @@ export async function remplirContenusCatalogue(db: PrismaClient) {
         documents,
         compatibilites: [],
         produitsAssocies: [],
-        sousCategorieId: sousCategories.get(`${m.categorie}|${m.nom}`) ?? null,
         ordre,
         etat: publie ? "publie" : "preparation",
         publieLe: publie ? new Date() : null,

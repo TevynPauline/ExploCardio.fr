@@ -7,7 +7,7 @@ import { CARTE_SD, ajouterDepuisFiche, clientConnecte, ecranDemo, reapprovisionn
 // pendant qu'un article est au panier → prix en vigueur et client informé ; plus affichée.
 
 test.describe.configure({ timeout: 240_000, mode: "serial" });
-const FICHE_SD = "/accessoires-consommables/dms-carte-sd";
+const FICHE_SD = "/holter-ecg/dms-carte-sd";
 
 test("vente flash : annoncée, appliquée, puis terminée", async ({ page, browser, baseURL }) => {
   const nom = `Vente flash cartes SD ${Date.now() % 100000} (−20 %)`;

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { usePathname } from "next/navigation";
 import { actionNombreArticles } from "@/actions/panier";
-import type { EntreeNavigation } from "@/domaine/navigation";
+import type { EntreeNavigation, Lien } from "@/domaine/navigation";
 import { authClient } from "@/lib/auth-client";
 import { Logo } from "../Logo";
 import { IconeChevron, IconeCompte, IconePanier } from "./icones";
@@ -22,12 +22,12 @@ import { Recherche } from "./Recherche";
 const DELAI_SURVOL_MS = 150;
 const DELAI_SORTIE_MS = 100;
 
-type Props = { entrees: EntreeNavigation[]; articlesPanier: number };
+type Props = { entrees: EntreeNavigation[]; liensSecondaires: Lien[]; articlesPanier: number };
 
 /** Événement émis après une modification du panier (ajout, quantité, suppression). */
 export const EVENEMENT_PANIER = "ec:panier";
 
-export function BarreNavigation({ entrees, articlesPanier: initial }: Props) {
+export function BarreNavigation({ entrees, liensSecondaires, articlesPanier: initial }: Props) {
   // Pastille du panier lue après l'affichage : les pages restent statiques (F04).
   const [articlesPanier, setArticlesPanier] = useState(initial);
   const chemin = usePathname();
@@ -108,7 +108,7 @@ export function BarreNavigation({ entrees, articlesPanier: initial }: Props) {
             compte à droite. Ordinateur (dès 1 024 px) : logo à gauche, menu sur la deuxième ligne. */}
         <div className="mx-auto grid max-w-page grid-cols-[1fr_auto_1fr] items-center gap-2 px-4 sm:gap-4 lg:flex">
           <div className="flex items-center lg:hidden">
-            <MenuMobile entrees={entrees} />
+            <MenuMobile entrees={entrees} liensSecondaires={liensSecondaires} />
           </div>
           <Link href="/" aria-label="ExploCardio.fr, accueil" className="inline-flex min-h-14 min-w-11 items-center justify-center lg:justify-start">
             <span className="min-[420px]:hidden">
@@ -152,10 +152,11 @@ export function BarreNavigation({ entrees, articlesPanier: initial }: Props) {
           </div>
         </div>
 
-        {/* Ordinateur : les sept entrées sur une seconde ligne, pour qu'elles tiennent toutes ;
-            dès 1 024 px (F16 : PC Windows à affichage agrandi), plus serrées jusqu'à 1 280 px. */}
+        {/* Ordinateur (dès 1 024 px) : les cinq entrées sur une seconde ligne, « Qui sommes-nous »
+            et « Contact » à droite, plus discrets (F27). */}
         <nav aria-label="Navigation principale" className="hidden border-t border-line lg:block">
-          <ul className="mx-auto flex max-w-page flex-wrap items-center justify-center gap-x-0 px-0 xl:gap-x-2 xl:px-4">
+          <div className="mx-auto flex max-w-page items-center gap-4 px-4">
+          <ul className="flex items-center gap-x-1 xl:gap-x-2">
             {entrees.map((e) => (
               <li key={e.cle} onMouseEnter={() => surEntree(e.cle)} onMouseLeave={surSortie}>
                 <button
@@ -170,7 +171,7 @@ export function BarreNavigation({ entrees, articlesPanier: initial }: Props) {
                     setOuvert(ouvert === e.cle ? null : e.cle);
                   }}
                   onKeyDown={(ev) => auClavierEntree(ev, e.cle)}
-                  className="inline-flex min-h-12 items-center gap-1 whitespace-nowrap px-1 text-small font-medium text-ink aria-expanded:text-action xl:px-2"
+                  className="inline-flex min-h-12 items-center gap-1 whitespace-nowrap px-2 font-medium text-ink aria-expanded:text-action xl:px-3"
                 >
                   {e.libelle}
                   <IconeChevron className={ouvert === e.cle ? "rotate-180" : ""} />
@@ -178,6 +179,16 @@ export function BarreNavigation({ entrees, articlesPanier: initial }: Props) {
               </li>
             ))}
           </ul>
+          <ul className="ml-auto flex items-center gap-x-4">
+            {liensSecondaires.map((l) => (
+              <li key={l.href}>
+                <Link href={l.href} className="inline-flex min-h-12 items-center whitespace-nowrap text-small text-muted hover:text-action hover:underline">
+                  {l.libelle}
+                </Link>
+              </li>
+            ))}
+          </ul>
+          </div>
         </nav>
 
         {entrees.map((e) => (

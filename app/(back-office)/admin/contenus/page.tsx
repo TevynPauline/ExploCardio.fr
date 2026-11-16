@@ -17,9 +17,9 @@ export default function Contenus() {
           { titre: "Gammes phares", texte: "Titre, phrase, lien, badge, fond et image des 3 cartes.", href: "/admin/contenus/tuiles" },
           { titre: "Carrousel de l'accueil", texte: "Vignettes : offres, informations du moment, produits phares ; ordre, dates, aperçu.", href: "/admin/contenus/carrousel" },
           { titre: "Textes de l'accueil", texte: "Animation d'ouverture et six cartes « Pourquoi choisir ExploCardio.fr ? ».", href: "/admin/contenus/accueil" },
+          { titre: "Page Informatique médicale", texte: "Titres et phrases de la page PCA : en-tête, bénéfices, étapes, hébergement, prestataire, partenaire.", href: "/admin/contenus/informatique-medicale" },
           { titre: "Textes des pages", texte: "Services, financement, catégories, qui sommes-nous, pages légales : brouillon, aperçu, publication.", href: "/admin/contenus/pages" },
           { titre: "Coordonnées et textes", texte: "Coordonnées du bloc Contact, textes de l'accueil.", href: "/admin/contenus/coordonnees" },
-          { titre: "Menus", texte: "Produits phares et liens rapides des méga-menus.", href: "/admin/contenus/menus" },
           { titre: "Marques", texte: "Marques partenaires et leurs logos.", href: "/admin/contenus/marques" },
           { titre: "Centre d'aide", texte: "Tutoriels vidéo, modes d'emploi, notices générales et FAQ.", href: "/admin/contenus/aide" },
         ]}

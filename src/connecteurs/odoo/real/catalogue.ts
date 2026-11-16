@@ -40,6 +40,7 @@ function resumer(m: ModeleLu): ResumeArticle {
     marque: m.marque,
     type: m.type,
     categorie: m.categorie,
+    categorieDetail: m.categorieDetail,
     prixAPartirDeHt: Math.min(...m.variantes.map((v) => v.prixHt)),
     formules: formules(m),
     disponibilite: meilleureDisponibilite(m.variantes.map((v) => v.achat)),
@@ -49,6 +50,11 @@ function resumer(m: ModeleLu): ResumeArticle {
   };
 }
 
+/** L'article est dans cette catégorie ou l'un de ses sous-niveaux (F27). */
+export function dansCategorie(m: { categorie: string; categorieDetail: string }, code: string): boolean {
+  return m.categorie === code || m.categorieDetail === code || m.categorieDetail.startsWith(`${code}/`);
+}
+
 const parMarqueEtNom = (a: ModeleLu, b: ModeleLu) => a.marque.localeCompare(b.marque, "fr") || a.nom.localeCompare(b.nom, "fr");
 
 type Partenaire = Enregistrement & { name: string; ref: string | false; property_product_pricelist: unknown; l10n_fr_siret: string | false };
@@ -56,13 +62,15 @@ type Partenaire = Enregistrement & { name: string; ref: string | false; property
 export function creerCatalogueReel(client: ClientOdoo, instantane: () => Promise<Instantane>): CatalogueOdoo {
   return {
     async listerCategories(): Promise<Categorie[]> {
-      return RUBRIQUES.map((r) => ({ code: r.code, nom: r.nom, ordre: r.ordre, parentCode: null, estFictif: false }));
+      const { categories } = await instantane();
+      const rubriques: Categorie[] = RUBRIQUES.map((r) => ({ code: r.code, nom: r.nom, ordre: r.ordre, parentCode: null, rubrique: r.code, niveau: 0, estFictif: false }));
+      return [...rubriques, ...categories.map((c, i) => ({ ...c, ordre: i + 1, estFictif: false }))];
     },
 
     async listerArticles(categorie: string, filtres: FiltresArticles = {}): Promise<ResumeArticle[]> {
       const { modeles } = await instantane();
       return modeles
-        .filter((m) => m.categorie === categorie)
+        .filter((m) => dansCategorie(m, categorie))
         .filter((m) => !filtres.marque || m.marque === filtres.marque)
         .filter((m) => !filtres.type || m.type === filtres.type)
         .sort(parMarqueEtNom)
@@ -81,6 +89,7 @@ export function creerCatalogueReel(client: ClientOdoo, instantane: () => Promise
         marque: m.marque,
         type: m.type,
         categorie: m.categorie,
+        categorieDetail: m.categorieDetail,
         description: m.description,
         formules: formules(m),
         eligibleBonsAchat: m.eligibleBonsAchat,
@@ -152,6 +161,7 @@ export function creerCatalogueReel(client: ClientOdoo, instantane: () => Promise
             marque: m.marque,
             type: m.type,
             categorie: m.categorie,
+            categorieDetail: m.categorieDetail,
             configuration: v.configuration,
             prixHt: v.prixHt,
             tauxTva: m.tauxTva,

@@ -5,7 +5,6 @@ import { ecrireCaracteristiques, lireArticleAdmin } from "@/domaine/catalogue/ad
 import { cheminFicheDe } from "@/domaine/catalogue/lecture";
 import { manquantsPublication, photosDe, textesDe, type DocumentProduit } from "@/domaine/catalogue/publication";
 import { slugArticle } from "@/domaine/slugs";
-import { dbSite } from "@/lib/db/site";
 import { euros } from "@/lib/montants";
 import { sessionCourante } from "@/lib/roles";
 import { Card, Kicker, Retour } from "@/ui";
@@ -36,9 +35,6 @@ export default async function ContenuProduit({
   const [{ article, contenu, odooIndisponible }, session] = await Promise.all([lireArticleAdmin(reference), sessionCourante()]);
   if (!article && !contenu) notFound();
   const admin = (session?.user as { role?: string } | undefined)?.role === "admin";
-  const sousCategories = article
-    ? await dbSite().sousCategorie.findMany({ where: { categorie: article.categorie }, orderBy: { ordre: "asc" } })
-    : [];
   const textes = textesDe(contenu ?? { textes: {} });
   const manquants = contenu ? manquantsPublication(contenu, article) : ["La description courte.", "L'adresse de la fiche."];
   const titre = article ? `${article.marque} ${article.nom}` : reference;
@@ -139,11 +135,9 @@ export default async function ContenuProduit({
         {admin ? (
           <FormulaireContenu
             madProposee={Boolean(article?.formules.includes("mise_a_disposition"))}
-            sousCategories={sousCategories.map((s) => ({ id: s.id, libelle: s.libelle }))}
             v={{
               reference,
               slug: contenu?.slug ?? (article ? slugArticle(article.marque, article.nom) : ""),
-              sousCategorieId: contenu?.sousCategorieId ?? "",
               ordre: String(contenu?.ordre ?? 0),
               descriptionCourte: textes.descriptionCourte ?? article?.description ?? "",
               caracteristiques: ecrireCaracteristiques(textes.caracteristiques),

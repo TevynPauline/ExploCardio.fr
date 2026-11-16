@@ -6,12 +6,9 @@ import { exigerDroit } from "@/lib/droits";
 import { redirect } from "next/navigation";
 import {
   ContenuInvalide,
-  creerSousCategorie,
-  deplacerSousCategorie,
   enregistrerContenu,
   publier,
   retirer,
-  supprimerSousCategorie,
   type SaisieContenu,
 } from "@/domaine/catalogue/administration";
 import type { DocumentProduit, PhotoProduit } from "@/domaine/catalogue/publication";
@@ -58,7 +55,6 @@ export async function actionEnregistrerContenu(_e: EtatContenu, d: FormData): Pr
   }
   const saisie: SaisieContenu = {
     slug: t(d, "slug"),
-    sousCategorieId: t(d, "sousCategorieId"),
     ordre: t(d, "ordre"),
     descriptionCourte: t(d, "descriptionCourte"),
     caracteristiques: t(d, "caracteristiques"),
@@ -100,22 +96,6 @@ export async function actionRetirer(d: FormData) {
   retour(`/admin/catalogue/${encodeURIComponent(reference)}`, {
     ok: etat === "retire" ? "Produit retiré du catalogue : son adresse indique qu'il n'est plus proposé." : "Produit remis en préparation : il est invisible du public.",
   });
-}
-
-export async function actionSousCategorie(d: FormData) {
-  const a = await auteur();
-  const chemin = "/admin/catalogue/sous-categories";
-  try {
-    const action = t(d, "action");
-    if (action === "creer") await creerSousCategorie(t(d, "categorie"), t(d, "libelle"), a);
-    else if (action === "monter") await deplacerSousCategorie(t(d, "id"), -1, a);
-    else if (action === "descendre") await deplacerSousCategorie(t(d, "id"), 1, a);
-    else if (action === "supprimer") await supprimerSousCategorie(t(d, "id"), a);
-  } catch (e) {
-    if (e instanceof ContenuInvalide) retour(chemin, { erreur: Object.values(e.erreurs).join(" ") });
-    throw e;
-  }
-  retour(chemin, { ok: "Types enregistrés." });
 }
 
 const CLES_SERVICES = [
