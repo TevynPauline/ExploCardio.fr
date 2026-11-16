@@ -58,7 +58,7 @@ export async function traduireEvenement(evt: Stripe.Event, lire: LecteurStripe):
         // F24 (FR-012, option A) : un mandat SEPA signé confirme la souscription, sans attendre
         // la confirmation du premier prélèvement.
         const paiementRef = s.invoice ? await lire.paiementDeFacture(id(s.invoice)!) : null;
-        const sepa = s.payment_method_types?.includes("sepa_debit") ?? false;
+        const sepa = [...(s.allowed_payment_method_types ?? []), ...(s.payment_method_types ?? [])].includes("sepa_debit");
         return { ...commun, type: "paiement_reussi", abonnementRef: s.metadata?.abonnementRef ?? null, paiementRef, moyen: sepa ? "sepa" : "carte" };
       }
       return null;

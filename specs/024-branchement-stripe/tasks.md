@@ -66,9 +66,9 @@ contracts/stripe-reel.md, quickstart.md)
 
 **Test indépendant** : quickstart étape 2.
 
-- [ ] T018 [P] [US1] Tests `tests/unit/stripe-reel/clients.test.ts` : client existant trouvé par `metadata['partenaireRef']` (pas de création) ; sinon création avec `email`, `metadata.partenaireRef` et `idempotencyKey` `client:<partenaireRef>` ; aucun nom ni adresse transmis
-- [ ] T019 [P] [US1] Tests `tests/unit/stripe-reel/sessions-paiement.test.ts` : `checkout.sessions.create` avec `mode: "payment"`, `payment_method_types: ["card"]`, une ligne `price_data` (`currency: "eur"`, `unit_amount` = montant TTC, `product_data.name` « Commande <ref> »), `customer`, `client_reference_id` et `metadata.commandeRef`, `payment_intent_data.metadata.commandeRef` et `statement_descriptor_suffix` (référence, 22 caractères max), `success_url`/`cancel_url`, `locale: "fr"`, aucun `automatic_tax` ni `invoice_creation` ; `idempotencyKey` = clé ; renvoie `{ sessionId, url }`
-- [ ] T020 [US1] `src/connecteurs/stripe/real/clients.ts` (`clientStripe(sdk, client)`) et `ouvrirSessionPaiement` dans `src/connecteurs/stripe/real/sessions.ts`
+- [X] T018 [P] [US1] Tests `tests/unit/stripe-reel/clients.test.ts` : client existant trouvé par `metadata['partenaireRef']` (pas de création) ; sinon création avec `email`, `metadata.partenaireRef` et `idempotencyKey` `client:<partenaireRef>` ; aucun nom ni adresse transmis
+- [X] T019 [P] [US1] Tests `tests/unit/stripe-reel/sessions-paiement.test.ts` : `checkout.sessions.create` avec `mode: "payment"`, `allowed_payment_method_types: ["card"]` (nom du champ dans l'API 2026-10-28), une ligne `price_data` (`currency: "eur"`, `unit_amount` = montant TTC, `product_data.name` « Commande <ref> »), `customer`, `client_reference_id` et `metadata.commandeRef`, `payment_intent_data.metadata.commandeRef` et `statement_descriptor_suffix` (référence, 22 caractères max), `success_url`/`cancel_url`, `locale: "fr"`, aucun `automatic_tax` ni `invoice_creation` ; `idempotencyKey` = clé ; renvoie `{ sessionId, url }`
+- [X] T020 [US1] `src/connecteurs/stripe/real/clients.ts` (`clientStripe(sdk, client)`) et `ouvrirSessionPaiement` dans `src/connecteurs/stripe/real/sessions.ts`
 
 ---
 
@@ -76,11 +76,11 @@ contracts/stripe-reel.md, quickstart.md)
 
 **Test indépendant** : quickstart étapes 3, 4, 5, 9.
 
-- [ ] T021 [P] [US2] Tests `tests/unit/stripe-reel/sessions-abonnement.test.ts` : `mode: "subscription"` ; `payment_method_types` `["card"]` ou `["sepa_debit"]` ; un article `price_data` mensuel récurrent (`recurring.interval: "month"`) par élément avec `metadata.element` (via `subscription_data` / `product_data.metadata`) ; `subscription_data.metadata.abonnementRef` ; premier > mensuel → ligne ponctuelle de l'écart ; premier < mensuel → coupon `amount_off` = écart total, `duration: "once"`, `currency: "eur"`, idempotence `coupon:<clé>` ; `debutPrelevements` → `subscription_data.trial_end` (secondes) et aucune ligne ni coupon ; sans éléments → un article unique au montant mensuel
-- [ ] T022 [US2] `ouvrirSessionAbonnement` dans `src/connecteurs/stripe/real/sessions.ts`
-- [ ] T023 [P] [US2] Tests `tests/unit/stripe-reel/portail.test.ts` : `billingPortal.sessions.create({ customer, return_url })` ; client inconnu (aucun client pour ce `partenaireRef`) → `NotFound`
-- [ ] T024 [US2] `ouvrirGestionMoyenPaiement` réel dans `src/connecteurs/stripe/real/index.ts` (portail client ; la configuration du portail est faite dans le tableau de bord, research R13)
-- [ ] T025 [US2] Lien « Mettre à jour ma carte ou mon compte bancaire » dans `app/(public)/mon-compte/locations/page.tsx` quand le client a au moins une location ou un abonnement en cours : action serveur dans `src/actions/` qui appelle `registre.stripe().ouvrirGestionMoyenPaiement({ partenaireRef, urlRetour: "<site>/mon-compte/locations" })` et redirige ; en cas d'erreur de connecteur, message « Service momentanément indisponible, réessayez dans quelques instants. » ; test e2e `tests/e2e/f05/moyen-paiement.spec.ts` en démonstration (lien → page de démonstration → retour)
+- [X] T021 [P] [US2] Tests `tests/unit/stripe-reel/sessions-abonnement.test.ts` : `mode: "subscription"` ; `allowed_payment_method_types` `["card"]` ou `["sepa_debit"]` ; un article `price_data` mensuel récurrent (`recurring.interval: "month"`) par élément avec `metadata.element` (via `subscription_data` / `product_data.metadata`) ; `subscription_data.metadata.abonnementRef` ; premier > mensuel → ligne ponctuelle de l'écart ; premier < mensuel → coupon `amount_off` = écart total, `duration: "once"`, `currency: "eur"`, idempotence `coupon:<clé>` ; `debutPrelevements` → `subscription_data.trial_end` (secondes) et aucune ligne ni coupon ; sans éléments → un article unique au montant mensuel
+- [X] T022 [US2] `ouvrirSessionAbonnement` dans `src/connecteurs/stripe/real/sessions.ts` (prise d'effet à moins de 48 h : reportée au minimum exigé par Stripe ; adresses de retour rendues absolues avec `SITE_URL`)
+- [X] T023 [P] [US2] Tests `tests/unit/stripe-reel/portail.test.ts` : `billingPortal.sessions.create({ customer, return_url })` ; client inconnu (aucun client pour ce `partenaireRef`) → `NotFound`
+- [X] T024 [US2] `ouvrirGestionMoyenPaiement` réel dans `src/connecteurs/stripe/real/index.ts` (portail client ; la configuration du portail est faite dans le tableau de bord, research R13)
+- [X] T025 [US2] Lien « Mettre à jour ma carte ou mon compte bancaire » dans `app/(public)/mon-compte/locations/page.tsx` quand le client a au moins une location ou un abonnement en cours : action serveur dans `src/actions/` qui appelle `registre.stripe().ouvrirGestionMoyenPaiement({ partenaireRef, urlRetour: "<site>/mon-compte/locations" })` et redirige ; en cas d'erreur de connecteur, message « Service momentanément indisponible, réessayez dans quelques instants. » ; test e2e `tests/e2e/f05/moyen-paiement.spec.ts` en démonstration (lien → page de démonstration → retour)
 
 ---
 

@@ -6,7 +6,7 @@ import { creerStripeReel } from "@/connecteurs/stripe/real";
 // doublures qui enregistrent chaque appel. Aucune requête ne part.
 
 export const SECRET_WEBHOOK = "whsec_secret_factice_de_test";
-export const ENV_RECETTE = { CONNECTOR_STRIPE: "real", STRIPE_ENVIRONNEMENT: "recette", STRIPE_SECRET_KEY: "rk_test_cle_factice", STRIPE_WEBHOOK_SECRET: SECRET_WEBHOOK };
+export const ENV_RECETTE = { CONNECTOR_STRIPE: "real", STRIPE_ENVIRONNEMENT: "recette", STRIPE_SECRET_KEY: "rk_test_cle_factice", STRIPE_WEBHOOK_SECRET: SECRET_WEBHOOK, SITE_URL: "https://recette.explocardio.test" };
 
 export type Appel = { ressource: string; methode: string; args: unknown[] };
 type Reponse = (...args: unknown[]) => unknown;

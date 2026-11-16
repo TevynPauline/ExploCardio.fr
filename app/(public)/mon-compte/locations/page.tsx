@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { actionAnnuler, actionPasserAchat, actionProlonger, actionReporter } from "@/actions/locations";
+import { actionAnnuler, actionMoyenPaiement, actionPasserAchat, actionProlonger, actionReporter } from "@/actions/locations";
 import { prixTexte } from "@/domaine/catalogue/prix";
 import { abonnementsARegler, LIBELLES_LOCATION } from "@/domaine/commande/mon-compte";
 import { compteCourant } from "@/domaine/comptes/session";
@@ -173,6 +173,12 @@ export default async function Locations({ searchParams }: { searchParams: Promis
             <Location key={l.ref} l={l} compteId={compte.id} />
           ))}
         </ul>
+      ) : null}
+      {actives.length ? (
+        <form action={actionMoyenPaiement} className="flex flex-col gap-2">
+          <p className="text-small text-muted">Vos mensualités sont prélevées sur le moyen de paiement choisi à la souscription.</p>
+          <button type="submit" className="ec-btn ec-btn--secondary self-start">Mettre à jour ma carte ou mon compte bancaire</button>
+        </form>
       ) : null}
       {historique.length ? (
         <section aria-labelledby="titre-historique" className="flex flex-col gap-3">

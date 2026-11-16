@@ -2,14 +2,16 @@ import { ConfigurationIncomplete } from "../../erreurs";
 import { implementationRefusee } from "../../non-livre";
 import type { ConnecteurStripe, EvenementPaiement, MoyenPaiement } from "../interfaces";
 import { traduireErreurStripe } from "./erreurs";
+import { clientExistant } from "./clients";
 import { construireEvenementStripe, traduireEvenement, typeCarte, type LecteurStripe } from "./evenements";
+import { absolue, ouvrirSessionAbonnement, ouvrirSessionPaiement } from "./sessions";
 import { creerSdk, type SdkStripe } from "./sdk";
 
 // Mode réel du connecteur Stripe (F24, contracts/stripe-reel.md). Configuration incomplète ou
 // clé incohérente avec l'environnement → ConfigurationIncomplete à chaque opération, sans jamais
 // basculer en démonstration (FR-003, FR-004).
-// Lot 1 : réception signée des événements. Paiements, abonnements et opérations de l'équipe :
-// lots 2 et 3.
+// Lots 1 et 2 : événements signés, pages de paiement (achat, abonnement), gestion du moyen de
+// paiement. Opérations de l'équipe sur les abonnements et remboursements : lot 3.
 
 type Env = Record<string, string | undefined>;
 
@@ -46,19 +48,30 @@ export function creerStripeReel(variablesManquantes: string[], env: Env = proces
   };
 
   const nonLivre = () => new ConfigurationIncomplete("stripe", []);
+  // Les parcours donnent des chemins ; Stripe exige des adresses absolues.
+  const site = () => {
+    if (!env.SITE_URL) throw new ConfigurationIncomplete("stripe", ["SITE_URL"]);
+    return env.SITE_URL;
+  };
 
   return {
     async verifierEvenement(contenu: string, signature: string): Promise<EvenementPaiement | null> {
       return traduireEvenement(construireEvenementStripe(sdk, contenu, signature, secret), lecteur);
     },
-    async ouvrirSessionPaiement() {
-      throw nonLivre();
+    async ouvrirSessionPaiement(session, cle) {
+      return appel(() => ouvrirSessionPaiement(sdk, session, cle, site()));
     },
-    async ouvrirSessionAbonnement() {
-      throw nonLivre();
+    async ouvrirSessionAbonnement(session, cle) {
+      return appel(() => ouvrirSessionAbonnement(sdk, session, cle, site()));
     },
-    async ouvrirGestionMoyenPaiement() {
-      throw nonLivre();
+    async ouvrirGestionMoyenPaiement(d) {
+      // FR-015 : portail client de Stripe, configuré dans le tableau de bord pour la seule mise à
+      // jour du moyen de paiement (research R13).
+      return appel(async () => {
+        const customer = await clientExistant(sdk, d.partenaireRef);
+        const portail = await sdk.billingPortal.sessions.create({ customer, return_url: absolue(d.urlRetour, site()), locale: "fr" });
+        return { url: portail.url };
+      }, "Client de paiement");
     },
     async rembourser() {
       throw nonLivre();

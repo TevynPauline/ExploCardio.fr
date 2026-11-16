@@ -32,7 +32,7 @@
 
 ## R4. Achat par carte (US1)
 
-- **Decision** : Checkout Session `mode: "payment"`, `payment_method_types: ["card"]` (Apple Pay
+- **Decision** : Checkout Session `mode: "payment"`, `allowed_payment_method_types: ["card"]` (nouveau nom du champ dans l'API 2026-10-28) (Apple Pay
   et Google Pay sont des portefeuilles de la carte), une ligne `price_data` « Commande
   <ref> » au montant TTC exact (FR-008), `customer`, `client_reference_id` et
   `metadata.commandeRef`, `payment_intent_data.metadata.commandeRef`,
@@ -43,7 +43,7 @@
 
 ## R5. Abonnement : premier mois, mensualités, éléments (US2)
 
-- **Decision** : Checkout Session `mode: "subscription"`, `payment_method_types` = `["card"]`
+- **Decision** : Checkout Session `mode: "subscription"`, `allowed_payment_method_types` = `["card"]`
   ou `["sepa_debit"]` selon le choix du client ; **un article d'abonnement par élément**
   (`price_data` mensuel, `metadata.element`, FR-011) ; `subscription_data.metadata.abonnementRef`.
   Écart entre premier mois et mensualité (par élément, puis totalisé) :
@@ -51,7 +51,8 @@
   - premier < mensuel → coupon `amount_off` de l'écart, `duration: "once"` (créé pour la
     session, clé d'idempotence dérivée) ;
   - premier = 0 avec `debutPrelevements` (F12) → `subscription_data.trial_end` à cette date :
-    autorisation recueillie, rien prélevé (FR-013).
+    autorisation recueillie, rien prélevé (FR-013). Stripe exige au moins 48 h : une date plus
+    proche est reportée à ce minimum (le client n'est jamais prélevé plus tôt que prévu).
 - **Alternatives** : mode `setup` puis abonnement créé par le site (premier paiement hors
   session, authentification forte risquée) ; écarts de prix par « schedules » (impossible
   dans Checkout).
