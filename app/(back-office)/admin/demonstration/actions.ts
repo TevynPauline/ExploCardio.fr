@@ -6,6 +6,7 @@ import { ecranDemonstration, ValeurRefusee, type Auteur } from "@/connecteurs/de
 import { estErreurConnecteur } from "@/connecteurs/erreurs";
 import { invaliderDepuisAction } from "@/lib/cache";
 import { centimesDepuisSaisie } from "@/lib/montants";
+import { finDeJourneeParis } from "@/lib/calendrier";
 
 // Actions de l'écran de démonstration (US5) : administrateur uniquement ; chaque modification
 // est journalisée (T064) et invalide aussitôt le cache des pages concernées (T063, SC-009).
@@ -164,7 +165,7 @@ export async function ajusterDroits(donnees: FormData) {
     const { fideliteDemoOps } = await import("@/connecteurs/demonstration");
     const jour = texte(donnees, "fin");
     if (!/^\d{4}-\d{2}-\d{2}$/.test(jour)) throw new ValeurRefusee("Date de fin invalide.");
-    await fideliteDemoOps.ajusterDroits(a, texte(donnees, "partenaire"), new Date(`${jour}T21:59:59Z`), texte(donnees, "motif"));
+    await fideliteDemoOps.ajusterDroits(a, texte(donnees, "partenaire"), finDeJourneeParis(jour), texte(donnees, "motif"));
     await suivreFideliteAussitot();
   });
 }
@@ -183,7 +184,7 @@ export async function expirerBons(donnees: FormData) {
   const jour = texte(donnees, "date");
   await executer(FIDELITE, `Bons échus au ${jour} expirés ; rappels envoyés.`, async () => {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(jour)) throw new ValeurRefusee("Date invalide.");
-    const date = new Date(`${jour}T21:59:59Z`);
+    const date = finDeJourneeParis(jour);
     const { fideliteDemoOps } = await import("@/connecteurs/demonstration");
     await fideliteDemoOps.expirerBons(a, date);
     await suivreFideliteAussitot();

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { datesProposees, estLendemain, premiereDateLivraison, type ReglesLivraison } from "@/domaine/location/calendrier";
-import { joursFeries } from "@/lib/calendrier";
+import { finDeJourneeParis, joursFeries } from "@/lib/calendrier";
 
 // T009 — calendrier de livraison d'une mise à disposition (F05, R3, SC-001).
 
@@ -56,5 +56,21 @@ describe("dates proposées", () => {
   it("« le lendemain » : le jour civil suivant la commande", () => {
     expect(estLendemain(paris("2026-10-14T13:59"), "2026-10-15")).toBe(true);
     expect(estLendemain(paris("2026-10-16T09:00"), "2026-10-19")).toBe(false);
+  });
+});
+
+describe("fin de journée à Paris (date simulée du démonstrateur)", () => {
+  it("hiver : 23:59:59 à Paris = 22:59:59 UTC", () => {
+    expect(finDeJourneeParis("2026-11-16").toISOString()).toBe("2026-11-16T22:59:59.999Z");
+  });
+  it("été : 23:59:59 à Paris = 21:59:59 UTC", () => {
+    expect(finDeJourneeParis("2026-07-01").toISOString()).toBe("2026-07-01T21:59:59.999Z");
+  });
+  it("jours de changement d'heure", () => {
+    expect(finDeJourneeParis("2026-03-29").toISOString()).toBe("2026-03-29T21:59:59.999Z");
+    expect(finDeJourneeParis("2026-10-25").toISOString()).toBe("2026-10-25T22:59:59.999Z");
+  });
+  it("une échéance à 23 h 22 à Paris tombe bien ce jour-là", () => {
+    expect(new Date("2026-12-16T22:22:39Z") <= finDeJourneeParis("2026-12-16")).toBe(true);
   });
 });

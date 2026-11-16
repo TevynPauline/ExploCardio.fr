@@ -1,6 +1,7 @@
 import { expect, type Browser, type Page } from "@playwright/test";
 import { accepterConditions, jusquAuRecapitulatif, payerSurPageDemo, requete } from "../f04/outils";
 import { composerPanier, ecranDemo, payerParCarte } from "../f06/outils";
+import { jourDeParis } from "@/lib/calendrier";
 
 export { accepterConditions, clientConnecte, payerSurPageDemo, rendreParcDesTests, requete } from "../f04/outils";
 export { composerPanier, ecranDemo, nombreEmails, payerParCarte } from "../f06/outils";
@@ -60,7 +61,7 @@ export async function accesDe(partenaireRef: string) {
 /** « Avancer la date » au démonstrateur : actions planifiées d'Odoo, suivi, échéances des accès Cloud. */
 export async function avancerJusquAu(browser: Browser, baseURL: string | undefined, jour: Date) {
   await ecranDemo(browser, baseURL, "/admin/demonstration/locations", async (admin) => {
-    await admin.getByLabel("Date simulée").fill(jour.toISOString().slice(0, 10));
+    await admin.getByLabel("Date simulée").fill(jourDeParis(jour));
     await admin.getByRole("button", { name: "Exécuter les actions planifiées" }).click();
     await expect(admin.locator("main").getByRole("status")).toBeVisible();
   });

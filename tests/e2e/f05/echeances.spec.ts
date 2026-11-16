@@ -1,4 +1,5 @@
 import { expect, test, type Browser } from "@playwright/test";
+import { jourDeParis } from "@/lib/calendrier";
 import { demoLocations, expedierEtLivrer, louer, rendreParcDesTests, requete } from "./outils";
 
 // T031 (US6, FR-025 à FR-030, SC-009, SC-010) : rappel puis échéance facturée ; prélèvement
@@ -8,7 +9,8 @@ test.describe.configure({ timeout: 300_000, mode: "serial" });
 test.beforeEach(rendreParcDesTests);
 
 const JOUR = 86_400_000;
-const jour = (d: Date) => d.toISOString().slice(0, 10);
+// Jour vu depuis Paris, comme la « Date simulée » du démonstrateur.
+const jour = (d: Date) => jourDeParis(d);
 
 async function avancer(browser: Browser, baseURL: string | undefined, date: Date) {
   await demoLocations(browser, baseURL, async (admin) => {

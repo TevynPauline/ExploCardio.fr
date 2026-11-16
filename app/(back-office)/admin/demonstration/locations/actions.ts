@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { locationsDemo, ValeurRefusee } from "@/connecteurs/demonstration";
 import { estErreurConnecteur } from "@/connecteurs/erreurs";
 import { centimesDepuisSaisie } from "@/lib/montants";
+import { finDeJourneeParis } from "@/lib/calendrier";
 
 // Cycle des locations en démonstration (F05, T017) : ce que l'équipe fera dans Odoo. Le suivi
 // des locations passe aussitôt après chaque action (en temps normal : toutes les 5 minutes).
@@ -104,7 +105,7 @@ export async function avancer(d: FormData) {
   const jour = t(d, "date");
   if (!/^\d{4}-\d{2}-\d{2}$/.test(jour)) retour({ erreur: "Date invalide." });
   // Fin de la journée choisie (heure de Paris) : tout ce qui tombe ce jour-là est dû.
-  const fin = new Date(`${jour}T21:59:59Z`);
+  const fin = finDeJourneeParis(jour);
   let n = 0;
   try {
     n = (await locationsDemo.avancerJusquA(a, fin)).echeances;

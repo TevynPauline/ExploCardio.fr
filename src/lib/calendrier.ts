@@ -14,6 +14,16 @@ export function heureDeParis(instant: Date): string {
   return new Intl.DateTimeFormat("fr-FR", { timeZone: FUSEAU, hour: "2-digit", minute: "2-digit", hour12: false }).format(instant);
 }
 
+/** Dernière milliseconde du jour civil (AAAA-MM-JJ) à Paris : 22:59:59.999 UTC en hiver,
+ *  21:59:59.999 UTC en été. Les changements d'heure ont lieu la nuit : le décalage de midi vaut
+ *  pour la fin de journée. */
+export function finDeJourneeParis(jour: string): Date {
+  const heureParisAMidiUtc = Number(new Intl.DateTimeFormat("en-GB", { timeZone: FUSEAU, hour: "2-digit", hourCycle: "h23" }).format(dateDuJour(jour)));
+  const decalage = heureParisAMidiUtc - 12;
+  const [a, m, j] = jour.split("-").map(Number) as [number, number, number];
+  return new Date(Date.UTC(a, m - 1, j, 23 - decalage, 59, 59, 999));
+}
+
 /** Jour civil (AAAA-MM-JJ) → date à midi UTC, stable quel que soit le fuseau du serveur. */
 export function dateDuJour(jour: string): Date {
   return new Date(`${jour}T12:00:00Z`);
