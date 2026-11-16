@@ -70,10 +70,10 @@ export default async function Livraison({ searchParams }: { searchParams: Promis
             <legend className="mb-2 font-semibold text-ink">Date de livraison — mise à disposition {d.libelle}</legend>
             <p>
               {d.lendemain
-                ? `Livraison possible dès demain, ${libelleJour(d.premiere)}.`
+                ? `Livraison prévue dès demain, ${libelleJour(d.premiere)}.`
                 : `Première livraison possible : ${libelleJour(d.premiere)}.`}{" "}
               <span className="text-small text-muted">
-                Commande passée avant {regles!.heureLimite} un jour ouvré : livraison le lendemain si un appareil est disponible.
+                Commande passée avant {regles!.heureLimite} un jour ouvré : expédition le jour même et livraison prévue le lendemain, sous réserve de disponibilité et des délais du transporteur.
                 {estZoneEloignee(cp, regles!) ? " Votre adresse se trouve dans une zone où la livraison au lendemain n’est pas assurée : le délai réel est indiqué." : ""}
               </span>
             </p>

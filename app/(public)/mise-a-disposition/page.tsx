@@ -23,8 +23,8 @@ export default async function MiseADisposition() {
           <section id="depannage-express" aria-labelledby="titre-depannage" className="flex scroll-mt-24 flex-col gap-4">
             <h2 id="titre-depannage" className="text-h2 font-light">Équipements disponibles en dépannage</h2>
             <p className="max-w-2xl">
-              Un appareil en panne ? Recevez un équipement prêt à l’emploi, sans engagement : commandé un jour ouvré avant {heureLimite}, il est livré le
-              lendemain si un appareil est disponible.
+              Un appareil en panne ? Recevez un équipement prêt à l’emploi, sans engagement : commandé un jour ouvré avant {heureLimite}, il est expédié le
+              jour même. Livraison prévue le lendemain, sous réserve de disponibilité et des délais du transporteur.
             </p>
             {indisponible ? (
               <p role="status" className="ec-box--info p-4">
@@ -43,7 +43,7 @@ export default async function MiseADisposition() {
                     </h3>
                   </div>
                   <p className={o.lendemain ? "font-semibold text-ink" : ""}>
-                    {o.lendemain ? `Livraison demain, ${libelleJour(o.premiereDate)}` : `Première livraison possible : ${libelleJour(o.premiereDate)}`}
+                    {o.lendemain ? `Livraison prévue demain, ${libelleJour(o.premiereDate)}` : `Première livraison possible : ${libelleJour(o.premiereDate)}`}
                   </p>
                   <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1">
                     <dt>Premier mois</dt>

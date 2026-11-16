@@ -140,7 +140,8 @@ export function SelecteurFormule({ nom, formules, variantes, contenuPackMad, men
             ) : null}
             {variante.livraisonMad ? (
               <p className={variante.livraisonMad.lendemain ? "font-semibold text-ink" : ""}>
-                {variante.livraisonMad.lendemain ? `Livraison possible dès demain, ${variante.livraisonMad.libelle}` : `Première livraison possible : ${variante.livraisonMad.libelle}`}
+                {variante.livraisonMad.lendemain ? `Livraison prévue dès demain, ${variante.livraisonMad.libelle}` : `Première livraison possible : ${variante.livraisonMad.libelle}`}
+                <span className="block text-small font-normal text-muted">Sous réserve de disponibilité et des délais du transporteur.</span>
               </p>
             ) : (
               <Disponibilite etat={dispo} />
