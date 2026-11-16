@@ -94,7 +94,25 @@ suiteDeContrat("stripe", "paiements et abonnements (contracts/stripe.md)", ({ re
     const { contenu, signature } = serialiser(evt);
     const lu = await stripe().verifierEvenement(contenu, signature);
     expect(lu).toMatchObject({ id: evt.id, type: "paiement_reussi", carte: "amex", montantTtc: 14_400 });
-    expect(lu.date).toBeInstanceOf(Date);
+    expect(lu?.date).toBeInstanceOf(Date);
+  });
+
+  it.runIf(mode === "demo")("restitue une contestation signée ; la démonstration ne renvoie jamais null (F24)", async () => {
+    const evt = construireEvenement("contestation", { montantTtc: 9_600, commandeRef: "FICT-SO-2", paiementRef: "FICT-pi-2" });
+    const { contenu, signature } = serialiser(evt);
+    const lu = await stripe().verifierEvenement(contenu, signature);
+    expect(lu).not.toBeNull();
+    expect(lu).toMatchObject({ type: "contestation", montantTtc: 9_600 });
+  });
+
+  it("ouvre la gestion du moyen de paiement d'un client connu ; NotFound sinon (F24)", async () => {
+    await stripe().ouvrirSessionPaiement(
+      { commandeRef: "FICT-SO-MOYEN", montantTtc: 1_200, moyens: ["carte"], client, urlRetour: "https://exemple.test/retour", urlAnnulation: "https://exemple.test/annulation" },
+      cleDeTest("moyen-session"),
+    );
+    const { url } = await stripe().ouvrirGestionMoyenPaiement({ partenaireRef: client.partenaireRef, urlRetour: "https://exemple.test/mon-compte/locations" });
+    expect(url).toBeTruthy();
+    await expect(stripe().ouvrirGestionMoyenPaiement({ partenaireRef: "FICT-P-INCONNU", urlRetour: "https://exemple.test/" })).rejects.toMatchObject({ code: "NOT_FOUND" });
   });
 
   it("refuse un événement dont la signature est invalide", async () => {

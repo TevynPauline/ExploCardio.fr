@@ -22,6 +22,8 @@ export async function POST(requete: Request) {
     }
     throw e;
   }
+  // F24 : événement Stripe sans usage pour le site, accepté (200) pour que Stripe ne le renvoie pas.
+  if (!evenement) return Response.json({ ignore: true });
   const resultat = await traiterEvenementPaiement(evenement);
   return Response.json(resultat);
 }

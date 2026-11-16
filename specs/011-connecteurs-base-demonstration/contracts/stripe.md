@@ -13,7 +13,8 @@ Aucune donnée de carte ne touche le site, dans aucun mode (principe V).
 | Retirer / rétablir un élément d'abonnement | abonnement, élément (location), date d'effet, clé | prélèvements mensuels de l'élément arrêtés ; autorisation conservée | `NotFound` | F05 |
 | Prélever un montant ponctuel | abonnement, montant TTC, libellé, clé | paiement, état (`payee` / `refusee`) | `NotFound`, `OperationRefusee` (autorisation libérée) | F05 |
 | Libérer l'autorisation | abonnement | — | `NotFound` | F05 |
-| Vérifier un événement reçu | contenu, signature | événement typé | `InvalidSignature` | gestionnaire d'événements |
+| Vérifier un événement reçu | contenu, signature | événement typé, ou `null` s'il est sans usage (F24) | `InvalidSignature` | gestionnaire d'événements |
+| Gérer le moyen de paiement (F24) | client, adresse de retour | adresse de la page sécurisée | `NotFound` | Mon compte › Locations |
 
 ## Événements (identiques dans les deux modes)
 
@@ -25,6 +26,7 @@ Aucune donnée de carte ne touche le site, dans aucun mode (principe V).
 | Échéance d'abonnement payée | Facture de l'échéance (Odoo), email |
 | Échéance d'abonnement refusée | Relances et règles d'impayé (F05, F10) |
 | Remboursement | Statut mis à jour dans « Mon compte », avoir (Odoo) |
+| Contestation (F24) | Alerte à l'administrateur, journal |
 
 Chaque événement est traité **une seule fois** (table des événements traités), même s'il
 arrive en retard ou plusieurs fois (F04).

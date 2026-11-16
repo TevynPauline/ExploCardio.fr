@@ -18,7 +18,8 @@ const variableDeMode: Record<NomConnecteur, string> = {
 export const VARIABLES_MODE_REEL: Record<NomConnecteur, readonly string[]> = {
   // F14 : ODOO_ENVIRONNEMENT vaut « recette » (copie neutralisée) ou « production ».
   odoo: ["ODOO_URL", "ODOO_DATABASE", "ODOO_USER", "ODOO_API_KEY", "ODOO_ENVIRONNEMENT"],
-  stripe: ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET"],
+  // F24 : STRIPE_ENVIRONNEMENT vaut « recette » (clés de test) ou « production » (clés live).
+  stripe: ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET", "STRIPE_ENVIRONNEMENT"],
   pca: ["PCA_API_URL", "PCA_API_KEY"],
   // F25 : EMAILING_ENVIRONNEMENT vaut « recette » (envois limités aux adresses autorisées) ou « production ».
   emailing: ["EMAILING_API_KEY", "EMAILING_ENVIRONNEMENT"],
@@ -39,6 +40,7 @@ export function modeDuConnecteur(nom: NomConnecteur, env: Env = process.env): Mo
 const VALEURS_ADMISES: Record<string, readonly string[]> = {
   ODOO_ENVIRONNEMENT: ["recette", "production"],
   EMAILING_ENVIRONNEMENT: ["recette", "production"],
+  STRIPE_ENVIRONNEMENT: ["recette", "production"],
 };
 
 export function variablesManquantes(nom: NomConnecteur, env: Env = process.env): string[] {
@@ -48,6 +50,10 @@ export function variablesManquantes(nom: NomConnecteur, env: Env = process.env):
     const admises = VALEURS_ADMISES[v];
     return admises ? !admises.includes(valeur) : false;
   });
+  // F24 (FR-004) : clé de test en recette, clé live en production ; sinon, clé comptée manquante.
+  if (nom === "stripe" && prefixeCleIncoherent(env) && !manquantes.includes("STRIPE_SECRET_KEY")) {
+    manquantes.push("STRIPE_SECRET_KEY");
+  }
   // F25 : en recette, la liste des adresses autorisées est obligatoire.
   if (nom === "emailing" && environnementEmailing(env) === "recette" && !adressesAutorisees(env).length) {
     manquantes.push("EMAILING_ADRESSES_AUTORISEES");
@@ -89,4 +95,29 @@ export function adressesAutorisees(env: Env = process.env): string[] {
     .split(",")
     .map((a) => a.trim().toLowerCase())
     .filter(Boolean);
+}
+
+export type EnvironnementStripe = "recette" | "production";
+
+/** Environnement de Stripe déclaré (F24, R2) ; `null` s'il est absent ou invalide. */
+export function environnementStripe(env: Env = process.env): EnvironnementStripe | null {
+  const v = env.STRIPE_ENVIRONNEMENT;
+  return v === "recette" || v === "production" ? v : null;
+}
+
+/**
+ * F24 (FR-004) : clé Stripe incohérente avec l'environnement — clé live sur la recette ou clé
+ * de test sur le site public. Seulement en mode réel, avec une clé et un environnement valides.
+ */
+export function cleStripeIncoherente(env: Env = process.env): boolean {
+  return env.CONNECTOR_STRIPE === "real" && prefixeCleIncoherent(env);
+}
+
+function prefixeCleIncoherent(env: Env): boolean {
+  const environnement = environnementStripe(env);
+  const cle = env.STRIPE_SECRET_KEY ?? "";
+  if (!environnement || !cle) return false;
+  const test = /^(sk|rk)_test_/.test(cle);
+  const live = /^(sk|rk)_live_/.test(cle);
+  return environnement === "recette" ? !test : !live;
 }

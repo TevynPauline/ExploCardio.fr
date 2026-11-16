@@ -43,7 +43,7 @@ describe("registre des connecteurs", () => {
       ),
     ).rejects.toMatchObject({
       code: "CONFIGURATION_INCOMPLETE",
-      details: { variablesManquantes: ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET"] },
+      details: { variablesManquantes: ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET", "STRIPE_ENVIRONNEMENT"] },
     });
   });
 
