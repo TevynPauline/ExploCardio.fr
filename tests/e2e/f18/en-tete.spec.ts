@@ -6,7 +6,8 @@ import { ELECTRODES, ajouterDepuisFiche, clientConnecte } from "../f04/outils";
 
 test.describe.configure({ timeout: 180_000 });
 
-const ENTREES = ["Holter ECG", "Holter tensionnel", "Épreuve d'effort", "Accessoires & consommables", "Services", "Financement", "Qui sommes-nous / Contact"];
+// Mis à jour par F27 : cinq entrées, « Qui sommes-nous » et « Contact » en liens discrets à droite.
+const ENTREES = ["Produits", "Consommables", "Informatique médicale", "Location et financement", "Services"];
 
 // 1 093 px : écran de 1 366 px à 125 % ; 1 280 px : écran de 1 920 px à 150 % (Windows).
 for (const largeur of [1024, 1093, 1280, 1920]) {

@@ -8,7 +8,8 @@ import { boite } from "./outils";
 
 test.describe.configure({ timeout: 180_000 });
 
-const ENTREES = ["Holter ECG", "Holter tensionnel", "Épreuve d'effort", "Accessoires & consommables", "Services", "Financement", "Qui sommes-nous / Contact"];
+// Mis à jour par F27 : cinq entrées, « Qui sommes-nous » et « Contact » en liens discrets à droite.
+const ENTREES = ["Produits", "Consommables", "Informatique médicale", "Location et financement", "Services"];
 
 for (const largeur of [320, 390]) {
   test(`en-tête à ${largeur} px : menu à gauche, logo au centre, recherche, panier et compte à droite`, async ({ page }) => {
@@ -45,9 +46,13 @@ for (const largeur of [1024, 1093, 1280, 1920]) {
       hauts.add(Math.round(b.y));
     }
     expect(hauts.size).toBe(1);
-    await nav.getByRole("button", { name: "Holter ECG", exact: true }).focus();
+    for (const lien of ["Qui sommes-nous", "Contact"]) {
+      const b = await boite(page, nav.getByRole("link", { name: lien, exact: true }));
+      expect(b.x + b.width).toBeLessThanOrEqual(largeur);
+    }
+    await nav.getByRole("button", { name: "Produits", exact: true }).focus();
     await page.keyboard.press("Enter");
-    await expect(page.locator("#megamenu-holter_ecg")).toBeVisible();
+    await expect(page.locator("#megamenu-produits")).toBeVisible();
   });
 }
 

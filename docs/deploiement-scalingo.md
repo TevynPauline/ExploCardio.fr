@@ -82,8 +82,8 @@ Events.
 
 À faire par Régis (propriétaire du compte) avant la recette :
 
-1. **Dossier** : fournir les informations « matériel médical » demandées par Stripe **avant le
-   28 novembre 2026** (sinon les virements vers le compte bancaire sont suspendus).
+1. **Dossier** : informations « matériel médical » demandées par Stripe — **fournies le
+   15 novembre 2026** à l'ouverture du compte.
 2. **Moyens de paiement** (Paramètres › Paiements › Moyens de paiement) : Cartes, Apple Pay,
    Google Pay et **Prélèvement SEPA** activés ; le reste désactivé.
 3. **Emails clients** (Paramètres › Emails clients) : **désactiver** les reçus de paiements

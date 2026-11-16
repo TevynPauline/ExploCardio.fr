@@ -155,8 +155,8 @@ export function BarreNavigation({ entrees, liensSecondaires, articlesPanier: ini
         {/* Ordinateur (dès 1 024 px) : les cinq entrées sur une seconde ligne, « Qui sommes-nous »
             et « Contact » à droite, plus discrets (F27). */}
         <nav aria-label="Navigation principale" className="hidden border-t border-line lg:block">
-          <div className="mx-auto flex max-w-page items-center gap-4 px-4">
-          <ul className="flex items-center gap-x-1 xl:gap-x-2">
+          <div className="mx-auto flex max-w-page flex-wrap items-center gap-x-4 px-4">
+          <ul className="flex flex-wrap items-center gap-x-1 xl:gap-x-2">
             {entrees.map((e) => (
               <li key={e.cle} onMouseEnter={() => surEntree(e.cle)} onMouseLeave={surSortie}>
                 <button
@@ -179,7 +179,7 @@ export function BarreNavigation({ entrees, liensSecondaires, articlesPanier: ini
               </li>
             ))}
           </ul>
-          <ul className="ml-auto flex items-center gap-x-4">
+          <ul className="ml-auto flex flex-wrap items-center gap-x-4">
             {liensSecondaires.map((l) => (
               <li key={l.href}>
                 <Link href={l.href} className="inline-flex min-h-12 items-center whitespace-nowrap text-small text-muted hover:text-action hover:underline">
