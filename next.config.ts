@@ -11,6 +11,10 @@ const nextConfig: NextConfig = {
   experimental: { serverActions: { bodySizeLimit: "52mb" }, cpus: 2 },
   // Site de démonstration : aucune réponse indexable, fichiers statiques compris (FR-035).
   // F21 (FR-001) : sauf sur les adresses de la page d'attente, dont le proxy règle l'indexation.
+  // F27 (FR-039) : l'ancienne page Hébergement est fondue dans « Informatique médicale ».
+  async redirects() {
+    return [{ source: "/services/hebergement-donnees-sante", destination: "/informatique-medicale#hebergement", permanent: true }];
+  },
   async headers() {
     if (process.env.SITE_MODE === "prod") return [];
     const domaines = (process.env.DOMAINES_PAGE_ATTENTE ?? "")

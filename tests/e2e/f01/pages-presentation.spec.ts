@@ -17,9 +17,9 @@ test("chaque page de F01 s'affiche sans erreur et reste accessible", async ({ pa
 
 test("les pages de familles listent les articles avec leur prix HT (pages catégorie de F03)", async ({ page }) => {
   await page.goto("/holter-tensionnel");
-  const oscar = page.locator("main article").filter({ has: page.getByRole("heading", { name: "Oscar 2" }) });
+  const oscar = page.locator("main article").filter({ has: page.getByRole("heading", { name: "Oscar 2", exact: true }) });
   await expect(oscar).toContainText("HT");
-  await page.goto("/accessoires-consommables/suntech-brassard-mapa-orbit?config=EC-SUN-ORBIT-M");
+  await page.goto("/holter-tensionnel/suntech-brassard-mapa-orbit?config=EC-SUN-ORBIT-M");
   await expect(page.locator("main")).toContainText("98-0239-22");
 });
 

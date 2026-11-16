@@ -1,8 +1,8 @@
 import Link from "next/link";
 
 // Filtre par état d'une liste de demandes (F13, US6).
-export function Onglets({ chemin, actif, etats, comptes }: { chemin: string; actif: string; etats: Record<string, string>; comptes: Partial<Record<string, number>> }) {
-  const tous = Object.values(comptes).reduce<number>((s, n) => s + (n ?? 0), 0);
+export function Onglets({ chemin, actif, etats, comptes, total }: { chemin: string; actif: string; etats: Record<string, string>; comptes: Partial<Record<string, number>>; total?: number }) {
+  const tous = total ?? Object.values(comptes).reduce<number>((s, n) => s + (n ?? 0), 0);
   return (
     <nav aria-label="Filtrer par état">
       <ul className="flex flex-wrap gap-2">

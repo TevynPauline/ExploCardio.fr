@@ -38,8 +38,11 @@ export function lireCorrespondance(json: string | null | undefined): Corresponda
 
 const segments = (chemin: string) => chemin.split("/").map(normaliser).filter(Boolean);
 
-/** Rubrique d'une catégorie Odoo, d'après son chemin complet (« MAPA / Accessoires MAPA »). */
-export function rubriqueDe(cheminComplet: string, correspondance: Correspondance): CodeRubrique | null {
+/**
+ * Rubrique d'une catégorie Odoo et profondeur de la catégorie reliée dans son chemin (F27 : les
+ * segments suivants forment ses sous-catégories).
+ */
+export function rattachementDe(cheminComplet: string, correspondance: Correspondance): { code: CodeRubrique; profondeur: number } | null {
   const chemin = segments(cheminComplet);
   let meilleure: { profondeur: number; code: string } | null = null;
   for (const [cle, code] of Object.entries(correspondance)) {
@@ -47,5 +50,10 @@ export function rubriqueDe(cheminComplet: string, correspondance: Correspondance
     const prefixe = k.length > 0 && k.length <= chemin.length && k.every((s, i) => s === chemin[i]);
     if (prefixe && (!meilleure || k.length > meilleure.profondeur)) meilleure = { profondeur: k.length, code };
   }
-  return meilleure && CODES.has(meilleure.code) ? (meilleure.code as CodeRubrique) : null;
+  return meilleure && CODES.has(meilleure.code) ? { code: meilleure.code as CodeRubrique, profondeur: meilleure.profondeur } : null;
+}
+
+/** Rubrique d'une catégorie Odoo, d'après son chemin complet (« MAPA / Accessoires MAPA »). */
+export function rubriqueDe(cheminComplet: string, correspondance: Correspondance): CodeRubrique | null {
+  return rattachementDe(cheminComplet, correspondance)?.code ?? null;
 }

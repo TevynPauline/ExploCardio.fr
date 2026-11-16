@@ -8,13 +8,12 @@ import { requete } from "./outils";
 test.describe.configure({ mode: "serial", timeout: 120_000 });
 
 const PAGES = [
-  { chemin: "/services/hebergement-donnees-sante", titre: /Hébergement/ },
   { chemin: "/services/assistance", titre: /Assistance/ },
   { chemin: "/financement", titre: /Financement/ },
   { chemin: "/services/installation-formation", titre: /Installation et formation/ },
 ];
 
-test("quatre pages services : offre, bouton d'action vers le contact avec le motif", async ({ page }) => {
+test("trois pages services : offre, bouton d'action vers le contact avec le motif", async ({ page }) => {
   for (const p of PAGES) {
     await page.goto(p.chemin);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(p.titre);
@@ -27,10 +26,11 @@ test("quatre pages services : offre, bouton d'action vers le contact avec le mot
   await expect(page.locator("main").getByRole("link", { name: /Installation et formation/ })).toBeVisible();
 });
 
-test("hébergement « En préparation » sans souscription ; badge retiré et tarif affiché depuis le back-office", async ({ page, browser, baseURL }) => {
-  await page.goto("/services/hebergement-donnees-sante");
-  await expect(page.locator("main")).toContainText("En préparation");
-  await expect(page.locator("main")).not.toContainText(/€ HT/);
+test("hébergement « En préparation » sur la page Services ; badge retiré et tarif affiché depuis le back-office", async ({ page, browser, baseURL }) => {
+  // F27 : l'hébergement est présenté sur la page Informatique médicale ; le badge reste sur sa carte.
+  const carte = () => page.locator("main a").filter({ hasText: "Hébergement des données de santé" });
+  await page.goto("/services");
+  await expect(carte()).toContainText("En préparation");
 
   const equipe = await browser.newContext({ baseURL, storageState: "playwright/.auth/acces-demo.json" });
   await connecterNavigateur(equipe, COMPTES.admin);
@@ -44,8 +44,8 @@ test("hébergement « En préparation » sans souscription ; badge retiré et ta
     await admin.getByRole("button", { name: "Enregistrer" }).click();
     await expect(admin.getByRole("status").filter({ hasText: "Réglages enregistrés." })).toBeVisible();
 
-    await page.goto("/services/hebergement-donnees-sante");
-    await expect(page.locator("main")).not.toContainText("En préparation");
+    await page.goto("/services");
+    await expect(carte()).not.toContainText("En préparation");
     await page.goto("/services/installation-formation");
     await expect(page.locator("main")).toContainText("490,00 € HT");
     await expect(page.locator("main")).toContainText("588,00 € TTC");

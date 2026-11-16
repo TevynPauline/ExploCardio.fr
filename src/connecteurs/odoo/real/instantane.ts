@@ -1,6 +1,7 @@
 import type { Anomalie, EtatDisponibilite, OffreMiseADisposition, TypeArticle } from "../interfaces";
 import { idDe, texteDe, type ClientOdoo, type Enregistrement } from "./client";
-import { rubriqueDe, type CodeRubrique, type Correspondance } from "./correspondance";
+import { codeCategorie, parNom } from "../categories";
+import { rattachementDe, type CodeRubrique, type Correspondance } from "./correspondance";
 import { normaliser } from "./normaliser";
 import { CHAMPS_REGLE, regleNonGeree, type Cible, type RegleOdoo } from "./prix";
 import { lireProprietes } from "./proprietes";
@@ -26,6 +27,8 @@ export type ModeleLu = {
   id: number;
   nom: string;
   categorie: CodeRubrique;
+  /** Catégorie la plus précise (F27), code commun aux deux modes. */
+  categorieDetail: string;
   marque: string;
   type: TypeArticle;
   description: string | null;
@@ -40,8 +43,13 @@ export type ModeleLu = {
   variantes: VarianteLue[];
 };
 
+/** Sous-catégorie d'Odoo reliée à une rubrique (F27), niveau 1 ou 2. */
+export type CategorieLue = { code: string; nom: string; parentCode: string; rubrique: CodeRubrique; niveau: 1 | 2 };
+
 export type Instantane = {
   modeles: ModeleLu[];
+  /** Sous-catégories reliées, triées par nom sous chaque parent. */
+  categories: CategorieLue[];
   parReference: Map<string, { modele: ModeleLu; variante: VarianteLue }>;
   regles: RegleOdoo[];
   listeParDefaut: number | null;
@@ -73,7 +81,7 @@ async function lire(client: ClientOdoo) {
   const entrepots = await client.searchRead("stock.warehouse", [["code", "=", "WH"]], ["id"], { limite: 1 });
   const contexte = entrepots[0] ? { warehouse_id: entrepots[0].id } : {};
   const [categories, templates, taxes, listes] = await Promise.all([
-    client.searchRead<Enregistrement & { complete_name: string; parent_id: unknown }>("product.category", [], ["complete_name", "parent_id"]),
+    client.searchRead<Enregistrement & { name?: string; complete_name: string; parent_id: unknown }>("product.category", [], ["name", "complete_name", "parent_id"]),
     client.searchRead<Template>("product.template", [["sale_ok", "=", true], ["active", "=", true]], CHAMPS_TEMPLATE),
     client.searchRead<Enregistrement & { amount: number; amount_type: string; price_include: boolean }>("account.tax", [["type_tax_use", "=", "sale"]], ["amount", "amount_type", "price_include"]),
     client.searchRead<Enregistrement & { sequence: number }>("product.pricelist", [], ["sequence"], { ordre: "sequence, id" }),
@@ -113,6 +121,30 @@ export function assembler(lu: Lu, correspondance: Correspondance): Instantane {
     for (let c = id; c !== null && !ids.includes(c); c = idDe(categorie.get(c)?.parent_id)) ids.push(c);
     return ids;
   };
+  // F27 : noms des catégories de la racine jusqu'à `id`, puis position sous la rubrique.
+  const nomDe = (id: number) => {
+    const c = categorie.get(id);
+    return c?.name ?? c?.complete_name.split(" / ").at(-1)?.trim() ?? "";
+  };
+  const detailDe = (id: number | null) => {
+    const c = id === null ? undefined : categorie.get(id);
+    if (!c) return null;
+    const r = rattachementDe(c.complete_name, correspondance);
+    if (!r) return null;
+    const relatifs = chaine(id).reverse().map(nomDe).slice(r.profondeur);
+    return { rubrique: r.code, relatifs, code: codeCategorie(r.code, relatifs) };
+  };
+  const sousCategories = new Map<string, CategorieLue>();
+  for (const c of lu.categories) {
+    const d = detailDe(c.id);
+    if (!d) continue;
+    for (let n = 1; n <= Math.min(2, d.relatifs.length); n++) {
+      const code = codeCategorie(d.rubrique, d.relatifs.slice(0, n));
+      if (!sousCategories.has(code)) {
+        sousCategories.set(code, { code, nom: d.relatifs[n - 1]!, parentCode: codeCategorie(d.rubrique, d.relatifs.slice(0, n - 1)), rubrique: d.rubrique, niveau: n as 1 | 2 });
+      }
+    }
+  }
   const taxe = new Map(lu.taxes.map((t) => [t.id, t]));
   const valeur = new Map(lu.valeurs.map((v) => [v.id, v]));
   const listeParDefaut = lu.listes[0]?.id ?? null;
@@ -133,7 +165,8 @@ export function assembler(lu: Lu, correspondance: Correspondance): Instantane {
     const codes = variantesDuModele.map((v) => texteDe(v.default_code)).filter((c): c is string => Boolean(c));
     const idCategorie = idDe(t.categ_id);
     const chemin = categorie.get(idCategorie ?? -1)?.complete_name ?? "";
-    const rubrique = chemin ? rubriqueDe(chemin, correspondance) : null;
+    const detail = detailDe(idCategorie);
+    const rubrique = detail?.rubrique ?? null;
     // Produit sans aucune référence hors des rubriques (cartes cadeaux, porte-monnaie) : pas un
     // produit du site, ignoré sans anomalie.
     if (!rubrique && !codes.length) continue;
@@ -212,6 +245,7 @@ export function assembler(lu: Lu, correspondance: Correspondance): Instantane {
       id: t.id,
       nom,
       categorie: rubrique,
+      categorieDetail: detail!.code,
       marque: proprietes.marque!,
       type: proprietes.type!,
       description: texteDe(t.description_sale),
@@ -238,7 +272,8 @@ export function assembler(lu: Lu, correspondance: Correspondance): Instantane {
 
   const parReference = new Map<string, { modele: ModeleLu; variante: VarianteLue }>();
   for (const m of modeles) for (const v of m.variantes) parReference.set(v.defaultCode, { modele: m, variante: v });
-  return { modeles, parReference, regles: lu.regles, listeParDefaut, anomalies };
+  const categories = [...sousCategories.values()].sort((a, b) => a.niveau - b.niveau || parNom(a, b));
+  return { modeles, categories, parReference, regles: lu.regles, listeParDefaut, anomalies };
 }
 
 const DUREE_MEMOIRE_MS = 60_000;

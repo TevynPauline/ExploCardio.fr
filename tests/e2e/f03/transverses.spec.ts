@@ -11,8 +11,8 @@ const FICHES = [
   "/holter-tensionnel/suntech-oscar-2",
   "/epreuve-effort/koch-evolution-korele-8000",
   "/holter-ecg/ecg-de-repos/dms-cardioscan-resting-12-derivations",
-  "/accessoires-consommables/electrodes-holter",
-  "/accessoires-consommables/suntech-brassard-mapa-orbit",
+  "/holter-ecg/electrodes-holter",
+  "/holter-tensionnel/suntech-brassard-mapa-orbit",
 ];
 const PAGES_F03 = [...CATEGORIES.map((c) => c.chemin), ...FICHES, "/services/installation-formation", "/panier"];
 

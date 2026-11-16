@@ -14,6 +14,36 @@ import type { EtatDisponibilite, MensualiteForcee, Palier } from "../interfaces"
 import { INCLURE_DISPONIBILITE, etatsAchat } from "./disponibilite";
 import { db } from "./outils";
 import { trierAnomalies } from "../anomalies";
+import { parNom } from "../categories";
+
+/** Arbre des catégories de la base de démonstration (petit : lu en entier, F27). */
+type Noeud = { id: number; code: string; nom: string; ordre: number; parentId: number | null; estFictif: boolean };
+type Arbre = Map<number, Noeud>;
+
+async function lireArbre(): Promise<Arbre> {
+  const lignes = await db().categorie.findMany({ select: { id: true, code: true, nom: true, ordre: true, parentId: true, estFictif: true } });
+  return new Map(lignes.map((c) => [c.id, c]));
+}
+
+/** Ancêtres d'une catégorie, de la rubrique jusqu'à elle. */
+function branche(arbre: Arbre, id: number): Noeud[] {
+  const chemin: Noeud[] = [];
+  for (let n = arbre.get(id); n && !chemin.includes(n); n = n.parentId === null ? undefined : arbre.get(n.parentId)) chemin.unshift(n);
+  return chemin;
+}
+
+/** Rubrique et catégorie la plus précise (niveau 2 au plus) d'un modèle. */
+function rattachement(arbre: Arbre, categorieId: number): { categorie: string; categorieDetail: string } {
+  const b = branche(arbre, categorieId);
+  return { categorie: b[0]?.code ?? "", categorieDetail: (b[Math.min(2, b.length - 1)] ?? b[0])?.code ?? "" };
+}
+
+/** Identifiants de la catégorie de ce code et de tous ses sous-niveaux. */
+function descendants(arbre: Arbre, code: string): number[] {
+  const racine = [...arbre.values()].find((c) => c.code === code);
+  if (!racine) return [];
+  return [...arbre.values()].filter((c) => branche(arbre, c.id).includes(racine)).map((c) => c.id);
+}
 
 // Domaine « Catalogue » en démonstration (contracts/odoo.md §1).
 
@@ -29,7 +59,7 @@ async function etatsDesModeles(modeles: ModeleComplet[]) {
   return etatsAchat(modeles.flatMap((m) => m.variantes));
 }
 
-function resumer(m: ModeleComplet, dispo: Map<string, EtatDisponibilite>): ResumeArticle | null {
+function resumer(m: ModeleComplet, dispo: Map<string, EtatDisponibilite>, arbre: Arbre): ResumeArticle | null {
   const premiere = m.variantes[0];
   if (!premiere) return null;
   const prix = Math.min(...m.variantes.map((v) => v.prixHtCentimes));
@@ -46,7 +76,7 @@ function resumer(m: ModeleComplet, dispo: Map<string, EtatDisponibilite>): Resum
     nom: m.nom,
     marque: m.marque,
     type: m.type,
-    categorie: m.categorie.code,
+    ...rattachement(arbre, m.categorieId),
     prixAPartirDeHt: prix,
     formules: m.formules as ResumeArticle["formules"],
     disponibilite,
@@ -62,23 +92,30 @@ function nonNul<T>(x: T | null): x is T {
 
 export const catalogueDemo: CatalogueOdoo = {
   async listerCategories(): Promise<Categorie[]> {
-    const categories = await db().categorie.findMany({
-      include: { parent: true },
-      orderBy: [{ ordre: "asc" }, { nom: "asc" }],
-    });
-    return categories.map((c) => ({
-      code: c.code,
-      nom: c.nom,
-      ordre: c.ordre,
-      parentCode: c.parent?.code ?? null,
-      estFictif: c.estFictif,
-    }));
+    const arbre = await lireArbre();
+    const noeuds = [...arbre.values()];
+    const sortie: Categorie[] = [];
+    const visiter = (parentId: number | null, niveau: number) => {
+      const enfants = noeuds.filter((c) => c.parentId === parentId);
+      enfants.sort(niveau === 0 ? (a, b) => a.ordre - b.ordre || parNom(a, b) : parNom);
+      for (const c of enfants) {
+        const b = branche(arbre, c.id);
+        if (niveau <= 2) {
+          sortie.push({ code: c.code, nom: c.nom, ordre: niveau === 0 ? c.ordre : sortie.length, parentCode: niveau === 0 ? null : arbre.get(c.parentId!)!.code, rubrique: b[0]!.code, niveau: niveau as 0 | 1 | 2, estFictif: c.estFictif });
+        }
+        visiter(c.id, niveau + 1);
+      }
+    };
+    visiter(null, 0);
+    // Rubriques d'abord, puis les sous-catégories (même forme qu'en mode réel).
+    return [...sortie.filter((c) => c.niveau === 0), ...sortie.filter((c) => c.niveau > 0)];
   },
 
   async listerArticles(categorie: string, filtres: FiltresArticles = {}): Promise<ResumeArticle[]> {
+    const arbre = await lireArbre();
     const modeles = await db().modeleArticle.findMany({
       where: {
-        OR: [{ categorie: { code: categorie } }, { categorie: { parent: { code: categorie } } }],
+        categorieId: { in: descendants(arbre, categorie) },
         ...(filtres.marque ? { marque: filtres.marque } : {}),
         ...(filtres.type ? { type: filtres.type } : {}),
       },
@@ -87,7 +124,7 @@ export const catalogueDemo: CatalogueOdoo = {
     });
     const dispo = await etatsDesModeles(modeles);
     return modeles
-      .map((m) => resumer(m, dispo))
+      .map((m) => resumer(m, dispo, arbre))
       .filter(nonNul)
       .filter((a) => !filtres.disponibilite || a.disponibilite.etat === filtres.disponibilite);
   },
@@ -111,7 +148,7 @@ export const catalogueDemo: CatalogueOdoo = {
       nom: m.nom,
       marque: m.marque,
       type: m.type,
-      categorie: m.categorie.code,
+      ...rattachement(await lireArbre(), m.categorieId),
       description: m.description,
       formules: m.formules as Article["formules"],
       eligibleBonsAchat: m.eligibleBonsAchat,
@@ -171,8 +208,8 @@ export const catalogueDemo: CatalogueOdoo = {
       orderBy: [{ marque: "asc" }, { nom: "asc" }],
       take: 30,
     });
-    const dispo = await etatsDesModeles(modeles);
-    return modeles.map((m) => resumer(m, dispo)).filter(nonNul);
+    const [dispo, arbre] = await Promise.all([etatsDesModeles(modeles), lireArbre()]);
+    return modeles.map((m) => resumer(m, dispo, arbre)).filter(nonNul);
   },
 
   /** Rapport de contrôle (F14, FR-027), calculé sur la base fictive avec les mêmes codes. */
@@ -200,10 +237,13 @@ export const catalogueDemo: CatalogueOdoo = {
   },
 
   async listerReferences(): Promise<ReferenceArticle[]> {
-    const modeles = await db().modeleArticle.findMany({
-      include: INCLURE_MODELE,
-      orderBy: [{ categorie: { ordre: "asc" } }, { marque: "asc" }, { nom: "asc" }],
-    });
+    const [modelesLus, arbre] = await Promise.all([
+      db().modeleArticle.findMany({ include: INCLURE_MODELE, orderBy: [{ marque: "asc" }, { nom: "asc" }] }),
+      lireArbre(),
+    ]);
+    // Par rubrique (ordre fixe), puis marque et nom.
+    const ordreRubrique = (m: (typeof modelesLus)[number]) => branche(arbre, m.categorieId)[0]?.ordre ?? 99;
+    const modeles = [...modelesLus].sort((a, b) => ordreRubrique(a) - ordreRubrique(b));
     const dispo = await etatsDesModeles(modeles);
     return modeles.flatMap((m) =>
       m.variantes.map((v) => ({
@@ -213,7 +253,7 @@ export const catalogueDemo: CatalogueOdoo = {
         nom: m.nom,
         marque: m.marque,
         type: m.type,
-        categorie: m.categorie.code,
+        ...rattachement(arbre, m.categorieId),
         configuration: v.configuration,
         prixHt: v.prixHtCentimes,
         tauxTva: Number(v.tauxTva),

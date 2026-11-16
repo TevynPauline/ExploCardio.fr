@@ -10,10 +10,10 @@ function entree(o: {
   nom: string;
   marque: string;
   categorie?: string;
+  categorieDetail?: string;
   prix: number[];
   formules?: Article["formules"];
   dispo?: Disponibilite["achat"];
-  sousCategorie?: string;
   ordre?: number;
   mad?: number;
 }): EntreeCatalogue {
@@ -25,6 +25,7 @@ function entree(o: {
     marque: o.marque,
     type: "equipement",
     categorie: o.categorie ?? "mapa",
+    categorieDetail: o.categorieDetail ?? o.categorie ?? "mapa",
     description: null,
     formules: o.formules ?? ["achat"],
     eligibleBonsAchat: false,
@@ -59,19 +60,28 @@ function entree(o: {
       slug: o.nom.toLowerCase(),
       ordre: o.ordre ?? n,
       photos: [],
-      sousCategorie: o.sousCategorie ? { id: o.sousCategorie, categorie: "mapa", libelle: o.sousCategorie, slug: o.sousCategorie, ordre: 1 } : null,
     } as unknown as EntreeCatalogue["contenu"],
   };
 }
 
-const oscar = entree({ nom: "Oscar", marque: "SunTech", prix: [189000, 229000], formules: ["achat", "mise_a_disposition", "financement"], mad: 8900, sousCategorie: "enregistreurs", ordre: 2 });
-const bravo = entree({ nom: "Bravo", marque: "SunTech", prix: [129000], dispo: { etat: "delai", delaiJours: 10 }, sousCategorie: "enregistreurs", ordre: 3 });
-const watch = entree({ nom: "Watch", marque: "Microlife", prix: [99000], dispo: { etat: "indisponible" }, sousCategorie: "autres", ordre: 1 });
+const oscar = entree({ nom: "Oscar", marque: "SunTech", prix: [189000, 229000], formules: ["achat", "mise_a_disposition", "financement"], mad: 8900, categorieDetail: "mapa/enregistreurs-mapa", ordre: 2 });
+const bravo = entree({ nom: "Bravo", marque: "SunTech", prix: [129000], dispo: { etat: "delai", delaiJours: 10 }, categorieDetail: "mapa/enregistreurs-mapa", ordre: 3 });
+const watch = entree({ nom: "Watch", marque: "Microlife", prix: [99000], dispo: { etat: "indisponible" }, categorieDetail: "mapa/accessoires-mapa/sacoches-pour-mapa", ordre: 1 });
 const location = entree({ nom: "Loc", marque: "DMS", prix: [150000], formules: ["mise_a_disposition"], mad: 7900, ordre: 4 });
 const ailleurs = entree({ nom: "Holter", marque: "DMS", categorie: "holter-ecg", prix: [100000] });
 const toutes = [oscar, bravo, watch, location, ailleurs];
 
-const lister = (f: FiltresCategorie = {}) => cartesDeCategorie(toutes, "mapa", f);
+// Arbre d'Odoo (F27) : une sous-catégorie vide (Consommables MAPA) n'est pas proposée.
+const noeud = (code: string, nom: string, parentCode: string | null, niveau: 0 | 1 | 2) => ({ code, nom, parentCode, niveau, rubrique: code.split("/")[0]!, ordre: 0, estFictif: true });
+const arbre = [
+  noeud("mapa", "MAPA", null, 0),
+  noeud("mapa/accessoires-mapa", "Accessoires MAPA", "mapa", 1),
+  noeud("mapa/consommables-mapa", "Consommables MAPA", "mapa", 1),
+  noeud("mapa/enregistreurs-mapa", "Enregistreurs MAPA", "mapa", 1),
+  noeud("mapa/accessoires-mapa/sacoches-pour-mapa", "Sacoches pour MAPA", "mapa/accessoires-mapa", 2),
+];
+
+const lister = (f: FiltresCategorie = {}) => cartesDeCategorie(toutes, "mapa", f, arbre);
 
 describe("cartesDeCategorie", () => {
   it("ne garde que la catégorie, dans l'ordre de l'administrateur", () => {
@@ -95,18 +105,19 @@ describe("cartesDeCategorie", () => {
     expect(carte).toMatchObject({ prixHt: 4900, mensuel: true, aPartirDe: false, location: false, disponibilite: { etat: "disponible" } });
   });
 
-  it("filtres marque, type et disponibilité, combinables", () => {
+  it("filtres marque, catégorie d'Odoo (sous-niveaux compris) et disponibilité, combinables", () => {
     expect(lister({ marque: "SunTech" }).cartes.map((c) => c.nom)).toEqual(["Oscar", "Bravo"]);
-    expect(lister({ type: "autres" }).cartes.map((c) => c.nom)).toEqual(["Watch"]);
+    expect(lister({ categorie: "mapa/accessoires-mapa" }).cartes.map((c) => c.nom)).toEqual(["Watch"]);
+    expect(lister({ categorie: "mapa/accessoires-mapa/sacoches-pour-mapa" }).categorieChoisie?.nom).toBe("Sacoches pour MAPA");
     expect(lister({ dispo: "delai" }).cartes.map((c) => c.nom)).toEqual(["Bravo"]);
     expect(lister({ marque: "SunTech", dispo: "disponible" }).cartes.map((c) => c.nom)).toEqual(["Oscar"]);
-    expect(lister({ marque: "SunTech", type: "autres" }).total).toBe(0);
+    expect(lister({ marque: "SunTech", categorie: "mapa/accessoires-mapa" }).total).toBe(0);
   });
 
-  it("filtres disponibles : marques, types et disponibilités présents dans la catégorie", () => {
+  it("filtres disponibles : marques, catégories non vides (niveau 1 puis ses niveaux 2) et disponibilités", () => {
     const { filtresDisponibles } = lister({ marque: "SunTech" });
     expect(filtresDisponibles.marques).toEqual(["DMS", "Microlife", "SunTech"]);
-    expect(filtresDisponibles.types.map((t) => t.slug)).toEqual(["autres", "enregistreurs"]);
+    expect(filtresDisponibles.categories.map((t) => t.code)).toEqual(["mapa/accessoires-mapa", "mapa/accessoires-mapa/sacoches-pour-mapa", "mapa/enregistreurs-mapa"]);
     expect(filtresDisponibles.dispos).toEqual(["disponible", "delai", "indisponible"]);
   });
 

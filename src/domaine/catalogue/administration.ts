@@ -3,7 +3,7 @@ import type { Article } from "@/connecteurs/odoo/interfaces";
 import { estErreurConnecteur } from "@/connecteurs/erreurs";
 import { invaliderDepuisAction } from "@/lib/cache";
 import { dbSite } from "@/lib/db/site";
-import type { ContenuProduit, SousCategorie } from "@generated/site/client";
+import type { ContenuProduit } from "@generated/site/client";
 import { invaliderIndexRecherche } from "../recherche/index";
 import { slugArticle, versSlug } from "../slugs";
 import { manquantsPublication, photosDe, textesDe, type DocumentProduit, type PhotoProduit, type TextesProduit } from "./publication";
@@ -23,7 +23,7 @@ export class ContenuInvalide extends Error {
 export type LigneAdmin = {
   reference: string;
   article: Article | null;
-  contenu: (ContenuProduit & { sousCategorie: SousCategorie | null }) | null;
+  contenu: ContenuProduit | null;
   etat: "a_rediger" | "preparation" | "publie" | "retire" | "orphelin";
   manquants: string[];
 };
@@ -55,7 +55,7 @@ async function articlesOdoo(): Promise<Article[] | null> {
 export async function listerPourAdmin(): Promise<{ lignes: LigneAdmin[]; odooIndisponible: boolean }> {
   const [articles, contenus] = await Promise.all([
     articlesOdoo(),
-    dbSite().contenuProduit.findMany({ include: { sousCategorie: true } }),
+    dbSite().contenuProduit.findMany(),
   ]);
   if (!articles) {
     return {
@@ -93,14 +93,13 @@ export function aCompleter(l: Pick<LigneAdmin, "contenu" | "etat" | "manquants">
   const liste: string[] = [];
   if (!c || !textesDe(c).descriptionCourte?.trim()) liste.push("Texte");
   if (!c || photosDe(c).length === 0) liste.push("Photo");
-  if (!c?.sousCategorieId) liste.push("Type");
   for (const m of l.manquants) if (/Odoo/.test(m)) liste.push(m.replace(/\.$/, ""));
   if (l.etat !== "publie" && l.etat !== "orphelin") liste.push("Publication");
   return [...new Set(liste)];
 }
 
 export async function lireArticleAdmin(reference: string): Promise<{ article: Article | null; contenu: LigneAdmin["contenu"]; odooIndisponible: boolean }> {
-  const contenu = await dbSite().contenuProduit.findUnique({ where: { defaultCode: reference }, include: { sousCategorie: true } });
+  const contenu = await dbSite().contenuProduit.findUnique({ where: { defaultCode: reference } });
   try {
     return { article: await registre.odoo().catalogue.lireArticle(reference), contenu, odooIndisponible: false };
   } catch (e) {
@@ -111,7 +110,6 @@ export async function lireArticleAdmin(reference: string): Promise<{ article: Ar
 
 export type SaisieContenu = {
   slug: string;
-  sousCategorieId: string;
   ordre: string;
   descriptionCourte: string;
   caracteristiques: string;
@@ -175,10 +173,6 @@ export async function enregistrerContenu(reference: string, s: SaisieContenu, au
     const inconnuesA = associes.filter((r) => !connues.has(r));
     if (inconnuesA.length) e.produitsAssocies = `Références inconnues dans Odoo : ${inconnuesA.join(", ")}.`;
   }
-  if (s.sousCategorieId) {
-    const sc = await dbSite().sousCategorie.findUnique({ where: { id: s.sousCategorieId } });
-    if (!sc || (article && sc.categorie !== article.categorie)) e.sousCategorieId = "Choisissez un type de cette catégorie.";
-  }
 
   const photos = existant ? photosDe(existant) : [];
   const gardees = photos
@@ -204,7 +198,6 @@ export async function enregistrerContenu(reference: string, s: SaisieContenu, au
   const donnees = {
     slug,
     anciensSlugs,
-    sousCategorieId: s.sousCategorieId || null,
     ordre,
     textes,
     photos: toutesPhotos,
@@ -239,39 +232,3 @@ export async function retirer(reference: string, etat: "preparation" | "retire",
   invaliderCatalogue();
 }
 
-// --- Sous-catégories (filtre « type ») -----------------------------------------------------------
-
-export async function creerSousCategorie(categorie: string, libelle: string, auteur: Auteur) {
-  const propre = libelle.trim();
-  if (!propre) throw new ContenuInvalide({ libelle: "Indiquez un libellé." });
-  const slug = versSlug(propre);
-  const doublon = await dbSite().sousCategorie.findFirst({ where: { categorie, OR: [{ libelle: propre }, { slug }] } });
-  if (doublon) throw new ContenuInvalide({ libelle: "Ce type existe déjà dans cette catégorie." });
-  const ordre = (await dbSite().sousCategorie.count({ where: { categorie } })) + 1;
-  await dbSite().sousCategorie.create({ data: { categorie, libelle: propre, slug, ordre } });
-  await journal(auteur, "catalogue.sous_categorie", categorie, { libelle: propre });
-  invaliderDepuisAction("catalogue");
-}
-
-export async function deplacerSousCategorie(id: string, sens: -1 | 1, auteur: Auteur) {
-  const sc = await dbSite().sousCategorie.findUniqueOrThrow({ where: { id } });
-  const liste = await dbSite().sousCategorie.findMany({ where: { categorie: sc.categorie }, orderBy: { ordre: "asc" } });
-  const i = liste.findIndex((x) => x.id === id);
-  const voisin = liste[i + sens];
-  if (!voisin) return;
-  await dbSite().$transaction([
-    dbSite().sousCategorie.update({ where: { id: sc.id }, data: { ordre: voisin.ordre } }),
-    dbSite().sousCategorie.update({ where: { id: voisin.id }, data: { ordre: sc.ordre } }),
-  ]);
-  await journal(auteur, "catalogue.sous_categorie", sc.categorie, { deplace: sc.libelle });
-  invaliderDepuisAction("catalogue");
-}
-
-/** Suppression refusée si un produit utilise ce type. */
-export async function supprimerSousCategorie(id: string, auteur: Auteur) {
-  const utilises = await dbSite().contenuProduit.count({ where: { sousCategorieId: id } });
-  if (utilises) throw new ContenuInvalide({ libelle: `Ce type est utilisé par ${utilises} produit${utilises > 1 ? "s" : ""} : changez-leur de type d'abord.` });
-  const sc = await dbSite().sousCategorie.delete({ where: { id } });
-  await journal(auteur, "catalogue.sous_categorie", sc.categorie, { supprime: sc.libelle });
-  invaliderDepuisAction("catalogue");
-}

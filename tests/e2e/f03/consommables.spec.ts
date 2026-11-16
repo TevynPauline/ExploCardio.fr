@@ -5,7 +5,7 @@ import { verifierAccessibilite } from "../axe";
 
 test.describe.configure({ timeout: 90_000 });
 
-const ELECTRODES = "/accessoires-consommables/electrodes-holter";
+const ELECTRODES = "/holter-ecg/electrodes-holter";
 
 test("fiche consommable : prix unitaire et par lot, conditionnements, paliers ; quantité → prix et total", async ({ page }) => {
   await page.goto(ELECTRODES);

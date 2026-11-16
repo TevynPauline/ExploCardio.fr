@@ -20,7 +20,7 @@ export async function ajouterDepuisFiche(page: Page, chemin: string, formule: "a
 }
 
 export const HOLTER = "/holter-ecg/dms-300-4l";
-export const ELECTRODES = "/accessoires-consommables/electrodes-holter";
+export const ELECTRODES = "/holter-ecg/electrodes-holter";
 
 
 /** Compte client validé, avec sa fiche fictive dans Odoo, connecté dans ce contexte. */

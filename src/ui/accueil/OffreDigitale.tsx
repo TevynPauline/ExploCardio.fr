@@ -11,7 +11,7 @@ export function OffreDigitale({ badgeLogicielCloud, whatsapp }: { badgeLogicielC
     { titre: "Financement", texte: "Étalez l'investissement sur la durée choisie.", href: "/financement" },
     { titre: "Mise à disposition au mois", texte: "Sans engagement, premier mois et suivants affichés.", href: "/mise-a-disposition" },
     { titre: "Pack dépannage express", texte: "Un appareil immobilisé ? Continuez vos examens.", href: "/mise-a-disposition#depannage-express" },
-    { titre: "Logiciel Cloud", texte: "Vos logiciels sur une plateforme certifiée HDS.", href: "/services/hebergement-donnees-sante", badge: badgeLogicielCloud },
+    { titre: "Logiciel Cloud", texte: "Vos logiciels sur une plateforme certifiée HDS.", href: "/informatique-medicale#hebergement", badge: badgeLogicielCloud },
     { titre: "Outils en ligne", texte: "Tutoriels, espace client et contact WhatsApp.", href: "/services/assistance#aide" },
   ];
   return (

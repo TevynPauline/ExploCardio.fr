@@ -29,7 +29,7 @@ test("fiche à variantes : TTC et HT changent ensemble avec la configuration", a
 });
 
 test("consommable à paliers : lot, unité, paliers et total en TTC d'abord", async ({ page }) => {
-  await page.goto("/accessoires-consommables/electrodes-holter");
+  await page.goto("/holter-ecg/electrodes-holter");
   const main = page.locator("main");
   await verifierPrixTtcDabord(main);
   await expect(main).toContainText(/Soit .* TTC l’unité \(soit .* HT l’unité\)/);

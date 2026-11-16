@@ -127,7 +127,7 @@ export const emailsFidelite = {
   droits: (p: { type: "ouverture" | "prolongation" | "retrait" | "ajustement"; fin: Date; motif: string | null }) =>
     email(`droits_${p.type}`, { fin: dateFr(p.fin), motif: p.motif ?? "" }, ["corps", p.type === "ajustement" && Boolean(p.motif) && "motif"], DROITS()),
   rappelFinDroits: (p: { fin: Date; seuilHt: number; pied?: PiedPreferences }) =>
-    email("droits_rappel_fin", { fin: dateFr(p.fin), seuil_ht: euros(p.seuilHt) }, ["corps"], { href: urlDuSite("/accessoires-consommables"), libelle: "Voir les consommables" }, p.pied),
+    email("droits_rappel_fin", { fin: dateFr(p.fin), seuil_ht: euros(p.seuilHt) }, ["corps"], { href: urlDuSite("/consommables"), libelle: "Voir les consommables" }, p.pied),
   rappelExpiration: (p: { montantHt: number; date: Date; soldeHt?: number; pied?: PiedPreferences }) =>
     email(
       "bons_rappel_expiration",

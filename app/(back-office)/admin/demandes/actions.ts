@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { suivreDevis, suivreMessage, SuiviRefuse, type Suivi } from "@/domaine/demandes/suivi";
+import { suivreDemandeInformatique, suivreDevis, suivreMessage, SuiviRefuse, type Suivi } from "@/domaine/demandes/suivi";
 import { auteurAvecDroit } from "@/lib/droits";
 
 // Suivi des messages de contact et des demandes de devis (F13, US6) : administrateur et commercial.
@@ -30,6 +30,10 @@ async function executer(d: FormData, chemin: string, operation: (id: string, a: 
 
 export async function actionSuivreMessage(d: FormData) {
   await executer(d, "/admin/demandes/messages", (id, a) => suivreMessage(id, suivi(d), a));
+}
+
+export async function actionSuivreInformatique(d: FormData) {
+  await executer(d, "/admin/demandes/informatique", (id, a) => suivreDemandeInformatique(id, suivi(d), a));
 }
 
 export async function actionSuivreDevis(d: FormData) {

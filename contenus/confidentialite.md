@@ -26,6 +26,7 @@ aucune donnée concernant vos patients dans les formulaires ou messages du site.
 - **Accès aux logiciels Cloud** : identité du compte, logiciels et dates d'accès. *Base légale* : contrat. *Conservation* : durée de l'accès, puis 3 ans.
 - **Bons d'achat et droits d'assistance** : commandes ouvrant les droits, soldes, dates. *Base légale* : contrat. *Conservation* : durée du compte.
 - **Demandes de devis, de contact et de financement** : coordonnées, contenu de la demande. *Base légale* : mesures précontractuelles. *Conservation* : 3 ans après le dernier contact.
+- **Demandes Informatique médicale** (questionnaire « Décrire mon besoin ») : nom, cabinet, code postal, email, téléphone, créneau de rappel, taille du cabinet, logiciels utilisés et besoins informatiques ; aucune donnée de patient. *Base légale* : consentement. *Conservation* : 3 ans après le dernier contact.
 - **Inscription à l'ouverture du site** : nom, email, téléphone et commentaire facultatifs. *Base légale* : consentement. *Conservation* : jusqu'à l'ouverture du site et la réponse à votre demande, puis [durée].
 - **Emails de gestion et de service** : email, préférences, remise et ouverture des emails. *Base légale* : contrat et intérêt légitime. *Conservation* : durée du compte.
 - **Newsletter** : email, abonnement et preuve du consentement. *Base légale* : consentement. *Conservation* : jusqu'à la désinscription, puis 3 ans pour la preuve.
@@ -43,7 +44,7 @@ transmises, pour les seules finalités ci-dessus, à nos prestataires :
 - **Odoo** (gestion commerciale et facturation) ;
 - **Stripe** (paiement par carte et prélèvements) ;
 - **Brevo** (envoi des emails) ;
-- **Nelson — Patient Care Anywhere** (ouverture de vos accès aux logiciels Cloud) ;
+- **Indoor Informatique (2i) — Patient Care Anywhere** (ouverture de vos accès aux logiciels Cloud ; et, après votre demande Informatique médicale et notre appel, présentation de ses solutions) ;
 - nos **partenaires de financement**, si vous déposez une demande de financement ;
 - nos **transporteurs**, pour la livraison.
 

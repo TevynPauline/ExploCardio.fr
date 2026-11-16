@@ -24,7 +24,7 @@ test("pages client de F06", async ({ page, browser, baseURL }) => {
   await payerParCarte(page);
   const confirmation = new URL(page.url()).pathname;
   await composerPanier(page, c.email, { "EC-DMS-SD-8GO": 2 });
-  expect(await sansDefilement(page, ["/panier", confirmation, "/mon-compte/bons-achat", "/mon-compte/assistance", "/accessoires-consommables/electrodes-holter"])).toEqual([]);
+  expect(await sansDefilement(page, ["/panier", confirmation, "/mon-compte/bons-achat", "/mon-compte/assistance", "/holter-ecg/electrodes-holter"])).toEqual([]);
 });
 
 test("back-office de F06", async ({ page, context }) => {

@@ -56,7 +56,7 @@ describe("registre des connecteurs", () => {
   it("accepte une configuration mixte : Stripe réel, les autres en démonstration", async () => {
     const registre = creerRegistre({ ...base, CONNECTOR_STRIPE: "real" });
     const categories = await registre.odoo().catalogue.listerCategories();
-    expect(categories.length).toBe(5);
+    expect(categories.filter((c) => c.niveau === 0)).toHaveLength(5);
     await expect(registre.pca().lireDroits("FICT-P-00001")).resolves.toBeInstanceOf(Array);
     await expect(registre.stripe().resilierAbonnement("A1", new Date())).rejects.toMatchObject({
       code: "CONFIGURATION_INCOMPLETE",
@@ -84,8 +84,8 @@ describe("registre des connecteurs", () => {
       ODOO_API_KEY: "k",
       ODOO_ENVIRONNEMENT: "recette",
     });
-    // Catégories : rubriques fixes du site, sans appel à Odoo.
-    await expect(registre.odoo().catalogue.listerCategories()).resolves.toHaveLength(5);
+    // Catégories : depuis F27, l'arbre est lu dans Odoo (injoignable ici) : erreur du connecteur.
+    await expect(registre.odoo().catalogue.listerCategories()).rejects.toMatchObject({ code: "SERVICE_UNAVAILABLE" });
     const refuse = { code: "CONFIGURATION_INCOMPLETE", details: { variablesManquantes: [] } };
     await expect(registre.odoo().stock.reserver([{ defaultCode: "X", quantite: 1 }], "cle")).rejects.toMatchObject(refuse);
     await expect(registre.odoo().clients.lireSituation("P")).rejects.toMatchObject(refuse);

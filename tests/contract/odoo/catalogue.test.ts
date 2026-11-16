@@ -7,7 +7,7 @@ suiteDeContrat("odoo", "catalogue (contracts/odoo.md §1)", ({ registre, mode })
   const catalogue = () => registre.odoo().catalogue;
 
   it("liste les cinq catégories du catalogue, dans l'ordre", async () => {
-    const categories = await catalogue().listerCategories();
+    const categories = (await catalogue().listerCategories()).filter((c) => c.niveau === 0);
     expect(categories.map((c) => c.nom)).toEqual([
       "Holter ECG",
       "Holter tensionnel / MAPA",
@@ -114,7 +114,8 @@ suiteDeContrat("odoo", "catalogue (contracts/odoo.md §1)", ({ registre, mode })
       nom: "Brassard MAPA Orbit",
       marque: "SunTech",
       type: "consommable",
-      categorie: "accessoires",
+      categorie: "mapa",
+      categorieDetail: "mapa/accessoires-mapa/brassards-pour-mapa",
       configuration: "26-34 cm",
     });
     expect(orbit!.prixHt).toBeGreaterThan(0);

@@ -23,7 +23,7 @@ test("pages client de F12", async ({ page, browser, baseURL }) => {
   await acheterHolterCloud(page, c.email);
   await page.goto("/holter-ecg");
   const fiche = new URL((await page.locator("main").getByRole("link", { name: /CardioScan Holter ECG/ }).first().getAttribute("href"))!, "http://x").pathname;
-  expect(await sansDefilement(page, ["/mon-compte/logiciels", "/services/hebergement-donnees-sante", "/demo/plateforme-cloud", fiche])).toEqual([]);
+  expect(await sansDefilement(page, ["/mon-compte/logiciels", "/informatique-medicale", "/demo/plateforme-cloud", fiche])).toEqual([]);
 });
 
 test("back-office de F12", async ({ page, context }) => {

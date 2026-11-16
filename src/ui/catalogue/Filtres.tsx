@@ -6,9 +6,10 @@ import { useTransition } from "react";
 
 type Props = {
   marques: string[];
-  types: { slug: string; libelle: string }[];
+  /** Sous-catégories d'Odoo (F27), niveau 1 puis ses sous-niveaux 2. */
+  categories: { code: string; libelle: string; niveau: number }[];
   dispos: ("disponible" | "delai" | "indisponible")[];
-  valeurs: { marque?: string; type?: string; dispo?: string; tri?: string };
+  valeurs: { marque?: string; categorie?: string; dispo?: string; tri?: string };
   total: number;
 };
 
@@ -20,7 +21,7 @@ const classeChamp = "min-h-11 rounded-sm border border-muted bg-surface px-3 tex
  * sans JavaScript (bouton « Appliquer ») ; avec JavaScript, la liste se met à jour dès qu'un
  * choix change. Le nombre de résultats est annoncé ; chaque filtre actif se retire seul.
  */
-export function Filtres({ marques, types, dispos, valeurs, total }: Props) {
+export function Filtres({ marques, categories, dispos, valeurs, total }: Props) {
   const router = useRouter();
   const chemin = usePathname();
   const parametres = useSearchParams();
@@ -43,7 +44,9 @@ export function Filtres({ marques, types, dispos, valeurs, total }: Props) {
 
   const actifs = [
     valeurs.marque ? { nom: "marque", libelle: `Marque : ${valeurs.marque}` } : null,
-    valeurs.type ? { nom: "type", libelle: `Type : ${types.find((t) => t.slug === valeurs.type)?.libelle ?? valeurs.type}` } : null,
+    valeurs.categorie
+      ? { nom: "categorie", libelle: `Catégorie : ${categories.find((c) => c.code === valeurs.categorie)?.libelle ?? valeurs.categorie}` }
+      : null,
     valeurs.dispo ? { nom: "dispo", libelle: LIBELLES_DISPO[valeurs.dispo as keyof typeof LIBELLES_DISPO] ?? valeurs.dispo } : null,
   ].filter((x): x is { nom: string; libelle: string } => Boolean(x));
 
@@ -60,12 +63,23 @@ export function Filtres({ marques, types, dispos, valeurs, total }: Props) {
             </select>
           </div>
         ) : null}
-        {types.length > 1 ? (
+        {categories.length > 0 ? (
           <div className="flex flex-col gap-1">
-            <label htmlFor="filtre-type" className="text-small font-medium">Type</label>
-            <select id="filtre-type" name="type" defaultValue={valeurs.type ?? ""} onChange={(e) => changer("type", e.target.value)} className={classeChamp}>
-              <option value="">Tous</option>
-              {types.map((t) => <option key={t.slug} value={t.slug}>{t.libelle}</option>)}
+            <label htmlFor="filtre-categorie" className="text-small font-medium">Catégorie</label>
+            <select
+              key={valeurs.categorie ?? ""}
+              id="filtre-categorie"
+              name="categorie"
+              defaultValue={valeurs.categorie ?? ""}
+              onChange={(e) => changer("categorie", e.target.value)}
+              className={classeChamp}
+            >
+              <option value="">Toutes</option>
+              {categories.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.niveau > 1 ? `\u00a0\u00a0— ${c.libelle}` : c.libelle}
+                </option>
+              ))}
             </select>
           </div>
         ) : null}

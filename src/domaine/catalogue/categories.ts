@@ -1,14 +1,18 @@
-import type { EtatDisponibilite } from "@/connecteurs/odoo/interfaces";
-import { lireCatalogue, type EntreeCatalogue } from "./lecture";
+import type { Categorie, EtatDisponibilite } from "@/connecteurs/odoo/interfaces";
+import { lireCatalogue, lireCategories, type EntreeCatalogue } from "./lecture";
 import { photosDe, type PhotoProduit } from "./publication";
 
 // Page catégorie (F03, US1, FR-005 à FR-007) : cartes des articles publiés, filtres marque,
-// type (sous-catégorie) et disponibilité, combinables, et tri.
+// catégorie d'Odoo (F27, à la place des « types » propres au site) et disponibilité,
+// combinables, et tri.
 
 export type EtatFiltre = EtatDisponibilite["etat"];
 const ETATS: EtatFiltre[] = ["disponible", "delai", "indisponible"];
 
-export type FiltresCategorie = { marque?: string; type?: string; dispo?: EtatFiltre; tri?: "ordre" | "prix" };
+export type FiltresCategorie = { marque?: string; categorie?: string; dispo?: EtatFiltre; tri?: "ordre" | "prix" };
+
+/** Sous-catégorie proposée en filtre, avec son niveau (1 ou 2) pour l'indentation. */
+export type FiltreCategorie = { code: string; libelle: string; niveau: number };
 
 export type Carte = {
   defaultCode: string;
@@ -24,14 +28,17 @@ export type Carte = {
   /** « Disponible en location » (FR-006). */
   location: boolean;
   disponibilite: EtatDisponibilite;
-  typeSlug: string | null;
+  /** Catégorie la plus précise d'Odoo (F27). */
+  categorieDetail: string;
   ordre: number;
 };
 
 export type ResultatCategorie = {
   cartes: Carte[];
   total: number;
-  filtresDisponibles: { marques: string[]; types: { slug: string; libelle: string }[]; dispos: EtatFiltre[] };
+  filtresDisponibles: { marques: string[]; categories: FiltreCategorie[]; dispos: EtatFiltre[] };
+  /** Sous-catégorie filtrée, pour le titre et le fil d'Ariane. */
+  categorieChoisie: Categorie | null;
   indisponible: boolean;
 };
 
@@ -72,52 +79,62 @@ export function carteDe(e: EntreeCatalogue): Carte {
     mensuel,
     location,
     disponibilite: meilleure(etats),
-    typeSlug: contenu.sousCategorie?.slug ?? null,
+    categorieDetail: article.categorieDetail,
     ordre: contenu.ordre,
   };
 }
 
 /** Cartes d'une catégorie, filtrées et triées (logique pure, testée). */
-export function cartesDeCategorie(entrees: EntreeCatalogue[], categorie: string, filtres: FiltresCategorie): Omit<ResultatCategorie, "indisponible"> {
+/** La carte appartient à cette catégorie ou à l'un de ses sous-niveaux. */
+export const dansLaCategorie = (categorieDetail: string, code: string) => categorieDetail === code || categorieDetail.startsWith(`${code}/`);
+
+export function cartesDeCategorie(
+  entrees: EntreeCatalogue[],
+  categorie: string,
+  filtres: FiltresCategorie,
+  arbre: Categorie[] = [],
+): Omit<ResultatCategorie, "indisponible"> {
   const deLaCategorie = entrees.filter((e) => e.article.categorie === categorie);
   const toutes = deLaCategorie.map(carteDe);
   const dispo = filtres.dispo && ETATS.includes(filtres.dispo) ? filtres.dispo : undefined;
   const cartes = toutes
     .filter((c) => !filtres.marque || c.marque === filtres.marque)
-    .filter((c) => !filtres.type || c.typeSlug === filtres.type)
+    .filter((c) => !filtres.categorie || dansLaCategorie(c.categorieDetail, filtres.categorie))
     .filter((c) => !dispo || c.disponibilite.etat === dispo)
     .sort((a, b) => (filtres.tri === "prix" ? a.prixHt - b.prixHt : 0) || a.ordre - b.ordre || a.nom.localeCompare(b.nom, "fr"));
-  const types = new Map<string, { slug: string; libelle: string; ordre: number }>();
-  for (const e of deLaCategorie) {
-    const sc = e.contenu.sousCategorie;
-    if (sc) types.set(sc.slug, { slug: sc.slug, libelle: sc.libelle, ordre: sc.ordre });
+  // Sous-catégories de la rubrique qui contiennent au moins un article publié, dans l'ordre de l'arbre.
+  const categories = arbre
+    .filter((c) => c.niveau > 0 && c.rubrique === categorie && toutes.some((x) => dansLaCategorie(x.categorieDetail, c.code)))
+    .map((c) => ({ code: c.code, libelle: c.nom, niveau: c.niveau }));
+  const ordonnees: FiltreCategorie[] = [];
+  for (const c of categories.filter((x) => x.niveau === 1)) {
+    ordonnees.push(c, ...categories.filter((x) => x.niveau === 2 && x.code.startsWith(`${c.code}/`)));
   }
   return {
     cartes,
     total: cartes.length,
     filtresDisponibles: {
       marques: [...new Set(toutes.map((c) => c.marque))].sort((a, b) => a.localeCompare(b, "fr")),
-      types: [...types.values()]
-        .sort((a, b) => a.ordre - b.ordre || a.libelle.localeCompare(b.libelle, "fr"))
-        .map(({ slug, libelle }) => ({ slug, libelle })),
+      categories: ordonnees,
       dispos: ETATS.filter((x) => toutes.some((c) => c.disponibilite.etat === x)),
     },
+    categorieChoisie: (filtres.categorie && arbre.find((c) => c.code === filtres.categorie && c.rubrique === categorie && c.niveau > 0)) || null,
   };
 }
 
-/** Lit et normalise les filtres de l'adresse (?marque=…&type=…&dispo=…&tri=prix). */
+/** Lit et normalise les filtres de l'adresse (?marque=…&categorie=…&dispo=…&tri=prix) ; l'ancien ?type= est ignoré. */
 export function filtresDepuisAdresse(p: Record<string, string | string[] | undefined>): FiltresCategorie {
   const un = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v)?.trim() || undefined;
   const dispo = un(p.dispo);
   return {
     marque: un(p.marque),
-    type: un(p.type),
+    categorie: un(p.categorie),
     dispo: ETATS.includes(dispo as EtatFiltre) ? (dispo as EtatFiltre) : undefined,
     tri: un(p.tri) === "prix" ? "prix" : "ordre",
   };
 }
 
 export async function listerCategorie(categorie: string, filtres: FiltresCategorie): Promise<ResultatCategorie> {
-  const catalogue = await lireCatalogue();
-  return { ...cartesDeCategorie(catalogue.entrees, categorie, filtres), indisponible: catalogue.indisponible };
+  const [catalogue, arbre] = await Promise.all([lireCatalogue(), lireCategories()]);
+  return { ...cartesDeCategorie(catalogue.entrees, categorie, filtres, arbre), indisponible: catalogue.indisponible };
 }

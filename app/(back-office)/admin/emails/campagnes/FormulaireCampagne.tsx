@@ -24,7 +24,7 @@ export function FormulaireCampagne({ action, campagne, bouton }: { action: (d: F
       <Champ id="campagne-titre" name="titre" libelle="Titre affiché dans l’email" maxLength={120} required defaultValue={campagne?.titre} />
       <label htmlFor="campagne-texte" className="text-small font-medium text-ink">Texte (une ligne vide sépare deux paragraphes)</label>
       <textarea id="campagne-texte" name="texte" className={zone} required minLength={20} maxLength={4000} defaultValue={campagne?.texte} />
-      <Champ id="campagne-lien" name="lien" libelle="Lien (une page du site, facultatif)" placeholder="/accessoires-consommables" defaultValue={campagne?.lien ?? ""} />
+      <Champ id="campagne-lien" name="lien" libelle="Lien (une page du site, facultatif)" placeholder="/consommables" defaultValue={campagne?.lien ?? ""} />
       <Champ id="campagne-libelle" name="libelleLien" libelle="Texte du bouton" placeholder="Voir les consommables" maxLength={60} defaultValue={campagne?.libelleLien ?? ""} />
       <div><Button type="submit">{bouton}</Button></div>
     </form>

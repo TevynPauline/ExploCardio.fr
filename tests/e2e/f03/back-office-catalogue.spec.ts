@@ -114,16 +114,3 @@ test("le support n'a pas accès au catalogue", async ({ page }) => {
   await expect(page).toHaveURL(/\/admin\?acces=refuse/);
 });
 
-test("types : création, suppression refusée s'ils sont utilisés", async ({ page }) => {
-  await connecterNavigateur(page.context(), COMPTES.admin);
-  await page.goto("/admin/catalogue/sous-categories");
-  await verifierAccessibilite(page);
-  await page.getByRole("button", { name: "Supprimer Brassards" }).click();
-  await expect(page.getByRole("alert").filter({ hasText: "utilisé par" })).toBeVisible();
-  const nom = `Type test ${Date.now() % 100000}`;
-  await page.getByLabel("Nouveau type").first().fill(nom);
-  await page.getByRole("button", { name: "Ajouter" }).first().click();
-  await expect(page.getByText(nom)).toBeVisible();
-  await page.getByRole("button", { name: `Supprimer ${nom}` }).click();
-  await expect(page.getByText(nom)).toHaveCount(0);
-});

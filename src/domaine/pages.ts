@@ -13,7 +13,6 @@ export const PAGES_TEXTE: Record<string, { libelle: string; chemin: string }> = 
   services: { libelle: "Services", chemin: "/services" },
   assistance: { libelle: "Assistance et SAV", chemin: "/services/assistance" },
   "installation-formation": { libelle: "Installation et formation", chemin: "/services/installation-formation" },
-  "hebergement-donnees-sante": { libelle: "Hébergement des données de santé", chemin: "/services/hebergement-donnees-sante" },
   financement: { libelle: "Financement", chemin: "/financement" },
   "mise-a-disposition": { libelle: "Mise à disposition", chemin: "/mise-a-disposition" },
   catalogue: { libelle: "Catalogue", chemin: "/catalogue" },

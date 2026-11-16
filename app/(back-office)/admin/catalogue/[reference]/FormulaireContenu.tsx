@@ -8,7 +8,6 @@ import { actionEnregistrerContenu, type EtatContenu } from "../actions";
 type Valeurs = {
   reference: string;
   slug: string;
-  sousCategorieId: string;
   ordre: string;
   descriptionCourte: string;
   caracteristiques: string;
@@ -36,7 +35,7 @@ function Champ({ id, libelle, aide, erreur, children }: { id: string; libelle: s
 }
 
 /** Formulaire des contenus d'un produit (F03, US6) : la saisie reste affichée en cas d'erreur. */
-export function FormulaireContenu({ v, sousCategories, madProposee }: { v: Valeurs; sousCategories: { id: string; libelle: string }[]; madProposee: boolean }) {
+export function FormulaireContenu({ v, madProposee }: { v: Valeurs; madProposee: boolean }) {
   const [etat, action, enCours] = useActionState(actionEnregistrerContenu, initial);
   const router = useRouter();
   const formulaire = useRef<HTMLFormElement>(null);
@@ -61,15 +60,9 @@ export function FormulaireContenu({ v, sousCategories, madProposee }: { v: Valeu
       <input type="hidden" name="reference" value={v.reference} />
       {etat.message ? <p role="alert" className="ec-box--promo p-3 font-medium">{etat.message}</p> : null}
       {etat.ok ? <p role="status" className="ec-box--info p-3">{etat.ok}</p> : null}
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2">
         <Champ id="slug" libelle="Adresse de la fiche" aide="Lettres, chiffres et tirets. L'ancienne adresse reste redirigée." erreur={e.slug}>
           <input id="slug" name="slug" defaultValue={v.slug} aria-describedby={decrit("slug", true)} aria-invalid={Boolean(e.slug)} className={classeChamp} />
-        </Champ>
-        <Champ id="sousCategorieId" libelle="Type (filtre)" erreur={e.sousCategorieId}>
-          <select id="sousCategorieId" name="sousCategorieId" defaultValue={v.sousCategorieId} aria-describedby={decrit("sousCategorieId", false)} className={classeChamp}>
-            <option value="">Aucun</option>
-            {sousCategories.map((s) => <option key={s.id} value={s.id}>{s.libelle}</option>)}
-          </select>
         </Champ>
         <Champ id="ordre" libelle="Ordre d'affichage" erreur={e.ordre}>
           <input id="ordre" name="ordre" inputMode="numeric" defaultValue={v.ordre} aria-describedby={decrit("ordre", false)} aria-invalid={Boolean(e.ordre)} className={classeChamp} />

@@ -1,4 +1,5 @@
 import type { Prisma, PrismaClient } from "@generated/demo/client";
+import { codeCategorie } from "@/connecteurs/odoo/categories";
 
 // Catalogue de démonstration (T041, FR-013) à partir de specs/011-…/demo-references.md :
 // marques et modèles de la brochure ; vraies références fabricant quand elles sont connues,
@@ -23,6 +24,8 @@ type Variante = {
 
 type Modele = {
   categorie: string;
+  /** F27 : noms des sous-catégories sous la rubrique, comme dans Odoo (deux niveaux au plus). */
+  sousCategorie?: string[];
   marque: string;
   nom: string;
   type: "equipement" | "consommable" | "accessoire" | "logiciel" | "service";
@@ -573,6 +576,58 @@ export const BAREMES = [
   { dureeMois: 60, coefficient: 1.98 },
 ];
 
+/**
+ * F27 : rangement des modèles comme dans Odoo (docs/rangement-categories-odoo.docx) — rubrique
+ * et sous-catégories. Les accessoires et consommables rejoignent la famille de leur appareil.
+ */
+const H = "Accessoires Holter ECG";
+const M = "Accessoires MAPA";
+const RANGEMENT: Record<string, [string, string[]]> = {
+  "DMS 300-2e": ["holter-ecg", ["Enregistreurs Holter ECG"]],
+  "DMS 300-3A": ["holter-ecg", ["Enregistreurs Holter ECG"]],
+  "DMS 300-4L": ["holter-ecg", ["Enregistreurs Holter ECG"]],
+  "DMS 300-2W": ["holter-ecg", ["Enregistreurs Holter ECG"]],
+  "CardioScan Holter ECG (logiciel Cloud)": ["holter-ecg", ["Logiciels Holter ECG"]],
+  "CardioVision / Cardiac Rehab (logiciel Cloud)": ["holter-ecg", ["Logiciels Holter ECG"]],
+  "Câble patient Holter ECG": ["holter-ecg", [H, "Câbles pour Holter ECG"]],
+  "Câble de transfert USB HDMI": ["holter-ecg", [H, "Câbles pour Holter ECG"]],
+  "Pochette d'enregistreur": ["holter-ecg", [H, "Sacoches pour Holter ECG"]],
+  "Batterie rechargeable DMS 300-2W": ["holter-ecg", [H]],
+  "Chargeur pour batteries DMS 300-2W": ["holter-ecg", [H]],
+  "Carte SD": ["holter-ecg", [H]],
+  "Électrodes Holter": ["holter-ecg", ["Consommables Holter ECG"]],
+  "Kit consommables Holter (mise à disposition)": ["holter-ecg", ["Consommables Holter ECG"]],
+  "DMS300-ABP": ["mapa", ["Enregistreurs MAPA"]],
+  "Oscar 2": ["mapa", ["Enregistreurs MAPA"]],
+  "Mini Bravo": ["mapa", ["Enregistreurs MAPA"]],
+  "WatchBP 03": ["mapa", ["Enregistreurs MAPA"]],
+  "Mobil-O-Graph": ["mapa", ["Enregistreurs MAPA"]],
+  "Brassard MAPA Orbit": ["mapa", [M, "Brassards pour MAPA"]],
+  "Brassard MAPA 12-19 cm": ["mapa", [M, "Brassards pour MAPA"]],
+  "Pochette Oscar 2": ["mapa", [M, "Sacoches pour MAPA"]],
+  "Ceinture Oscar 2": ["mapa", [M, "Sacoches pour MAPA"]],
+  "Bandoulière Oscar 2": ["mapa", [M, "Sacoches pour MAPA"]],
+  "Extension de garantie Oscar 2": ["mapa", []],
+  "CardioScan Stress Test 12 dérivations": ["effort", ["Systèmes d'épreuve d'effort"]],
+  "ECG d'effort Norav (modèle à préciser)": ["effort", ["Systèmes d'épreuve d'effort"]],
+  "Matériel d'effort RAM (modèle à préciser)": ["effort", ["Systèmes d'épreuve d'effort"]],
+  "Tango M2": ["effort", ["Systèmes d'épreuve d'effort"]],
+  "ULTRA KOCH EXERCISE": ["effort", ["Ergomètres et tables"]],
+  "KORELE 8000": ["effort", ["Ergomètres et tables"]],
+  "KORELE 7000": ["effort", ["Ergomètres et tables"]],
+  "Banc de Koch PURE": ["effort", ["Ergomètres et tables"]],
+  "Ergocycle Ergoline (modèle à préciser)": ["effort", ["Ergomètres et tables"]],
+  "Chariot d'épreuve d'effort": ["effort", ["Accessoires d'effort"]],
+  "Câble patient ECG d'effort": ["effort", ["Accessoires d'effort"]],
+  "CardioScan Resting 12 dérivations": ["ecg-repos", ["Électrocardiographes"]],
+  "Câble patient ECG fiche banane": ["ecg-repos", ["Accessoires ECG de repos"]],
+  "Poires et pinces ECG": ["ecg-repos", ["Accessoires ECG de repos"]],
+};
+for (const m of MODELES) {
+  const r = RANGEMENT[m.nom];
+  if (r) [m.categorie, m.sousCategorie] = [r[0], r[1]];
+}
+
 const euros = (montant: number) => Math.round(montant * 100);
 const dans = (jours: number) => new Date(Date.now() + jours * 86_400_000);
 
@@ -582,6 +637,20 @@ export async function remplirCatalogue(db: PrismaClient): Promise<{ modeles: num
     const cree = await db.categorie.create({ data: c });
     categories.set(c.code, cree.id);
   }
+  // F27 : sous-catégories créées à la demande, avec le même code qu'en mode réel.
+  const categorieDe = async (m: Modele): Promise<number> => {
+    let parent = categories.get(m.categorie)!;
+    const noms = m.sousCategorie ?? [];
+    for (let n = 1; n <= noms.length; n++) {
+      const code = codeCategorie(m.categorie, noms.slice(0, n));
+      if (!categories.has(code)) {
+        const cree = await db.categorie.create({ data: { code, nom: noms[n - 1]!, ordre: 0, parentId: parent } });
+        categories.set(code, cree.id);
+      }
+      parent = categories.get(code)!;
+    }
+    return parent;
+  };
   let variantes = 0;
   for (const m of MODELES) {
     const eligible = m.type === "consommable" || m.type === "accessoire";
@@ -589,7 +658,7 @@ export async function remplirCatalogue(db: PrismaClient): Promise<{ modeles: num
       data: {
         nom: m.nom,
         marque: m.marque,
-        categorieId: categories.get(m.categorie)!,
+        categorieId: await categorieDe(m),
         type: m.type,
         description: m.description,
         formules: m.formules,

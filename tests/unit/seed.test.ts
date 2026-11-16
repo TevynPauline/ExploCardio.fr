@@ -24,7 +24,9 @@ describe("jeu de données de départ", () => {
   }, 60_000);
 
   it("contient tout le catalogue de la brochure, sans lampe MedLED", async () => {
-    expect(await dbDemo().categorie.count()).toBe(CATEGORIES.length);
+    // F27 : les cinq rubriques, puis les sous-catégories rangées comme dans Odoo.
+    expect(await dbDemo().categorie.count({ where: { parentId: null } })).toBe(CATEGORIES.length);
+    expect(await dbDemo().categorie.count()).toBeGreaterThan(CATEGORIES.length);
     expect(await dbDemo().modeleArticle.count()).toBe(MODELES.length);
     const variantes = MODELES.reduce((n, m) => n + m.variantes.length, 0);
     expect(await dbDemo().variante.count()).toBe(variantes);

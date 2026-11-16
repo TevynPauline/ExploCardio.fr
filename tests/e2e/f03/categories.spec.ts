@@ -43,13 +43,14 @@ test("filtres combinables, résultat annoncé, filtres retirables ; aucun résul
 test("filtres dans l'adresse : fonctionnent sans JavaScript", async ({ browser, baseURL }) => {
   const contexte = await browser.newContext({ baseURL, javaScriptEnabled: false, storageState: "playwright/.auth/acces-demo.json" });
   const page = await contexte.newPage();
-  await page.goto("/accessoires-consommables?type=brassards");
+  // F27 : filtre par catégorie d'Odoo (sous-niveaux compris).
+  await page.goto("/holter-tensionnel?categorie=mapa%2Faccessoires-mapa%2Fbrassards-pour-mapa");
   const noms = await page.locator("main article h3").allInnerTexts();
   expect(noms.length).toBeGreaterThan(0);
   expect(noms.every((n) => /Brassard/.test(n))).toBe(true);
-  await page.locator("main").getByLabel("Type", { exact: true }).selectOption("electrodes");
+  await page.locator("main").getByLabel("Catégorie", { exact: true }).selectOption({ label: "Enregistreurs MAPA" });
   await page.getByRole("button", { name: "Appliquer" }).click();
-  await expect(page).toHaveURL(/type=electrodes/);
+  await expect(page).toHaveURL(/categorie=mapa%2Fenregistreurs-mapa/);
   await contexte.close();
 });
 
@@ -57,7 +58,8 @@ test("une carte mène à la fiche ; tri par prix", async ({ page }) => {
   await page.goto("/holter-tensionnel?tri=prix");
   const premiers = await page.locator("main article h3").allInnerTexts();
   expect(premiers.length).toBeGreaterThan(1);
-  await page.locator("main article").filter({ hasText: "Oscar 2" }).first().getByRole("link").click();
+  // F27 : les accessoires Oscar 2 sont désormais dans la famille MAPA : on vise l'enregistreur.
+  await page.locator("main article").filter({ has: page.getByRole("heading", { name: "Oscar 2", exact: true }) }).getByRole("link").first().click();
   await expect(page).toHaveURL(/\/holter-tensionnel\/suntech-oscar-2(\?|$)/);
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Oscar 2");
 });
@@ -83,7 +85,8 @@ test("SC-004 : chaque article publié est atteint en 3 clics au plus depuis l'ac
 });
 
 test("catégorie sans article publié : introduction et invitation à nous contacter", async ({ page }) => {
-  const condition = `"defaultCode" LIKE 'EC-DMS-REPOS%' AND etat = 'publie'`;
+  // F27 : câble « fiche banane » et poires et pinces sont rangés dans la famille ECG de repos.
+  const condition = `("defaultCode" LIKE 'EC-DMS-REPOS%' OR "defaultCode" IN ('EC-DMS-CABLE-BANANE', 'EC-DMS-POIRES-PINCES')) AND etat = 'publie'`;
   const avant = await requete<{ defaultCode: string }>("site", `SELECT "defaultCode" FROM contenu_produit WHERE ${condition}`);
   expect(avant.length).toBeGreaterThan(0);
   await requete("site", `UPDATE contenu_produit SET etat = 'preparation' WHERE ${condition}`);
