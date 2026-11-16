@@ -91,7 +91,7 @@ export async function demarrerTravailleurs() {
   });
   // F10 : remise, rejets et ouvertures des envois récents, toutes les 15 minutes.
   await boss.createQueue("emails-suivi").catch(() => undefined);
-  await boss.schedule("emails-suivi", "*/15 * * * *");
+  await boss.schedule("emails-suivi", "*/5 * * * *");
   await boss.work("emails-suivi", async () => {
     const { suivreEnvois } = await import("@/domaine/emailing/suivi");
     await suivreEnvois();

@@ -10,6 +10,8 @@ import { signatureValide } from "./signature";
 // Stripe vers le même gestionnaire. Aucune donnée de carte n'est jamais saisie ni stockée.
 
 export const CHEMIN_PAGE_PAIEMENT_DEMO = "/demo/paiement";
+/** F24 : page de démonstration de la mise à jour du moyen de paiement. */
+export const CHEMIN_GESTION_MOYEN_DEMO = "/demo/moyen-paiement";
 
 const db = () => dbDemo();
 
@@ -134,6 +136,12 @@ export function creerStripeDemo(): ConnecteurStripe {
     async libererAutorisation(abonnementRef: string) {
       const session = await sessionAbonnement(abonnementRef);
       await db().sessionPaiementDemo.update({ where: { id: session.id }, data: { autorisationLiberee: true } });
+    },
+
+    async ouvrirGestionMoyenPaiement(d: { partenaireRef: string; urlRetour: string }) {
+      const session = await db().sessionPaiementDemo.findFirst({ where: { partenaireRef: d.partenaireRef } });
+      if (!session) throw new NotFound("Client de paiement", d.partenaireRef);
+      return { url: `${CHEMIN_GESTION_MOYEN_DEMO}?retour=${encodeURIComponent(d.urlRetour)}` };
     },
 
     async verifierEvenement(contenu: string, signature: string): Promise<EvenementPaiement> {

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { registre } from "@/connecteurs/registre";
 import { listerClients } from "@/domaine/clients";
-import { environnementOdoo, modeDuSite } from "@/lib/config";
+import { cleStripeIncoherente, environnementOdoo, modeDuSite } from "@/lib/config";
 import { dbSite } from "@/lib/db/site";
 import { listeIgnoreeEnProduction } from "@/lib/garde-recette-emailing";
 import { exigerDroit, peut } from "@/lib/droits";
@@ -53,6 +53,12 @@ export default async function TableauDeBord({ searchParams }: { searchParams: Pr
     <div className="flex flex-col gap-6">
       <Kicker>Back-office</Kicker>
       <h1 className="text-h2 font-light">À traiter</h1>
+      {cleStripeIncoherente() ? (
+        <p role="alert" className="ec-box--info p-4">
+          Clé Stripe incohérente avec l’environnement : les paiements sont bloqués. Utilisez une clé de test sur le site de recette et
+          une clé de production sur le site public (variables STRIPE_SECRET_KEY et STRIPE_ENVIRONNEMENT dans Scalingo).
+        </p>
+      ) : null}
       {listeIgnoreeEnProduction() ? (
         <p role="alert" className="ec-box--info p-4">
           Liste d’adresses autorisées ignorée sur le site public : la variable EMAILING_ADRESSES_AUTORISEES est renseignée alors que

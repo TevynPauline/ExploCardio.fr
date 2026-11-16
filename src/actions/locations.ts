@@ -2,6 +2,8 @@
 
 import { redirect } from "next/navigation";
 import { estErreurConnecteur } from "@/connecteurs/erreurs";
+import { registre } from "@/connecteurs/registre";
+import { dbSite } from "@/lib/db/site";
 import { compteConnecte } from "@/domaine/comptes/session";
 import { ActionLocationRefusee, annuler, passerAlAchat, prolonger, reporter, resilier } from "@/domaine/location/gestion";
 
@@ -61,4 +63,23 @@ export async function actionPasserAchat(d: FormData) {
     throw e;
   }
   redirect("/panier?depuis=location");
+}
+
+/**
+ * F24 (FR-015) : page sécurisée du service de paiement où le client met à jour la carte ou le
+ * compte bancaire de ses abonnements. Aucune donnée bancaire ne passe par le site.
+ */
+export async function actionMoyenPaiement() {
+  const c = await compte();
+  const { odooPartnerRef } = await dbSite().compteClient.findUniqueOrThrow({ where: { id: c.id }, select: { odooPartnerRef: true } });
+  if (!odooPartnerRef) retour({ erreur: "Aucun moyen de paiement n’est enregistré pour votre compte." });
+  let url: string;
+  try {
+    ({ url } = await registre.stripe().ouvrirGestionMoyenPaiement({ partenaireRef: odooPartnerRef, urlRetour: CHEMIN }));
+  } catch (e) {
+    if (estErreurConnecteur(e) && e.code === "NOT_FOUND") retour({ erreur: "Aucun moyen de paiement n’est enregistré pour votre compte." });
+    if (estErreurConnecteur(e)) retour({ erreur: "Service momentanément indisponible, réessayez dans quelques instants." });
+    throw e;
+  }
+  redirect(url);
 }

@@ -259,7 +259,7 @@ async function appliquer(envoi: Envoi, decision: Decision, maintenant: Date): Pr
       await bloquer(envoi, e.message);
       return "bloque";
     }
-    await reessayerPlusTard(envoi, rendu, maintenant, e.message);
+    await reessayerPlusTard(envoi, rendu, maintenant, motifErreur(e));
     return "programme";
   }
 }
@@ -292,6 +292,11 @@ async function bloquer(envoi: Envoi, motif: string) {
   );
 }
 
+/** Motif d'une reprise : le quota atteint est nommé (alerte dédiée, F25 R11). */
+function motifErreur(e: { message: string; details?: Record<string, unknown> }): string {
+  return e.details?.cause === "quota" ? "Quota journalier de l'outil d'envoi atteint" : e.message;
+}
+
 async function transmettreEquipe(envoi: Envoi, maintenant: Date): Promise<Envoi["etat"]> {
   let n = envoi.variables as unknown as NotificationEquipe;
   if (gardeRecetteActive()) {
@@ -309,7 +314,7 @@ async function transmettreEquipe(envoi: Envoi, maintenant: Date): Promise<Envoi[
     return "envoye";
   } catch (e) {
     if (!estErreurConnecteur(e)) throw e;
-    await reessayerPlusTard(envoi, null, maintenant, e.message);
+    await reessayerPlusTard(envoi, null, maintenant, motifErreur(e));
     return "programme";
   }
 }
@@ -332,6 +337,12 @@ export async function notifierEquipe(n: NotificationEquipe, cle: string, mainten
 
 export { destinatairesAlertes };
 
+/** F25 (R11) : en cas de quota, les transactionnels passent d'abord, puis l'équipe, puis le reste. */
+export function ordreDePassage<T extends Pick<Envoi, "famille" | "programmeLe">>(envois: T[]): T[] {
+  const rang = (f: Envoi["famille"]) => (f === "transactionnel" ? 0 : f === "equipe" ? 1 : 2);
+  return [...envois].sort((a, b) => rang(a.famille) - rang(b.famille) || a.programmeLe.getTime() - b.programmeLe.getTime());
+}
+
 /** Tâche `emails-envoi` (chaque minute) : envois dus et reprises après panne. */
 export async function releverEnvois(maintenant = new Date()): Promise<{ traites: number }> {
   const dus = await dbSite().envoi.findMany({
@@ -339,7 +350,7 @@ export async function releverEnvois(maintenant = new Date()): Promise<{ traites:
     orderBy: { programmeLe: "asc" },
     take: 200,
   });
-  for (const e of dus) await traiterEnvoi(e, maintenant);
+  for (const e of ordreDePassage(dus)) await traiterEnvoi(e, maintenant);
   await alerterPanneProlongee(maintenant);
   const { mettreAJourCampagnes } = await import("./campagnes");
   await mettreAJourCampagnes();
@@ -353,12 +364,15 @@ async function alerterPanneProlongee(maintenant: Date) {
     orderBy: { creeLe: "asc" },
   });
   if (!ancien) return;
+  const quota = /quota/i.test(ancien.motif ?? "");
   await notifierEquipe(
     {
       canal: "email",
       destinataires: await destinatairesAlertes(),
-      objet: "Outil d'emailing indisponible",
-      texte: `Des emails attendent depuis plus de ${minutes} minutes : l'outil d'envoi ne répond pas (${ancien.motif ?? "erreur"}). Ils partiront à son retour, sans doublon.`,
+      objet: quota ? "Quota journalier d'emails atteint" : "Outil d'emailing indisponible",
+      texte: quota
+        ? `Le quota journalier de l'outil d'envoi est atteint : des emails attendent depuis plus de ${minutes} minutes. Ils partiront automatiquement, sans doublon, dès que le quota se renouvelle (le lendemain), les emails de commande et de facture en premier. Si cela se répète, passez à l'offre payante de Brevo.`
+        : `Des emails attendent depuis plus de ${minutes} minutes : l'outil d'envoi ne répond pas (${ancien.motif ?? "erreur"}). Ils partiront à son retour, sans doublon.`,
       declencheur: "emailing",
     },
     `alerte-panne-emailing:${ancien.id}`,

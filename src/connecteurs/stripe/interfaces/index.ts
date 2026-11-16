@@ -42,7 +42,9 @@ export type TypeEvenementPaiement =
   | "authentification_requise"
   | "echeance_payee"
   | "echeance_refusee"
-  | "remboursement";
+  | "remboursement"
+  /** F24 : paiement contesté par le client auprès de sa banque (alerte administrateur). */
+  | "contestation";
 
 /** Événement typé, identique dans les deux modes. */
 export type EvenementPaiement = {
@@ -83,6 +85,14 @@ export interface ConnecteurStripe {
   ): Promise<{ paiementRef: string; etat: "payee" | "refusee" }>;
   /** F05 : libère l'autorisation après le retour et le règlement des sommes dues. */
   libererAutorisation(abonnementRef: string): Promise<void>;
-  /** Lève InvalidSignature si la signature ne correspond pas. */
-  verifierEvenement(contenu: string, signature: string): Promise<EvenementPaiement>;
+  /**
+   * Lève InvalidSignature si la signature ne correspond pas. F24 : renvoie `null` pour un
+   * événement sans usage pour le site (accepté et ignoré) ; la démonstration n'en renvoie jamais.
+   */
+  verifierEvenement(contenu: string, signature: string): Promise<EvenementPaiement | null>;
+  /**
+   * F24 (FR-015) : page sécurisée où le client met à jour la carte ou le compte bancaire de ses
+   * abonnements, sans que ces données passent par le site. NotFound si le client est inconnu.
+   */
+  ouvrirGestionMoyenPaiement(d: { partenaireRef: string; urlRetour: string }): Promise<{ url: string }>;
 }

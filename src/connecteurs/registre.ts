@@ -55,7 +55,7 @@ function construire<K extends NomConnecteur>(nom: K, env: Env): Connecteurs[K] {
     return enveloppe as unknown as Connecteurs[K];
   }
   const fabriques = {
-    stripe: () => (mode === "demo" ? creerStripeDemo() : creerStripeReel(manquantes)),
+    stripe: () => (mode === "demo" ? creerStripeDemo() : creerStripeReel(manquantes, env)),
     pca: () => (mode === "demo" ? creerPcaDemo() : creerPcaReel(manquantes)),
     emailing: () => (mode === "demo" ? creerEmailingDemo() : creerEmailingReel(manquantes, env)),
   } as const;

@@ -8,7 +8,8 @@ import { PREFERENCES_PAR_DEFAUT, type PreferencesTypes } from "./decision";
 // newsletter reste porté par `Consentement` (comptes) et `InscriptionNewsletter` (pied de page).
 
 export type TypePreference = keyof PreferencesTypes;
-export type OrigineConsentement = "mon_compte" | "lien_email" | "desinscription_un_clic" | "equipe";
+/** `signalement_indesirable` (F25) : email signalé comme indésirable chez le destinataire. */
+export type OrigineConsentement = "mon_compte" | "lien_email" | "desinscription_un_clic" | "equipe" | "signalement_indesirable";
 
 export const TEXTES_PREFERENCES: Record<TypePreference, string> = {
   reapprovisionnement: "Relances de réapprovisionnement",

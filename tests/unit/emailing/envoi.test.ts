@@ -1,6 +1,6 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { definirPanne } from "@/connecteurs/panne-simulee";
-import { demanderEnvoi, notifierEquipe, releverEnvois } from "@/domaine/emailing/envoi";
+import { demanderEnvoi, notifierEquipe, ordreDePassage, releverEnvois } from "@/domaine/emailing/envoi";
 import { changerPreference } from "@/domaine/emailing/preferences";
 import { emailEssai } from "@/emails/modeles";
 import { dbSite } from "@/lib/db/site";
@@ -109,5 +109,34 @@ describe("point d'envoi unique", () => {
     const c = cle("equipe");
     await notifierEquipe({ canal: "sms", destinataires: ["equipe@demo.explocardio.test"], texte: "Test", declencheur: "test" }, c);
     expect(await dbSite().envoi.findUniqueOrThrow({ where: { cle: c } })).toMatchObject({ famille: "equipe", etat: "envoye" });
+  });
+});
+
+describe("priorités et quota (F25, R11)", () => {
+  it("transactionnels d'abord, puis l'équipe, puis le reste, chacun par date", () => {
+    const d = (h: number) => new Date(Date.UTC(2026, 10, 16, h));
+    const ordre = ordreDePassage([
+      { id: "c", famille: "commercial" as const, programmeLe: d(1) },
+      { id: "t2", famille: "transactionnel" as const, programmeLe: d(5) },
+      { id: "e", famille: "equipe" as const, programmeLe: d(2) },
+      { id: "t1", famille: "transactionnel" as const, programmeLe: d(3) },
+      { id: "s", famille: "service" as const, programmeLe: d(0) },
+    ]).map((x) => x.id);
+    expect(ordre).toEqual(["t1", "t2", "e", "s", "c"]);
+  });
+
+  it("quota atteint depuis longtemps : alerte « Quota journalier d'emails atteint »", async () => {
+    const c = cle("quota");
+    const ancien = new Date(Date.now() - 2 * 3600_000);
+    const e = await dbSite().envoi.create({
+      data: { cle: c, famille: "transactionnel", modele: "essai", destinataire: compte.email, declencheur: "test", programmeLe: new Date(Date.now() + 3600_000), creeLe: ancien, essais: 3, motif: "Quota journalier de l'outil d'envoi atteint" },
+    });
+    try {
+      await releverEnvois();
+      const alerte = await dbSite().envoi.findUniqueOrThrow({ where: { cle: `alerte-panne-emailing:${e.id}` } });
+      expect(alerte.objet).toBe("Quota journalier d'emails atteint");
+    } finally {
+      await dbSite().envoi.deleteMany({ where: { cle: { in: [c, `alerte-panne-emailing:${e.id}`] } } });
+    }
   });
 });

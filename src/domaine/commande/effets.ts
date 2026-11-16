@@ -253,6 +253,18 @@ export async function surRemboursement(evt: EvenementPaiement) {
   await journal("commande.remboursement", odooRef, { source: "stripe", montantTtc: evt.montantTtc });
 }
 
+/** F24 (FR-024) : paiement contesté auprès de la banque du client → alerte à l'équipe. */
+export async function surContestation(evt: EvenementPaiement) {
+  const objet = evt.commandeRef ?? evt.abonnementRef ?? evt.paiementRef;
+  const montant = (evt.montantTtc / 100).toFixed(2).replace(".", ",");
+  await alerterEquipe(
+    "Contestation d'un paiement",
+    `Un client conteste un paiement de ${montant} € TTC (${objet ?? "référence inconnue"}, paiement ${evt.paiementRef ?? "inconnu"}). La contestation se traite dans le tableau de bord de Stripe, dans le délai indiqué par Stripe.`,
+    `contestation:${evt.id}`,
+  );
+  // Le journal « paiement.contestation » est inscrit par le gestionnaire des paiements.
+}
+
 let enregistres = false;
 
 /** Enregistre les effets de F04 auprès du gestionnaire de paiements de F11 (une seule fois). */
@@ -264,6 +276,7 @@ export function enregistrerEffetsCommande() {
   ajouterEffet("echeance_payee", surEcheancePayee);
   ajouterEffet("echeance_refusee", surEcheanceRefusee);
   ajouterEffet("remboursement", surRemboursement);
+  ajouterEffet("contestation", surContestation);
 }
 
 /**

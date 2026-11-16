@@ -26,7 +26,7 @@ test("dépannage commandé : date au plus tôt, récapitulatif, paiement SEPA, l
     await expect(carte).toContainText(/TTC/);
     const attendue = premiereDateLivraison(new Date(), regles("23:59"), "69003");
     const demain = new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
-    if (attendue === demain) await expect(carte).toContainText("Livraison demain");
+    if (attendue === demain) await expect(carte).toContainText("Livraison prévue demain");
     await carte.getByRole("link", { name: /Choisir/ }).click();
     await page.waitForURL(/formule=mise-a-disposition/);
     await page.getByTestId("panneau-formule").getByRole("button", { name: "Ajouter la mise à disposition au panier" }).click();
@@ -87,7 +87,7 @@ test("heure limite passée : le lendemain n'est plus proposé ; parc en maintena
     await clientConnecte(browser, baseURL, page);
     await page.goto("/mise-a-disposition");
     const carte = page.locator("main").getByRole("listitem", { name: /SunTech Oscar 2/ }).first();
-    await expect(carte).not.toContainText("Livraison demain");
+    await expect(carte).not.toContainText("Livraison prévue demain");
     await expect(carte).toContainText("Première livraison possible");
 
     // Date de retour en UTC : la colonne n'a pas de fuseau horaire, et le site la lit en UTC

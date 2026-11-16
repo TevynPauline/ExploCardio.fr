@@ -57,6 +57,27 @@ supprimée.
 
 Ne collez jamais ces valeurs ailleurs que dans Scalingo et votre `.env.local`.
 
+### Paiements réels par Stripe (F24)
+
+Sur le site de recette (Stripe en **mode test**), puis sur le site public (Stripe en **mode
+production**) :
+
+| Variable | Valeur |
+|---|---|
+| `CONNECTOR_STRIPE` | `real` |
+| `STRIPE_ENVIRONNEMENT` | `recette` sur le site de recette, `production` sur le site public |
+| `STRIPE_SECRET_KEY` | clé **restreinte** créée dans Stripe (Développeurs › Clés API › Créer une clé restreinte) : commence par `rk_test_` en recette, `rk_live_` en production. Une clé incohérente avec l'environnement bloque les paiements et s'affiche en alerte dans « À traiter ». |
+| `STRIPE_WEBHOOK_SECRET` | secret de signature (`whsec_…`) du webhook déclaré pour ce site (Développeurs › Webhooks), adresse `https://<site>/api/evenements/paiement` |
+
+Permissions de la clé restreinte (écriture sauf mention) : Customers, Checkout Sessions,
+Coupons, Payment Intents, Payment Methods, Products, Prices, Refunds, Subscriptions,
+Subscription Schedules, Customer portal ; lecture : Invoices, Invoice Payments, Disputes,
+Events.
+
+Événements à cocher sur le webhook : `checkout.session.completed`,
+`checkout.session.async_payment_failed`, `invoice.paid`, `invoice.payment_failed`,
+`invoice.payment_action_required`, `refund.created`, `charge.dispute.created`.
+
 ### Emails réels par Brevo (F25)
 
 Sur le site de recette, puis sur le site public, quand les emails doivent vraiment partir :
