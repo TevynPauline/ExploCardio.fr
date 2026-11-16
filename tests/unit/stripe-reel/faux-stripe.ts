@@ -27,7 +27,7 @@ export function fauxStripe(reponses: Record<string, Reponse> = {}) {
     "customers.search", "customers.create", "checkout.sessions.create", "coupons.create", "billingPortal.sessions.create",
     "paymentIntents.retrieve", "paymentIntents.create", "invoicePayments.list", "refunds.create", "paymentMethods.detach",
     "subscriptions.search", "subscriptions.retrieve", "subscriptions.update", "subscriptionSchedules.create",
-    "subscriptionSchedules.retrieve", "subscriptionSchedules.update", "subscriptionSchedules.release",
+    "subscriptionSchedules.retrieve", "subscriptionSchedules.update", "subscriptionSchedules.release", "products.retrieve",
   ];
   for (const chemin of chemins) {
     const parties = chemin.split(".");

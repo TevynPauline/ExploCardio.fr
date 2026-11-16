@@ -78,6 +78,27 @@ Events.
 `checkout.session.async_payment_failed`, `invoice.paid`, `invoice.payment_failed`,
 `invoice.payment_action_required`, `refund.created`, `charge.dispute.created`.
 
+#### Réglages du tableau de bord Stripe (une fois, en mode test puis en mode production)
+
+À faire par Régis (propriétaire du compte) avant la recette :
+
+1. **Dossier** : fournir les informations « matériel médical » demandées par Stripe **avant le
+   28 novembre 2026** (sinon les virements vers le compte bancaire sont suspendus).
+2. **Moyens de paiement** (Paramètres › Paiements › Moyens de paiement) : Cartes, Apple Pay,
+   Google Pay et **Prélèvement SEPA** activés ; le reste désactivé.
+3. **Emails clients** (Paramètres › Emails clients) : **désactiver** les reçus de paiements
+   réussis, de remboursements et les emails de factures — Odoo émet les factures et le site
+   envoie ses propres emails.
+4. **Factures d'abonnement** (Paramètres › Billing › Abonnements et emails) : nouvelles
+   tentatives automatiques **désactivées** ; en cas d'échec de toutes les tentatives :
+   **laisser l'abonnement impayé** (pas d'annulation par Stripe). Les relances et la suspension
+   suivent les règles du site, réglées dans Odoo.
+5. **Portail client** (Paramètres › Billing › Portail client) : autoriser **uniquement** la mise à
+   jour des moyens de paiement (pas de résiliation, pas de changement d'offre, pas
+   d'historique de factures) ; lien de retour : la page Mon compte › Locations du site.
+6. **Clé restreinte** et **webhook** : voir le tableau ci-dessus ; saisir la clé et le secret de
+   signature directement dans Scalingo, jamais dans un email ni une conversation.
+
 ### Emails réels par Brevo (F25)
 
 Sur le site de recette, puis sur le site public, quand les emails doivent vraiment partir :

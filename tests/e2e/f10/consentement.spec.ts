@@ -58,8 +58,9 @@ test("une campagne ne vise que les abonnés ; la désinscription par lien l'annu
   await expect(page.getByText(/Scénarios lancés/)).toBeVisible({ timeout: 60_000 });
   // Hors des plages d'envoi (soir, week-end), l'envoi reste programmé : il sera annulé au moment
   // de partir, puisque l'abonné s'est désinscrit.
+  // Parti avant la désinscription, il peut déjà être « remis » (suivi de la remise).
   const [e] = await envoi(abonne.email);
-  expect(["annule", "envoye", "programme"]).toContain(e!.etat);
+  expect(["annule", "envoye", "remis", "programme"]).toContain(e!.etat);
   if (e!.etat === "annule") expect(e!.motif).toBe("non abonné");
   const [abonnement] = await requete<{ etat: boolean }>("site", `SELECT etat FROM consentement WHERE email = $1 AND objet = 'newsletter' ORDER BY date DESC LIMIT 1`, [abonne.email]);
   expect(abonnement!.etat).toBe(false);

@@ -88,20 +88,20 @@ contracts/stripe-reel.md, quickstart.md)
 
 **Test indépendant** : quickstart étape 6.
 
-- [ ] T026 [P] [US3] Tests `tests/unit/stripe-reel/abonnements.test.ts` : abonnement retrouvé par `subscriptions.search` sur `metadata['abonnementRef']` (inconnu → `NotFound`) ; retrait d'un élément à une date → schedule créé depuis l'abonnement, phase courante jusqu'à la date puis phase sans l'article, `proration_behavior: "none"` ; même retrait rejoué → aucun appel d'écriture ; rétablir → phases recalculées, schedule libéré s'il ne reste aucun retrait ; résilier → `cancel_at` (ou dernière phase + `end_behavior: "cancel"` si schedule)
-- [ ] T027 [P] [US3] Tests `tests/unit/stripe-reel/ponctuel.test.ts` : `paymentIntents.create` (`amount`, `currency: "eur"`, `customer`, `payment_method` par défaut de l'abonnement, `off_session: true`, `confirm: true`, `metadata.abonnementRef`/`libelle`, `idempotencyKey` = clé) ; `succeeded` et `processing` → `payee` ; `card_declined` et `authentication_required` → `refusee` ; `metadata.autorisationLiberee = "true"` → `OperationRefusee` ; libérer → `paymentMethods.detach` + métadonnée posée
-- [ ] T028 [P] [US3] Tests `tests/unit/stripe-reel/remboursements.test.ts` : `refunds.create({ payment_intent, amount, metadata.motif })` avec `idempotencyKey` ; PaymentIntent inconnu → `NotFound` ; montant supérieur au restant (`amount_too_large` / `charge_already_refunded`) → `OperationRefusee`
-- [ ] T029 [US3] `src/connecteurs/stripe/real/abonnements.ts` : `retirerElementAbonnement`, `retablirElementAbonnement`, `resilierAbonnement`, `preleverPonctuel`, `libererAutorisation`
-- [ ] T030 [US3] `rembourser` dans `src/connecteurs/stripe/real/index.ts`
+- [X] T026 [P] [US3] Tests `tests/unit/stripe-reel/abonnements.test.ts` : abonnement retrouvé par `subscriptions.search` sur `metadata['abonnementRef']` (inconnu → `NotFound`) ; retrait d'un élément à une date → schedule créé depuis l'abonnement, phase courante jusqu'à la date puis phase sans l'article, `proration_behavior: "none"` ; même retrait rejoué → aucun appel d'écriture ; rétablir → phases recalculées, schedule libéré s'il ne reste aucun retrait ; résilier → `cancel_at` (ou dernière phase + `end_behavior: "cancel"` si schedule)
+- [X] T027 [P] [US3] Tests `tests/unit/stripe-reel/ponctuel.test.ts` : `paymentIntents.create` (`amount`, `currency: "eur"`, `customer`, `payment_method` par défaut de l'abonnement, `off_session: true`, `confirm: true`, `metadata.abonnementRef`/`libelle`, `idempotencyKey` = clé) ; `succeeded` et `processing` → `payee` ; `card_declined` et `authentication_required` → `refusee` ; `metadata.autorisationLiberee = "true"` → `OperationRefusee` ; libérer → `paymentMethods.detach` + métadonnée posée
+- [X] T028 [P] [US3] Tests `tests/unit/stripe-reel/remboursements.test.ts` : `refunds.create({ payment_intent, amount, metadata.motif })` avec `idempotencyKey` ; PaymentIntent inconnu → `NotFound` ; montant supérieur au restant (`amount_too_large` / `charge_already_refunded`) → `OperationRefusee`
+- [X] T029 [US3] `src/connecteurs/stripe/real/abonnements.ts` (retraits et date de fin gardés dans les métadonnées de l'abonnement ; calendrier recalculé à chaque changement ; retrait immédiat = fin de phase « now » ; élément porté par la métadonnée du produit, lue par `products.retrieve`) : `retirerElementAbonnement`, `retablirElementAbonnement`, `resilierAbonnement`, `preleverPonctuel`, `libererAutorisation`
+- [X] T030 [US3] `rembourser` dans `src/connecteurs/stripe/real/index.ts`
 
 ---
 
 ## Phase 8: Polish & vérifications
 
-- [ ] T031 [P] Vérifier que le journal des connecteurs (`src/connecteurs/journal.ts`) ne reçoit que des références pour Stripe (aucune URL de session ni email) ; ajuster si besoin
-- [ ] T032 Lancer `npx tsc --noEmit`, `npx eslint .`, `npx vitest run tests/unit tests/contract` (démonstration)
-- [ ] T033 Lancer la suite e2e une seule fois : `SITE_URL=http://localhost:3100 npm run test:e2e` (jamais deux suites en parallèle) — non-régression de la démonstration (SC-006)
-- [ ] T034 Préparer pour Régis et Pauline la fiche « réglages Stripe » : informations « matériel médical » (avant le 28/11/2026), SEPA activé, réglages de research R14, création de la clé restreinte de test et du webhook de test, saisie dans Scalingo (étapes cliquées, sans valeur)
+- [X] T031 [P] (vérifié : le journal ne garde que `commandeRef`/`abonnementRef`/premier argument texte, aucune URL ni email) Vérifier que le journal des connecteurs (`src/connecteurs/journal.ts`) ne reçoit que des références pour Stripe (aucune URL de session ni email) ; ajuster si besoin
+- [X] T032 Lancer `npx tsc --noEmit`, `npx eslint .`, `npx vitest run tests/unit tests/contract` (démonstration)
+- [X] T033 Lancer la suite e2e une seule fois : `SITE_URL=http://localhost:3100 npm run test:e2e` (jamais deux suites en parallèle) — non-régression de la démonstration (SC-006) — 2026-11-16 : 667 réussis ; échecs restants hors F24 (confirmations tardives prises par d'autres serveurs locaux sur la même file)
+- [X] T034 (section « Réglages du tableau de bord Stripe » de `docs/deploiement-scalingo.md`) Préparer pour Régis et Pauline la fiche « réglages Stripe » : informations « matériel médical » (avant le 28/11/2026), SEPA activé, réglages de research R14, création de la clé restreinte de test et du webhook de test, saisie dans Scalingo (étapes cliquées, sans valeur)
 - [ ] T035 [Phase 3] Dérouler le quickstart sur le site de recette (après création de l'application de recette, F15)
 
 ---

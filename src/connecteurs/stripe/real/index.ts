@@ -2,6 +2,7 @@ import { ConfigurationIncomplete } from "../../erreurs";
 import { implementationRefusee } from "../../non-livre";
 import type { ConnecteurStripe, EvenementPaiement, MoyenPaiement } from "../interfaces";
 import { traduireErreurStripe } from "./erreurs";
+import { libererAutorisation, preleverPonctuel, resilier, retablirElement, retirerElement } from "./abonnements";
 import { clientExistant } from "./clients";
 import { construireEvenementStripe, traduireEvenement, typeCarte, type LecteurStripe } from "./evenements";
 import { absolue, ouvrirSessionAbonnement, ouvrirSessionPaiement } from "./sessions";
@@ -10,8 +11,8 @@ import { creerSdk, type SdkStripe } from "./sdk";
 // Mode réel du connecteur Stripe (F24, contracts/stripe-reel.md). Configuration incomplète ou
 // clé incohérente avec l'environnement → ConfigurationIncomplete à chaque opération, sans jamais
 // basculer en démonstration (FR-003, FR-004).
-// Lots 1 et 2 : événements signés, pages de paiement (achat, abonnement), gestion du moyen de
-// paiement. Opérations de l'équipe sur les abonnements et remboursements : lot 3.
+// Événements signés, pages de paiement (achat, abonnement), gestion du moyen de paiement,
+// opérations de l'équipe (retrait de location, résiliation, ponctuel, libération, remboursement).
 
 type Env = Record<string, string | undefined>;
 
@@ -47,7 +48,6 @@ export function creerStripeReel(variablesManquantes: string[], env: Env = proces
     },
   };
 
-  const nonLivre = () => new ConfigurationIncomplete("stripe", []);
   // Les parcours donnent des chemins ; Stripe exige des adresses absolues.
   const site = () => {
     if (!env.SITE_URL) throw new ConfigurationIncomplete("stripe", ["SITE_URL"]);
@@ -73,23 +73,25 @@ export function creerStripeReel(variablesManquantes: string[], env: Env = proces
         return { url: portail.url };
       }, "Client de paiement");
     },
-    async rembourser() {
-      throw nonLivre();
+    async rembourser(d, cle) {
+      // FR-019 : un montant supérieur au restant remboursable est refusé par Stripe → OperationRefusee.
+      const r = await appel(() => sdk.refunds.create({ payment_intent: d.paiementRef, amount: d.montantTtc, metadata: { motif: d.motif.slice(0, 450) } }, { idempotencyKey: cle }), "Paiement");
+      return { remboursementRef: r.id };
     },
-    async resilierAbonnement() {
-      throw nonLivre();
+    async resilierAbonnement(abonnementRef, dateFin) {
+      await appel(() => resilier(sdk, abonnementRef, dateFin), "Abonnement de paiement");
     },
-    async retirerElementAbonnement() {
-      throw nonLivre();
+    async retirerElementAbonnement(abonnementRef, element, dateEffet) {
+      await appel(() => retirerElement(sdk, abonnementRef, element, dateEffet), "Abonnement de paiement");
     },
-    async retablirElementAbonnement() {
-      throw nonLivre();
+    async retablirElementAbonnement(abonnementRef, element) {
+      await appel(() => retablirElement(sdk, abonnementRef, element), "Abonnement de paiement");
     },
-    async preleverPonctuel() {
-      throw nonLivre();
+    async preleverPonctuel(d, cle) {
+      return appel(() => preleverPonctuel(sdk, d, cle), "Abonnement de paiement");
     },
-    async libererAutorisation() {
-      throw nonLivre();
+    async libererAutorisation(abonnementRef) {
+      await appel(() => libererAutorisation(sdk, abonnementRef), "Abonnement de paiement");
     },
   };
 }
