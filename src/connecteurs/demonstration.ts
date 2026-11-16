@@ -36,32 +36,7 @@ export async function reinitialiserDemonstration(auteur: Auteur): Promise<BilanR
   await poserVerrou();
   try {
     const site = dbSite();
-    await site.$transaction([
-      site.demandeFinancement.deleteMany(),
-      site.demandeDevis.deleteMany(),
-      site.messageContact.deleteMany(),
-      site.messageDemonstration.deleteMany(),
-      // F10 : envois des séances ; leurs clés citent les références fictives, qui repartent de
-      // zéro (sinon un email d'une nouvelle commande au même numéro serait pris pour un doublon).
-      site.envoi.deleteMany(),
-      site.panneSimulee.deleteMany(),
-      site.evenementPaiementTraite.deleteMany(),
-      // F01 : inscriptions à la newsletter et limites d'envoi, données de test en phase 1
-      site.inscriptionNewsletter.deleteMany(),
-      site.limiteEnvoi.deleteMany(),
-      // F03 : paniers des séances (les lignes suivent) ; contenus et sous-catégories conservés
-      site.panier.deleteMany(),
-      // F04 : commandes du site et suivis des séances (les demandes de financement sont supprimées plus haut)
-      site.commandeSite.deleteMany(),
-      site.suiviCommande.deleteMany(),
-      // F05 : suivis des locations des séances
-      site.suiviLocation.deleteMany(),
-      // F06 : suivis de fidélité des séances
-      site.suiviFidelite.deleteMany(),
-      // F12 : registre des accès Cloud et tâches de l'équipe (repris de la plateforme ci-dessous)
-      site.tacheAcces.deleteMany(),
-      site.accesLogiciel.deleteMany(),
-    ]);
+    await effacerActiviteDesSeances();
     const bilan = await remplirJeuDeDepart(dbDemo(), site);
     const { reprendreAccesExistants } = await import("@/domaine/cloud/acces");
     await reprendreAccesExistants();
@@ -77,6 +52,41 @@ export async function reinitialiserDemonstration(auteur: Auteur): Promise<BilanR
   } finally {
     await leverVerrou();
   }
+}
+
+/**
+ * Activité de test du site effacée à la réinitialisation, avant de remettre la base de
+ * démonstration à l'état de départ : ces traces citent des références fictives qui repartent
+ * de zéro. Partagée avec le test du jeu de départ, qui reproduit la réinitialisation.
+ */
+export async function effacerActiviteDesSeances(): Promise<void> {
+  const site = dbSite();
+  await site.$transaction([
+    site.demandeFinancement.deleteMany(),
+    site.demandeDevis.deleteMany(),
+    site.messageContact.deleteMany(),
+    site.messageDemonstration.deleteMany(),
+    // F10 : envois des séances ; leurs clés citent les références fictives, qui repartent de
+    // zéro (sinon un email d'une nouvelle commande au même numéro serait pris pour un doublon).
+    site.envoi.deleteMany(),
+    site.panneSimulee.deleteMany(),
+    site.evenementPaiementTraite.deleteMany(),
+    // F01 : inscriptions à la newsletter et limites d'envoi, données de test en phase 1
+    site.inscriptionNewsletter.deleteMany(),
+    site.limiteEnvoi.deleteMany(),
+    // F03 : paniers des séances (les lignes suivent) ; contenus et sous-catégories conservés
+    site.panier.deleteMany(),
+    // F04 : commandes du site et suivis des séances (les demandes de financement sont supprimées plus haut)
+    site.commandeSite.deleteMany(),
+    site.suiviCommande.deleteMany(),
+    // F05 : suivis des locations des séances
+    site.suiviLocation.deleteMany(),
+    // F06 : suivis de fidélité des séances
+    site.suiviFidelite.deleteMany(),
+    // F12 : registre des accès Cloud et tâches de l'équipe (repris de la plateforme après le remplissage)
+    site.tacheAcces.deleteMany(),
+    site.accesLogiciel.deleteMany(),
+  ]);
 }
 
 /** Inscrit une modification de l'écran de démonstration dans le journal des actions (T064). */

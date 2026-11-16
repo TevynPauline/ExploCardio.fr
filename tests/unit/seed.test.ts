@@ -1,6 +1,7 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { dbDemo } from "@/lib/db/demo";
 import { dbSite } from "@/lib/db/site";
+import { effacerActiviteDesSeances } from "@/connecteurs/demonstration";
 import { OperationDemoInterdite, verifierModeDemonstration } from "@/lib/demo/garde";
 import { CATEGORIES, MODELES } from "../../prisma/demo/seed/catalogue";
 import { PARTENAIRES } from "../../prisma/demo/seed/partenaires";
@@ -12,15 +13,14 @@ import { remplirJeuDeDepart } from "../../prisma/demo/seed/remplissage";
 
 describe("jeu de données de départ", () => {
   beforeAll(async () => {
+    // Comme la réinitialisation : les références fictives repartent de zéro, donc toute l'activité
+    // du site qui les cite (envois et leurs clés d'idempotence, messages, suivis…) est effacée
+    // avec elles. Sinon, un email d'une nouvelle commande au même numéro serait pris pour un
+    // doublon par les fichiers de test suivants.
+    await effacerActiviteDesSeances();
     await remplirJeuDeDepart(dbDemo(), dbSite());
-    // Comme la réinitialisation : les références fictives repartent de zéro, donc les traces
-    // du site qui les citent (emails, suivis) sont effacées avec elles.
-    await dbSite().$transaction([
-      dbSite().messageDemonstration.deleteMany(),
-      dbSite().suiviCommande.deleteMany(),
-      dbSite().suiviLocation.deleteMany(),
-      dbSite().commandeSite.deleteMany(),
-    ]);
+    const { reprendreAccesExistants } = await import("@/domaine/cloud/acces");
+    await reprendreAccesExistants();
   }, 60_000);
 
   it("contient tout le catalogue de la brochure, sans lampe MedLED", async () => {
