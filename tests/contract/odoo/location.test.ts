@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, expect, it } from "vitest";
 import { dbDemo } from "@/lib/db/demo";
 import { cleDeTest, suiteDeContrat } from "../harness";
 import { nouveauPartenaire, REF } from "./outils";
@@ -21,6 +21,8 @@ suiteDeContrat("odoo", "location et abonnements (contracts/odoo.md §6)", ({ reg
   const location = () => registre.odoo().location;
   if (mode === "demo") {
     beforeAll(rendreParcDesContrats);
+    // Le parc n'a qu'un appareil libre : chaque test le rend, sinon le résultat dépend de l'ordre.
+    afterEach(rendreParcDesContrats);
     afterAll(rendreParcDesContrats);
   }
 
