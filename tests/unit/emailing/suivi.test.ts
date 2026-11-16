@@ -1,6 +1,7 @@
 import { afterAll, describe, expect, it } from "vitest";
 import { demanderEnvoi } from "@/domaine/emailing/envoi";
-import { enregistrerRejet, leverSuspension, statistiques, suivreEnvois } from "@/domaine/emailing/suivi";
+import { enregistrerRejet, leverSuspension, MOTIF_PLAINTE, statistiques, suivreEnvois } from "@/domaine/emailing/suivi";
+import { estAbonne } from "@/domaine/emailing/preferences";
 import { emailEssai } from "@/emails/modeles";
 import { dbSite } from "@/lib/db/site";
 import { compteValide, nettoyer } from "../commande/outils";
@@ -20,6 +21,8 @@ const envoyer = async (destinataire: string, nom: string) => {
 afterAll(async () => {
   await dbSite().envoi.deleteMany({ where: { cle: { startsWith: "test-suivi:" } } });
   await dbSite().adresseRejetee.deleteMany({ where: { email: { in: adresses } } });
+  await dbSite().inscriptionNewsletter.deleteMany({ where: { email: { in: adresses } } });
+  await dbSite().consentement.deleteMany({ where: { email: { in: adresses } } });
   await nettoyer();
 });
 
@@ -70,5 +73,22 @@ describe("résultats", () => {
     // Au-delà de 14 jours, la commande ne compte plus.
     await dbSite().envoi.update({ where: { id: envoiId }, data: { envoyeLe: new Date(Date.now() - 20 * JOUR) } });
     expect((await statistiques({ campagneId }, new Date(Date.now() - 30 * JOUR))).commandes).toBe(0);
+  });
+});
+
+describe("signalement comme indésirable (F25, FR-014)", () => {
+  it("désinscrit de la newsletter une seule fois, sans alerte de rejet", async () => {
+    const adresse = `lecteur-${Date.now()}@plainte.demo.explocardio.test`;
+    await dbSite().inscriptionNewsletter.create({ data: { email: adresse, etat: "confirmee", confirmeeLe: new Date(), textePresente: "test" } });
+    expect(await estAbonne(adresse)).toBe(true);
+    const id = await envoyer(adresse, "plainte");
+    await suivreEnvois();
+    await suivreEnvois();
+    const e = await dbSite().envoi.findUniqueOrThrow({ where: { id } });
+    expect(e).toMatchObject({ etat: "remis", motif: MOTIF_PLAINTE });
+    expect(await estAbonne(adresse)).toBe(false);
+    expect((await dbSite().inscriptionNewsletter.findUniqueOrThrow({ where: { email: adresse } })).etat).toBe("desinscrite");
+    expect(await dbSite().consentement.count({ where: { email: adresse, origine: "signalement_indesirable" } })).toBe(1);
+    expect(await dbSite().envoi.count({ where: { cle: `alerte-rejet:${id}` } })).toBe(0);
   });
 });

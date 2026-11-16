@@ -64,9 +64,9 @@ contracts/emailing-reel.md, quickstart.md)
 **But** : envoi réel, expéditeur contact@, rendu intact, une seule fois par clé.
 **Test indépendant** : quickstart étapes 1 à 3.
 
-- [ ] T019 [P] [US1] Tests dans `tests/unit/emailing-reel/envoi.test.ts` (`fetch` simulé) : corps `POST /smtp/email` = `sender { name: "ExploCardio.fr", email: "contact@explocardio.fr" }`, `replyTo` identique, `to [{ email }]`, `subject`, `htmlContent`, `textContent`, `tags` contenant `etiquetteCle(cle)`, `famille:<famille>`, `modele:<modele>` ; aucun nom, cabinet ni autre donnée ; si les événements de l'étiquette existent déjà → aucun `POST`, même `envoiId` ; destinataire hors liste en recette → `OperationRefusee` sans appel
-- [ ] T020 [US1] Implémenter `envoyerEmail` dans `src/connecteurs/emailing/real/index.ts` : garde (T010) → recherche par étiquette (`evenements({ tags, jours: 7 })`, premier `messageId`) → sinon `envoyer()` ; renvoie `{ envoiId: messageId }`
-- [ ] T021 [US1] `releverEnvois` dans `src/domaine/emailing/envoi.ts` : trier les envois dus avec les transactionnels d'abord (`famille` = `transactionnel` puis `equipe` puis les autres, ensuite `programmeLe`) — test ajouté à `tests/unit/emailing/envoi.test.ts`
+- [X] T019 [P] [US1] Tests dans `tests/unit/emailing-reel/envoi.test.ts` (`fetch` simulé) : corps `POST /smtp/email` = `sender { name: "ExploCardio.fr", email: "contact@explocardio.fr" }`, `replyTo` identique, `to [{ email }]`, `subject`, `htmlContent`, `textContent`, `tags` contenant `etiquetteCle(cle)`, `famille:<famille>`, `modele:<modele>` ; aucun nom, cabinet ni autre donnée ; si les événements de l'étiquette existent déjà → aucun `POST`, même `envoiId` ; destinataire hors liste en recette → `OperationRefusee` sans appel
+- [X] T020 [US1] Implémenter `envoyerEmail` dans `src/connecteurs/emailing/real/index.ts` : garde (T010) → recherche par étiquette (`evenements({ tags, jours: 7 })`, premier `messageId`) → sinon `envoyer()` ; renvoie `{ envoiId: messageId }`
+- [X] T021 [US1] `releverEnvois` (tri extrait dans `ordreDePassage`) dans `src/domaine/emailing/envoi.ts` : trier les envois dus avec les transactionnels d'abord (`famille` = `transactionnel` puis `equipe` puis les autres, ensuite `programmeLe`) — test ajouté à `tests/unit/emailing/envoi.test.ts`
 
 **Checkpoint** : US1 testable en recette avec une clé.
 
@@ -77,9 +77,9 @@ contracts/emailing-reel.md, quickstart.md)
 **But** : états remis, ouvert, rejeté au back-office en moins de 5 minutes.
 **Test indépendant** : quickstart étapes 4 et 5.
 
-- [ ] T022 [P] [US2] Tests dans `tests/unit/emailing-reel/suivi.test.ts` : `lireSuivi(messageId)` appelle `evenements({ messageId, jours: 7 })` et renvoie la correspondance ; aucun événement → `NotFound("Envoi", messageId)`
-- [ ] T023 [US2] Implémenter `lireSuivi` dans `src/connecteurs/emailing/real/index.ts`
-- [ ] T024 [US2] Passer la tâche `emails-suivi` de `*/15 * * * *` à `*/5 * * * *` dans `src/file-attente/travailleurs.ts` et corriger le commentaire de `suivreEnvois` dans `src/domaine/emailing/suivi.ts`
+- [X] T022 [P] [US2] Tests dans `tests/unit/emailing-reel/suivi.test.ts` : `lireSuivi(messageId)` appelle `evenements({ messageId, jours: 7 })` et renvoie la correspondance ; aucun événement → `NotFound("Envoi", messageId)`
+- [X] T023 [US2] Implémenter `lireSuivi` dans `src/connecteurs/emailing/real/index.ts`
+- [X] T024 [US2] Passer la tâche `emails-suivi` de `*/15 * * * *` à `*/5 * * * *` dans `src/file-attente/travailleurs.ts` et corriger le commentaire de `suivreEnvois` dans `src/domaine/emailing/suivi.ts`
 
 ---
 
@@ -88,11 +88,11 @@ contracts/emailing-reel.md, quickstart.md)
 **But** : en-têtes de désinscription ; plainte → consentement commercial retiré.
 **Test indépendant** : quickstart étapes 6 et 7.
 
-- [ ] T025 [P] [US3] Tests dans `tests/unit/emailing-reel/envoi.test.ts` : famille `service` ou `commercial` avec `desinscription` → `headers` `List-Unsubscribe: <url>` et `List-Unsubscribe-Post: List-Unsubscribe=One-Click` ; `transactionnel` → aucun de ces en-têtes
-- [ ] T026 [P] [US3] Tests dans `tests/unit/emailing/suivi.test.ts` : suivi `plainte: true` → `desabonnerNewsletter(email, "signalement_indesirable")` et préférence `promotions` désactivée, une seule fois (envoi déjà traité ignoré) ; aucune alerte de rejet
-- [ ] T027 [US3] Ajouter les en-têtes dans le corps d'envoi de `src/connecteurs/emailing/real/index.ts`
-- [ ] T028 [US3] Ajouter `"signalement_indesirable"` à `OrigineConsentement` dans `src/domaine/emailing/preferences.ts` (et son libellé dans l'historique des consentements du back-office s'il existe) ; dans `suivreUn()` de `src/domaine/emailing/suivi.ts`, si `s.plainte` et l'envoi n'est pas déjà marqué (`motif` ≠ « Signalé comme indésirable ») → retrait des consentements commerciaux, `motif` de l'envoi mis à « Signalé comme indésirable »
-- [ ] T029 [P] [US3] Tests puis implémentation de `mettreAJourContact` dans `src/connecteurs/emailing/real/index.ts` : `POST /contacts` `{ email, updateEnabled: true, attributes }` avec les clés de `consentements` en MAJUSCULES et valeurs booléennes ; jamais `emailBlacklisted` ; test dans `tests/unit/emailing-reel/contacts.test.ts`
+- [X] T025 [P] [US3] Tests dans `tests/unit/emailing-reel/envoi.test.ts` : famille `service` ou `commercial` avec `desinscription` → `headers` `List-Unsubscribe: <url>` et `List-Unsubscribe-Post: List-Unsubscribe=One-Click` ; `transactionnel` → aucun de ces en-têtes
+- [X] T026 [P] [US3] Tests dans `tests/unit/emailing/suivi.test.ts` : suivi `plainte: true` → `desabonnerNewsletter(email, "signalement_indesirable")` et préférence `promotions` désactivée, une seule fois (envoi déjà traité ignoré) ; aucune alerte de rejet
+- [X] T027 [US3] Ajouter les en-têtes dans le corps d'envoi de `src/connecteurs/emailing/real/index.ts`
+- [X] T028 [US3] Ajouter `"signalement_indesirable"` à `OrigineConsentement` dans `src/domaine/emailing/preferences.ts` (et son libellé dans l'historique des consentements du back-office s'il existe) ; dans `suivreUn()` de `src/domaine/emailing/suivi.ts`, si `s.plainte` et l'envoi n'est pas déjà marqué (`motif` ≠ « Signalé comme indésirable ») → retrait des consentements commerciaux, `motif` de l'envoi mis à « Signalé comme indésirable »
+- [X] T029 [P] [US3] Tests puis implémentation de `mettreAJourContact` dans `src/connecteurs/emailing/real/index.ts` : `POST /contacts` `{ email, updateEnabled: true, attributes }` avec les clés de `consentements` en MAJUSCULES et valeurs booléennes ; jamais `emailBlacklisted` ; test dans `tests/unit/emailing-reel/contacts.test.ts`
 
 ---
 
@@ -101,17 +101,17 @@ contracts/emailing-reel.md, quickstart.md)
 **But** : notifications d'équipe par email ; SMS replié vers email ; quota signalé.
 **Test indépendant** : quickstart étape 9.
 
-- [ ] T030 [P] [US5] Tests dans `tests/unit/emailing-reel/equipe.test.ts` : `envoyerNotificationEquipe` canal `email` → un envoi par destinataire, clé `cle + ":" + adresse`, objet = `n.objet ?? "Notification"`, HTML échappé du texte ; canal `sms` → email, objet préfixé « [SMS] », `console.warn` de l'écart ; renvoie l'`envoiId` du premier
-- [ ] T031 [US5] Implémenter `envoyerNotificationEquipe` dans `src/connecteurs/emailing/real/index.ts` (réutilise `envoyerEmail` interne, famille `transactionnel`, sans désinscription)
-- [ ] T032 [US5] Dans `alerterPanneProlongee` de `src/domaine/emailing/envoi.ts` : si le motif de l'envoi le plus ancien contient la cause quota, objet « Quota journalier d'emails atteint » et texte expliquant le report au lendemain et l'offre payante ; test dans `tests/unit/emailing/alertes.test.ts`
+- [X] T030 [P] [US5] Tests dans `tests/unit/emailing-reel/equipe.test.ts` (faux Brevo partagé : `tests/unit/emailing-reel/faux-brevo.ts`) : `envoyerNotificationEquipe` canal `email` → un envoi par destinataire, clé `cle + ":" + adresse`, objet = `n.objet ?? "Notification"`, HTML échappé du texte ; canal `sms` → email, objet préfixé « [SMS] », `console.warn` de l'écart ; renvoie l'`envoiId` du premier
+- [X] T031 [US5] Implémenter `envoyerNotificationEquipe` dans `src/connecteurs/emailing/real/index.ts` (réutilise `envoyerEmail` interne, famille `transactionnel`, sans désinscription)
+- [X] T032 [US5] Dans `alerterPanneProlongee` de `src/domaine/emailing/envoi.ts` : si le motif de l'envoi le plus ancien contient la cause quota, objet « Quota journalier d'emails atteint » et texte expliquant le report au lendemain et l'offre payante ; test dans `tests/unit/emailing/alertes.test.ts`
 
 ---
 
 ## Phase 8: Polish & vérifications
 
-- [ ] T033 [P] Vérifier `src/connecteurs/journal.ts` : aucune donnée sensible journalisée pour emailing (rendu, texte exclus ; destinataire seulement) ; ajuster si besoin
-- [ ] T034 Lancer `npx tsc --noEmit`, `npx eslint .`, `npm run test:unit`, `npm run test:contract` — tout vert en démonstration
-- [ ] T035 Lancer la suite e2e une seule fois (`npm run test:e2e`, jamais deux suites en parallèle) — non-régression de la démonstration (SC-006)
+- [X] T033 [P] Vérifier `src/connecteurs/journal.ts` (vérifié : seules des références sont journalisées, aucun changement) : aucune donnée sensible journalisée pour emailing (rendu, texte exclus ; destinataire seulement) ; ajuster si besoin
+- [X] T034 Lancer `npx tsc --noEmit`, `npx eslint .`, `npm run test:unit`, `npm run test:contract` — tout vert en démonstration
+- [X] T035 Lancer la suite e2e une seule fois (`npm run test:e2e`, jamais deux suites en parallèle) — non-régression de la démonstration (SC-006)
 - [ ] T036 Mettre à jour `specs/025-branchement-brevo/quickstart.md` si un écart apparaît ; préparer pour Pauline la fiche « créer la clé API Brevo et la saisir dans Scalingo » (étapes cliquées, sans valeur)
 - [ ] T037 [Phase 3] Dérouler le quickstart sur le site de recette (après création de l'application de recette, F15)
 

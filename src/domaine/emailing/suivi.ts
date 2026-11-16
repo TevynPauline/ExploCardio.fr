@@ -4,6 +4,7 @@ import { estErreurConnecteur } from "@/connecteurs/erreurs";
 import { dbSite } from "@/lib/db/site";
 import { entreeDuModele } from "./catalogue";
 import { destinatairesAlertes, notifierEquipe } from "./envoi";
+import { desabonnerNewsletter } from "./preferences";
 
 // Suivi des envois (F10, US8, FR-033, FR-035, FR-036, D9, D10) : remise, rejets, ouvertures lus
 // auprès de l'outil d'envoi ; suspension d'une adresse qui rejette durablement les messages ;
@@ -13,6 +14,8 @@ const JOUR = 24 * 3600_000;
 const SUIVI_JOURS = 3;
 const REJETS_TEMPORAIRES_MAX = 3;
 const CONVERSION_JOURS = 14;
+/** F25 (FR-014) : motif posé une fois la plainte traitée. */
+export const MOTIF_PLAINTE = "Signalé comme indésirable";
 
 /** Rejet d'une adresse : définitif, ou temporaire (trois de suite suspendent). */
 export async function enregistrerRejet(emailBrut: string, definitif: boolean, motif: string, maintenant = new Date()): Promise<boolean> {
@@ -47,6 +50,11 @@ export async function leverSuspension(emailBrut: string, par: string, maintenant
 
 async function suivreUn(envoi: Envoi, maintenant: Date): Promise<void> {
   const s = await registre.emailing().lireSuivi(envoi.connecteurEnvoiId!);
+  // F25 (FR-014) : signalé comme indésirable → plus d'email commercial (newsletter), une fois.
+  if (s.plainte && envoi.motif !== MOTIF_PLAINTE) {
+    await desabonnerNewsletter(envoi.destinataire, "signalement_indesirable", maintenant);
+    await dbSite().envoi.update({ where: { id: envoi.id }, data: { motif: MOTIF_PLAINTE } });
+  }
   if (s.etat === "rejete") {
     if (envoi.etat === "rejete") return;
     await dbSite().envoi.update({ where: { id: envoi.id }, data: { etat: "rejete", motif: s.motifRejet ?? "rejeté" } });
@@ -75,7 +83,7 @@ async function suivreUn(envoi: Envoi, maintenant: Date): Promise<void> {
   if (Object.keys(data).length) await dbSite().envoi.update({ where: { id: envoi.id }, data });
 }
 
-/** Tâche `emails-suivi` (toutes les 15 minutes) : envois des trois derniers jours. */
+/** Tâche `emails-suivi` (toutes les 5 minutes, F25 SC-003) : envois des trois derniers jours. */
 export async function suivreEnvois(maintenant = new Date()): Promise<{ suivis: number }> {
   const envois = await dbSite().envoi.findMany({
     where: {
