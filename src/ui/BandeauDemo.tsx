@@ -7,7 +7,17 @@ import { modeDuSite } from "@/lib/config";
  * pas : elle n'appartient pas à la démonstration.
  */
 export function BandeauDemo() {
-  if (modeDuSite() !== "demo") return null;
+  const mode = modeDuSite();
+  if (mode === "prod") return null;
+  if (mode === "recette") {
+    // F14 (recette) : site fermé, produits réels d'Odoo, aucune écriture possible dans Odoo.
+    return (
+      <div role="region" aria-label="Avertissement" className="bg-dark px-4 py-2 text-center text-small text-white">
+        <strong className="font-semibold">Site de recette — réservé à l’équipe.</strong>{" "}
+        Produits réels d’Odoo ; aucune commande, aucun paiement ni aucun message n’est réel.
+      </div>
+    );
+  }
   return (
     <div role="region" aria-label="Avertissement" className="bg-dark px-4 py-2 text-center text-small text-white">
       <strong className="font-semibold">Version de démonstration — données fictives.</strong>{" "}

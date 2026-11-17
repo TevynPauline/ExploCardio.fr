@@ -8,6 +8,8 @@ import nextEnv from "@next/env";
 // Un échec arrête le déploiement (l'ancienne version continue de tourner).
 // 1. Migrations des deux bases (site, démonstration).
 // 2. Site de démonstration : jeu de départ créé au PREMIER déploiement seulement (base vide).
+// 2 bis. Site de recette (SITE_MODE=recette, F14) : pas de base de démonstration ; mot de passe
+//    d'accès, contenus de départ et premiers comptes de l'équipe (prisma/site/seed/recette.ts).
 // 3. À chaque déploiement : contenus de départ manquants ajoutés (nouveaux types de contenus d'un
 //    module, par exemple les vignettes du carrousel de F16), sans rien modifier de l'existant.
 // Rien de secret n'est jamais écrit dans les journaux (mots de passe, clé de double authentification).
@@ -27,6 +29,14 @@ function migrer(base: "site" | "demo") {
 
 async function principal() {
   migrer("site");
+  if (process.env.SITE_MODE === "recette") {
+    const { dbSite } = await import("@/lib/db/site");
+    const { preparerSiteRecette } = await import("../prisma/site/seed/recette");
+    const bilan = await preparerSiteRecette(dbSite());
+    const mdp = { cree: "créé", remplace: "remplacé", inchange: "inchangé" }[bilan.motDePasseSite];
+    console.log(`✓ Site de recette prêt : mot de passe d'accès ${mdp}, ${bilan.comptesCrees} compte(s) d'équipe créé(s).`);
+    return;
+  }
   const demonstration = process.env.SITE_MODE === "demo";
   if (!demonstration) {
     console.log("✓ Site réel : la base de démonstration n'est pas utilisée.");

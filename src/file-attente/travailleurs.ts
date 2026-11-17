@@ -123,7 +123,7 @@ export async function demarrerTravailleurs() {
   await traiterFile<{ ref: string; coordonnees: Record<string, unknown> }>(FILE_COORDONNEES, async ({ ref, coordonnees }) => {
     await registre.odoo().clients.mettreAJourCoordonnees(ref, coordonnees);
   });
-  if (process.env.SITE_MODE !== "prod" && process.env.CONNECTOR_STRIPE !== "real") {
+  if (process.env.SITE_MODE !== "prod" && process.env.SITE_MODE !== "recette" && process.env.CONNECTOR_STRIPE !== "real") {
     const { FILE_CONFIRMATIONS_TARDIVES, envoyerAuGestionnaire } = await import(
       "@/connecteurs/stripe/demo/emission"
     );

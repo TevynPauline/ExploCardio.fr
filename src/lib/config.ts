@@ -3,7 +3,8 @@
 
 export type NomConnecteur = "odoo" | "stripe" | "pca" | "emailing";
 export type ModeConnecteur = "demo" | "real";
-export type ModeSite = "demo" | "prod";
+/** demo : démonstration fictive ; recette : site fermé branché sur les vrais services (F14) ; prod : site public. */
+export type ModeSite = "demo" | "recette" | "prod";
 
 export const CONNECTEURS: readonly NomConnecteur[] = ["odoo", "stripe", "pca", "emailing"];
 
@@ -28,7 +29,9 @@ export const VARIABLES_MODE_REEL: Record<NomConnecteur, readonly string[]> = {
 type Env = Record<string, string | undefined>;
 
 export function modeDuSite(env: Env = process.env): ModeSite {
-  return env.SITE_MODE === "prod" ? "prod" : "demo";
+  if (env.SITE_MODE === "prod") return "prod";
+  if (env.SITE_MODE === "recette") return "recette";
+  return "demo";
 }
 
 /** Mode d'un connecteur : `demo` par défaut ; toute autre valeur que `real` vaut `demo`. */

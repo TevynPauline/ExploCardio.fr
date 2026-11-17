@@ -88,7 +88,7 @@ export default async function TableauDeBord({ searchParams }: { searchParams: Pr
       {peut(role, "journal", "voir") ? (
         <Card>
           <h2 className="text-h3 font-semibold">Mode des connecteurs</h2>
-          <p className="text-muted">Site : {modeDuSite() === "demo" ? "démonstration" : "production"}</p>
+          <p className="text-muted">Site : {({ demo: "démonstration", recette: "recette", prod: "production" } as const)[modeDuSite()]}</p>
           <ul className="mt-2 grid gap-1 sm:grid-cols-2">
             {Object.entries(modes).map(([nom, mode]) => (
               <li key={nom}>

@@ -111,6 +111,113 @@ Sur le site de recette, puis sur le site public, quand les emails doivent vraime
 | `EMAILING_ADRESSES_AUTORISEES` | **recette uniquement** : adresses ou domaines autorisés, séparés par des virgules (par exemple `contact@explocardio.fr, @explocardio.fr`). Les autres emails ne partent pas et restent consultables au back-office. À laisser vide sur le site public. |
 | `EMAILING_TEST_DESTINATAIRE` | recette uniquement : boîte qui reçoit les tests de contrat (une adresse autorisée) |
 
+## Site de recette (F14) : les produits réels d'Odoo, avant l'ouverture
+
+Deuxième site, **distinct de la démonstration** : il lit les produits de la **vraie base Odoo**
+et sert à préparer le catalogue (textes, photos, documents, publication) avant l'ouverture.
+Il est fermé par un mot de passe, invisible des moteurs de recherche, et **n'écrit jamais dans
+Odoo** : réglé en « recette », le site refuse toute écriture dans une base qui n'est pas une
+copie neutralisée. Création de compte client, devis et commandes s'y arrêtent donc sur une
+erreur : c'est voulu. Paiements et emails restent en démonstration (aucun n'est réel).
+
+Ce qui est saisi au back-office est gardé dans la base du site, photos comprises, rattaché à la
+**référence** de chaque produit dans Odoo : ne pas changer les références (« Référence interne »)
+dans Odoo, sinon les contenus correspondants ne sont plus reliés.
+
+### 1. Créer l'application et sa base (Scalingo)
+
+1. Tableau de bord Scalingo → **Create an app** : nom `explocardio-recette`, région
+   **osc-fr1** (Paris).
+2. Onglet **Deploy** → **Configure integration** → **GitHub** : dépôt `ExploCardio.fr`,
+   branche `main`. Laisser le déploiement automatique **désactivé** (déploiement manuel, comme la
+   démonstration).
+3. Onglet **Resources** → **Add-on** → **PostgreSQL**, offre Starter 512M (sauvegardes
+   quotidiennes). Scalingo crée alors `SCALINGO_POSTGRESQL_URL`.
+4. Onglet **Resources** → conteneur **web** : taille **M**, **1** conteneur.
+
+Aucune base de démonstration : ne créez pas d'équivalent de `explocardio-demo-db`.
+
+### 2. Créer la clé d'accès à Odoo
+
+Dans la vraie base Odoo, connecté avec le compte qui servira au site (celui de Régis, par
+exemple : un utilisateur dédié occuperait une licence payante) :
+
+1. Avatar en haut à droite → **Mon profil** (ou **Préférences**) → onglet **Sécurité du compte**.
+2. **Nouvelle clé API** → mot de passe Odoo → nom « Site de recette », durée la plus longue
+   proposée, type (« scope ») **rpc** si demandé → **Générer la clé**.
+3. Copier la clé **directement** dans Scalingo (étape 3) : Odoo ne la montre qu'une fois. Ne
+   jamais l'envoyer par email ni la coller dans une conversation.
+
+Noter aussi : l'adresse de la base (`https://<nom>.odoo.com`), le **nom de la base** (souvent le
+même que `<nom>`, visible dans Paramètres → Activer le mode développeur → en bas de la page
+Paramètres, ou dans le gestionnaire de bases) et l'**adresse email de connexion** de ce compte.
+
+### 3. Saisir les variables (onglet Environment)
+
+| Variable | Valeur |
+|---|---|
+| `SITE_MODE` | `recette` |
+| `CONNECTOR_ODOO` | `real` |
+| `CONNECTOR_STRIPE`, `CONNECTOR_PCA`, `CONNECTOR_EMAILING` | `demo` |
+| `ODOO_URL` | adresse de la vraie base, par exemple `https://explocardio.odoo.com` |
+| `ODOO_DATABASE` | nom de la base Odoo |
+| `ODOO_USER` | adresse email de connexion du compte qui a créé la clé |
+| `ODOO_API_KEY` | la clé créée à l'étape 2 |
+| `ODOO_ENVIRONNEMENT` | `recette` (**jamais** `production` sur ce site : c'est ce qui interdit toute écriture dans la vraie base) |
+| `DATABASE_URL` | `$SCALINGO_POSTGRESQL_URL` |
+| `AUTH_SECRET` | chaîne aléatoire de 48 caractères ou plus, **nouvelle** (ni celle de la démonstration, ni celle de votre poste) |
+| `RECETTE_SITE_PASSWORD` | mot de passe d'accès au site (12 caractères au moins), à donner à Régis |
+| `RECETTE_EQUIPE` | premiers comptes du back-office, au format `Nom <adresse>` séparés par des points-virgules, par exemple `Pauline Kurkdjian <adresse-de-pauline>; Régis <adresse-de-régis>` |
+| `RECETTE_EQUIPE_PASSWORD` | mot de passe **provisoire** de ces comptes (12 caractères au moins) |
+| `SITE_URL` | `https://explocardio-recette.osc-fr1.scalingo.io` |
+| `TRUSTED_PROXY` | `1` |
+| `STORAGE_DIR` | `/app/stockage` |
+
+Ne pas renseigner `DEMO_DATABASE_URL`, `DOMAINES_PAGE_ATTENTE` ni les variables `DEMO_*`.
+
+### 4. Déployer
+
+Onglet **Deploy** → **Manual deployment** → branche `main` → **Trigger deployment**. Dans le
+journal du déploiement, la ligne attendue est :
+`✓ Site de recette prêt : mot de passe d'accès créé, 2 compte(s) d'équipe créé(s).`
+Si une variable manque, le déploiement s'arrête en la nommant (l'ancienne version continue de
+tourner) : la corriger, puis relancer.
+
+À chaque déploiement suivant, les comptes existants ne sont jamais modifiés ; une personne
+ajoutée à `RECETTE_EQUIPE` est créée. Changer `RECETTE_SITE_PASSWORD` puis redéployer remplace
+le mot de passe d'accès (les accès déjà ouverts sont refermés).
+
+### 5. Première connexion de chaque personne
+
+1. Ouvrir `https://explocardio-recette.osc-fr1.scalingo.io` → mot de passe du site.
+2. **Mon compte** → adresse email et mot de passe provisoire.
+3. Le site demande d'**activer la double authentification** : application d'authentification
+   sur le téléphone (Google Authenticator, Microsoft Authenticator…), scanner le code, saisir le
+   code à 6 chiffres, **garder les codes de secours**.
+4. Le mot de passe provisoire reste valable : chaque compte est protégé par sa propre double
+   authentification. Pour le changer, il faudra que les emails partent vraiment sur ce site
+   (Brevo en recette, voir « Emails réels par Brevo », avec vos adresses dans
+   `EMAILING_ADRESSES_AUTORISEES`) puis passer par **Mot de passe oublié**.
+
+Les autres membres de l'équipe s'ajoutent par `RECETTE_EQUIPE` (puis redéploiement) : sur ce
+site, l'invitation par email du back-office n'envoie rien.
+
+### 6. Vérifier que les produits remontent
+
+1. Back-office → **Catalogue** : la liste montre les produits d'Odoo (référence, prix HT,
+   catégorie). Rien n'apparaît encore côté public : un produit n'y figure qu'une fois **publié**.
+2. Back-office → **Paramètres** → Catalogue → **Rubrique de chaque catégorie Odoo** : une ligne
+   par catégorie de premier niveau d'Odoo, avec sa rubrique du site (`holter-ecg`, `mapa`,
+   `effort`, `ecg-repos`, `accessoires`). Exemple : `Holter ECG = holter-ecg`. Une catégorie
+   absente de cette liste n'est pas affichée.
+3. Back-office → Catalogue → **Contrôle des données Odoo** : liste ce qui bloque ou manque
+   (référence absente ou en double, prix, catégorie, type d'article…), à corriger dans Odoo.
+4. Ouvrir un produit → rédiger, ajouter une photo → **Enregistrer le contenu** → **Publier** :
+   il apparaît dans sa famille sur le site, avec le prix d'Odoo.
+
+Les changements faits dans Odoo (prix, stock, catégories) apparaissent sur le site en quelques
+minutes.
+
 ## Fichiers téléversés
 
 Le disque d'un conteneur Scalingo est **effacé à chaque déploiement et redémarrage**. Les

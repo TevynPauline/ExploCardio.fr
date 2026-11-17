@@ -119,7 +119,7 @@ Détaillées à réception des réponses à `docs/questions-branchement-odoo.doc
 - **Lot 3 — Commandes (US4)** : devis Odoo, commandes carte et virement, réservation de stock, remboursements, frais de port par produit « Livraison », garde de neutralisation active.
 - **Lot 4 — Location et factures (US5, US6)** : module Location, numéros de série, facturation mensuelle déclenchée par le site, factures et relances.
 - **Lot 5 — Fidélité masquée et offre de bienvenue (US7)** : FR-026, FR-026b ; peut avancer en parallèle, en phase 1.
-- **Recette** : création de l'application Scalingo de recette, puis F15.
+- **Recette** : réglage `SITE_MODE=recette` livré (site fermé, lecture du vrai Odoo, premiers comptes de l'équipe ; `docs/deploiement-scalingo.md`, « Site de recette »). Reste : création de l'application Scalingo par Pauline, puis F15.
 
 ---
 
