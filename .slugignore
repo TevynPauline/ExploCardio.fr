@@ -1,8 +1,8 @@
-# Fichiers inutiles à l'exécution sur Scalingo (image plus légère)
 tests
 specs
 playwright
 playwright-report
 test-results
 .lighthouseci
-docs
+docs/demonstration.md
+docs/deploiement-scalingo.md
