@@ -207,8 +207,9 @@ aucune donnée de carte ni de patient envoyée (FR-007) ; journal des connecteur
 - [ ] L3-09 Vérification sur la copie : 20 commandes de test dont des créations
   interrompues puis relancées (SC-004), virement annulé, devis puis commande, remboursement
 - [ ] L3-10 Fiche « brancher Stripe sur le site de recette » dans
-  `docs/deploiement-scalingo.md` (clés de test, webhook, changement de base Odoo), puis
-  quickstart de F24 (T035) avec Pauline et Régis
+  `docs/deploiement-scalingo.md` (clés de test, webhook, changement de base Odoo) — rédigée le
+  2026-11-18 (étapes A à G) ; reste à la dérouler avec Pauline et Régis (F24 T035, partie
+  achats ; locations après le lot 4)
 
 ### Ordre
 

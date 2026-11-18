@@ -99,6 +99,136 @@ Events.
 6. **Clé restreinte** et **webhook** : voir le tableau ci-dessus ; saisir la clé et le secret de
    signature directement dans Scalingo, jamais dans un email ni une conversation.
 
+#### Fiche : brancher Stripe sur le site de recette
+
+But : payer de vraies commandes avec les **cartes de test** de Stripe, et les voir arriver dans
+une **copie neutralisée** d'Odoo. Régis continue de travailler dans la vraie base pendant tout
+ce temps : seul le site de recette est branché sur la copie. Durée : environ une semaine sur la
+copie, dont une demi-journée à une journée d'essais et une heure pour Régis.
+
+Aucune clé n'est jamais écrite dans un email, une conversation ou un fichier du dépôt : elle va
+directement de Stripe (ou d'Odoo) à Scalingo.
+
+**A. Avant de commencer — dans la vraie base Odoo (Régis)**
+
+La copie reprend la vraie base telle qu'elle est le jour de la copie : tout ce qui suit doit
+donc y être **avant** l'étape B.
+
+1. **Journal** « Carte (Stripe) » : Comptabilité › Configuration › Journaux › Nouveau ; type
+   **Banque**, code court `STRP`. Ne pas installer le moyen de paiement « Stripe » d'Odoo : c'est
+   le site qui encaisse.
+2. **Produit « Livraison »** : service, référence interne `LIVRAISON`, prix de vente = forfait de
+   port HT, TVA 20 %, propriété **Seuil de franco HT** remplie. Sans lui, le site refuse de
+   calculer une commande d'appareils (« frais de port pas encore réglés »).
+3. **5 à 10 produits complets** couvrant les cas : un appareil en stock, un appareil épuisé avec
+   délai fournisseur, un consommable vendu par lot, un produit volumineux (propriétés « Frais de
+   livraison HT » et « Frais d'installation HT »), un produit à prix dégressif. Chacun avec
+   marque, type d'article, catégorie rangée, prix, TVA. Les publier au back-office de la recette.
+4. **Deux clients de test** : l'un avec un SIRET, l'autre sur la liste de prix « Remise ». Leur
+   adresse email doit faire partie de `EMAILING_ADRESSES_AUTORISEES` (par exemple
+   `prenom+client1@explocardio.fr` ou une boîte Gmail de l'équipe).
+5. Réponses attendues : **moment de la facture** (dès le paiement ou à l'expédition) et
+   **suivi des colis** (module Livraison ou non). Tant qu'elles manquent, la commande arrive dans
+   Odoo confirmée, avec la référence du paiement Stripe, mais sans facture.
+
+**B. Créer la copie neutralisée v3 (Pauline)**
+
+1. Odoo.com › **Mes bases** › menu de la base › **Dupliquer** ; nom `…duplicationv3` ; cocher
+   **« Pour test »** (copie neutralisée : emails, tâches automatiques et paiements coupés).
+2. Ouvrir la copie : elle doit être signalée comme neutralisée. Sinon, le site refusera
+   d'y écrire (« base non neutralisée ») : la supprimer et recommencer en cochant la case.
+3. Sur la copie, **Mon profil › Sécurité du compte › Nouvelle clé API** : nom
+   `explocardio-recette-v3`, durée « persistante » ou 3 mois. Copier la clé et la coller
+   directement dans Scalingo à l'étape D.
+
+**C. Dans Stripe, en mode test (Régis)**
+
+Activer le **mode test** (bac à sable, en haut du tableau de bord) avant chaque étape : rien ne
+doit être créé en mode production.
+
+1. Faire, **en mode test**, les réglages 2 à 5 de la liste ci-dessus (moyens de paiement, emails
+   clients désactivés, factures d'abonnement, portail client).
+2. **Clé restreinte** : Développeurs › Clés API › **Créer une clé restreinte** ; nom
+   `explocardio-recette` ; permissions du tableau « Paiements réels par Stripe » ci-dessus. Elle
+   commence par `rk_test_`. La copier et la coller directement dans Scalingo (étape D).
+3. **Webhook** : Développeurs › Webhooks › **Ajouter une destination** ; adresse
+   `https://explocardio-recette.osc-fr1.scalingo.io/api/evenements/paiement` ; cocher les
+   7 événements listés ci-dessus. Ouvrir la destination créée › **Secret de signature** ›
+   Révéler › copier (`whsec_…`) et le coller directement dans Scalingo (étape D).
+
+**D. Scalingo, application `explocardio-recette` → onglet Environment (Pauline)**
+
+Avant de modifier, **noter** les valeurs actuelles de `ODOO_URL` et `ODOO_DATABASE` (vraie
+base) pour le retour à l'étape G. La clé API de la vraie base n'a pas besoin d'être notée :
+elle reste valable dans Odoo et pourra être recréée.
+
+| Variable | Valeur |
+|---|---|
+| `ODOO_URL` | adresse de la copie v3 (`https://…duplicationv3.odoo.com`) |
+| `ODOO_DATABASE` | nom de la copie v3 |
+| `ODOO_API_KEY` | la clé créée sur la copie (étape B.3) |
+| `ODOO_ENVIRONNEMENT` | `recette` (inchangé : le site n'écrit que dans une base neutralisée) |
+| `CONNECTOR_STRIPE` | `real` (remplace `demo`) |
+| `STRIPE_ENVIRONNEMENT` | `recette` |
+| `STRIPE_SECRET_KEY` | la clé `rk_test_…` (étape C.2) |
+| `STRIPE_WEBHOOK_SECRET` | le secret `whsec_…` (étape C.3) |
+
+`ODOO_USER` ne change pas si la clé a été créée avec le même compte. Puis **Deploy** →
+**Manual deployment** → `main`. Si une variable manque, le back-office l'indique
+(« configuration incomplète ») et aucun paiement n'est possible.
+
+**E. Vérifier le branchement (10 minutes)**
+
+1. Back-office › Catalogue › **Contrôle des données Odoo** : aucune anomalie bloquante, et pas
+   de « Produit « Livraison » absent ».
+2. Back-office › accueil, **À traiter** : aucune alerte Stripe (une clé `sk_live_` ou `rk_live_`
+   sur la recette bloque les paiements et s'affiche ici).
+3. Après le premier paiement de l'étape F : Stripe (mode test) › Webhooks › la destination →
+   les événements reçus sont en **200** (un 400 signale un secret de signature erroné).
+
+**F. Recette (Pauline, puis Régis pour la partie Odoo)**
+
+Avec un compte client de test, créé sur le site puis validé au back-office (sa fiche est
+créée dans la copie) :
+
+1. **Achat par carte** `4242 4242 4242 4242` (date future, code quelconque) → page de
+   paiement aux couleurs du site, montant TTC exact, libellé `EXPLOCARDIO.FR` ; commande
+   confirmée sur le site, panier vidé, email reçu. Dans la copie : commande `D…` confirmée,
+   origine « Site explocardio.fr (carte) », référence du paiement remplie, bon de livraison
+   créé, mêmes montants.
+2. **Carte avec authentification** `4000 0025 0000 3155` : validée, puis une seconde fois
+   abandonnée → pas de commande pour l'abandon. **Carte refusée** `4000 0000 0000 0002` →
+   message, panier intact, rien dans Odoo.
+3. **Franco et frais** : un panier sous le seuil (forfait de port) et un au-dessus (port
+   offert) ; un produit volumineux (frais de livraison et d'installation) ; client « Remise »
+   → prix de sa liste. Montants identiques sur le site, dans Stripe et dans Odoo.
+4. **Virement** → commande « en attente de virement » sur le site, et dans Odoo une commande
+   confirmée avec échéance à 7 jours. Régis enregistre le virement dans Odoo (référence du
+   paiement) → la commande passe « payée » sur le site en moins de 15 minutes.
+5. **Devis** : enregistrer un devis depuis le panier → devis `D…` dans Odoo, PDF téléchargeable
+   depuis Mon compte ; le commander → même numéro, confirmé.
+6. **Client bloqué** : Régis passe un client de test en « Mauvais débiteur » (fiche du cabinet,
+   degré de confiance) → le site le renvoie au panier avant tout paiement ; le remettre en
+   « Normal ».
+7. **Rejeu** : Stripe › Webhooks › renvoyer un événement déjà reçu → aucune seconde commande.
+8. **Démonstration inchangée** : le site de démonstration fonctionne comme avant.
+
+Pas encore testable sur la recette : **remboursements** (ils partent d'un avoir saisi dans
+Odoo, F14 lot 3, L3-08), **locations** (abonnements par carte ou SEPA, horloge de
+test) et **abonnements logiciels**, qui attendent le branchement du parc de location dans Odoo
+(F14, lot 4). Ces cas restent vérifiés en démonstration.
+
+**G. Fin de la recette : revenir à la vraie base**
+
+1. Chaque compte client de test : Mon compte › **Mes données** › supprimer le compte. Sa fiche
+   est archivée dans la copie. Les références `P…` créées sur la copie n'existent pas dans la
+   vraie base : un compte de test gardé pointerait vers un client inconnu.
+2. Scalingo › Environment : remettre `ODOO_URL`, `ODOO_DATABASE` et `ODOO_API_KEY` de la vraie
+   base ; remettre `CONNECTOR_STRIPE` à `demo` (ou le laisser en `real` mode test si une autre
+   recette suit) ; redéployer. La vraie base n'étant pas neutralisée, le site de recette n'y
+   écrit rien.
+3. La copie v3 peut être supprimée d'Odoo.com une fois les constats notés.
+
 ### Emails réels par Brevo (F25)
 
 Sur le site de recette, puis sur le site public, quand les emails doivent vraiment partir :
