@@ -195,8 +195,10 @@ aucune donnée de carte ni de patient envoyée (FR-007) ; journal des connecteur
 - [X] L3-03 Tests et réservations `reserver` / `liberer` (D5) dans `real/stock.ts`
 - [X] L3-04 Tests et `real/commandes.ts` : création payée (idempotente par
   `client_order_ref`), virement, annulation, lecture, liste, états (D6), écart de montant
-  signalé ; confirmation, annulation, note et PDF de portail vérifiés sur la copie. Reste au
-  lot 3 : client « mauvais payeur » (`trust = bad`) refusé à la commande
+  signalé ; confirmation, annulation, note et PDF de portail vérifiés sur la copie. Client
+  « mauvais payeur » (`trust = bad`, lu sur la fiche principale) : `commandesBloquees` dans
+  `lireSituation`, refusé avant tout paiement (carte ou virement) par `verifierAvantPaiement`,
+  renvoyé au panier avec un message invitant à nous contacter (2026-11-18)
 - [ ] L3-05 Paiement enregistré dans le journal « Carte » et facture à la commande (après
   réponses 1 et 5)
 - [ ] L3-06 `listerChangements` (D6) avec transporteur et suivi (après réponse 3)

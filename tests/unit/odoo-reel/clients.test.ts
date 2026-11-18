@@ -116,6 +116,13 @@ describe("clients en mode réel (lot 2)", () => {
     expect(s).toMatchObject({ commandesRecentes: [], factures: [], locations: [], droitsAssistance: { statut: "inactif" } });
   });
 
+  it("client « Mauvais débiteur » dans Odoo : commandes bloquées ; sinon non", async () => {
+    const { odoo } = monter([societe(70, false, { trust: "bad" }), societe(71, false, { trust: "normal" }), societe(72, false)]);
+    expect((await odoo.clients.lireSituation("P70")).partenaire.commandesBloquees).toBe(true);
+    expect((await odoo.clients.lireSituation("P71")).partenaire.commandesBloquees).toBe(false);
+    expect((await odoo.clients.lireSituation("P72")).partenaire.commandesBloquees).toBe(false);
+  });
+
   it("archive une fiche, une seule fois ; référence inconnue → NotFound", async () => {
     const { odoo, donnees, ecritures } = monter([societe(60, "73282932000074")]);
     await odoo.clients.archiverPartenaire("P60", "archivage:c1");

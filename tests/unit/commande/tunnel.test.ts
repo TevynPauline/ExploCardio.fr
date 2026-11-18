@@ -1,5 +1,6 @@
-import { afterAll, describe, expect, it } from "vitest";
-import { ouvrirCommande, enregistrerAdresses, choisirPaiement, TunnelRefuse, SaisieInvalide } from "@/domaine/commande/tunnel";
+import { afterAll, describe, expect, it, vi } from "vitest";
+import { ouvrirCommande, enregistrerAdresses, choisirPaiement, TunnelRefuse, SaisieInvalide, CLIENT_BLOQUE } from "@/domaine/commande/tunnel";
+import { registre } from "@/connecteurs/registre";
 import { lancerPaiement } from "@/domaine/commande/paiement";
 import { compteValide, nettoyer, remplirPanier } from "./outils";
 
@@ -53,5 +54,25 @@ describe("tunnel", () => {
     await expect(choisirPaiement(c, null, "virement")).rejects.toBeInstanceOf(SaisieInvalide);
     const p = await choisirPaiement(c, null, "sepa");
     await expect(lancerPaiement(p, false)).rejects.toBeInstanceOf(SaisieInvalide);
+  });
+
+  it("client « mauvais payeur » dans Odoo : renvoyé au panier avant tout paiement, carte ou virement", async () => {
+    const { compteId } = await compteValide();
+    await remplirPanier(compteId, [{ defaultCode: "EC-ELEC-HOLTER-50", formule: "achat", quantite: 1 }]);
+    const c = await enregistrerAdresses(await ouvrirCommande(compteId), adresses);
+    const clients = registre.odoo().clients;
+    const lire = clients.lireSituation.bind(clients);
+    const espion = vi.spyOn(clients, "lireSituation").mockImplementation(async (ref) => {
+      const s = await lire(ref);
+      return { ...s, partenaire: { ...s.partenaire, commandesBloquees: true } };
+    });
+    try {
+      for (const moyen of ["carte", "virement"] as const) {
+        const p = await choisirPaiement(c, moyen, null);
+        expect(await lancerPaiement(p, true)).toEqual({ type: "redirection", url: "/panier", message: CLIENT_BLOQUE });
+      }
+    } finally {
+      espion.mockRestore();
+    }
   });
 });

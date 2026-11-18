@@ -27,9 +27,12 @@ type Fiche = Enregistrement & {
   type: string | false;
   parent_id: [number, string] | false;
   commercial_partner_id: [number, string] | false;
+  trust?: string | false;
 };
 
 const CHAMPS = ["name", "is_company", "email", "phone", "comment", "l10n_fr_siret", "street", "street2", "zip", "city", "active", "type", "parent_id", "commercial_partner_id"];
+/** Fiche principale seulement : « Degré de confiance » (Comptabilité), dépendant de la société. */
+const CHAMPS_PRINCIPALE = [...CHAMPS, "trust"];
 const TOUTES = { contexte: { active_test: false } };
 const TYPE_ODOO = { livraison: "delivery", facturation: "invoice" } as const;
 
@@ -58,7 +61,7 @@ export function creerClientsReels(client: ClientOdoo, ecritures: Ecritures): Cli
     (france ??= client.searchRead("res.country", [["code", "=", "FR"]], ["id"], { limite: 1 }).then((l) => l[0]?.id ?? null));
 
   async function lireFiche(ref: string): Promise<Fiche> {
-    const [f] = await client.searchRead<Fiche>("res.partner", [conditionPartenaire(ref)], CHAMPS, { ...TOUTES, limite: 1 });
+    const [f] = await client.searchRead<Fiche>("res.partner", [conditionPartenaire(ref)], CHAMPS_PRINCIPALE, { ...TOUTES, limite: 1 });
     if (!f) throw new NotFound("Partenaire", ref);
     return f;
   }
@@ -189,6 +192,8 @@ export function creerClientsReels(client: ClientOdoo, ecritures: Ecritures): Cli
         rpps: rppsDe(fiche.comment),
         siret: chiffres(fiche.l10n_fr_siret) || null,
         adresses: adresses.filter((a): a is AdressePartenaire => a !== null),
+        // Régis passe le client en « Mauvais débiteur » dans Odoo : plus de commande en ligne.
+        commandesBloquees: fiche.trust === "bad",
         estFictif: false,
       };
       // Commandes : lot 3 ; factures et locations : lot 4 ; droits d'assistance : fidélité

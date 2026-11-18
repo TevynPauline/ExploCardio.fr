@@ -32,6 +32,11 @@ export type Partenaire = MarqueFictive & {
   rpps: string | null;
   siret: string | null;
   adresses: AdressePartenaire[];
+  /**
+   * Client signalé « mauvais payeur » par l'équipe (Odoo : Comptabilité, degré de confiance
+   * « Mauvais débiteur ») : il ne peut plus payer de commande en ligne. Absent = non bloqué.
+   */
+  commandesBloquees?: boolean;
 };
 
 export type SituationClient = {

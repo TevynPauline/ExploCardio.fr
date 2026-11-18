@@ -265,6 +265,9 @@ export async function choisirPaiement(commande: CommandeSite, achat: MoyenPaieme
 export type Verification = { ok: true; devis: Devis } | { ok: false; message: string; redirection: string };
 
 /** Juste avant le paiement (FR-024) : accès, devis recalculé, disponibilité revérifiée. */
+export const CLIENT_BLOQUE =
+  "La commande en ligne n'est pas disponible pour votre compte. Contactez-nous pour finaliser votre commande : votre panier est conservé.";
+
 export async function verifierAvantPaiement(commande: CommandeSite): Promise<Verification> {
   const compte = await dbSite().compteClient.findUniqueOrThrow({ where: { id: commande.compteId } });
   const panier = await panierPour({ compteId: commande.compteId }, false);
@@ -275,6 +278,11 @@ export async function verifierAvantPaiement(commande: CommandeSite): Promise<Ver
     throw e;
   }
   try {
+    // Client signalé « mauvais payeur » dans Odoo : refusé avant tout paiement (carte ou virement).
+    const partenaireRef = await partenaireDuCompte(commande.compteId);
+    if (partenaireRef && (await registre.odoo().clients.lireSituation(partenaireRef)).partenaire.commandesBloquees) {
+      return { ok: false, message: CLIENT_BLOQUE, redirection: "/panier" };
+    }
     const devis = await devisCommande(commande);
     const lignes = lignesDe(commande);
     const dispos = await registre.odoo().stock.lireDisponibilite([...new Set(lignes.map((l) => l.defaultCode))]);

@@ -77,7 +77,8 @@ opportunités. **Lot 3** (en cours) : panier, commandes carte et virement, devis
   propriété « Seuil de franco HT ») ; produits volumineux : « Frais de livraison HT » et
   « Frais d'installation HT ». Référence d'une commande = son numéro Odoo ; clé dans
   « Référence client » ; paiement Stripe dans « Réf. de paiement » ; PDF des devis par le lien
-  de portail. Ni promotions ni codes promo à l'ouverture.
+  de portail. Ni promotions ni codes promo à l'ouverture. Client « Mauvais débiteur »
+  (Comptabilité › degré de confiance, fiche principale) : plus de commande en ligne.
 - **Rapport de contrôle** : back-office › Catalogue › Contrôle des données Odoo (export CSV).
 - **Tests** : `tests/unit/odoo-reel/` (sans réseau) ; tests de contrat en mode réel sur la copie :
   `CONNECTOR_ODOO=real npm run test:contract -- tests/contract/odoo/catalogue.test.ts tests/contract/odoo/stock.test.ts`.
