@@ -251,9 +251,11 @@ une fiche produit avec photo, ouvrir une vidéo d'aide.
 
 ## Assumptions
 
-- Le compte Scaleway d'ExploCardio.fr existe (domaine `explocardio.fr` enregistré chez
-  Scaleway par Régis) ; Pauline ou Régis y créent le projet, les compartiments et la clé,
-  et saisissent la clé directement dans Scalingo, jamais dans une conversation.
+- Aucun compte Scaleway n'existe encore (le domaine `explocardio.fr` a été acheté par
+  o2switch, dont Scaleway n'est que le bureau d'enregistrement technique). Un compte
+  professionnel au nom d'ExploCardio.fr est créé pour F26 ; Pauline ou Régis y créent le
+  projet, les compartiments et la clé, et saisissent la clé directement dans Scalingo,
+  jamais dans une conversation.
 - Deux compartiments : un pour la recette, un pour le site public, dans la région Paris.
   Le site de démonstration reste en mode démonstration (base).
 - Volumes faibles (quelques centaines de fichiers, vidéos d'aide de 50 Mo au plus) :

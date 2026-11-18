@@ -39,7 +39,7 @@ Le projet avance en trois phases.
 
 - **Phase 1 — Site en démonstration** : tout le site est construit et critiqué sans aucun
   service externe branché. Chaque service externe (Odoo, Stripe, plateforme Cloud PCA,
-  emailing) DOIT être utilisé uniquement à travers un connecteur. En
+  emailing, stockage des fichiers) DOIT être utilisé uniquement à travers un connecteur. En
   phase 1, chaque connecteur fonctionne en mode démonstration : il lit et écrit dans une
   mini base de données fictive, ou simule le service.
 - **Phase 2 — Branchement** : chaque connecteur reçoit son mode réel. Le passage du mode
@@ -197,8 +197,13 @@ logistique et le contenu.
 Cette section rassemble les contraintes d'architecture qui découlent des principes.
 
 - **Services externes connectés** : Odoo (gestion), Stripe (paiement), PCA (ouverture et
-  fermeture des droits d'accès des médecins) et un outil d'emailing (emails et SMS). Chacun passe par son connecteur (principe III). Toute autre intégration
-  externe exige un amendement.
+  fermeture des droits d'accès des médecins), un outil d'emailing (emails et SMS) et un
+  stockage de fichiers hébergé en France (Scaleway, région Paris, F26). Chacun passe par son
+  connecteur (principe III). Toute autre intégration externe exige un amendement.
+- **Stockage des fichiers** : il NE DOIT recevoir que les fichiers déposés par l'équipe au
+  back-office (contenus éditoriaux, photos et documents des produits, vidéos d'aide), dans
+  un espace privé propre à chaque environnement. Aucune donnée de patient, aucune donnée
+  personnelle de client, aucune facture.
 - **Contact WhatsApp** : hors du site. Le numéro de la ligne WhatsApp Business et ses
   horaires sont des paramètres du back-office.
 - **SAV et rendez-vous** : hors du site pour l'instant (application SAV externe à venir).
@@ -250,4 +255,4 @@ Cette section rassemble les contraintes d'architecture qui découlent des princi
 - Les onze principes étant non négociables, aucune dérogation ponctuelle n'est admise : un
   écart durable passe par un amendement.
 
-**Version**: 2.3.1 | **Ratified**: 2026-10-12 | **Last Amended**: 2026-11-16
+**Version**: 2.4.0 | **Ratified**: 2026-10-12 | **Last Amended**: 2026-11-18
