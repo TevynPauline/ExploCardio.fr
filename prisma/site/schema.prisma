@@ -1151,3 +1151,18 @@ model DemandeInformatique {
   @@index([etat, creeLe])
   @@map("demande_informatique")
 }
+
+/// F14 lots 2-3 (D1) : écritures faites dans Odoo par le mode réel, une seule fois par clé et
+/// par base (une clé vue sur la copie n'est pas réutilisée sur la base réelle).
+model EcritureOdoo {
+  id        String   @id @default(cuid())
+  base      String
+  cle       String
+  operation String
+  /// Résultat renvoyé à l'appelant (références Odoo), rejoué tel quel.
+  resultat  Json
+  creeLe    DateTime @default(now())
+
+  @@unique([base, cle])
+  @@map("ecriture_odoo")
+}

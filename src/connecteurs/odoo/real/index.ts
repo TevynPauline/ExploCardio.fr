@@ -5,12 +5,15 @@ import { environnementOdoo } from "@/lib/config";
 import { ClientOdoo } from "./client";
 import { lireCorrespondance, type Correspondance } from "./correspondance";
 import { creerCatalogueReel } from "./catalogue";
+import { creerClientsReels } from "./clients";
+import { creerEcritures, type StockageEcritures } from "./ecritures";
+import { creerOpportunitesReelles } from "./opportunites";
 import { creerLecteurInstantane } from "./instantane";
 import { creerGardeNeutralisation } from "./neutralisation";
 import { creerStockReel } from "./stock";
 
-// Mode réel d'Odoo (F14). Lot 1 : catalogue et lectures du stock. Les autres domaines, et les
-// écritures, lèvent ConfigurationIncomplete tant que leur lot n'est pas livré.
+// Mode réel d'Odoo (F14). Lot 1 : catalogue et lectures du stock ; lot 2 : clients et
+// opportunités. Les autres domaines lèvent ConfigurationIncomplete tant que leur lot n'est pas livré.
 
 type Env = Record<string, string | undefined>;
 
@@ -18,6 +21,8 @@ export type OptionsOdooReel = {
   /** Correspondance catégories → rubriques ; par défaut, le paramètre du back-office. */
   correspondance?: () => Promise<Correspondance>;
   fetch?: typeof fetch;
+  /** Trace des écritures (D1) ; par défaut, la base du site. */
+  stockageEcritures?: StockageEcritures;
 };
 
 async function correspondanceDuSite(): Promise<Correspondance> {
@@ -42,5 +47,12 @@ export function creerOdooReel(variablesManquantes: string[], env: Env = process.
     fetch: options.fetch,
   });
   const instantane = creerLecteurInstantane(client, options.correspondance ?? correspondanceDuSite);
-  return { ...refuse, catalogue: creerCatalogueReel(client, instantane), stock: creerStockReel(instantane) };
+  const ecritures = creerEcritures(env.ODOO_DATABASE!, options.stockageEcritures);
+  return {
+    ...refuse,
+    catalogue: creerCatalogueReel(client, instantane),
+    stock: creerStockReel(instantane),
+    clients: creerClientsReels(client, ecritures),
+    opportunites: creerOpportunitesReelles(client, ecritures),
+  };
 }

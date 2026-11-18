@@ -48,8 +48,9 @@ phase 3 (F15).
 
 ## Mode réel d'Odoo (F14)
 
-Livré par lots. **Lot 1** : catalogue et lecture du stock (lecture seule) ; les autres domaines
-et les écritures lèvent `ConfigurationIncomplete` jusqu'à leur lot.
+Livré par lots. **Lot 1** : catalogue et lecture du stock (lecture seule). **Lot 2** : clients et
+opportunités (`specs/014-branchement-odoo/plan-lots-2-3.md`). Les autres domaines lèvent
+`ConfigurationIncomplete` jusqu'à leur lot.
 
 - **Accès** : API externe JSON-RPC d'Odoo (`odoo/real/client.ts`), clé API au scope RPC. La clé
   n'apparaît jamais dans un message, un détail d'erreur ni le journal.
@@ -65,6 +66,12 @@ et les écritures lèvent `ConfigurationIncomplete` jusqu'à leur lot.
 - **Prix client** : le site applique les règles simples des listes de prix (prix fixe, remise
   en %, quantité minimale) pour l'affichage ; les autres sont signalées. Le montant d'une
   commande est toujours calculé par Odoo.
+- **Écritures** (lot 2 et suivants) : une seule fois par clé et par base Odoo (table
+  `ecriture_odoo` de la base du site, `odoo/real/ecritures.ts`). Fiche client : référence
+  `P` + identifiant Odoo ; recherche par SIRET puis email avant toute création ; SIRET en
+  double → `OperationRefused` (`siret_en_double`). Opportunités : CRM, étiquette « Site ».
+  Après un changement de base Odoo (copie → base réelle), les références `P…` des comptes de
+  recette ne sont plus valables.
 - **Rapport de contrôle** : back-office › Catalogue › Contrôle des données Odoo (export CSV).
 - **Tests** : `tests/unit/odoo-reel/` (sans réseau) ; tests de contrat en mode réel sur la copie :
   `CONNECTOR_ODOO=real npm run test:contract -- tests/contract/odoo/catalogue.test.ts tests/contract/odoo/stock.test.ts`.

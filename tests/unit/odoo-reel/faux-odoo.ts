@@ -23,9 +23,32 @@ export function fauxOdoo(donnees: Record<string, Record<string, unknown>[]>, sur
     if (special instanceof Response) return special;
     if (special !== undefined) return reponseJson({ jsonrpc: "2.0", id: 1, result: special });
     if (appel.service === "common" && appel.methode === "authenticate") return reponseJson({ jsonrpc: "2.0", id: 1, result: 2 });
-    const [, , , modele, methode, a] = appel.args as [string, number, string, string, string, unknown[]];
-    const lignes = donnees[modele] ?? [];
-    if (methode === "search_read") return reponseJson({ jsonrpc: "2.0", id: 1, result: filtrer(lignes, (a[0] ?? []) as unknown[]) });
+    const [, , , modele, methode, a, kw] = appel.args as [string, number, string, string, string, unknown[], Record<string, unknown>?];
+    const lignes = (donnees[modele] ??= []);
+    const ctx = (kw?.context ?? {}) as Record<string, unknown>;
+    if (methode === "search_read") {
+      let res = filtrer(lignes, (a[0] ?? []) as unknown[]);
+      if (ctx.active_test !== false) res = res.filter((l) => l.active !== false);
+      if (typeof kw?.limit === "number") res = res.slice(0, kw.limit);
+      return reponseJson({ jsonrpc: "2.0", id: 1, result: res });
+    }
+    if (methode === "create") {
+      const id = Math.max(1000, ...lignes.map((l) => Number(l.id))) + 1;
+      const valeurs = { ...(a[0] as Record<string, unknown>) };
+      for (const [k, v] of Object.entries(valeurs)) {
+        // many2one envoyé en identifiant → relu comme [id, libellé] ; commandes x2many simplifiées.
+        if (k.endsWith("_id") && typeof v === "number") valeurs[k] = [v, ""];
+        if (k.endsWith("_ids") && Array.isArray(v)) valeurs[k] = v.map((c) => (Array.isArray(c) ? c[1] : c));
+      }
+      const parent = Array.isArray(valeurs.parent_id) ? valeurs.parent_id[0] : null;
+      lignes.push({ active: true, ...valeurs, id, commercial_partner_id: [parent ?? id, ""] });
+      return reponseJson({ jsonrpc: "2.0", id: 1, result: id });
+    }
+    if (methode === "write") {
+      const [ids, valeurs] = a as [number[], Record<string, unknown>];
+      for (const l of lignes) if (ids.includes(Number(l.id))) Object.assign(l, valeurs);
+      return reponseJson({ jsonrpc: "2.0", id: 1, result: true });
+    }
     if (methode === "read") return reponseJson({ jsonrpc: "2.0", id: 1, result: lignes.filter((l) => (a[0] as number[]).includes(l.id as number)) });
     if (methode === "search_count") return reponseJson({ jsonrpc: "2.0", id: 1, result: lignes.length });
     return reponseJson({ jsonrpc: "2.0", id: 1, error: { message: "Odoo Server Error", data: { name: "odoo.exceptions.UserError", message: `méthode ${methode} non simulée` } } });
@@ -43,6 +66,7 @@ function filtrer(lignes: Record<string, unknown>[], domaine: unknown[]) {
       const v = Array.isArray(l[champ]) && typeof (l[champ] as unknown[])[0] === "number" && op !== "in" ? (l[champ] as unknown[])[0] : l[champ];
       if (op === "in") return (valeur as unknown[]).includes(Array.isArray(v) ? v[0] : v);
       if (op === "=") return v === valeur;
+      if (op === "=ilike") return typeof v === "string" && v.toLowerCase() === String(valeur).toLowerCase();
       return true;
     }),
   );

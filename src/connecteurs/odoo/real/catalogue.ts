@@ -14,6 +14,7 @@ import type {
 import { idDe, texteDe, type ClientOdoo, type Enregistrement } from "./client";
 import { RUBRIQUES } from "./correspondance";
 import { correspond, type Instantane, type ModeleLu } from "./instantane";
+import { conditionPartenaire, refPartenaire } from "./partenaires";
 import { paliersPour, prixPour, remisePourcent } from "./prix";
 
 // Domaine « Catalogue » en mode réel (F14, contracts/odoo-reel.md). Lecture seule.
@@ -119,7 +120,7 @@ export function creerCatalogueReel(client: ClientOdoo, instantane: () => Promise
 
     async lirePrixClient(partenaireRef: string, references: string[]): Promise<PrixClient[]> {
       const [partenaires, i] = await Promise.all([
-        client.searchRead<Partenaire>("res.partner", [["ref", "=", partenaireRef]], ["property_product_pricelist"], { limite: 1 }),
+        client.searchRead<Partenaire>("res.partner", [conditionPartenaire(partenaireRef)], ["property_product_pricelist"], { limite: 1 }),
         instantane(),
       ]);
       const partenaire = partenaires[0];
@@ -174,20 +175,20 @@ export function creerCatalogueReel(client: ClientOdoo, instantane: () => Promise
     async controlerDonnees(): Promise<Anomalie[]> {
       const [i, clients] = await Promise.all([
         instantane(),
-        client.searchRead<Partenaire>("res.partner", [["customer_rank", ">", 0], ["is_company", "=", true], ["active", "=", true]], ["name", "ref", "l10n_fr_siret"]),
+        client.searchRead<Partenaire>("res.partner", [["customer_rank", ">", 0], ["parent_id", "=", false], ["active", "=", true]], ["name", "ref", "l10n_fr_siret"]),
       ]);
       const anomalies = [...i.anomalies];
       const parSiret = new Map<string, Partenaire[]>();
       for (const c of clients) {
         const siret = texteDe(c.l10n_fr_siret)?.replace(/\s/g, "");
-        const reference = texteDe(c.ref) ?? `client ${c.id}`;
+        const reference = texteDe(c.ref) ?? refPartenaire(c.id);
         if (!siret) anomalies.push({ objet: "client", reference, nom: c.name, code: "CLIENT_SANS_SIRET", detail: null, bloquant: false });
         else parSiret.set(siret, [...(parSiret.get(siret) ?? []), c]);
       }
       for (const [siret, liste] of parSiret) {
         if (liste.length < 2) continue;
         for (const c of liste) {
-          anomalies.push({ objet: "client", reference: texteDe(c.ref) ?? `client ${c.id}`, nom: c.name, code: "SIRET_EN_DOUBLE", detail: `SIRET ${siret}`, bloquant: false });
+          anomalies.push({ objet: "client", reference: texteDe(c.ref) ?? refPartenaire(c.id), nom: c.name, code: "SIRET_EN_DOUBLE", detail: `SIRET ${siret}`, bloquant: false });
         }
       }
       return trierAnomalies(anomalies);
