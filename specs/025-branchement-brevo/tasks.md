@@ -113,7 +113,7 @@ contracts/emailing-reel.md, quickstart.md)
 - [X] T034 Lancer `npx tsc --noEmit`, `npx eslint .`, `npm run test:unit`, `npm run test:contract` — tout vert en démonstration
 - [X] T035 Lancer la suite e2e une seule fois (`npm run test:e2e`, jamais deux suites en parallèle) — non-régression de la démonstration (SC-006)
 - [X] T036 (fiche « brancher Brevo sur le site de recette » dans `docs/deploiement-scalingo.md`, 2026-11-17) Mettre à jour `specs/025-branchement-brevo/quickstart.md` si un écart apparaît ; préparer pour Pauline la fiche « créer la clé API Brevo et la saisir dans Scalingo » (étapes cliquées, sans valeur)
-- [ ] T037 [Phase 3] Dérouler le quickstart sur le site de recette (après création de l'application de recette, F15)
+- [X] T037 (validé par Pauline sur explocardio-recette le 2026-11-18 : réinitialisation, email de test d'un modèle, contact et demande Informatique médicale, réponse vers l'expéditeur, état « remis », DKIM/DMARC pass, blocage hors liste ; emails de commande et facture reportés à la recette Stripe) [Phase 3] Dérouler le quickstart sur le site de recette (après création de l'application de recette, F15)
 
 ---
 
