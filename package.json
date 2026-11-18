@@ -27,7 +27,8 @@
     "demo:reset": "tsx scripts/demo-reset.ts",
     "postinstall": "npm run db:generate",
     "demo:cle-2fa": "tsx scripts/cle-double-authentification.ts",
-    "odoo:sonder": "tsx scripts/sonder-odoo.ts"
+    "odoo:sonder": "tsx scripts/sonder-odoo.ts",
+    "stockage:reprise": "tsx scripts/reprise-stockage.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1171.0",

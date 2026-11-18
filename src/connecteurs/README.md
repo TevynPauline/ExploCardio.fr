@@ -23,6 +23,7 @@ Une variable d'environnement par connecteur, valeur `demo` (par défaut) ou `rea
 | `CONNECTOR_STRIPE` | Stripe | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` |
 | `CONNECTOR_PCA` | Plateforme Cloud PCA | `PCA_API_URL`, `PCA_API_KEY` |
 | `CONNECTOR_EMAILING` | Emailing | `EMAILING_API_KEY` |
+| `CONNECTOR_STOCKAGE` | Stockage des fichiers téléversés (F26) | `STOCKAGE_ENVIRONNEMENT` (`recette` ou `production`), `STOCKAGE_COMPARTIMENT`, `STOCKAGE_CLE_ACCES`, `STOCKAGE_CLE_SECRETE` ; facultative : `STOCKAGE_REGION` (`fr-par` par défaut) |
 
 Changer de mode ne demande **aucune modification** de page ni de composant ; il suffit de
 redémarrer le site. Une configuration mixte est possible (par exemple Stripe réel, le reste
@@ -82,3 +83,28 @@ opportunités. **Lot 3** (en cours) : panier, commandes carte et virement, devis
 - **Rapport de contrôle** : back-office › Catalogue › Contrôle des données Odoo (export CSV).
 - **Tests** : `tests/unit/odoo-reel/` (sans réseau) ; tests de contrat en mode réel sur la copie :
   `CONNECTOR_ODOO=real npm run test:contract -- tests/contract/odoo/catalogue.test.ts tests/contract/odoo/stock.test.ts`.
+
+## Mode réel du stockage (F26)
+
+Fichiers déposés au back-office (photos, logos, PDF, vidéos et sous-titres de l'aide).
+Démonstration : table `fichier_stocke` de la base du site. Réel : compartiment **privé**
+Scaleway Object Storage à Paris, un par site (`explocardio-recette`, `explocardio-production`).
+
+- **Accès** : `@aws-sdk/client-s3` (compatible S3), seulement dans `stockage/real/client.ts` ;
+  point d'accès `https://s3.<région>.scw.cloud`. Délais : 10 s sans réponse, 60 s pour un dépôt ;
+  2 tentatives. La clé n'apparaît dans aucun message, détail d'erreur ni journal.
+- **Garde** : le nom du compartiment doit contenir le mot de `STOCKAGE_ENVIRONNEMENT` et pas
+  l'autre ; sinon `ConfigurationIncomplete` à chaque appel et alerte dans « À traiter ».
+- **Lecture** : les adresses `/stockage/…` et leurs en-têtes de sécurité ne changent pas ; le
+  site relit l'objet en flux, par plages pour les vidéos (`Range`). Fichier absent du
+  compartiment → secours dans la base du site, puis dans `STORAGE_DIR`.
+- **Erreurs** : objet absent → `NotFound` ; clé refusée → `ConfigurationIncomplete`
+  (`STOCKAGE_CLE_*`) ; compartiment inconnu → `ConfigurationIncomplete`
+  (`STOCKAGE_COMPARTIMENT`) ; plage impossible → `OperationRefusee` (416) ; réseau, délai,
+  5xx → `ServiceUnavailable` (dépôt refusé avec « momentanément indisponible », lecture 503).
+- **Journal** : dépôts et erreurs seulement (les lectures réussies ne sont pas journalisées).
+- **Reprise** des fichiers déjà en base : `npm run stockage:reprise` (rejouable, contrôle de
+  taille et MD5), puis `npm run stockage:reprise -- --effacer-la-base` pour vider la table une
+  fois chaque objet vérifié (`stockage/real/reprise.ts`, `scripts/reprise-stockage.ts`).
+- **Tests** : `tests/unit/stockage-reel/` (client S3 simulé) ; contrat en mode réel sur le
+  compartiment de recette (laisse des fichiers sous `stockage/tests-contrat/`).

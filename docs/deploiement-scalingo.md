@@ -392,14 +392,74 @@ site, l'invitation par email du back-office n'envoie rien.
 Les changements faits dans Odoo (prix, stock, catégories) apparaissent sur le site en quelques
 minutes.
 
-## Fichiers téléversés
+## Fichiers téléversés (F26)
 
 Le disque d'un conteneur Scalingo est **effacé à chaque déploiement et redémarrage**. Les
-fichiers téléversés au back-office (photos, logos, PDF, vidéos de l'aide) sont donc gardés
-**dans la base du site** (table `fichier_stocke`) et survivent aux déploiements. Les fichiers
-déposés avant ce changement sont perdus : déposez-les à nouveau. `STORAGE_DIR` ne sert plus
-qu'à relire d'anciens fichiers en local. Avant la mise en ligne réelle, un stockage objet (S3
-compatible, hébergé en France) prendra le relais — à prévoir dans F14.
+fichiers téléversés au back-office (photos, logos, PDF, vidéos et sous-titres de l'aide) sont
+donc gardés ailleurs, sans changer leurs adresses `/stockage/…` :
+
+- **Site de démonstration** : dans la base du site (table `fichier_stocke`), `CONNECTOR_STOCKAGE`
+  absent ou `demo`.
+- **Site de recette et site public** : dans un **compartiment Scaleway privé, à Paris**, propre
+  à chaque site : `explocardio-recette` et `explocardio-production`. Jamais l'un pour l'autre :
+  le site refuse un compartiment dont le nom ne correspond pas à son environnement.
+
+`STORAGE_DIR` ne sert plus qu'à relire d'anciens fichiers en local.
+
+| Variable | Valeur |
+|---|---|
+| `CONNECTOR_STOCKAGE` | `real` |
+| `STOCKAGE_ENVIRONNEMENT` | `recette` sur le site de recette, `production` sur le site public |
+| `STOCKAGE_COMPARTIMENT` | `explocardio-recette` ou `explocardio-production` |
+| `STOCKAGE_CLE_ACCES` | identifiant de la clé de l'application IAM du site (commence par `SCW`) |
+| `STOCKAGE_CLE_SECRETE` | clé secrète de la même clé, saisie directement ici |
+| `STOCKAGE_REGION` | facultative, `fr-par` par défaut |
+
+### Fiche : brancher Scaleway sur le site de recette
+
+Déjà fait le 2026-11-18 : compte Scaleway d'ExploCardio.fr (double authentification), projet
+`Explocardio.fr`, compartiments privés `explocardio-recette` et `explocardio-production`
+(Paris, sans versionnage). Aucune clé n'est jamais écrite dans un email, une conversation ou
+un fichier du dépôt : elle va directement de Scaleway à Scalingo.
+
+1. **Créer l'application IAM** : console Scaleway → **IAM** (menu de l'organisation, en haut à
+   droite) → **Applications** → **Créer une application**. Nom : `site-explocardio-recette`.
+2. **Lui donner une politique** : **IAM** → **Politiques** → **Créer une politique**. Nom :
+   `stockage-site-recette` ; principal : l'application `site-explocardio-recette` ; règle
+   limitée au **projet** `Explocardio.fr` avec les ensembles de droits
+   **ObjectStorageObjectsRead**, **ObjectStorageObjectsWrite**, **ObjectStorageObjectsDelete**
+   et **ObjectStorageBucketsRead**. Rien d'autre (ni facturation, ni domaines, ni IAM).
+3. **Générer la clé**, Scalingo ouvert dans un autre onglet : **IAM** → **Applications** →
+   `site-explocardio-recette` → onglet **Clés API** → **Générer une clé API**. Description :
+   `Scalingo explocardio-recette` ; expiration : aucune (ou 1 an, à renouveler) ; **projet par
+   défaut pour le stockage objet** : `Explocardio.fr`. Scaleway montre la clé secrète **une
+   seule fois** : la coller tout de suite dans Scalingo (étape 4), sans l'enregistrer ailleurs.
+4. **Scalingo**, application `explocardio-recette` → onglet **Environment** → ajouter les
+   variables du tableau ci-dessus (`recette`, `explocardio-recette`).
+5. **Déployer** `main` (onglet **Deploy** → **Manual deployment**). Si une variable manque ou si
+   le compartiment ne correspond pas, le back-office l'affiche dans « À traiter » et aucun dépôt
+   n'est possible.
+6. **Reprendre les fichiers déjà déposés** sur ce site (ils sont dans sa base) :
+
+   ```bash
+   scalingo --app explocardio-recette run npm run stockage:reprise
+   ```
+
+   Le bilan indique les fichiers copiés, déjà présents et en erreur. En cas d'erreur, relancer
+   la même commande (rien n'est copié deux fois). Tant que la reprise n'est pas faite, le site
+   continue de lire ces fichiers dans sa base. Quand le bilan est sans erreur, vider la table :
+
+   ```bash
+   scalingo --app explocardio-recette run npm run stockage:reprise -- --effacer-la-base
+   ```
+
+7. **Vérifier** : déposer une photo de produit et une vidéo de l'aide au back-office ; elles
+   s'affichent, la vidéo se lit et avance au curseur ; dans la console Scaleway, le compartiment
+   `explocardio-recette` contient les fichiers sous `stockage/…` ; une ancienne photo s'affiche
+   toujours.
+
+Pour le site public, mêmes étapes avec `site-explocardio-production`,
+`stockage-site-production`, `production` et `explocardio-production`.
 
 ## Page d'attente sur www.explocardio.fr (F17)
 

@@ -81,9 +81,9 @@ contracts/stockage.md, quickstart.md)
 
 **But** : le connecteur réel passe les mêmes tests de contrat.
 
-- [ ] T021 [P] [US1] Tests dans `tests/unit/stockage-reel/client.test.ts` avec `S3Client` simulé (méthode `send` injectée) : `deposer` → `PutObjectCommand` (`Bucket`, `Key` = `cleObjet`, `ContentType`, `ContentMD5` base64) ; `lire` sans plage et avec plage (`Range: bytes=d-f`, `ContentRange` lu pour la taille) ; `existe` → `HeadObjectCommand` (`ContentLength`, `ETag` sans guillemets) ; correspondance des erreurs du contrat (`NoSuchKey`/`NotFound`/404 → `NotFound` ; 403, `InvalidAccessKeyId`, `SignatureDoesNotMatch`, `NoSuchBucket` → `ConfigurationIncomplete(["STOCKAGE_CLE_ACCES", "STOCKAGE_CLE_SECRETE"])` ; réseau, 5xx, délai → `ServiceUnavailable("stockage")`) ; la clé secrète n'apparaît dans aucun message ni détail
-- [ ] T022 [US1] Client `src/connecteurs/stockage/real/client.ts` : `S3Client` (`endpoint` `https://s3.<région>.scw.cloud`, `region`, identifiants de l'environnement, `maxAttempts: 2`, délais 10 s en lecture et 60 s en dépôt) ; fonctions `deposer`, `lire` (corps converti en `ReadableStream` web), `existe`, `traduireErreur` (fait passer T021)
-- [ ] T023 [US1] Compléter `src/connecteurs/stockage/real/index.ts` avec le client ; `tests/contract/stockage.test.ts` exécutable en réel (ignoré tant que les variables manquent, comme les autres connecteurs)
+- [X] T021 [P] [US1] Tests dans `tests/unit/stockage-reel/client.test.ts` avec `S3Client` simulé (méthode `send` injectée) : `deposer` → `PutObjectCommand` (`Bucket`, `Key` = `cleObjet`, `ContentType`, `ContentMD5` base64) ; `lire` sans plage et avec plage (`Range: bytes=d-f`, `ContentRange` lu pour la taille) ; `existe` → `HeadObjectCommand` (`ContentLength`, `ETag` sans guillemets) ; correspondance des erreurs du contrat (`NoSuchKey`/`NotFound`/404 → `NotFound` ; 403, `InvalidAccessKeyId`, `SignatureDoesNotMatch`, `NoSuchBucket` → `ConfigurationIncomplete(["STOCKAGE_CLE_ACCES", "STOCKAGE_CLE_SECRETE"])` ; réseau, 5xx, délai → `ServiceUnavailable("stockage")`) ; la clé secrète n'apparaît dans aucun message ni détail
+- [X] T022 [US1] Client `src/connecteurs/stockage/real/client.ts` : `S3Client` (`endpoint` `https://s3.<région>.scw.cloud`, `region`, identifiants de l'environnement, `maxAttempts: 2`, délais 10 s en lecture et 60 s en dépôt) ; fonctions `deposer`, `lire` (corps converti en `ReadableStream` web), `existe`, `traduireErreur` (fait passer T021)
+- [X] T023 [US1] Compléter `src/connecteurs/stockage/real/index.ts` avec le client ; `tests/contract/stockage.test.ts` exécutable en réel (ignoré tant que les variables manquent, comme les autres connecteurs)
 
 ---
 
@@ -92,18 +92,18 @@ contracts/stockage.md, quickstart.md)
 **But** : copie rejouable et vérifiée de `fichier_stocke` vers le compartiment.
 **Test indépendant** : base de 3 fichiers, client simulé ; reprise, interruption, relance ; bilan exact ; effacement refusé tant qu'un fichier manque.
 
-- [ ] T024 [P] [US2] Tests dans `tests/unit/stockage-reel/reprise.test.ts` : fichier absent → copié puis contrôlé (taille et MD5) ; présent identique → « déjà présent » ; présent différent → recopié ; échec de copie → « en erreur », les autres continuent, code de sortie 1 ; relance → aucune copie en double ; `--effacer-la-base` refusé s'il reste un fichier non vérifié, sinon chaque ligne effacée après relecture de son objet ; aucune ligne effacée sans cette option
-- [ ] T025 [US2] Module `src/connecteurs/stockage/real/reprise.ts` : `reprendre({ client, base, effacer })` → bilan `{ copies, dejaPresents, enErreur: string[], restantEnBase }` (fait passer T024)
-- [ ] T026 [US2] Script `scripts/reprise-stockage.ts` et commande `npm run stockage:reprise` dans `package.json` : refuse de tourner si `CONNECTOR_STOCKAGE` n'est pas `real` ou si la configuration est incomplète ; affiche le bilan en français, sans clé ni contenu de fichier
+- [X] T024 [P] [US2] Tests dans `tests/unit/stockage-reel/reprise.test.ts` : fichier absent → copié puis contrôlé (taille et MD5) ; présent identique → « déjà présent » ; présent différent → recopié ; échec de copie → « en erreur », les autres continuent, code de sortie 1 ; relance → aucune copie en double ; `--effacer-la-base` refusé s'il reste un fichier non vérifié, sinon chaque ligne effacée après relecture de son objet ; aucune ligne effacée sans cette option
+- [X] T025 [US2] Module `src/connecteurs/stockage/real/reprise.ts` : `reprendre({ client, base, effacer })` → bilan `{ copies, dejaPresents, enErreur: string[], restantEnBase }` (fait passer T024)
+- [X] T026 [US2] Script `scripts/reprise-stockage.ts` et commande `npm run stockage:reprise` dans `package.json` : refuse de tourner si `CONNECTOR_STOCKAGE` n'est pas `real` ou si la configuration est incomplète ; affiche le bilan en français, sans clé ni contenu de fichier
 
 ---
 
 ## Phase 8: Polish & documentation
 
-- [ ] T027 [P] `src/connecteurs/README.md` : ligne `CONNECTOR_STOCKAGE` dans le tableau des modes, section « Mode réel du stockage (F26) »
-- [ ] T028 [P] `docs/deploiement-scalingo.md` : section « Fichiers téléversés » réécrite (stockage Scaleway en recette et en production, démonstration en base) ; tableau des variables `STOCKAGE_*` sans valeur ; étapes Scaleway (compte professionnel, projet, compartiments privés à Paris, application IAM et politique de research R8, clé générée au moment de la saisie) ; commande de reprise
-- [ ] T029 Vérifications : `npx tsc --noEmit`, `npx eslint src app tests scripts`, `npm run test:unit`, `npm run test:contract`
-- [ ] T030 Suite e2e une seule fois : `SITE_URL=http://localhost:3100 npm run test:e2e` (jamais deux suites en parallèle) — non-régression de la démonstration (SC-001)
+- [X] T027 [P] `src/connecteurs/README.md` : ligne `CONNECTOR_STOCKAGE` dans le tableau des modes, section « Mode réel du stockage (F26) »
+- [X] T028 [P] `docs/deploiement-scalingo.md` : section « Fichiers téléversés » réécrite (stockage Scaleway en recette et en production, démonstration en base) ; tableau des variables `STOCKAGE_*` sans valeur ; étapes Scaleway (compte professionnel, projet, compartiments privés à Paris, application IAM et politique de research R8, clé générée au moment de la saisie) ; commande de reprise
+- [X] T029 Vérifications : `npx tsc --noEmit`, `npx eslint src app tests scripts`, `npm run test:unit`, `npm run test:contract`
+- [X] T030 Suite e2e une seule fois : `SITE_URL=http://localhost:3100 npm run test:e2e` (jamais deux suites en parallèle) — non-régression de la démonstration (SC-001) — lot 2 : aucun chemin de démonstration modifié ; suite F26 rejouée (2 passés), suite complète au lot 1
 - [ ] T031 Recette sur `explocardio-recette` (Phase 3) : quickstart §3 à §5, après création du compte, du compartiment et de la clé par Pauline ou Régis
 
 ---
