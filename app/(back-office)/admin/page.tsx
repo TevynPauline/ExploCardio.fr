@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { registre } from "@/connecteurs/registre";
 import { listerClients } from "@/domaine/clients";
-import { cleStripeIncoherente, environnementOdoo, modeDuSite } from "@/lib/config";
+import { cleStripeIncoherente, environnementOdoo, modeDuSite, stockageIncoherent } from "@/lib/config";
 import { dbSite } from "@/lib/db/site";
 import { listeIgnoreeEnProduction } from "@/lib/garde-recette-emailing";
 import { exigerDroit, peut } from "@/lib/droits";
@@ -57,6 +57,13 @@ export default async function TableauDeBord({ searchParams }: { searchParams: Pr
         <p role="alert" className="ec-box--info p-4">
           Clé Stripe incohérente avec l’environnement : les paiements sont bloqués. Utilisez une clé de test sur le site de recette et
           une clé de production sur le site public (variables STRIPE_SECRET_KEY et STRIPE_ENVIRONNEMENT dans Scalingo).
+        </p>
+      ) : null}
+      {stockageIncoherent() ? (
+        <p role="alert" className="ec-box--info p-4">
+          Compartiment de stockage incohérent avec l’environnement : les dépôts de fichiers sont bloqués. Le nom du compartiment doit
+          contenir « recette » sur le site de recette et « production » sur le site public (variables STOCKAGE_COMPARTIMENT et
+          STOCKAGE_ENVIRONNEMENT dans Scalingo).
         </p>
       ) : null}
       {listeIgnoreeEnProduction() ? (

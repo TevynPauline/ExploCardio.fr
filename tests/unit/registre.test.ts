@@ -11,6 +11,7 @@ const base = {
   CONNECTOR_STRIPE: undefined,
   CONNECTOR_PCA: undefined,
   CONNECTOR_EMAILING: undefined,
+  CONNECTOR_STOCKAGE: undefined,
   // Les accès d'Odoo du poste (copie de test) ne doivent pas compter ici.
   ODOO_URL: undefined,
   ODOO_DATABASE: undefined,
@@ -21,7 +22,7 @@ const base = {
 
 describe("registre des connecteurs", () => {
   it("met chaque connecteur en démonstration par défaut", () => {
-    for (const nom of ["odoo", "stripe", "pca", "emailing"] as const) {
+    for (const nom of ["odoo", "stripe", "pca", "emailing", "stockage"] as const) {
       expect(modeDuConnecteur(nom, base)).toBe("demo");
     }
     expect(modeDuConnecteur("stripe", { CONNECTOR_STRIPE: "n'importe quoi" })).toBe("demo");
@@ -94,5 +95,14 @@ describe("registre des connecteurs", () => {
     await expect(registre.odoo().factures.listerFactures("P")).rejects.toMatchObject(refuse);
     await expect(registre.odoo().location.lireRegles()).rejects.toMatchObject(refuse);
     await expect(registre.odoo().fidelite.lireReglesProgramme()).rejects.toMatchObject(refuse);
+  });
+
+  it("stockage (F26) : démonstration par défaut ; réel incomplet → configuration incomplète, sans repli", async () => {
+    await expect(creerRegistre(base).stockage().existe("/stockage/tests-contrat/absent.bin")).resolves.toBeNull();
+    const registre = creerRegistre({ ...base, CONNECTOR_STOCKAGE: "real" });
+    await expect(registre.stockage().lire("/stockage/produits/a.png")).rejects.toMatchObject({
+      code: "CONFIGURATION_INCOMPLETE",
+      details: { variablesManquantes: ["STOCKAGE_ENVIRONNEMENT", "STOCKAGE_COMPARTIMENT", "STOCKAGE_CLE_ACCES", "STOCKAGE_CLE_SECRETE"] },
+    });
   });
 });

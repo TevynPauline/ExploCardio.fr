@@ -12,6 +12,7 @@ const NOMS: Record<NomConnecteur, string> = {
   stripe: "Stripe",
   pca: "plateforme Cloud PCA",
   emailing: "emailing",
+  stockage: "stockage des fichiers",
 };
 
 export async function panneActive(connecteur: NomConnecteur): Promise<boolean> {

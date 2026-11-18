@@ -14,8 +14,8 @@ contracts/stockage.md, quickstart.md)
 
 ## Phase 1: Setup
 
-- [ ] T001 Installer `@aws-sdk/client-s3` (dépendance d'exécution) dans `package.json` ; ajouter le motif `^@aws-sdk/.*$` à `importsInterdits` de `eslint.config.mjs` (message `MESSAGE_CONNECTEUR`) et un cas dans `tests/unit/imports-connecteurs.test.ts`
-- [ ] T002 Configuration dans `src/lib/config.ts` : `NomConnecteur` + `"stockage"`, `CONNECTEURS` + `"stockage"`, `variableDeMode.stockage = "CONNECTOR_STOCKAGE"`, `VARIABLES_MODE_REEL.stockage = ["STOCKAGE_ENVIRONNEMENT", "STOCKAGE_COMPARTIMENT", "STOCKAGE_CLE_ACCES", "STOCKAGE_CLE_SECRETE"]`, `VALEURS_ADMISES.STOCKAGE_ENVIRONNEMENT = ["recette", "production"]` ; fonctions `environnementStockage(env)` (`"recette" | "production" | null`), `regionStockage(env)` (défaut `"fr-par"`), `compartimentIncoherent(env)` (vrai si le nom de `STOCKAGE_COMPARTIMENT`, en minuscules, ne contient pas le mot de l'environnement ou contient l'autre) et `stockageIncoherent(env)` (`CONNECTOR_STOCKAGE === "real"` et `compartimentIncoherent`) ; `variablesManquantes("stockage")` DOIT ajouter `STOCKAGE_COMPARTIMENT` quand `compartimentIncoherent` (R2)
+- [X] T001 Installer `@aws-sdk/client-s3` (dépendance d'exécution) dans `package.json` ; ajouter le motif `^@aws-sdk/.*$` à `importsInterdits` de `eslint.config.mjs` (message `MESSAGE_CONNECTEUR`) et un cas dans `tests/unit/imports-connecteurs.test.ts`
+- [X] T002 Configuration dans `src/lib/config.ts` : `NomConnecteur` + `"stockage"`, `CONNECTEURS` + `"stockage"`, `variableDeMode.stockage = "CONNECTOR_STOCKAGE"`, `VARIABLES_MODE_REEL.stockage = ["STOCKAGE_ENVIRONNEMENT", "STOCKAGE_COMPARTIMENT", "STOCKAGE_CLE_ACCES", "STOCKAGE_CLE_SECRETE"]`, `VALEURS_ADMISES.STOCKAGE_ENVIRONNEMENT = ["recette", "production"]` ; fonctions `environnementStockage(env)` (`"recette" | "production" | null`), `regionStockage(env)` (défaut `"fr-par"`), `compartimentIncoherent(env)` (vrai si le nom de `STOCKAGE_COMPARTIMENT`, en minuscules, ne contient pas le mot de l'environnement ou contient l'autre) et `stockageIncoherent(env)` (`CONNECTOR_STOCKAGE === "real"` et `compartimentIncoherent`) ; `variablesManquantes("stockage")` DOIT ajouter `STOCKAGE_COMPARTIMENT` quand `compartimentIncoherent` (R2)
 
 ---
 
@@ -25,18 +25,18 @@ contracts/stockage.md, quickstart.md)
 
 ### Tests (à écrire d'abord)
 
-- [ ] T003 [P] Tests de configuration dans `tests/unit/stockage-reel/config.test.ts` : environnement absent ou invalide → manquant ; `recette` + `explocardio-recette` → complet ; `recette` + `explocardio-production` → `STOCKAGE_COMPARTIMENT` manquante ; `production` + `explocardio-recette-production` → incohérent ; casse ignorée ; région par défaut `fr-par` ; mode démonstration → aucune variable exigée
-- [ ] T004 [P] Tests des chemins dans `tests/unit/stockage-reel/chemins.test.ts` : accepté `/stockage/produits/ab12.png` ; refusés (`OperationRefusee`) : vide, sans préfixe `/stockage/`, avec `..`, `\`, `//`, caractères de contrôle ; clé d'objet = chemin sans `/` initial ; plage `debut > fin`, négative ou `fin ≥ taille` → `OperationRefusee`
-- [ ] T005 Suite de contrat `tests/contract/stockage.test.ts` (harnais `suiteDeContrat("stockage", …)`) selon [contracts/stockage.md](contracts/stockage.md) : dépôt puis `lire` identique octet pour octet (lecture du flux) ; `lire` d'une plage (octets 2 à 5) ; `existe` → `null` avant, `{ taille }` après ; fichier absent → `NotFound` ; chemin refusé → `OperationRefusee` ; plage hors limites → `OperationRefusee` ; chemins de test sous `/stockage/tests-contrat/<aléatoire>`
-- [ ] T006 Mettre à jour `tests/unit/registre.test.ts` : connecteur `stockage` présent, mode `demo` par défaut, variables exigées en réel (liste de T002)
+- [X] T003 [P] Tests de configuration dans `tests/unit/stockage-reel/config.test.ts` : environnement absent ou invalide → manquant ; `recette` + `explocardio-recette` → complet ; `recette` + `explocardio-production` → `STOCKAGE_COMPARTIMENT` manquante ; `production` + `explocardio-recette-production` → incohérent ; casse ignorée ; région par défaut `fr-par` ; mode démonstration → aucune variable exigée
+- [X] T004 [P] Tests des chemins dans `tests/unit/stockage-reel/chemins.test.ts` : accepté `/stockage/produits/ab12.png` ; refusés (`OperationRefusee`) : vide, sans préfixe `/stockage/`, avec `..`, `\`, `//`, caractères de contrôle ; clé d'objet = chemin sans `/` initial ; plage `debut > fin`, négative ou `fin ≥ taille` → `OperationRefusee`
+- [X] T005 Suite de contrat `tests/contract/stockage.test.ts` (harnais `suiteDeContrat("stockage", …)`) selon [contracts/stockage.md](contracts/stockage.md) : dépôt puis `lire` identique octet pour octet (lecture du flux) ; `lire` d'une plage (octets 2 à 5) ; `existe` → `null` avant, `{ taille }` après ; fichier absent → `NotFound` ; chemin refusé → `OperationRefusee` ; plage hors limites → `OperationRefusee` ; chemins de test sous `/stockage/tests-contrat/<aléatoire>`
+- [X] T006 Mettre à jour `tests/unit/registre.test.ts` : connecteur `stockage` présent, mode `demo` par défaut, variables exigées en réel (liste de T002)
 
 ### Implémentation
 
-- [ ] T007 [P] Contrat `src/connecteurs/stockage/interfaces/index.ts` : types `Plage`, `LectureFichier` (`taille`, `plage`, `corps: ReadableStream<Uint8Array>`), `ConnecteurStockage` (`deposer`, `lire`, `existe`), commentaires renvoyant à F26
-- [ ] T008 [P] Validation commune `src/connecteurs/stockage/chemins.ts` : `verifierChemin(chemin)`, `cleObjet(chemin)`, `verifierPlage(plage, taille)` (fait passer T004)
-- [ ] T009 Démonstration `src/connecteurs/stockage/demo/index.ts` : `creerStockageDemo()` sur `dbSite().fichierStocke` (`deposer` = `upsert` avec `type`, `octets`, `taille` ; `lire` = flux d'un `Uint8Array` découpé à la plage ; `existe` = `{ taille, md5 }` calculé) ; chemins vérifiés par T008
-- [ ] T010 Squelette `src/connecteurs/stockage/real/index.ts` : `creerStockageReel(manquantes, env)` → `implementationRefusee("stockage", manquantes)` si `manquantes.length` (même motif que les autres connecteurs réels)
-- [ ] T011 Registre `src/connecteurs/registre.ts` : type `Connecteurs.stockage`, fabrique (`creerStockageDemo` / `creerStockageReel(manquantes, env)`), `registre.stockage()`, `creerRegistre(env).stockage()` ; contrôles habituels (pannes simulées en démonstration, données fictives en réel) ; vérifier que le journal n'inscrit que le chemin (premier argument) ; faire passer T003, T005 (démo), T006
+- [X] T007 [P] Contrat `src/connecteurs/stockage/interfaces/index.ts` : types `Plage`, `LectureFichier` (`taille`, `plage`, `corps: ReadableStream<Uint8Array>`), `ConnecteurStockage` (`deposer`, `lire`, `existe`), commentaires renvoyant à F26
+- [X] T008 [P] Validation commune `src/connecteurs/stockage/chemins.ts` : `verifierChemin(chemin)`, `cleObjet(chemin)`, `verifierPlage(plage, taille)` (fait passer T004)
+- [X] T009 Démonstration `src/connecteurs/stockage/demo/index.ts` : `creerStockageDemo()` sur `dbSite().fichierStocke` (`deposer` = `upsert` avec `type`, `octets`, `taille` ; `lire` = flux d'un `Uint8Array` découpé à la plage ; `existe` = `{ taille, md5 }` calculé) ; chemins vérifiés par T008
+- [X] T010 Squelette `src/connecteurs/stockage/real/index.ts` : `creerStockageReel(manquantes, env)` → `implementationRefusee("stockage", manquantes)` si `manquantes.length` (même motif que les autres connecteurs réels)
+- [X] T011 Registre `src/connecteurs/registre.ts` : type `Connecteurs.stockage`, fabrique (`creerStockageDemo` / `creerStockageReel(manquantes, env)`), `registre.stockage()`, `creerRegistre(env).stockage()` ; contrôles habituels (pannes simulées en démonstration, données fictives en réel) ; vérifier que le journal n'inscrit que le chemin (premier argument) ; faire passer T003, T005 (démo), T006
 
 **Checkpoint** : `npx vitest run tests/unit/stockage-reel tests/contract/stockage.test.ts tests/unit/registre.test.ts` vert, sans compte Scaleway.
 
@@ -47,10 +47,10 @@ contracts/stockage.md, quickstart.md)
 **But** : le site dépose et lit par le connecteur ; en démonstration, rien ne change.
 **Test indépendant** : en démonstration, dépôt d'image, PDF, vidéo ; lecture entière et par plage ; en-têtes identiques.
 
-- [ ] T012 [P] [US1] Adapter `tests/unit/fichiers/stockage-en-base.test.ts` et ajouter `tests/unit/fichiers/lecture-stockage.test.ts` : `ecrire()` passe par `registre.stockage().deposer` ; `lireFichier` : connecteur → secours `fichier_stocke` (mode réel seulement) → ancien dossier `STORAGE_DIR` → `null` ; type déduit de l'extension ; chemin forgé → `null`
-- [ ] T013 [US1] `src/lib/stockage.ts` : contrôles inchangés ; `ecrire()` appelle `registre.stockage().deposer(chemin, type, octets)` (plus d'écriture directe en base) ; `lireFichier(segments, plage?)` rend `{ type, taille, plage, corps }` selon l'ordre de T012, `NotFound` traduit en `null` ; commentaire d'en-tête mis à jour (F26 remplace la note « F14 »)
-- [ ] T014 [US1] Route `app/stockage/[...chemin]/route.ts` : lecture en flux via `lireFichier` ; analyse de l'en-tête `Range` avant la lecture (plage passée au connecteur) ; `206` + `Content-Range` ; `OperationRefusee` de plage → `416` ; tous les en-têtes actuels conservés à l'identique (CSP, `nosniff`, SVG en pièce jointe, PDF, cache 7 jours, `Accept-Ranges`)
-- [ ] T015 [P] [US1] Test e2e `tests/e2e/f26/stockage.spec.ts` (démonstration) : dépôt d'une image au catalogue puis affichage ; lecture d'une vidéo d'aide par plage (`206`) ; en-têtes du SVG ; plage hors limites → `416`
+- [X] T012 [P] [US1] Adapter `tests/unit/fichiers/stockage-en-base.test.ts` et ajouter `tests/unit/fichiers/lecture-stockage.test.ts` : `ecrire()` passe par `registre.stockage().deposer` ; `lireFichier` : connecteur → secours `fichier_stocke` (mode réel seulement) → ancien dossier `STORAGE_DIR` → `null` ; type déduit de l'extension ; chemin forgé → `null`
+- [X] T013 [US1] `src/lib/stockage.ts` : contrôles inchangés ; `ecrire()` appelle `registre.stockage().deposer(chemin, type, octets)` (plus d'écriture directe en base) ; `lireFichier(segments, plage?)` rend `{ type, taille, plage, corps }` selon l'ordre de T012, `NotFound` traduit en `null` ; commentaire d'en-tête mis à jour (F26 remplace la note « F14 »)
+- [X] T014 [US1] Route `app/stockage/[...chemin]/route.ts` : lecture en flux via `lireFichier` ; analyse de l'en-tête `Range` avant la lecture (plage passée au connecteur) ; `206` + `Content-Range` ; `OperationRefusee` de plage → `416` ; tous les en-têtes actuels conservés à l'identique (CSP, `nosniff`, SVG en pièce jointe, PDF, cache 7 jours, `Accept-Ranges`)
+- [X] T015 [P] [US1] Test e2e `tests/e2e/f26/stockage.spec.ts` (démonstration) : dépôt d'une image au catalogue puis affichage ; lecture d'une vidéo d'aide par plage (`206`) ; en-têtes du SVG ; plage hors limites → `416`
 
 **Checkpoint** : suite complète verte en démonstration (SC-001).
 
@@ -61,8 +61,8 @@ contracts/stockage.md, quickstart.md)
 **But** : compartiment incohérent → dépôts bloqués et alerte.
 **Test indépendant** : `recette` + compartiment `…production` → `ConfigurationIncomplete` à chaque appel, alerte affichée.
 
-- [ ] T016 [P] [US3] Tests dans `tests/unit/stockage-reel/garde.test.ts` : avec la configuration incohérente, `registre.stockage().deposer` et `lire` → `ConfigurationIncomplete` contenant `STOCKAGE_COMPARTIMENT` ; jamais de repli sur la démonstration
-- [ ] T017 [US3] Alerte dans `app/(back-office)/admin/page.tsx` (sur le modèle de `cleStripeIncoherente`) : si `stockageIncoherent()`, « Compartiment de stockage incohérent avec l'environnement : les dépôts de fichiers sont bloqués. Le nom du compartiment doit contenir « recette » sur le site de recette et « production » sur le site public (variables STOCKAGE_COMPARTIMENT et STOCKAGE_ENVIRONNEMENT dans Scalingo). »
+- [X] T016 [P] [US3] Tests dans `tests/unit/stockage-reel/garde.test.ts` : avec la configuration incohérente, `registre.stockage().deposer` et `lire` → `ConfigurationIncomplete` contenant `STOCKAGE_COMPARTIMENT` ; jamais de repli sur la démonstration
+- [X] T017 [US3] Alerte dans `app/(back-office)/admin/page.tsx` (sur le modèle de `cleStripeIncoherente`) : si `stockageIncoherent()`, « Compartiment de stockage incohérent avec l'environnement : les dépôts de fichiers sont bloqués. Le nom du compartiment doit contenir « recette » sur le site de recette et « production » sur le site public (variables STOCKAGE_COMPARTIMENT et STOCKAGE_ENVIRONNEMENT dans Scalingo). »
 
 ---
 
@@ -71,9 +71,9 @@ contracts/stockage.md, quickstart.md)
 **But** : message clair au dépôt, pages affichées, panne journalisée.
 **Test indépendant** : panne simulée du connecteur stockage (F11) ; dépôt refusé avec le message prévu ; page catalogue affichée.
 
-- [ ] T018 [P] [US4] Tests dans `tests/unit/fichiers/panne-stockage.test.ts` : `ServiceUnavailable` au dépôt → `FichierRefuse` avec le message exact « Le stockage des fichiers est momentanément indisponible. Réessayez dans quelques minutes. » ; `ConfigurationIncomplete` → « Le stockage des fichiers n'est pas configuré : prévenez l'administrateur. » ; en lecture, `ServiceUnavailable` → la route répond `503` sans détail
-- [ ] T019 [US4] `src/lib/stockage.ts` : traduction des erreurs du connecteur en `FichierRefuse` (messages de T018), pour que les actions existantes (`admin/catalogue/actions.ts`, `admin/contenus/actions.ts`, `admin/contenus/aide/actions.ts` via `src/domaine/aide/administration.ts`) affichent le message en gardant le formulaire ; route : `ServiceUnavailable` → `503`
-- [ ] T020 [US4] Écran des pannes simulées (F11) : vérifier que « stockage » apparaît dans la liste des connecteurs (`src/connecteurs/panne-simulee.ts` et écran de démonstration) ; compléter sinon
+- [X] T018 [P] [US4] Tests dans `tests/unit/fichiers/panne-stockage.test.ts` : `ServiceUnavailable` au dépôt → `FichierRefuse` avec le message exact « Le stockage des fichiers est momentanément indisponible. Réessayez dans quelques minutes. » ; `ConfigurationIncomplete` → « Le stockage des fichiers n'est pas configuré : prévenez l'administrateur. » ; en lecture, `ServiceUnavailable` → la route répond `503` sans détail
+- [X] T019 [US4] `src/lib/stockage.ts` : traduction des erreurs du connecteur en `FichierRefuse` (messages de T018), pour que les actions existantes (`admin/catalogue/actions.ts`, `admin/contenus/actions.ts`, `admin/contenus/aide/actions.ts` via `src/domaine/aide/administration.ts`) affichent le message en gardant le formulaire ; route : `ServiceUnavailable` → `503`
+- [X] T020 [US4] Écran des pannes simulées (F11) : vérifier que « stockage » apparaît dans la liste des connecteurs (`src/connecteurs/panne-simulee.ts` et écran de démonstration) ; compléter sinon
 
 ---
 

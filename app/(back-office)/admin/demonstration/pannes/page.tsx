@@ -16,6 +16,7 @@ const NOMS: Record<NomConnecteur, string> = {
   stripe: "Stripe (paiements)",
   pca: "Plateforme Cloud PCA (accès logiciels)",
   emailing: "Emailing (emails et notifications)",
+  stockage: "Stockage des fichiers (photos, documents, vidéos)",
 };
 
 async function basculer(donnees: FormData) {

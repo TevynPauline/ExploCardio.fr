@@ -30,6 +30,8 @@ const importsInterdits = {
     { regex: "^(stripe|@stripe/.*)$", message: MESSAGE_CONNECTEUR },
     { regex: "^(odoo-.*|@odoo/.*|xmlrpc|json-rpc-.*)$", message: MESSAGE_CONNECTEUR },
     { regex: "^(@getbrevo/.*|sib-api-v3-sdk|@sendgrid/.*|mailjet.*|nodemailer)$", message: MESSAGE_CONNECTEUR },
+    // F26 : stockage des fichiers (Scaleway, compatible S3).
+    { regex: "^@aws-sdk/.*$", message: MESSAGE_CONNECTEUR },
   ],
 };
 

@@ -82,6 +82,8 @@ export function envelopper<T extends object>(
     mode: ModeConnecteur;
     operationPrefixe?: string;
     controles?: ControleAvantAppel[];
+    /** Opérations dont les succès ne sont pas journalisés (F26 : lectures de fichiers, très fréquentes). Les erreurs le sont toujours. */
+    succesNonJournalises?: readonly string[];
   },
 ): T {
   return new Proxy(cible, {
@@ -96,6 +98,7 @@ export function envelopper<T extends object>(
         try {
           for (const controle of options.controles ?? []) await controle(operation, args);
           const resultat = await (valeur as Fonction).apply(objet, args);
+          if (options.succesNonJournalises?.includes(operation)) return resultat;
           await inscrire({
             connecteur: options.connecteur,
             mode: options.mode,

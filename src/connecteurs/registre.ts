@@ -12,6 +12,7 @@ import { DOMAINES_ODOO, type ConnecteurOdoo } from "./odoo/interfaces";
 import type { ConnecteurStripe } from "./stripe/interfaces";
 import type { ConnecteurPca } from "./pca/interfaces";
 import type { ConnecteurEmailing } from "./emailing/interfaces";
+import type { ConnecteurStockage } from "./stockage/interfaces";
 import { creerOdooDemo } from "./odoo/demo";
 import { creerOdooReel } from "./odoo/real";
 import { creerStripeDemo } from "./stripe/demo";
@@ -20,6 +21,8 @@ import { creerPcaDemo } from "./pca/demo";
 import { creerPcaReel } from "./pca/real";
 import { creerEmailingDemo } from "./emailing/demo";
 import { creerEmailingReel } from "./emailing/real";
+import { creerStockageDemo } from "./stockage/demo";
+import { creerStockageReel } from "./stockage/real";
 
 // Registre des connecteurs : SEUL point d'accès aux services externes (principe III, FR-003).
 // Il choisit l'implémentation de chaque connecteur selon CONNECTOR_* (défaut : demo).
@@ -31,6 +34,7 @@ type Connecteurs = {
   stripe: ConnecteurStripe;
   pca: ConnecteurPca;
   emailing: ConnecteurEmailing;
+  stockage: ConnecteurStockage;
 };
 
 type Env = Record<string, string | undefined>;
@@ -58,9 +62,12 @@ function construire<K extends NomConnecteur>(nom: K, env: Env): Connecteurs[K] {
     stripe: () => (mode === "demo" ? creerStripeDemo() : creerStripeReel(manquantes, env)),
     pca: () => (mode === "demo" ? creerPcaDemo() : creerPcaReel(manquantes)),
     emailing: () => (mode === "demo" ? creerEmailingDemo() : creerEmailingReel(manquantes, env)),
+    stockage: () => (mode === "demo" ? creerStockageDemo() : creerStockageReel(manquantes, env)),
   } as const;
   const brut = fabriques[nom as Exclude<NomConnecteur, "odoo">]();
-  return envelopper(brut as object, options) as Connecteurs[K];
+  // F26 : chaque image affichée est une lecture ; seuls les dépôts et les erreurs sont journalisés.
+  const succesNonJournalises = nom === "stockage" ? ["lire", "existe"] : undefined;
+  return envelopper(brut as object, { ...options, succesNonJournalises }) as Connecteurs[K];
 }
 
 let instances: Partial<Connecteurs> = {};
@@ -75,6 +82,8 @@ export const registre = {
   stripe: () => obtenir("stripe"),
   pca: () => obtenir("pca"),
   emailing: () => obtenir("emailing"),
+  /** F26 : fichiers téléversés au back-office (base en démonstration, Scaleway en réel). */
+  stockage: () => obtenir("stockage"),
   /** Mode actif de chaque connecteur (affichage dans le back-office uniquement). */
   modes: (): Record<NomConnecteur, ModeConnecteur> =>
     Object.fromEntries(CONNECTEURS.map((n) => [n, modeDuConnecteur(n)])) as Record<
@@ -93,6 +102,7 @@ export function creerRegistre(env: Env) {
     stripe: () => get("stripe"),
     pca: () => get("pca"),
     emailing: () => get("emailing"),
+    stockage: () => get("stockage"),
   };
 }
 

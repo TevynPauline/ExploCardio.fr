@@ -30,6 +30,7 @@
     "odoo:sonder": "tsx scripts/sonder-odoo.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1171.0",
     "@better-auth/utils": "0.5.0",
     "@prisma/adapter-pg": "7.10.1",
     "@prisma/client": "7.10.1",

@@ -10,6 +10,7 @@ const DOMAINES_PAR_CONNECTEUR: Record<NomConnecteur, string[]> = {
   // Domaine de la plateforme Cloud : connu par PCA_API_URL (à fournir par Nelson, décision D8).
   pca: [],
   emailing: ["brevo.com", "sendinblue.com", "sendgrid.net", "mailjet.com"],
+  stockage: ["scw.cloud"],
 };
 
 const VARIABLES_URL: Partial<Record<NomConnecteur, string>> = {

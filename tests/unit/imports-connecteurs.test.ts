@@ -20,6 +20,8 @@ describe("imports des pages et composants", () => {
     'import { creerStripeReel } from "@/connecteurs/stripe/real";',
     'import Stripe from "stripe";',
     'import { TransactionalEmailsApi } from "@getbrevo/brevo";',
+    'import { S3Client } from "@aws-sdk/client-s3";',
+    'import { creerStockageDemo } from "@/connecteurs/stockage/demo";',
   ])("la règle refuse : %s", async (code) => {
     const [resultat] = await eslint.lintText(code, { filePath: "app/essai/page.tsx" });
     expect(resultat!.messages.some((m) => m.ruleId === "no-restricted-imports")).toBe(true);
