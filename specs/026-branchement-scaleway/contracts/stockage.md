@@ -26,9 +26,9 @@ interface ConnecteurStockage {
 
 | Cas | Résultat |
 |---|---|
-| Chemin hors de `/stockage/…`, avec `..`, `\` ou vide | `ValidationError` (aucun appel) |
+| Chemin hors de `/stockage/…`, avec `..`, `\` ou vide | `OperationRefusee` (aucun appel) |
 | Fichier absent | `lire` → `NotFound("Fichier", chemin)` ; `existe` → `null` |
-| Plage hors des limites | `ValidationError` (la route en fait un `416`) |
+| Plage hors des limites | `OperationRefusee` (la route en fait un `416`) |
 | Service injoignable, délai dépassé | `ServiceUnavailable("stockage")` |
 | Mode réel incomplet ou compartiment incohérent | `ConfigurationIncomplete("stockage", […])` |
 | Dépôt du même chemin | remplace le contenu (n'arrive pas : noms aléatoires) |
