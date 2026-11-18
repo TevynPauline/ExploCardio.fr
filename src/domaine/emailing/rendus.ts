@@ -42,6 +42,8 @@ export async function rendreEnvoi(envoi: Envoi): Promise<EmailRendu> {
 }
 
 export async function objetToujoursValide(envoi: Envoi, maintenant: Date): Promise<boolean> {
+  // Email de test d'un modèle ou d'une campagne : sans scénario ni objet réel, rien à vérifier.
+  if (!envoi.scenario) return true;
   const s = await scenarioDuModele(envoi.modele);
   return s ? s.objetValide(envoi, maintenant) : true;
 }

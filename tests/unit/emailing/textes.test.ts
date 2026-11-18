@@ -2,6 +2,7 @@ import { afterAll, describe, expect, it } from "vitest";
 import { CATALOGUE } from "@/domaine/emailing/catalogue";
 import { apercuModele, enregistrerBrouillon, envoyerTestModele, etatModele, publierModele, revenirAuTexteOrigine, validerTextes } from "@/domaine/emailing/textes";
 import { emailsCommandes } from "@/emails/modeles-commandes";
+import { EXEMPLES } from "@/emails/exemples";
 import { TEXTES_PAR_DEFAUT } from "@/emails/textes-par-defaut";
 import { dbSite } from "@/lib/db/site";
 
@@ -75,5 +76,19 @@ describe("brouillon, aperçu, test, publication", () => {
     const e = await emailsCommandes.annulation({ ref: "<b>X</b>", motif: "**y**" });
     expect(e.rendu).not.toContain("<b>X</b>");
     expect(e.rendu).toContain("&lt;b&gt;X&lt;/b&gt;");
+  });
+
+  it("email de test des modèles de scénario (relance d'impayé…) : envoyé sans vérifier d'objet réel", async () => {
+    const codes = Object.entries(CATALOGUE).filter(([code, e]) => e.scenario && EXEMPLES[code]).map(([code]) => code);
+    expect(codes).toContain("relance_impaye");
+    try {
+      for (const code of codes) {
+        await envoyerTestModele(code, auteur);
+        const test = await dbSite().envoi.findFirstOrThrow({ where: { cle: { startsWith: `modele-test:${code}:` } } });
+        expect(test.scenario).toBeNull();
+      }
+    } finally {
+      await dbSite().envoi.deleteMany({ where: { cle: { startsWith: "modele-test:" }, destinataire: auteur.email } });
+    }
   });
 });

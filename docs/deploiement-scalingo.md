@@ -111,6 +111,50 @@ Sur le site de recette, puis sur le site public, quand les emails doivent vraime
 | `EMAILING_ADRESSES_AUTORISEES` | **recette uniquement** : adresses ou domaines autorisés, séparés par des virgules (par exemple `contact@explocardio.fr, @explocardio.fr`). Les autres emails ne partent pas et restent consultables au back-office. À laisser vide sur le site public. |
 | `EMAILING_TEST_DESTINATAIRE` | recette uniquement : boîte qui reçoit les tests de contrat (une adresse autorisée) |
 
+#### Fiche : brancher Brevo sur le site de recette
+
+Aucune clé n'est jamais écrite dans un email, une conversation ou un fichier du dépôt : elle va
+directement de Brevo à Scalingo.
+
+1. **Créer la clé dans Brevo** (compte de Régis) : **Paramètres** (roue dentée, en bas à
+   gauche) → **SMTP et API** (ou « Clés API ») → onglet **Clés API** → **Générer une nouvelle
+   clé API**. Nom : `explocardio-recette` ; expiration 1 an (à renouveler ensuite) ; accès
+   **Restreint** : **Emails transactionnels = Tous** (envoi et suivi), **contact = Tous**
+   (consentements), toutes les autres ressources sur **Aucune**. Copier la clé tout de suite
+   (Brevo ne la montre qu'une fois) et la coller dans Scalingo à l'étape 3, sans l'enregistrer
+   ailleurs.
+2. **Adresses IP** : si Brevo restreint les appels aux adresses IP connues (**Sécurité** →
+   **Adresses IP autorisées**), désactiver ce blocage : Scalingo n'a pas d'adresse fixe, et
+   tous les envois seraient refusés (« unrecognised IP address »).
+3. **Scalingo**, application `explocardio-recette` → onglet **Environment** → ajouter :
+
+   | Variable | Valeur |
+   |---|---|
+   | `CONNECTOR_EMAILING` | `real` (remplace `demo`) |
+   | `EMAILING_API_KEY` | la clé copiée à l'étape 1 |
+   | `EMAILING_ENVIRONNEMENT` | `recette` |
+   | `EMAILING_ADRESSES_AUTORISEES` | `@explocardio.fr` puis, séparées par des virgules, les adresses personnelles de l'équipe (celles de `RECETTE_EQUIPE`) et les boîtes de test (Gmail, Outlook) |
+   | `EMAILING_TEST_DESTINATAIRE` | `contact@explocardio.fr` (ou une autre adresse de la liste) |
+
+4. **Déployer** `main` (onglet **Deploy** → **Manual deployment**). Si une variable manque, le
+   site le dit au back-office (« configuration incomplète ») et aucun email ne part.
+5. **Vérifier** :
+   - **Mot de passe oublié** depuis la page de connexion, avec votre adresse d'équipe → email
+     reçu en moins de 2 minutes, expéditeur « ExploCardio.fr » ; choisir un nouveau mot de
+     passe (il remplace le mot de passe provisoire).
+   - Back-office › **Emails** › **Modèles** → ouvrir un modèle (commande payée, facture…) →
+     **M'envoyer un email de test** : rendu identique à l'aperçu, ni logo ni pied de page Brevo.
+   - **Formulaire de contact** et **demande Informatique médicale** depuis le site → email
+     reçu sur contact@explocardio.fr.
+   - Répondre à un email reçu → la réponse arrive sur contact@explocardio.fr.
+   - Back-office › **Emails** → état « remis » en moins de 5 minutes.
+   - Dans Gmail, « Afficher l'original » : `dkim=pass` et `dmarc=pass`.
+   - Envoi vers une adresse hors liste (par exemple un client de test inscrit avec une adresse
+     non autorisée) → rien ne part, ligne « Bloqué en recette » au back-office.
+
+Les emails de commande, de facture et d'échéance réels attendront la recette Stripe (F24) :
+ils supposent des commandes enregistrées dans Odoo (F14, lots 2 et 3), sur la copie neutralisée.
+
 ## Site de recette (F14) : les produits réels d'Odoo, avant l'ouverture
 
 Deuxième site, **distinct de la démonstration** : il lit les produits de la **vraie base Odoo**
