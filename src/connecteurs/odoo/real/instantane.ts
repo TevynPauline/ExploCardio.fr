@@ -41,7 +41,16 @@ export type ModeleLu = {
   appareilLibre: boolean;
   /** Variantes affichables, dans l'ordre d'Odoo. */
   variantes: VarianteLue[];
+  /** Produits volumineux (lot 3) : frais par unité en plus du forfait de port. */
+  fraisLivraisonHt: number;
+  fraisInstallationHt: number;
 };
+
+/** Produit « Livraison » d'Odoo (lot 3) : forfait de port HT et seuil de franco. */
+export type LivraisonLue = { varianteId: number; nom: string; forfaitHt: number; tauxTva: number; taxes: number[]; seuilFrancoHt: number | null };
+
+/** Référence interne du produit de port, à créer par Régis dans Odoo. */
+export const CODE_LIVRAISON = "LIVRAISON";
 
 /** Sous-catégorie d'Odoo reliée à une rubrique (F27), niveau 1 ou 2. */
 export type CategorieLue = { code: string; nom: string; parentCode: string; rubrique: CodeRubrique; niveau: 1 | 2 };
@@ -53,6 +62,10 @@ export type Instantane = {
   parReference: Map<string, { modele: ModeleLu; variante: VarianteLue }>;
   regles: RegleOdoo[];
   listeParDefaut: number | null;
+  /** Null si le produit « Livraison » n'existe pas dans Odoo (anomalie bloquante). */
+  livraison: LivraisonLue | null;
+  /** Identifiants Odoo des variantes, par référence (lignes de commande). */
+  taxesParReference: Map<string, number[]>;
   anomalies: Anomalie[];
 };
 
@@ -158,6 +171,8 @@ export function assembler(lu: Lu, correspondance: Correspondance): Instantane {
 
   const categoriesNonReliees = new Map<string, number>();
   const modeles: ModeleLu[] = [];
+  const taxesParReference = new Map<string, number[]>();
+  let livraison: LivraisonLue | null = null;
   for (const t of lu.templates) {
     const variantesDuModele = t.product_variant_ids
       .map((id) => lu.variantes.find((v) => v.id === id))
@@ -170,6 +185,20 @@ export function assembler(lu: Lu, correspondance: Correspondance): Instantane {
     // Produit sans aucune référence hors des rubriques (cartes cadeaux, porte-monnaie) : pas un
     // produit du site, ignoré sans anomalie.
     if (!rubrique && !codes.length) continue;
+    // Produit de port : lu à part, jamais affiché ni signalé comme catégorie non reliée.
+    if (codes.includes(CODE_LIVRAISON)) {
+      const v = variantesDuModele.find((x) => texteDe(x.default_code) === CODE_LIVRAISON)!;
+      const taxesVente = t.taxes_id.map((id) => taxe.get(id)).filter((x): x is NonNullable<typeof x> => Boolean(x) && x!.amount_type === "percent" && !x!.price_include);
+      livraison = {
+        varianteId: v.id,
+        nom: t.name,
+        forfaitHt: Math.round(v.lst_price * 100),
+        tauxTva: taxesVente.reduce((s, x) => s + x.amount, 0),
+        taxes: taxesVente.map((x) => x.id),
+        seuilFrancoHt: lireProprietes(t.product_properties).seuilFrancoHt,
+      };
+      continue;
+    }
     const reference = codes[0] ?? `modèle ${t.id}`;
     const nom = t.name;
     const signaler = (a: Omit<Anomalie, "nom" | "objet" | "reference"> & Partial<Pick<Anomalie, "objet" | "reference" | "nom">>) =>
@@ -256,9 +285,22 @@ export function assembler(lu: Lu, correspondance: Correspondance): Instantane {
       offre: proprietes.offre,
       appareilLibre,
       variantes: variantesLues,
+      fraisLivraisonHt: proprietes.fraisLivraisonHt,
+      fraisInstallationHt: proprietes.fraisInstallationHt,
     });
+    for (const v of variantesLues) taxesParReference.set(v.defaultCode, taxesVente.map((x) => x.id));
   }
 
+  if (!livraison) {
+    anomalies.push({
+      objet: "article",
+      reference: CODE_LIVRAISON,
+      nom: "Livraison",
+      code: "LIVRAISON_ABSENTE",
+      detail: `créer un service vendable de référence ${CODE_LIVRAISON}, au prix du forfait HT, avec la TVA ; propriété « Seuil de franco HT » facultative`,
+      bloquant: true,
+    });
+  }
   for (const [chemin, n] of categoriesNonReliees) {
     anomalies.push({ objet: "categorie", reference: chemin, nom: chemin, code: "CATEGORIE_NON_RELIEE", detail: `${n} produit${n > 1 ? "s" : ""} à vendre`, bloquant: true });
   }
@@ -273,7 +315,7 @@ export function assembler(lu: Lu, correspondance: Correspondance): Instantane {
   const parReference = new Map<string, { modele: ModeleLu; variante: VarianteLue }>();
   for (const m of modeles) for (const v of m.variantes) parReference.set(v.defaultCode, { modele: m, variante: v });
   const categories = [...sousCategories.values()].sort((a, b) => a.niveau - b.niveau || parNom(a, b));
-  return { modeles, categories, parReference, regles: lu.regles, listeParDefaut, anomalies };
+  return { modeles, categories, parReference, regles: lu.regles, listeParDefaut, livraison, taxesParReference, anomalies };
 }
 
 const DUREE_MEMOIRE_MS = 60_000;

@@ -23,6 +23,9 @@ export const LIBELLES = {
   kitRequis: "Kit requis",
   logiciel: "Logiciel Cloud",
   eligibleBons: "Éligible aux bons d'achat",
+  fraisLivraison: "Frais de livraison HT",
+  fraisInstallation: "Frais d'installation HT",
+  seuilFranco: "Seuil de franco HT",
 } as const;
 
 const TYPES: Record<string, TypeArticle> = {
@@ -42,6 +45,11 @@ export type ProprietesArticle = {
   offre: OffreMiseADisposition | null;
   /** Au moins un montant de mise à disposition renseigné, mais pas les trois. */
   offreIncomplete: boolean;
+  /** Produits volumineux (lot 3) : frais par unité, en plus du forfait de port. */
+  fraisLivraisonHt: number;
+  fraisInstallationHt: number;
+  /** Produit « Livraison » (lot 3) : seuil de franco ; null si non renseigné. */
+  seuilFrancoHt: number | null;
 };
 
 /** Valeur lisible d'une propriété (le libellé pour une sélection). */
@@ -89,5 +97,8 @@ export function lireProprietes(brutes: unknown): ProprietesArticle {
         }
       : null,
     offreIncomplete: !complete && montants.some((m) => m !== null),
+    fraisLivraisonHt: versCentimes(lire(LIBELLES.fraisLivraison)) ?? 0,
+    fraisInstallationHt: versCentimes(lire(LIBELLES.fraisInstallation)) ?? 0,
+    seuilFrancoHt: versCentimes(lire(LIBELLES.seuilFranco)),
   };
 }

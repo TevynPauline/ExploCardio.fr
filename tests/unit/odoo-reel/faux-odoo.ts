@@ -56,20 +56,57 @@ export function fauxOdoo(donnees: Record<string, Record<string, unknown>[]>, sur
   return { fetch: fetchSimule, appels };
 }
 
-/** Filtre minimal : conditions `[champ, "in" | "=", valeur]` ; autres opérateurs et champs absents ignorés. */
+/**
+ * Filtre des domaines Odoo : notation préfixée (`&`, `|`, `!`), opérateurs `=`, `!=`, `in`,
+ * `=ilike`, `=like` (préfixe `%`), `>`, `<` ; `child_of` comme `=`. Champ absent du jeu :
+ * condition ignorée.
+ */
 function filtrer(lignes: Record<string, unknown>[], domaine: unknown[]) {
-  return lignes.filter((l) =>
-    domaine.every((c) => {
-      if (!Array.isArray(c)) return true;
-      const [champ, op, valeur] = c as [string, string, unknown];
-      if (!(champ in l)) return true; // champ non enregistré dans le jeu : condition ignorée
-      const v = Array.isArray(l[champ]) && typeof (l[champ] as unknown[])[0] === "number" && op !== "in" ? (l[champ] as unknown[])[0] : l[champ];
-      if (op === "in") return (valeur as unknown[]).includes(Array.isArray(v) ? v[0] : v);
-      if (op === "=") return v === valeur;
-      if (op === "=ilike") return typeof v === "string" && v.toLowerCase() === String(valeur).toLowerCase();
+  return lignes.filter((l) => evaluer(l, domaine));
+}
+
+function condition(l: Record<string, unknown>, c: [string, string, unknown]): boolean {
+  const [champ, op, valeur] = c;
+  if (!(champ in l)) return true;
+  const brut = l[champ];
+  const v = Array.isArray(brut) && typeof brut[0] === "number" && op !== "in" ? brut[0] : brut;
+  switch (op) {
+    case "in":
+      return (valeur as unknown[]).includes(Array.isArray(v) ? v[0] : v);
+    case "=":
+    case "child_of":
+      return v === valeur;
+    case "!=":
+      return v !== valeur;
+    case "=ilike":
+      return typeof v === "string" && v.toLowerCase() === String(valeur).toLowerCase();
+    case "=like":
+      return typeof v === "string" && (String(valeur).endsWith("%") ? v.startsWith(String(valeur).slice(0, -1)) : v === valeur);
+    case ">":
+      return String(v) > String(valeur);
+    case "<":
+      return String(v) < String(valeur);
+    default:
       return true;
-    }),
-  );
+  }
+}
+
+function evaluer(l: Record<string, unknown>, domaine: unknown[]): boolean {
+  let pos = 0;
+  const terme = (): boolean => {
+    const t = domaine[pos++];
+    if (t === "&") return [terme(), terme()].every(Boolean);
+    if (t === "|") {
+      const a = terme();
+      const b = terme();
+      return a || b;
+    }
+    if (t === "!") return !terme();
+    return Array.isArray(t) ? condition(l, t as [string, string, unknown]) : true;
+  };
+  let ok = true;
+  while (pos < domaine.length) ok = terme() && ok;
+  return ok;
 }
 
 export function clientDeTest(fetchSimule: typeof fetch, o: Partial<OptionsClient> = {}) {

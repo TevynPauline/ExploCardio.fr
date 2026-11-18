@@ -74,7 +74,7 @@ describe("registre des connecteurs", () => {
     }
   });
 
-  it("Odoo réel complet : catalogue, lecture du stock, clients et opportunités livrés, le reste refusé (F14, lots 1-2)", async () => {
+  it("Odoo réel complet : catalogue, lecture du stock, clients, opportunités et commandes livrés, le reste refusé (F14, lots 1-3)", async () => {
     const registre = creerRegistre({
       ...base,
       CONNECTOR_ODOO: "real",
@@ -87,10 +87,10 @@ describe("registre des connecteurs", () => {
     // Catégories : depuis F27, l'arbre est lu dans Odoo (injoignable ici) : erreur du connecteur.
     await expect(registre.odoo().catalogue.listerCategories()).rejects.toMatchObject({ code: "SERVICE_UNAVAILABLE" });
     const refuse = { code: "CONFIGURATION_INCOMPLETE", details: { variablesManquantes: [] } };
-    await expect(registre.odoo().stock.reserver([{ defaultCode: "X", quantite: 1 }], "cle")).rejects.toMatchObject(refuse);
+    await expect(registre.odoo().stock.reserverAppareil("X", new Date(), "cle")).rejects.toMatchObject(refuse);
     // Clients (lot 2) : livrés ; Odoo injoignable ici.
     await expect(registre.odoo().clients.lireSituation("P1")).rejects.toMatchObject({ code: "SERVICE_UNAVAILABLE" });
-    await expect(registre.odoo().commandes.listerCommandes("P")).rejects.toMatchObject(refuse);
+    await expect(registre.odoo().commandes.listerRemboursementsAExecuter()).rejects.toMatchObject(refuse);
     await expect(registre.odoo().factures.listerFactures("P")).rejects.toMatchObject(refuse);
     await expect(registre.odoo().location.lireRegles()).rejects.toMatchObject(refuse);
     await expect(registre.odoo().fidelite.lireReglesProgramme()).rejects.toMatchObject(refuse);

@@ -15,8 +15,19 @@ describe("propriétés produit", () => {
   });
 
   it("valeurs par défaut sans propriété", () => {
-    expect(lireProprietes([])).toEqual({ marque: null, type: null, quantiteParLot: 1, eligibleBonsAchat: false, offre: null, offreIncomplete: false });
+    expect(lireProprietes([])).toEqual({
+      marque: null, type: null, quantiteParLot: 1, eligibleBonsAchat: false, offre: null, offreIncomplete: false,
+      fraisLivraisonHt: 0, fraisInstallationHt: 0, seuilFrancoHt: null,
+    });
     expect(lireProprietes(false)).toMatchObject({ marque: null });
+  });
+
+  it("frais des produits volumineux et seuil de franco (lot 3), en centimes", () => {
+    expect(lireProprietes([p("Frais de livraison HT", 150, { type: "float" }), p("Frais d'installation HT", "80,50"), p("Seuil de franco HT", 500, { type: "float" })])).toMatchObject({
+      fraisLivraisonHt: 15000,
+      fraisInstallationHt: 8050,
+      seuilFrancoHt: 50000,
+    });
   });
 
   it("offre de mise à disposition complète, montants en centimes", () => {

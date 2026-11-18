@@ -86,16 +86,17 @@ chaque affichage du panier écrirait dans Odoo à chaque visite. Le site calcule
 - promotions et codes promo : selon la question 4 ;
 - bons d'achat : aucun (fidélité masquée).
 
-**À la création de la commande, Odoo recalcule** (les lignes sont envoyées sans prix
-unitaire, sauf lignes offertes à 0 €). Si le total TTC d'Odoo diffère du montant payé, la
-commande est créée quand même (le paiement est fait) et l'écart est inscrit au journal des
-connecteurs et signalé à l'équipe par email.
+**À la création de la commande**, les lignes sont envoyées avec les prix calculés par le site,
+ceux que le client a payés (prix figés d'un devis compris) ; Odoo calcule taxes et totaux
+(vérifié sur la copie le 2026-11-18 : TVA du produit appliquée d'office). Si le total TTC
+d'Odoo diffère du montant payé de plus d'un centime, la commande est créée quand même (le
+paiement est fait) et l'écart est signalé au journal.
 
 ### D5 — Réservation de stock (lot 3)
 
-`reserver` vérifie la quantité libre (`free_qty`) des articles stockés et enregistre la
-réservation dans la base du site (clé, lignes, expiration 30 min) ; `OutOfStock` si un
-article sans délai de réassort manque. La vraie réservation se fait dans Odoo à la
+`reserver` vérifie la quantité libre (`free_qty`) des articles stockés ; `OutOfStock` si un
+article sans délai de réassort manque. Rien n'est écrit (ni dans Odoo, ni dans la base du
+site) : `liberer` n'a rien à faire. La vraie réservation se fait dans Odoo à la
 confirmation de la commande (bon de livraison réservé). Le risque restant (deux médecins qui
 paient le dernier article dans la même minute) est accepté : la commande est créée, le bon
 de livraison reste « en attente » et l'équipe le voit dans Odoo.
@@ -110,12 +111,16 @@ de livraison reste « en attente » et l'équipe le voit dans Odoo.
 - `creerCommandeVirement` : même création, confirmée, **sans paiement** ; échéance = date
   du jour + délai du site (inchangé, F04). `annulerCommandeEnAttente` : `action_cancel`
   (stock libéré par Odoo).
-- Le virement reçu est saisi par Régis dans Odoo (paiement sur la commande ou sa facture) ;
-  la tâche quotidienne existante le détecte (`traiterVirements`).
+- Le virement reçu est saisi par Régis dans Odoo : référence du virement dans « Réf. de
+  paiement » de la commande, ou facture réglée ; la tâche quotidienne existante le détecte
+  (`traiterVirements`).
+- Origine des commandes : « Site explocardio.fr (carte) », « (virement) », « (devis) » ; un
+  devis confirmé devient « (devis, carte) ». Seules ces commandes sont suivies par le site.
 - États lus : brouillon ou envoyé → devis ; annulé → `annulee` ; confirmée sans paiement
   → `en_attente_paiement` ; payée et bon de livraison prêt → `en_preparation` ; expédiée →
-  `expediee` (selon la question 3) ; livrée (`delivery_status = full`) → `livree` ; avoirs
-  → `remboursee_partiellement` / `remboursee`.
+  `expediee` : sans module Livraison, le bon de livraison validé vaut expédition, et
+  « livrée » n'est pas connu (question 3) ; avoirs → `remboursee_partiellement` /
+  `remboursee` (L3-08).
 - `listerChangements` : commandes et bons de livraison modifiés depuis la date
   (`write_date`), lus toutes les 5 minutes par la tâche existante (≤ 15 min, FR-020).
 
@@ -181,18 +186,21 @@ aucune donnée de carte ni de patient envoyée (FR-007) ; journal des connecteur
 
 ### Lot 3 — Commandes
 
-- [ ] L3-01 Lecture du produit « Livraison », du seuil de franco et des propriétés de frais
-  (après réponse 2), avec tests ; ajout au rapport de contrôle (produit absent → bloquant)
-- [ ] L3-02 Tests et `real/devis.ts` : `calculerDevis` (D4), mêmes formes que la
+- [X] L3-01 Lecture du produit « Livraison » (référence `LIVRAISON`), de la propriété « Seuil de
+  franco HT » et des propriétés « Frais de livraison HT » / « Frais d'installation HT » des
+  produits volumineux, avec tests ; rapport de contrôle : produit absent → bloquant. Reste :
+  création du produit par Régis (réponse 2)
+- [X] L3-02 Tests et `real/devis.ts` : `calculerDevis` (D4), mêmes formes que la
   démonstration ; tests de contrat de devis rejoués sur le faux Odoo
-- [ ] L3-03 Tests et réservations `reserver` / `liberer` (D5) dans `real/stock.ts`
-- [ ] L3-04 Tests et `real/commandes.ts` : création payée (idempotente par
+- [X] L3-03 Tests et réservations `reserver` / `liberer` (D5) dans `real/stock.ts`
+- [X] L3-04 Tests et `real/commandes.ts` : création payée (idempotente par
   `client_order_ref`), virement, annulation, lecture, liste, états (D6), écart de montant
-  signalé
+  signalé ; confirmation, annulation, note et PDF de portail vérifiés sur la copie. Reste au
+  lot 3 : client « mauvais payeur » (`trust = bad`) refusé à la commande
 - [ ] L3-05 Paiement enregistré dans le journal « Carte » et facture à la commande (après
   réponses 1 et 5)
 - [ ] L3-06 `listerChangements` (D6) avec transporteur et suivi (après réponse 3)
-- [ ] L3-07 Devis enregistrés et PDF par le lien de portail (D7)
+- [X] L3-07 Devis enregistrés et PDF par le lien de portail (D7)
 - [ ] L3-08 Remboursements par avoir (D8)
 - [ ] L3-09 Vérification sur la copie : 20 commandes de test dont des créations
   interrompues puis relancées (SC-004), virement annulé, devis puis commande, remboursement

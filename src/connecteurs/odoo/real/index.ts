@@ -6,6 +6,7 @@ import { ClientOdoo } from "./client";
 import { lireCorrespondance, type Correspondance } from "./correspondance";
 import { creerCatalogueReel } from "./catalogue";
 import { creerClientsReels } from "./clients";
+import { creerCommandesReelles } from "./commandes";
 import { creerEcritures, type StockageEcritures } from "./ecritures";
 import { creerOpportunitesReelles } from "./opportunites";
 import { creerLecteurInstantane } from "./instantane";
@@ -13,7 +14,7 @@ import { creerGardeNeutralisation } from "./neutralisation";
 import { creerStockReel } from "./stock";
 
 // Mode réel d'Odoo (F14). Lot 1 : catalogue et lectures du stock ; lot 2 : clients et
-// opportunités. Les autres domaines lèvent ConfigurationIncomplete tant que leur lot n'est pas livré.
+// opportunités ; lot 3 : panier, commandes, devis enregistrés, réservations avant paiement. Les autres domaines lèvent ConfigurationIncomplete tant que leur lot n'est pas livré.
 
 type Env = Record<string, string | undefined>;
 
@@ -53,6 +54,7 @@ export function creerOdooReel(variablesManquantes: string[], env: Env = process.
     catalogue: creerCatalogueReel(client, instantane),
     stock: creerStockReel(instantane),
     clients: creerClientsReels(client, ecritures),
+    commandes: creerCommandesReelles(client, instantane, ecritures),
     opportunites: creerOpportunitesReelles(client, ecritures),
   };
 }

@@ -136,7 +136,8 @@ export type CodeAnomalie =
   | "SANS_NUMERO_SERIE"
   | "REGLE_PRIX_NON_GEREE"
   | "CLIENT_SANS_SIRET"
-  | "SIRET_EN_DOUBLE";
+  | "SIRET_EN_DOUBLE"
+  | "LIVRAISON_ABSENTE";
 
 export type Anomalie = {
   objet: "article" | "variante" | "categorie" | "regle_prix" | "client";

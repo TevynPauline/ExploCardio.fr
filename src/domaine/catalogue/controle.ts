@@ -17,6 +17,7 @@ export const LIBELLES_ANOMALIE: Record<CodeAnomalie, string> = {
   REGLE_PRIX_NON_GEREE: "Règle de prix non prise en charge par le site",
   CLIENT_SANS_SIRET: "Client sans SIRET",
   SIRET_EN_DOUBLE: "SIRET en double",
+  LIVRAISON_ABSENTE: "Produit « Livraison » (frais de port) absent d'Odoo",
 };
 
 export const LIBELLES_OBJET: Record<Anomalie["objet"], string> = {

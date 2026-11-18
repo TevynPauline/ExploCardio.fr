@@ -136,6 +136,21 @@ export class ClientOdoo {
     return (await this.executer(modele, "search_count", [domaine], {}, true)) as number;
   }
 
+  /**
+   * Document servi par Odoo hors API (PDF de devis par le lien de portail et son jeton, F14
+   * lot 3). Le chemin ne contient jamais la clé API.
+   */
+  async telecharger(chemin: string): Promise<Uint8Array> {
+    let reponse: Response;
+    try {
+      reponse = await this.fetch(`${this.options.url.replace(/\/+$/, "")}${chemin}`, { method: "GET" });
+    } catch {
+      throw this.indisponible({ cause: "reseau" });
+    }
+    if (!reponse.ok) throw this.indisponible({ cause: "http", statut: reponse.status });
+    return new Uint8Array(await reponse.arrayBuffer());
+  }
+
   /** Écriture (lots suivants) : garde de neutralisation, jamais de reprise automatique. */
   async appeler(modele: string, methode: string, args: unknown[], kw: Record<string, unknown> = {}): Promise<unknown> {
     await this.options.avantEcriture?.(this);
