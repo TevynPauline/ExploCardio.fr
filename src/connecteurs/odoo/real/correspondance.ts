@@ -23,6 +23,7 @@ export const CORRESPONDANCE_PAR_DEFAUT: Correspondance = {
 };
 
 const CODES = new Set<string>(RUBRIQUES.map((r) => r.code));
+const RACINES = new Set(["all", "tous", "toutes"]);
 
 /** Lit la valeur du paramètre ; une valeur illisible donne la correspondance par défaut. */
 export function lireCorrespondance(json: string | null | undefined): Correspondance {
@@ -44,11 +45,15 @@ const segments = (chemin: string) => chemin.split("/").map(normaliser).filter(Bo
  */
 export function rattachementDe(cheminComplet: string, correspondance: Correspondance): { code: CodeRubrique; profondeur: number } | null {
   const chemin = segments(cheminComplet);
+  // Catégorie racine d'Odoo (« All », « Tous ») : facultative dans la correspondance, pour que
+  // « MAPA » et « All / MAPA » désignent la même catégorie.
+  const racine = chemin.length > 1 && RACINES.has(chemin[0]!) ? 1 : 0;
   let meilleure: { profondeur: number; code: string } | null = null;
   for (const [cle, code] of Object.entries(correspondance)) {
     const k = segments(cle);
-    const prefixe = k.length > 0 && k.length <= chemin.length && k.every((s, i) => s === chemin[i]);
-    if (prefixe && (!meilleure || k.length > meilleure.profondeur)) meilleure = { profondeur: k.length, code };
+    const decalage = k.length && RACINES.has(k[0]!) ? 0 : racine;
+    const prefixe = k.length > 0 && k.length + decalage <= chemin.length && k.every((s, i) => s === chemin[i + decalage]);
+    if (prefixe && (!meilleure || k.length + decalage > meilleure.profondeur)) meilleure = { profondeur: k.length + decalage, code };
   }
   return meilleure && CODES.has(meilleure.code) ? { code: meilleure.code as CodeRubrique, profondeur: meilleure.profondeur } : null;
 }

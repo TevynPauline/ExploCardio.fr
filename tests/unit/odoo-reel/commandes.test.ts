@@ -163,6 +163,16 @@ describe("commandes en mode réel (lot 3, D6)", () => {
     expect(await odoo.commandes.listerCommandes("P100")).toEqual([expect.objectContaining({ ref: a.ref, statut: "payee", montantTtc: 239940 })]);
   });
 
+  it("franco atteint : la ligne « Livraison » est quand même dans la commande, à 0 €", async () => {
+    const { odoo, d } = monter({ franco: 125 });
+    await odoo.commandes.creerCommandePayee(commande("f"), "commande:f");
+    const v = d["sale.order"]![0]!;
+    const lignes = d["sale.order.line"]!.filter((l) => (v.order_line as number[]).includes(l.id));
+    expect(lignes.filter((l) => (l.product_id as [number])[0] === 90)).toEqual([
+      expect.objectContaining({ price_unit: 0, product_uom_qty: 1, name: "Livraison — offerte (franco de port atteint)" }),
+    ]);
+  });
+
   it("trace perdue après une coupure : la commande est retrouvée dans Odoo par sa clé", async () => {
     const { odoo, d } = monter();
     const a = await odoo.commandes.creerCommandePayee(commande("2"), "commande:2");

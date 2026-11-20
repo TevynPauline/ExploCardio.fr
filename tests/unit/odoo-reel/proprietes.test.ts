@@ -49,6 +49,17 @@ describe("propriétés produit", () => {
     expect(r).toMatchObject({ offre: null, offreIncomplete: true });
   });
 
+  it("saisies de la vraie base : seuil « 125 € » en sélection, type au pluriel, frais sous d'autres libellés, champs prioritaires", () => {
+    expect(lireProprietes([p("Seuil de franco HT", "125", { type: "selection", selection: [["125", "125 €"]] })]).seuilFrancoHt).toBe(12500);
+    expect(lireProprietes([p("Type d'article", "Accessoires")]).type).toBe("accessoire");
+    expect(lireProprietes([p("Livraison spéciale", 600, { type: "float" }), p("Frais d'installation", 600, { type: "float" })])).toMatchObject({
+      fraisLivraisonHt: 60000,
+      fraisInstallationHt: 60000,
+    });
+    expect(lireProprietes([p("Marque", "Ancienne"), p("Type d'article", "Service")], { marque: "Suntech", type: "Equipement" })).toMatchObject({ marque: "Suntech", type: "equipement" });
+    expect(lireProprietes([p("Marque", "DMS")], { marque: null, type: null }).marque).toBe("DMS");
+  });
+
   it("type inconnu : null", () => {
     expect(lireProprietes([p("Type d'article", "Gadget")]).type).toBeNull();
   });

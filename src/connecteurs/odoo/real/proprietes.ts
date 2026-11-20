@@ -2,8 +2,9 @@ import type { OffreMiseADisposition, TypeArticle } from "../interfaces";
 import { normaliser, versCentimes } from "./normaliser";
 
 // Propriétés produit d'Odoo (F14, R2) : définies sur chaque catégorie, saisies dans la fiche
-// produit, sans Studio. Reconnues par leur libellé, sans tenir compte de la casse, des accents
-// ni de la ponctuation.
+// produit. Reconnues par leur libellé, sans tenir compte de la casse, des accents ni de la
+// ponctuation. Marque et Type d'article peuvent aussi être de vrais champs de la fiche produit
+// (créés avec Studio, décision du 2026-11-20) : le champ l'emporte alors sur la propriété.
 
 export type ProprieteOdoo = {
   name?: string;
@@ -25,6 +26,9 @@ export const LIBELLES = {
   eligibleBons: "Éligible aux bons d'achat",
   fraisLivraison: "Frais de livraison HT",
   fraisInstallation: "Frais d'installation HT",
+  /** Libellés acceptés aussi (saisis par Régis sur la catégorie ERGOS). */
+  fraisLivraisonAutre: "Livraison spéciale",
+  fraisInstallationAutre: "Frais d'installation",
   seuilFranco: "Seuil de franco HT",
 } as const;
 
@@ -35,6 +39,16 @@ const TYPES: Record<string, TypeArticle> = {
   logiciel: "logiciel",
   service: "service",
 };
+
+/** Type d'article d'après son libellé (« Équipement », « Accessoires »…) ; null si inconnu. */
+export function typeArticle(libelle: string | null): TypeArticle | null {
+  if (!libelle) return null;
+  const n = normaliser(libelle);
+  return TYPES[n] ?? TYPES[n.replace(/s$/, "")] ?? null;
+}
+
+/** Valeurs lues dans les champs de la fiche produit, prioritaires sur les propriétés. */
+export type ChampsArticle = { marque?: string | null; type?: string | null };
 
 export type ProprietesArticle = {
   marque: string | null;
@@ -62,7 +76,7 @@ function valeur(p: ProprieteOdoo): unknown {
   return p.value;
 }
 
-export function lireProprietes(brutes: unknown): ProprietesArticle {
+export function lireProprietes(brutes: unknown, champs: ChampsArticle = {}): ProprietesArticle {
   const parLibelle = new Map<string, unknown>();
   for (const p of Array.isArray(brutes) ? (brutes as ProprieteOdoo[]) : []) {
     if (p?.string) parLibelle.set(normaliser(p.string), valeur(p));
@@ -73,7 +87,7 @@ export function lireProprietes(brutes: unknown): ProprietesArticle {
     return typeof v === "string" && v.trim() ? v.trim() : null;
   };
 
-  const typeBrut = texte(LIBELLES.type);
+  const typeBrut = champs.type?.trim() || texte(LIBELLES.type);
   const quantite = Number(lire(LIBELLES.quantiteParLot));
   const premierMoisHt = versCentimes(lire(LIBELLES.premierMois));
   const moisSuivantsHt = versCentimes(lire(LIBELLES.moisSuivants));
@@ -82,8 +96,8 @@ export function lireProprietes(brutes: unknown): ProprietesArticle {
   const complete = montants.every((m) => m !== null);
 
   return {
-    marque: texte(LIBELLES.marque),
-    type: typeBrut ? (TYPES[normaliser(typeBrut)] ?? null) : null,
+    marque: champs.marque?.trim() || texte(LIBELLES.marque),
+    type: typeArticle(typeBrut),
     quantiteParLot: Number.isInteger(quantite) && quantite > 0 ? quantite : 1,
     eligibleBonsAchat: lire(LIBELLES.eligibleBons) === true,
     offre: complete
@@ -97,8 +111,8 @@ export function lireProprietes(brutes: unknown): ProprietesArticle {
         }
       : null,
     offreIncomplete: !complete && montants.some((m) => m !== null),
-    fraisLivraisonHt: versCentimes(lire(LIBELLES.fraisLivraison)) ?? 0,
-    fraisInstallationHt: versCentimes(lire(LIBELLES.fraisInstallation)) ?? 0,
+    fraisLivraisonHt: versCentimes(lire(LIBELLES.fraisLivraison) ?? lire(LIBELLES.fraisLivraisonAutre)) ?? 0,
+    fraisInstallationHt: versCentimes(lire(LIBELLES.fraisInstallation) ?? lire(LIBELLES.fraisInstallationAutre)) ?? 0,
     seuilFrancoHt: versCentimes(lire(LIBELLES.seuilFranco)),
   };
 }

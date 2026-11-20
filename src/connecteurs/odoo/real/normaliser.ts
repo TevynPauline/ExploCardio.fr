@@ -12,7 +12,10 @@ export function normaliser(texte: string): string {
 export function versCentimes(valeur: unknown): number | null {
   if (typeof valeur === "number" && Number.isFinite(valeur)) return Math.round(valeur * 100);
   if (typeof valeur === "string" && valeur.trim()) {
-    const n = Number(valeur.replace(/\s/g, "").replace(",", "."));
+    // Saisie libre tolérée : « 125 € », « 1 250,50 », « 35.5 EUR ».
+    const nettoye = valeur.replace(/\s/g, "").replace(/€|eur(os)?/gi, "").replace(",", ".");
+    if (!nettoye) return null;
+    const n = Number(nettoye);
     return Number.isFinite(n) ? Math.round(n * 100) : null;
   }
   return null;

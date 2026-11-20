@@ -59,10 +59,19 @@ opportunités. **Lot 3** (en cours) : panier, commandes carte et virement, devis
 - **`ODOO_ENVIRONNEMENT`** : `recette` (copie neutralisée) ou `production`. Avant toute écriture,
   le site lit `database.is_neutralized` : en recette, il refuse d'écrire dans une base non
   neutralisée ; en production, dans une base neutralisée (`OperationRefused`).
-- **Propriétés produit attendues dans Odoo** (définies sur chaque catégorie, sans Studio) :
-  Marque ; Type d'article (Équipement, Consommable, Accessoire, Logiciel, Service) ; Quantité
-  par lot ; Mise à disposition – premier mois HT ; Mise à disposition – mois suivants HT ;
-  Valeur de remplacement HT ; Kit requis ; Logiciel Cloud ; Éligible aux bons d'achat.
+- **Champs de la fiche produit** (créés avec Studio, décision du 2026-11-20), repérés par leur
+  libellé : **Marque** ; **Type d'article** (Équipement, Consommable, Accessoire, Logiciel,
+  Service ; pluriel accepté) ; **A publier** (case). Quand la case existe, seuls les produits
+  cochés sont lus ; les autres (pièces de kit, frais d'importation…) sont ignorés sans anomalie.
+  Base sans ces champs : Marque et Type d'article sont lus dans les propriétés.
+- **Propriétés produit** (définies sur chaque catégorie qui contient le produit ; une propriété
+  ne descend pas aux sous-catégories) : Quantité par lot ; Mise à disposition – premier mois HT ;
+  Mise à disposition – mois suivants HT ; Valeur de remplacement HT ; Kit requis ; Logiciel
+  Cloud ; Éligible aux bons d'achat ; Frais de livraison HT (ou « Livraison spéciale ») ; Frais
+  d'installation HT (ou « Frais d'installation ») ; Seuil de franco HT (produit `LIVRAISON`).
+  Montants en nombre, ou en texte tel que « 125 € ».
+- **Catégorie racine** : un premier niveau « All » est facultatif dans la correspondance des
+  rubriques (`MAPA` et `All / MAPA` désignent la même catégorie).
 - **Rubriques du site** : paramètre « Rubrique de chaque catégorie Odoo » (back-office,
   Paramètres › Catalogue Odoo).
 - **Prix client** : le site applique les règles simples des listes de prix (prix fixe, remise
@@ -78,7 +87,8 @@ opportunités. **Lot 3** (en cours) : panier, commandes carte et virement, devis
   propriété « Seuil de franco HT ») ; produits volumineux : « Frais de livraison HT » et
   « Frais d'installation HT ». Référence d'une commande = son numéro Odoo ; clé dans
   « Référence client » ; paiement Stripe dans « Réf. de paiement » ; PDF des devis par le lien
-  de portail. Ni promotions ni codes promo à l'ouverture. Client « Mauvais débiteur »
+  de portail. Ni promotions ni codes promo à l'ouverture. Toute commande expédiée porte une
+  ligne `LIVRAISON`, à 0 € quand le franco est atteint. Client « Mauvais débiteur »
   (Comptabilité › degré de confiance, fiche principale) : plus de commande en ligne.
 - **Rapport de contrôle** : back-office › Catalogue › Contrôle des données Odoo (export CSV).
 - **Tests** : `tests/unit/odoo-reel/` (sans réseau) ; tests de contrat en mode réel sur la copie :

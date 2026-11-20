@@ -122,8 +122,10 @@ donc y être **avant** l'étape B.
    calculer une commande d'appareils (« frais de port pas encore réglés »).
 3. **5 à 10 produits complets** couvrant les cas : un appareil en stock, un appareil épuisé avec
    délai fournisseur, un consommable vendu par lot, un produit volumineux (propriétés « Frais de
-   livraison HT » et « Frais d'installation HT »), un produit à prix dégressif. Chacun avec
-   marque, type d'article, catégorie rangée, prix, TVA. Les publier au back-office de la recette.
+   livraison HT » et « Frais d'installation HT », ou « Livraison spéciale » et « Frais
+   d'installation »), un produit à prix dégressif. Chacun avec les champs **Marque** et **Type
+   d'article** remplis, la case **A publier** cochée, une catégorie rangée, un prix et la TVA. Les
+   publier au back-office de la recette.
 4. **Deux clients de test** : l'un avec un SIRET, l'autre sur la liste de prix « Remise ». Leur
    adresse email doit faire partie de `EMAILING_ADRESSES_AUTORISEES` (par exemple
    `prenom+client1@explocardio.fr` ou une boîte Gmail de l'équipe).
@@ -378,12 +380,15 @@ site, l'invitation par email du back-office n'envoie rien.
 
 ### 6. Vérifier que les produits remontent
 
-1. Back-office → **Catalogue** : la liste montre les produits d'Odoo (référence, prix HT,
-   catégorie). Rien n'apparaît encore côté public : un produit n'y figure qu'une fois **publié**.
+1. Back-office → **Catalogue** : la liste montre les produits d'Odoo cochés **A publier**
+   (référence, prix HT, catégorie), avec leurs champs **Marque** et **Type d'article** remplis.
+   Rien n'apparaît encore côté public : un produit n'y figure qu'une fois **publié** au
+   back-office.
 2. Back-office → **Paramètres** → Catalogue → **Rubrique de chaque catégorie Odoo** : une ligne
-   par catégorie de premier niveau d'Odoo, avec sa rubrique du site (`holter-ecg`, `mapa`,
-   `effort`, `ecg-repos`, `accessoires`). Exemple : `Holter ECG = holter-ecg`. Une catégorie
-   absente de cette liste n'est pas affichée.
+   par catégorie d'Odoo, avec sa rubrique du site (`holter-ecg`, `mapa`, `effort`, `ecg-repos`,
+   `accessoires`). Exemple : `Holter ECG = holter-ecg`. La catégorie racine « All » peut être
+   omise (`MAPA` vaut pour `All / MAPA`). Une catégorie absente de cette liste n'est pas
+   affichée.
 3. Back-office → Catalogue → **Contrôle des données Odoo** : liste ce qui bloque ou manque
    (référence absente ou en double, prix, catégorie, type d'article…), à corriger dans Odoo.
 4. Ouvrir un produit → rédiger, ajouter une photo → **Enregistrer le contenu** → **Publier** :

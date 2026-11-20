@@ -24,6 +24,14 @@ describe("correspondance des catégories", () => {
     expect(rubriqueDe("MAPA Pro", CORRESPONDANCE_PAR_DEFAUT)).toBeNull();
   });
 
+  it("catégorie racine « All » facultative, dans Odoo comme dans le paramètre", () => {
+    expect(rubriqueDe("All / MAPA / Accessoires MAPA", CORRESPONDANCE_PAR_DEFAUT)).toBe("mapa");
+    expect(rubriqueDe("All / MAPA", { "All / MAPA": "mapa" })).toBe("mapa");
+    expect(rubriqueDe("All / ECG / ECG de repos", { "ECG / ECG de repos": "ecg-repos" })).toBe("ecg-repos");
+    expect(rubriqueDe("All / MAPA / Accessoires MAPA", { "All / MAPA": "mapa", "MAPA / Accessoires MAPA": "accessoires" })).toBe("accessoires");
+    expect(rubriqueDe("All", CORRESPONDANCE_PAR_DEFAUT)).toBeNull();
+  });
+
   it("catégorie non reliée : null", () => {
     expect(rubriqueDe("Services", CORRESPONDANCE_PAR_DEFAUT)).toBeNull();
   });

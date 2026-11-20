@@ -215,3 +215,14 @@ aucune donnée de carte ni de patient envoyée (FR-007) ; journal des connecteur
 
 L2-01 et L2-02 d'abord ; lot 2 avant lot 3 (une commande a besoin d'une fiche client).
 L3-01, L3-05 et L3-06 attendent les réponses de Régis ; le reste avance sans elles.
+
+## Vraie base au 2026-11-20 : champs Studio et catégorie « All »
+
+Décision de Pauline et Régis : Marque, Type d'article et « A publier » sont de vrais champs de
+la fiche produit (Studio : `x_studio_marque`, `x_studio_selection_3`, `x_studio_a_publier`),
+repérés par leur libellé dans `ir.model.fields`. Seuls les produits cochés sont lus (un kit est
+une référence à part entière : ses pièces restent décochées). Les autres données restent en
+propriétés de catégorie ; frais volumineux acceptés sous « Livraison spéciale » / « Frais
+d'installation », montants en texte (« 125 € ») acceptés. Catégorie racine « All » facultative
+dans la correspondance. Ligne `LIVRAISON` toujours présente dans une commande expédiée, à 0 €
+au franco (demande de Pauline).

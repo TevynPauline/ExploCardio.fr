@@ -88,14 +88,42 @@ type Variant = Enregistrement & {
 };
 
 const CHAMPS_TEMPLATE = ["name", "categ_id", "tracking", "description_sale", "taxes_id", "product_properties", "product_variant_ids"];
+
+/**
+ * Champs ajoutés à la fiche produit avec Studio (décision du 2026-11-20), repérés par leur
+ * libellé : « Marque », « Type d'article », « A publier (sur le site) ». Absents (copie
+ * ancienne, base de test) : Marque et Type sont lus dans les propriétés, et tout produit vendable
+ * est lu.
+ */
+export type ChampsStudio = { marque: string | null; type: string | null; aPublier: string | null };
+
+async function champsStudio(client: ClientOdoo): Promise<ChampsStudio> {
+  const champs = await client.searchRead<Enregistrement & { name: string; field_description: string; ttype: string }>(
+    "ir.model.fields",
+    [["model", "=", "product.template"], ["name", "=like", "x_%"]],
+    ["name", "field_description", "ttype"],
+  );
+  const trouver = (test: (libelle: string) => boolean, types: string[]) =>
+    champs.find((c) => types.includes(c.ttype) && test(normaliser(c.field_description)))?.name ?? null;
+  return {
+    marque: trouver((l) => l === "marque", ["selection", "char", "many2one"]),
+    type: trouver((l) => l === "type d article", ["selection", "char"]),
+    aPublier: trouver((l) => l === "a publier" || l.startsWith("a publier "), ["boolean"]),
+  };
+}
+
+/** Texte d'un champ (valeur d'une sélection, texte, ou nom d'un many2one). */
+const texteChamp = (v: unknown) => (Array.isArray(v) && typeof v[1] === "string" ? v[1] : texteDe(v));
 const CHAMPS_VARIANTE = ["product_tmpl_id", "default_code", "barcode", "lst_price", "free_qty", "product_template_attribute_value_ids"];
 
 async function lire(client: ClientOdoo) {
   const entrepots = await client.searchRead("stock.warehouse", [["code", "=", "WH"]], ["id"], { limite: 1 });
   const contexte = entrepots[0] ? { warehouse_id: entrepots[0].id } : {};
+  const studio = await champsStudio(client);
+  const champsEnPlus = [studio.marque, studio.type, studio.aPublier].filter((c): c is string => Boolean(c));
   const [categories, templates, taxes, listes] = await Promise.all([
     client.searchRead<Enregistrement & { name?: string; complete_name: string; parent_id: unknown }>("product.category", [], ["name", "complete_name", "parent_id"]),
-    client.searchRead<Template>("product.template", [["sale_ok", "=", true], ["active", "=", true]], CHAMPS_TEMPLATE),
+    client.searchRead<Template>("product.template", [["sale_ok", "=", true], ["active", "=", true]], [...CHAMPS_TEMPLATE, ...champsEnPlus]),
     client.searchRead<Enregistrement & { amount: number; amount_type: string; price_include: boolean }>("account.tax", [["type_tax_use", "=", "sale"]], ["amount", "amount_type", "price_include"]),
     client.searchRead<Enregistrement & { sequence: number }>("product.pricelist", [], ["sequence"], { ordre: "sequence, id" }),
   ]);
@@ -121,7 +149,7 @@ async function lire(client: ClientOdoo) {
       ? client.searchRead<Enregistrement & { product_id: unknown; product_qty: number }>("stock.lot", [["product_id", "in", idsSuivies]], ["product_id", "product_qty"])
       : Promise.resolve([]),
   ]);
-  return { categories, templates, taxes, listes, variantes, fournisseurs, regles, lots, valeurs };
+  return { categories, templates, taxes, listes, variantes, fournisseurs, regles, lots, valeurs, studio };
 }
 
 type Lu = Awaited<ReturnType<typeof lire>>;
@@ -199,6 +227,9 @@ export function assembler(lu: Lu, correspondance: Correspondance): Instantane {
       };
       continue;
     }
+    // « A publier » décoché (pièces de kit, frais d'importation, logistique…) : ignoré sans
+    // anomalie. Le produit « Livraison », lu plus haut, ne dépend pas de cette case.
+    if (lu.studio.aPublier && t[lu.studio.aPublier] !== true) continue;
     const reference = codes[0] ?? `modèle ${t.id}`;
     const nom = t.name;
     const signaler = (a: Omit<Anomalie, "nom" | "objet" | "reference"> & Partial<Pick<Anomalie, "objet" | "reference" | "nom">>) =>
@@ -208,7 +239,10 @@ export function assembler(lu: Lu, correspondance: Correspondance): Instantane {
       categoriesNonReliees.set(chemin || "(sans catégorie)", (categoriesNonReliees.get(chemin || "(sans catégorie)") ?? 0) + 1);
       continue;
     }
-    const proprietes = lireProprietes(t.product_properties);
+    const proprietes = lireProprietes(t.product_properties, {
+      marque: lu.studio.marque ? texteChamp(t[lu.studio.marque]) : null,
+      type: lu.studio.type ? texteChamp(t[lu.studio.type]) : null,
+    });
     let bloque = false;
     const bloquer = (a: Parameters<typeof signaler>[0]) => {
       bloque = true;

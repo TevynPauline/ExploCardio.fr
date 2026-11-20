@@ -154,8 +154,17 @@ export function creerCommandesReelles(
         }];
       });
     const achat = devis.achat;
-    if (achat && i.livraison) {
-      if (achat.fraisPortHt > 0) lignes.push([0, 0, { product_id: i.livraison.varianteId, product_uom_qty: 1, price_unit: euros(achat.fraisPortHt) }]);
+    // Toute commande expédiée porte sa ligne « Livraison », à 0 € quand le franco est atteint
+    // (demande du 2026-11-20) ; une commande de services seuls n'en a pas.
+    const expediee = devis.lignes.some((l) => l.formule === "achat" && i.parReference.get(l.defaultCode)?.modele.type !== "service");
+    if (achat && i.livraison && expediee) {
+      const franco = devis.modesLivraison[0]?.francoAtteint === true;
+      lignes.push([0, 0, {
+        product_id: i.livraison.varianteId,
+        product_uom_qty: 1,
+        price_unit: euros(achat.fraisPortHt),
+        ...(achat.fraisPortHt === 0 && franco ? { name: `${i.livraison.nom} — offerte (franco de port atteint)` } : {}),
+      }]);
       if (achat.fraisSpecifiquesHt > 0) {
         lignes.push([0, 0, { product_id: i.livraison.varianteId, product_uom_qty: 1, price_unit: euros(achat.fraisSpecifiquesHt), name: "Livraison et installation des équipements volumineux" }]);
       }
