@@ -104,7 +104,7 @@ contracts/stockage.md, quickstart.md)
 - [X] T028 [P] `docs/deploiement-scalingo.md` : section « Fichiers téléversés » réécrite (stockage Scaleway en recette et en production, démonstration en base) ; tableau des variables `STOCKAGE_*` sans valeur ; étapes Scaleway (compte professionnel, projet, compartiments privés à Paris, application IAM et politique de research R8, clé générée au moment de la saisie) ; commande de reprise
 - [X] T029 Vérifications : `npx tsc --noEmit`, `npx eslint src app tests scripts`, `npm run test:unit`, `npm run test:contract`
 - [X] T030 Suite e2e une seule fois : `SITE_URL=http://localhost:3100 npm run test:e2e` (jamais deux suites en parallèle) — non-régression de la démonstration (SC-001) — lot 2 : aucun chemin de démonstration modifié ; suite F26 rejouée (2 passés), suite complète au lot 1
-- [ ] T031 Recette sur `explocardio-recette` (Phase 3) : quickstart §3 à §5, après création du compte, du compartiment et de la clé par Pauline ou Régis
+- [X] T031 Recette sur `explocardio-recette` (Phase 3) : quickstart §3 à §5, après création du compte, du compartiment et de la clé par Pauline ou Régis — fait le 2026-11-20 : déploiement de 0c24771, reprise (0 fichier en base, 0 erreur), photos de produit et vidéo d'aide déposées au back-office et présentes dans le compartiment sous `stockage/…`, servies par `/stockage/…` avec les mêmes en-têtes ; vidéo lue par plages (206, 416 hors limite) et avance au curseur. Production : mêmes étapes à faire.
 
 ---
 
